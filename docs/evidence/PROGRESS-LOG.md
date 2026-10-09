@@ -12,3 +12,4 @@ Times are US Pacific, 2026-10-08/09. Newest entries last.
 - **22:50** Phase 1 public app: all routes from 03 return correct status; typecheck clean. Commit 733ce0c.
 - **23:35** Phase 2 editorial service built. Real Qwen probe: 3.4 s, schema-valid JSON. pytest 38/38 (unit + integration against an isolated PocketBase). Commit b0212ec.
 - **00:55** E2E 26/26 passing on isolated test stack; vitest 17/17; pytest 38/38. Fixed real bugs found by tests: duplicate dialog label ids, stale layout after sign-in (server-action redirect render), same-page hash reload, concurrent vote delete. Commit be463a3.
+- **00:05 (10-09)** Evidence documents complete; production stack restarted for review; final backup + restore drill OK. Report: OVERNIGHT-BUILD-REPORT.md.
