@@ -5,12 +5,13 @@
 import { pb, pbDate, q, type Rec } from "../pb";
 import type { Tenant } from "../tenant";
 import { toSummary, type PieceSummary } from "./pieces";
+import { engagementSince } from "../engagement";
 
-export const FORMULA_VERSION = "trend-v1: (2*human_comments + human_votes + 0.5*(source_count-1) + 1) / (age_h + 2)^1.2; ai_posts excluded";
+export const FORMULA_VERSION = "trend-v2: (2*human_comments + human_votes + 1.5*human_shares + 0.5*log2(1+human_views) + 0.5*(source_count-1) + 1) / (age_h + 2)^1.2; ai_posts excluded; views/shares deduplicated, bots/headless/staff excluded";
 const WINDOW_H = 72;
 export type TrendBasis = "human_activity" | "verified_coverage" | "editorial_selection";
 export type TrendItem = PieceSummary & {
-  metrics: { human_comments: number; human_votes: number; source_count: number; ai_posts: number; human_views: null; human_shares: null };
+  metrics: { human_comments: number; human_votes: number; source_count: number; ai_posts: number; human_views: number; human_shares: number };
   score: number; basis: TrendBasis[]; rank: number;
 };
 export type TrendResult = { scope: "home" | "africa"; country: string; items: TrendItem[]; computed_at: string; window_h: number; popularity: boolean; formula: string };
@@ -50,14 +51,16 @@ export async function computeTrending(t: Tenant, scope: "home" | "africa", editi
   if (scope === "home" && edition !== "ALL") f += ` && country_codes~${q(`"${edition}"`)}`;
   if (scope === "africa" && edition !== "ALL") f += ` && country_codes!~${q(`"${edition}"`)}`;
   const rows = (await pb.list("editorial_pieces", { filter: f, sort: "-published_at", perPage: 100 })).filter((r) => scope === "home" || (r.country_codes ?? []).length > 0);
-  const [{ human, ai, votes }, sc] = await Promise.all([countsSince(t, rows.map((r) => r.id), since), sourceCounts(t, rows)]);
+  const [{ human, ai, votes }, sc, eng] = await Promise.all([countsSince(t, rows.map((r) => r.id), since), sourceCounts(t, rows),
+    engagementSince(t, rows.map((r) => r.id), since.slice(0, 10)).catch(() => new Map<string, { views: number; shares: number }>())]);
   let items: TrendItem[] = rows.map((r) => {
     const s = toSummary(r);
     const ageH = Math.max(0, (now - new Date(s.published_at.replace(" ", "T")).getTime()) / 3600_000);
-    const m = { human_comments: human.get(r.id) ?? 0, human_votes: votes.get(r.id) ?? 0, source_count: sc.get(r.id) ?? 1, ai_posts: ai.get(r.id) ?? 0, human_views: null, human_shares: null };
-    const score = (2 * m.human_comments + m.human_votes + 0.5 * (m.source_count - 1) + 1) / Math.pow(ageH + 2, 1.2);
+    const e = eng.get(r.id) ?? { views: 0, shares: 0 };
+    const m = { human_comments: human.get(r.id) ?? 0, human_votes: votes.get(r.id) ?? 0, source_count: sc.get(r.id) ?? 1, ai_posts: ai.get(r.id) ?? 0, human_views: e.views, human_shares: e.shares };
+    const score = (2 * m.human_comments + m.human_votes + 1.5 * m.human_shares + 0.5 * Math.log2(1 + m.human_views) + 0.5 * (m.source_count - 1) + 1) / Math.pow(ageH + 2, 1.2);
     const basis: TrendBasis[] = [];
-    if (m.human_comments + m.human_votes > 0) basis.push("human_activity");
+    if (m.human_comments + m.human_votes + m.human_shares + m.human_views > 0) basis.push("human_activity");
     if (m.source_count > 1) basis.push("verified_coverage");
     if (!basis.length) basis.push("editorial_selection");
     return { ...s, metrics: m, score, basis, rank: 0 };
@@ -85,8 +88,8 @@ async function snapshot(t: Tenant, r: TrendResult) {
   const ws = pbDate(new Date(Date.now() - r.window_h * 3600_000)), we = pbDate(), at = pbDate(new Date(r.computed_at));
   for (const it of r.items) {
     await pb.create("trending_snapshots", { tenant_id: t.id, scope: r.scope, country: r.country, area_code: "", piece_id: it.id, window_start: ws, window_end: we, computed_at: at,
-      rank: it.rank, score: Math.round(it.score * 1e4) / 1e4, source_count: it.metrics.source_count, human_views: 0, human_comments: it.metrics.human_comments,
-      human_shares: 0, human_votes: it.metrics.human_votes, ai_posts: it.metrics.ai_posts, basis: it.basis, confidence: r.popularity ? "measured" : "no_popularity_signal",
+      rank: it.rank, score: Math.round(it.score * 1e4) / 1e4, source_count: it.metrics.source_count, human_views: it.metrics.human_views, human_comments: it.metrics.human_comments,
+      human_shares: it.metrics.human_shares, human_votes: it.metrics.human_votes, ai_posts: it.metrics.ai_posts, basis: it.basis, confidence: r.popularity ? "measured" : "no_popularity_signal",
       display_locale: "", formula_version: r.formula });
   }
 }

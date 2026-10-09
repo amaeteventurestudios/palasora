@@ -194,3 +194,25 @@ def test_ai_paused_switch_defers(seeded, tmp_path):
         assert e.value.reason == "AI_PAUSED"
     finally:
         pb.update("tenant_settings", sw["id"], {"value": False})
+
+
+def test_T028_raw_event_partitions_older_than_30_days_are_purged(seeded, tmp_path, monkeypatch):
+    """Retention: raw first-party events older than 30 days are deleted, newer ones kept; also when ALL data is old."""
+    import dataclasses, json as _json
+    from datetime import date, timedelta
+    from palavva_editorial import analytics_etl, config
+    pb, t = seeded["pb"], seeded["palavva"]
+    s = dataclasses.replace(config.load(), data_dir=tmp_path)
+    base = s.analytics_dir / f"tenant={t['id']}"
+    old_day, new_day = (date.today() - timedelta(days=45)).isoformat(), date.today().isoformat()
+    for d in (old_day, new_day):
+        (base / f"date={d}").mkdir(parents=True)
+        (base / f"date={d}" / "events-10.ndjson").write_text(_json.dumps({"event_id": "x", "event_name": "story_viewed", "occurred_at": f"{d}T10:00:00Z", "tenant_id": t["id"]}) + "\n")
+    out = analytics_etl.run(s, pb)
+    assert out["purged_dirs"] >= 1 and not (base / f"date={old_day}").exists() and (base / f"date={new_day}").exists()
+    # Only-old data is purged too (previously skipped).
+    (base / f"date={old_day}").mkdir(parents=True)
+    (base / f"date={old_day}" / "events-10.ndjson").write_text("{}\n")
+    import shutil; shutil.rmtree(base / f"date={new_day}")
+    analytics_etl.run(s, pb)
+    assert not (base / f"date={old_day}").exists()

@@ -1,3 +1,4 @@
+import { safeExternalUrl } from "@/lib/url-safety";
 import { notFound } from "next/navigation";
 import { getTenant } from "@/lib/tenant";
 import { pb, q } from "@/lib/pb";
@@ -8,9 +9,6 @@ import { ReportForm } from "@/components/ReportForm";
 
 export const dynamic = "force-dynamic";
 
-function safeUrl(u: string): string | null {
-  try { const x = new URL(u); return x.protocol === "https:" || x.protocol === "http:" ? x.toString() : null; } catch { return null; }
-}
 
 export default async function Business({ params }: { params: Promise<{ slug: string }> }) {
   const tenant = await getTenant();
@@ -23,7 +21,7 @@ export default async function Business({ params }: { params: Promise<{ slug: str
   const spot = await pb.first("spotlights", `tenant_id=${q(tenant.id)} && business_id=${q(b.id)} && approval_status='approved'`);
   const tax = await taxonomy();
   const p = (b.profile_json ?? {}) as Record<string, string>;
-  const site = b.website ? safeUrl(b.website) : null;
+  const site = b.website ? safeExternalUrl(b.website) : null;
   const fixture = site?.includes("example.invalid");
   return (
     <div className="container-pv max-w-3xl py-8">

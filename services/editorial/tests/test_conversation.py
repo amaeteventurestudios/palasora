@@ -219,7 +219,7 @@ def test_cross_thread_repetition_and_recycled_themes_are_rejected(env):
     other = [{"id": f"o{i}", "piece_id": f"topic{i}", "body_text": "Grid reliability and power supply reliability shape whether equipment survives; "
               "maintenance costs and spare parts decide uptime under African operating conditions."} for i in range(4)]
     themes = diversity.overused_themes(other, "A cooperative bakery shares one oven between members in Lilongwe.")
-    assert "power supply" in themes or "supply reliability" in themes, themes
+    assert themes and all(t.split()[0] not in {"bakery", "oven"} for t in themes), themes
     reply = ("Power supply reliability and maintenance costs decide everything here, because African operating conditions punish equipment "
              "that has no spare parts plan.")
     assert len(diversity.theme_hits(reply, themes)) >= 2

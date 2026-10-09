@@ -20,3 +20,16 @@ export async function signIn(page: Page, email: string, base = BASE, next = "/")
 }
 
 export const shotDir = path.resolve(__dirname, "../../../../docs/evidence/screenshots");
+
+// Superuser access to the TEST stack's PocketBase (127.0.0.1:8390) for time-travel style assertions.
+const envVal = (k: string) => new RegExp(`^${k}=(.*)$`, "m").exec(envText)?.[1].trim().replace(/^'|'$/g, "") ?? "";
+export async function pbAdmin() {
+  const url = envVal("PB_URL") || "http://127.0.0.1:8390";
+  const auth = await (await fetch(`${url}/api/collections/_superusers/auth-with-password`, { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ identity: envVal("PB_SERVICE_EMAIL"), password: envVal("PB_SERVICE_PASSWORD") }) })).json();
+  const h = { authorization: auth.token, "content-type": "application/json" };
+  return {
+    list: async (coll: string, filter: string) => (await (await fetch(`${url}/api/collections/${coll}/records?perPage=50&sort=-created&filter=${encodeURIComponent(filter)}`, { headers: h })).json()).items as Record<string, any>[],
+    update: async (coll: string, id: string, data: Record<string, unknown>) => (await fetch(`${url}/api/collections/${coll}/records/${id}`, { method: "PATCH", headers: h, body: JSON.stringify(data) })).json(),
+  };
+}

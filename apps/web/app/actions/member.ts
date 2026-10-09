@@ -337,3 +337,38 @@ export async function reportTranslation(_: ActionState, f: FormData): Promise<Ac
   await writeEvent(tenant.id, { event_name: "translation_quality_reported" });
   return { ok: true, message: "Thanks. An editor will review this translation." };
 }
+
+// ---------- Comment self-edit (T-012 "edit" state) ----------
+
+const EDIT_WINDOW_MS = 15 * 60_000;
+
+/** Authors may correct their own visible reply for 15 minutes. The same posting rules apply again; the previous
+ *  text is kept in the staff-only audit trail (moderation and appeals), readers see an "edited" label. */
+export async function editComment(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await ctx();
+  const blocked = canParticipate(session);
+  if (blocked) return blocked;
+  const s = session!;
+  if (!rateLimit(`comment-edit:${s.user.id}`, 10, 60_000).ok) return fail("Too many edits for now. Please try again shortly.");
+  const id = str(f, "comment_id", 30);
+  const text = str(f, "text", 5000).replace(/\r\n/g, "\n");
+  if (text.length < 2) return fail("Write a little more before saving.", "text");
+  if (text.length > 4000) return fail("Comments are limited to 4,000 characters.", "text");
+  const c = await pb.first("comments", `tenant_id=${q(tenant.id)} && id=${q(id)}`);
+  if (!c || c.author_id !== s.user.id || c.author_kind !== "human") return fail("You can only edit your own replies.");
+  if (c.moderation_status !== "visible" || c.approval_state === "rejected") return fail("This reply is under moderation and cannot be edited.");
+  if (Date.now() - new Date(String(c.created).replace(" ", "T")).getTime() > EDIT_WINDOW_MS) return fail("Replies can be edited for 15 minutes after posting.");
+  if (text === c.body_text) return { ok: true, message: "No changes." };
+  const pending = (text.match(LINK_RE) ?? []).length > 2;
+  const revision = (c.edit_revision ?? 1) + 1;
+  await pb.update("comments", c.id, { body_text: text, edit_revision: revision, approval_state: pending ? "pending" : c.approval_state });
+  await audit(tenant.id, s.user.id, "comment.edit", "comments", c.id, { previous_text: String(c.body_text).slice(0, 4000), revision, pending }, revision);
+  if (pending) {
+    await emitEvent(tenant, { event_type: "post_removed", piece_id: c.piece_id, post_id: c.id, author_kind: "human", payload: { reason: "awaiting moderation after edit" } });
+  } else {
+    await emitEvent(tenant, { event_type: "post_corrected", piece_id: c.piece_id, post_id: c.id, parent_id: c.parent_id ?? "", author_kind: "human",
+      payload: { post: { id: c.id, body_text: text, edited: true } } });
+  }
+  revalidatePath("/", "layout");
+  return { ok: true, message: pending ? "Saved. Your reply now includes several links, so a moderator will review it first." : "Your reply was updated.", data: { id: c.id, text } };
+}

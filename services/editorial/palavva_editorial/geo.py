@@ -9,6 +9,8 @@ A place NAME is not a place FACT. This module:
 """
 from __future__ import annotations
 
+from .config import shared_path
+
 import re
 from dataclasses import dataclass
 
@@ -137,7 +139,7 @@ def load_area_names() -> dict[str, dict[str, str]]:
     import json
     import os
     from pathlib import Path
-    d = Path(os.environ.get("GEO_DIR") or Path(__file__).resolve().parents[3] / "apps/web/public/geo")
+    d = Path(os.environ.get("GEO_DIR") or shared_path("public/geo"))
     out: dict[str, dict[str, str]] = {}
     if d.exists():
         for f in d.glob("*.json"):

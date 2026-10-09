@@ -37,7 +37,7 @@ export default async function Conversations() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric label="AI replies published" value={posted} period="Last 24 h" source="moderation_decisions (allow)" />
         <Metric label="Abstentions" value={abst} period="Last 24 h" source="Model chose not to reply" hint="Abstaining is a valid outcome" />
-        <Metric label="Rejected by validator" value={rejected.length} period="Last 24 h" source={`Ruleset conv-rules-v1`} hint={[...reasonCounts].map(([k, v]) => `${k} ×${v}`).join(", ") || "none"} />
+        <Metric label="Rejected by validator" value={rejected.length} period="Last 24 h" source={`Ruleset conv-rules-v2`} hint={[...reasonCounts].map(([k, v]) => `${k} ×${v}`).join(", ") || "none"} />
         <Metric label="Reply latency p50 / p95" value={lat.length ? `${(pct(lat, 50)! / 1000).toFixed(1)} / ${(pct(lat, 95)! / 1000).toFixed(1)}` : null} unit="s" period="Last 24 h" source="ai_runs (converse)" state={lat.length ? "ok" : "zero"} />
         <Metric label="Reply budget" value={stats?.reply_budget_used_today ?? null} unit={`/ ${stats?.reply_budget_limit ?? "?"}`} period="Today (UTC)" source="Worker quota" state={stats ? "ok" : "unknown"} hint={`${stats?.converse_pending ?? "?"} reply jobs pending`} />
         <Metric label="Auto-publication (LOW risk)" value={autoOff ? "Disabled" : "Enabled"} period="Now" source="AUTO_PUBLISH_DISABLED" hint="Sensitive and uncertain topics always go to Exceptions" />

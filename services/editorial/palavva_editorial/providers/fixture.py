@@ -78,7 +78,8 @@ class FixtureProvider:
                    "new_angle": angles.get(role, "open questions"), "uncertainties": ["fixture"]}
         elif stage == "translate":
             fields = json.loads(re.search(r"EVIDENCE_PACKET_JSON:\n(.*)\nEND_EVIDENCE", req.user_prompt, re.S).group(1))["fields"]
-            out = {k: ("[FR] " + v if self.mode != "bad_translation" else "Traduction sans chiffres.") for k, v in fields.items()}
+            bad = self.mode == "bad_translation" or (self.mode == "bad_translation_repairable" and "previous_translation" not in req.user_prompt)
+            out = {k: ("[FR] " + v if not bad else "Traduction sans chiffres.") for k, v in fields.items()}
         elif stage == "validator":
             out = {"verdict": "PASS", "flags": []}
         elif stage == "timelens":

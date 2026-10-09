@@ -2,6 +2,7 @@
 import { Check, Copy, Share2 } from "lucide-react";
 import { useState } from "react";
 import { track } from "./analytics-client";
+import { shareBeacon } from "./EngagementBeacon";
 
 /** Share intents (14-SEO §Sharing). Plain links work without JS; JS adds copy + Web Share. */
 export function ShareBar({ url, title, storyId }: { url: string; title: string; storyId: string }) {
@@ -17,7 +18,7 @@ export function ShareBar({ url, title, storyId }: { url: string; title: string; 
     try { await navigator.clipboard.writeText(url); } catch {
       const ta = document.createElement("textarea"); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
     }
-    setCopied(true); track("share_clicked", { story_id: storyId, channel: "copy" });
+    setCopied(true); track("share_clicked", { story_id: storyId, channel: "copy" }); shareBeacon(storyId, "copy");
     setTimeout(() => setCopied(false), 2500);
   };
   return (
@@ -25,7 +26,7 @@ export function ShareBar({ url, title, storyId }: { url: string; title: string; 
       <span className="me-1 inline-flex items-center gap-1 text-sm font-semibold"><Share2 size={16} aria-hidden="true" />Share</span>
       {links.map((l) => (
         <a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" className="btn btn-secondary !min-h-[40px] !px-3 text-sm"
-          data-share={l.name} onClick={() => track("share_clicked", { story_id: storyId, channel: l.name.toLowerCase() })}>
+          data-share={l.name} onClick={() => { track("share_clicked", { story_id: storyId, channel: l.name.toLowerCase() }); shareBeacon(storyId, l.name.toLowerCase()); }}>
           {l.name}<span className="sr-only"> (opens in a new tab)</span>
         </a>
       ))}

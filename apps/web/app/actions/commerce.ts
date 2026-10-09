@@ -1,4 +1,5 @@
 "use server";
+import { safeExternalUrl } from "@/lib/url-safety";
 import { headers } from "next/headers";
 import { randomBytes } from "node:crypto";
 import { getTenant } from "@/lib/tenant";
@@ -23,7 +24,7 @@ export async function submitInquiry(_: ActionState, f: FormData): Promise<Action
   if (!name) return { ok: false, message: "Tell us your name.", field: "contact_name" };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, message: "Enter a valid work email.", field: "email" };
   if (!business) return { ok: false, message: "Tell us the business or organization.", field: "business" };
-  if (website && !/^https?:\/\/[^\s]+$/i.test(website)) return { ok: false, message: "Websites should start with https://", field: "website" };
+  if (website && !safeExternalUrl(website)) return { ok: false, message: "Enter a public website address starting with https://", field: "website" };
   if (f.get("consent") !== "on") return { ok: false, message: "Please confirm we may contact you about this inquiry.", field: "consent" };
   const reference = `PV-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${randomBytes(3).toString("hex").toUpperCase()}`;
   let inq;

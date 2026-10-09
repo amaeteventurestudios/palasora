@@ -1,4 +1,10 @@
-# Local smoke override: publish web on 127.0.0.1:3400 so it never collides with the dev server.
+# Local smoke override: publish web on 127.0.0.1:3400 so it never collides with the dev server, and make the
+# smoke deterministic and offline: fixture model provider, ingestion paused (no feed fetches, no Qwen calls).
 services:
   web:
     ports: !override ["127.0.0.1:3400:3000"]
+    environment: { WEB_ORIGIN: "http://127.0.0.1:3400", TENANT_HOSTS: '{"127.0.0.1:3400":"palavva","localhost:3400":"palavva"}', DEMO_THREADS_ENABLED: "true" }
+  editorial:
+    environment: { MODEL_PROVIDER: fixture, INGEST_PAUSED: "true", DEMO_THREADS_ENABLED: "true", CONVERSATION_STEP_SPACING_SEC: "3", AUTO_PUBLISH_DISABLED: "false" }
+  worker:
+    environment: { MODEL_PROVIDER: fixture, INGEST_PAUSED: "true", DEMO_THREADS_ENABLED: "true", CONVERSATION_STEP_SPACING_SEC: "3", AUTO_PUBLISH_DISABLED: "false" }

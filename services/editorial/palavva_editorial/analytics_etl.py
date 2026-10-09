@@ -32,6 +32,12 @@ def run(settings: Settings, pb: PB, days: int = 30) -> dict:
         files = sorted(tdir.glob("date=*/*.ndjson")) if tdir.exists() else []
         files = [f for f in files if f.parent.name[5:] >= cutoff.isoformat()]
         out["tenants"] += 1
+        # Retention purge of raw event partitions FIRST: a tenant whose events are all old must still be purged.
+        if tdir.exists():
+            for p in tdir.glob("date=*"):
+                if p.name[5:] < (datetime.now(timezone.utc).date() - timedelta(days=RETENTION_DAYS)).isoformat():
+                    shutil.rmtree(p, ignore_errors=True)
+                    out["purged_dirs"] += 1
         if not files:
             continue
         rows = con.execute(
@@ -46,10 +52,5 @@ def run(settings: Settings, pb: PB, days: int = 30) -> dict:
                 pb.upsert("aggregated_metrics", f"tenant_id={q(tid)} && date_bucket={q(d)} && event={q(name)} && country='' && topic=''",
                           {"tenant_id": tid, "date_bucket": d, "event": name, "country": "", "topic": "", "count": int(count), "source": "first-party events (DuckDB ETL)", "asof": asof})
                 out["rows"] += 1
-        # Retention purge of raw event partitions.
-        for p in tdir.glob("date=*"):
-            if p.name[5:] < (datetime.now(timezone.utc).date() - timedelta(days=RETENTION_DAYS)).isoformat():
-                shutil.rmtree(p, ignore_errors=True)
-                out["purged_dirs"] += 1
     con.close()
     return out

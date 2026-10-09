@@ -18,6 +18,7 @@ import { TranslationBar } from "./TranslationBar";
 import { LiveCount, LiveEventsProvider } from "./live/LiveEvents";
 import { LiveThread } from "./live/LiveThread";
 import { ShareBar } from "./ShareBar";
+import { EngagementBeacon } from "./EngagementBeacon";
 import { CommentForm } from "./CommentForm";
 import { SaveButton, VoteButton } from "./MemberButtons";
 import { ReportForm } from "./ReportForm";
@@ -187,6 +188,7 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
 
           <section className="mt-8 max-w-[760px] border-y border-border py-4">
             <ShareBar url={url} title={piece.headline} storyId={piece.id} />
+            <EngagementBeacon pieceId={piece.id} />
             <div className="mt-3 flex flex-wrap items-center gap-4">
               <ReportForm type="piece" id={piece.id} />
               <Link href={`/corrections?story=${encodeURIComponent(path)}#request`} className="text-sm link">Request a correction</Link>
@@ -199,7 +201,7 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
             <AINote />
             {(body.questions ?? []).length > 0 && <p className="mt-3 rounded-lg bg-card-muted p-3 text-[15px]"><span className="font-semibold">A question worth asking: </span>{body.questions![0]}</p>}
             <div className="mt-3">
-              <LiveThread pieceId={piece.id} initial={threadPosts} claimIndex={claimIndex} signedIn={signedIn} verified={verified} returnPath={path} open={disc.discussion?.status === "open"} />
+              <LiveThread pieceId={piece.id} initial={threadPosts} claimIndex={claimIndex} signedIn={signedIn} verified={verified} returnPath={path} open={disc.discussion?.status === "open"} viewerHandle={session?.user.handle} />
             </div>
             <div className="mt-5">
               {disc.discussion?.status === "open" ? (

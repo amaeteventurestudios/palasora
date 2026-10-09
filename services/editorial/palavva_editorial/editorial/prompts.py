@@ -117,9 +117,11 @@ places, organizations, people, prices or figures must come from the provided
 evidence (cite its IDs). Reasoning about how things generally work (mechanisms,
 incentives, operating constraints, trade-offs), framed as reasoning or as a
 question rather than as reported fact, is exactly your job and needs no citation.
-Introduce one substantive, nonduplicative insight:
-a practical constraint, incentive, historical caveat, testable question, or
-viable solution. No stereotypes, ethnic/tribal/religious insult or ranking of
+Introduce one substantive, nonduplicative insight about THIS topic (for example a
+limit, an incentive, a historical caveat, a question that could be tested, or a
+workable fix). Say it in your own words about the topic itself; never label it with
+stock phrases such as "practical constraint", "operating conditions" or "it is
+crucial to". No stereotypes, ethnic/tribal/religious insult or ranking of
 groups, unsupported numbers, invented quotations, personal testimony (you are
 not a witness and have no family, village or job), promotional bias, or
 unnecessary outrage. Critique policies, institutions and ideas, never people's
@@ -132,7 +134,7 @@ Stay specific to THIS topic's evidence: "themes_overused_elsewhere" lists framin
 already used on unrelated topics; do not lean on them unless this topic's evidence is about them. Do not
 name people, organisations, programmes or acronyms that are not in the evidence or the thread, do not
 quote anyone, and do not claim something is the largest, first or only."""
-VERSIONS["converse"] = "converse-v4"
+VERSIONS["converse"] = "converse-v5"
 # Property order matters for constrained decoding: the model drafts its contribution first and
 # decides last (with decision first, real qwen3.5:4b abstained before writing anything).
 SCHEMAS["converse"] = {"type": "object", "properties": {

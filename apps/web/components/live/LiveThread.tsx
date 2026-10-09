@@ -8,14 +8,15 @@ import { LiveStatus, useLive } from "./LiveEvents";
 import { CommentForm } from "../CommentForm";
 import { VoteButton } from "../MemberButtons";
 import { ReportForm } from "../ReportForm";
+import { EditComment } from "./EditComment";
 
 type Props = {
-  pieceId: string; initial: PostView[]; claimIndex: Record<string, number>; signedIn: boolean; verified: boolean; returnPath: string; open: boolean;
+  pieceId: string; initial: PostView[]; claimIndex: Record<string, number>; signedIn: boolean; verified: boolean; returnPath: string; open: boolean; viewerHandle?: string;
 };
 
 const MAX_VISUAL_INDENT = 3; // deeper replies keep a "Replying to" breadcrumb instead of squeezing the column
 
-export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, returnPath, open }: Props) {
+export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, returnPath, open, viewerHandle }: Props) {
   const [posts, setPosts] = useState<PostView[]>(initial);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const [offscreen, setOffscreen] = useState<string | null>(null);
@@ -38,6 +39,10 @@ export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, r
       });
     }
     if (e.type === "post_removed" && e.post_id) setPosts((xs) => xs.filter((x) => x.id !== e.post_id));
+    if (e.type === "post_corrected" && e.post_id && typeof e.payload?.post?.body_text === "string") {
+      const body = e.payload.post.body_text as string;
+      setPosts((xs) => xs.map((x) => (x.id === e.post_id ? { ...x, body_text: body, edited: true } : x)));
+    }
   }), [ctx, pieceId]);
 
   const byParent = useMemo(() => {
@@ -66,6 +71,9 @@ export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, r
               {open && <button type="button" className="inline-flex min-h-[32px] items-center gap-1 text-sm font-semibold text-muted hover:text-foreground" aria-expanded={replyTo === p.id}
                 onClick={() => setReplyTo(replyTo === p.id ? null : p.id)}><MessageSquare size={14} aria-hidden="true" />{t("thread.reply")}</button>}
               {p.author_kind === "human" && <VoteButton kind="comment" id={p.id} score={p.vote_score} voted={false} signedIn={signedIn} returnPath={`${returnPath}#post-${p.id}`} label="Upvote reply" />}
+              {viewerHandle && p.author_kind === "human" && p.author?.handle === viewerHandle && (
+                <EditComment id={p.id} text={p.body_text} created={p.created} onSaved={(body) => setPosts((xs) => xs.map((x) => (x.id === p.id ? { ...x, body_text: body, edited: true } : x)))} />
+              )}
               <ReportForm type="comment" id={p.id} />
             </PostCard>
             {replyTo === p.id && (

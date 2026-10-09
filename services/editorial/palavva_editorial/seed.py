@@ -12,6 +12,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 from . import taxonomy as tx
+from .config import shared_path
 from .pb import PB, PBError, q
 
 
@@ -49,7 +50,7 @@ def seed_geo(pb: PB) -> int:
     import json
     from pathlib import Path
     from . import geo
-    d = Path(__file__).resolve().parents[3] / "apps/web/public/geo"
+    d = shared_path("public/geo")
     n = 0
     for f in sorted(d.glob("*.json")) if d.exists() else []:
         j = json.loads(f.read_text())

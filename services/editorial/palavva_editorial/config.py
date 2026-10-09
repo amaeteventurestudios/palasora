@@ -65,3 +65,18 @@ def load() -> Settings:
         auto_publish_disabled=_bool("AUTO_PUBLISH_DISABLED", True),
         reply_daily_budget=int(os.environ.get("CONVERSATION_DAILY_REPLY_BUDGET", "150")),
     )
+
+
+def shared_path(rel: str) -> "Path":
+    """Files shared with the web app (locale registry, boundary files). In containers they are copied to
+    PALAVVA_SHARED_DIR (/app/shared); in the repo they live under apps/web. Never index past the filesystem root."""
+    from pathlib import Path
+    base = os.environ.get("PALAVVA_SHARED_DIR")
+    if base:
+        return Path(base) / rel
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        cand = parent / "apps" / "web" / rel
+        if cand.exists():
+            return cand
+    return here.parent / "shared" / rel

@@ -1,0 +1,13 @@
+# T-026 structured data on real vs demo topics (dev stack, 2026-10-09T22:22:57Z)
+real topic: /discussion/sa-brand-a-key-strategic-economic-asset-morolong-097csz
+  JSON-LD {"@context": "https://schema.org", "@type": "NewsArticle", "headline": "Deputy Minister Kenny Morolong urges South Africa to leverage global position for economic growth and social unity", "description": "Deputy Minister in the Presidency Kenny Morolong stated at the Nation Brand Forum in Johannesburg that South Africa should use its position in regional and global affairs to strengthen investor c
+  canonical ['http://127.0.0.1:3000/discussion/sa-brand-a-key-strategic-economic-asset-morolong-097csz']
+  robots ['index, follow']
+demo topic: /discussion/demo-rainy-season-delivery-routes
+  JSON-LD blocks: 0
+  <meta name="robots" content="noindex, nofollow"
+robots.txt (PUBLIC_LAUNCH_AUTHORIZED=false):
+  User-Agent: *
+  Disallow: /
+  
+sitemap contains real topic: 1  demo: 0

@@ -12,7 +12,9 @@ function Basis({ it, t }: { it: Item; t: T }) {
   const m = it.metrics;
   return (
     <p className="meta mt-0.5 flex flex-wrap items-center gap-x-2">
-      {it.basis.includes("human_activity") && <span className="inline-flex items-center gap-1"><Users size={12} aria-hidden="true" />{t("trend.basis.human")}: {m.human_comments + m.human_votes}</span>}
+      {m.human_comments + m.human_votes > 0 && <span className="inline-flex items-center gap-1"><Users size={12} aria-hidden="true" />{t("trend.basis.human")}: {m.human_comments + m.human_votes}</span>}
+      {m.human_views > 0 && <span data-testid="trend-reads">{t("trend.reads", { n: m.human_views })}</span>}
+      {m.human_shares > 0 && <span data-testid="trend-shares">{t("trend.shares", { n: m.human_shares })}</span>}
       {it.basis.includes("verified_coverage") && <span>{t("trend.basis.coverage")}: {m.source_count}</span>}
       {m.ai_posts > 0 && <span className="inline-flex items-center gap-1"><Bot size={12} aria-hidden="true" />{t("trend.basis.ai")}: {m.ai_posts}</span>}
     </p>
