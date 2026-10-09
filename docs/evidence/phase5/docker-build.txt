@@ -1,0 +1,17 @@
+=== pocketbase ===
+ ---> Removed intermediate container 4c0df13be9c2
+ ---> 7441258f5ee6
+Successfully built 7441258f5ee6
+Successfully tagged palavva-pocketbase:local
+=== editorial ===
+ ---> Removed intermediate container 8af978f7a18a
+ ---> f192043a05ce
+Successfully built f192043a05ce
+Successfully tagged palavva-editorial:local
+=== web ===
+}
+
+Node.js v22.20.0
+[0mThe command '/bin/sh -c pnpm install --frozen-lockfile' returned a non-zero code: 1
+palavva-editorial:local 310MB f192043a05ce
+palavva-pocketbase:local 64.9MB 7441258f5ee6

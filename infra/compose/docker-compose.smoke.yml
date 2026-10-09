@@ -1,0 +1,4 @@
+# Local smoke override: publish web on 127.0.0.1:3400 so it never collides with the dev server.
+services:
+  web:
+    ports: !override ["127.0.0.1:3400:3000"]

@@ -1,0 +1,11 @@
+**/node_modules
+**/.next
+**/.next-test
+**/.venv
+data
+data-test
+backups
+.audit
+.env*
+!.env.example
+docs/evidence/e2e/artifacts

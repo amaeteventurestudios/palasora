@@ -1,0 +1,42 @@
+# Palavva Compose stack. LOCAL BUILD ARTIFACT ONLY: not deployed anywhere.
+# ORACLE_DEPLOYMENT_AUTHORIZED=false. Phase 6 (Oracle private staging) needs separate founder approval.
+# Only the web service is published, and only on 127.0.0.1. Everything else stays on the private network.
+name: palavva_local
+services:
+  pocketbase:
+    build: { context: ../.., dockerfile: infra/docker/pocketbase.Dockerfile }
+    volumes: ["pb_data:/pb/pb_data"]
+    networks: [internal]
+    restart: unless-stopped
+  editorial:
+    build: { context: ../.., dockerfile: infra/docker/editorial.Dockerfile }
+    env_file: ../../.env.compose
+    environment: { PB_URL: "http://pocketbase:8090", PALAVVA_DATA_DIR: /data }
+    volumes: ["editorial_data:/data"]
+    networks: [internal]
+    depends_on: [pocketbase]
+    restart: unless-stopped
+  worker:
+    build: { context: ../.., dockerfile: infra/docker/editorial.Dockerfile }
+    command: ["python", "-m", "palavva_editorial.worker"]
+    healthcheck: { test: ["CMD", "test", "-f", "/data/run/worker.lock"], interval: 30s, timeout: 5s }
+    env_file: ../../.env.compose
+    environment: { PB_URL: "http://pocketbase:8090", PALAVVA_DATA_DIR: /data }
+    volumes: ["editorial_data:/data"]
+    networks: [internal, egress]
+    depends_on: [pocketbase]
+    restart: unless-stopped
+  web:
+    build: { context: ../.., dockerfile: infra/docker/web.Dockerfile }
+    env_file: ../../.env.compose
+    environment: { PB_URL: "http://pocketbase:8090", EDITORIAL_URL: "http://editorial:8000", PALAVVA_DATA_DIR: /data }
+    volumes: ["editorial_data:/data"]
+    ports: ["127.0.0.1:3000:3000"]
+    networks: [internal, edge]
+    depends_on: [pocketbase, editorial]
+    restart: unless-stopped
+networks:
+  internal: { internal: true }
+  edge: {}     # web only: lets Docker publish 127.0.0.1:3000 (internal networks cannot publish ports)
+  egress: {}   # worker only: rights-approved feeds + private Qwen over the host's Tailscale
+volumes: { pb_data: {}, editorial_data: {} }

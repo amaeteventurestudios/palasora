@@ -1,0 +1,236 @@
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  49.11MB
+Step 1/23 : FROM node:22.20.0-alpine3.22 AS deps
+ ---> dbcedd8aeab4
+Step 2/23 : WORKDIR /app/apps/web
+ ---> Using cache
+ ---> db38de5647b4
+Step 3/23 : RUN npm install -g pnpm@12.10.1 --no-audit --no-fund
+ ---> Running in 9425a5265e4e
+
+added 2 packages in 5s
+[91mnpm notice
+npm notice New major version of npm available! 10.9.3 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+[0m ---> Removed intermediate container 9425a5265e4e
+ ---> 3390432e3d8d
+Step 4/23 : COPY apps/web/package.json apps/web/pnpm-lock.yaml apps/web/pnpm-workspace.yaml ./
+ ---> 00fa5014ac89
+Step 5/23 : RUN pnpm install --frozen-lockfile
+ ---> Running in 495fc6f3f605
+? Verifying lockfile against supply-chain policies (201 entries)...
+Downloading @next/swc-linux-x64-musl@15.5.27: 0.00 B/47.47 MB
+Downloading next@15.5.27: 0.00 B/31.29 MB
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /root/.local/share/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Downloading @img/sharp-libvips-linuxmusl-x64@1.3.4: 0.00 B/8.26 MB
+Downloading next@15.5.27: 335.87 kB/31.29 MB
+Downloading @img/sharp-libvips-linuxmusl-x64@1.3.4: 327.68 kB/8.26 MB
+Downloading @next/swc-linux-x64-musl@15.5.27: 1.01 MB/47.47 MB
+Downloading @next/swc-linux-x64-musl@15.5.27: 1.19 MB/47.47 MB
+Downloading next@15.5.27: 1.12 MB/31.29 MB
+Downloading @next/swc-linux-x64-musl@15.5.27: 1.72 MB/47.47 MB
+Downloading @img/sharp-libvips-linuxmusl-x64@1.3.4: 1.48 MB/8.26 MB
+Downloading next@15.5.27: 4.55 MB/31.29 MB
+✓ Lockfile passes supply-chain policies (201 entries in 10.8s)
+Lockfile is up to date, resolution step is skipped
+Downloading next@15.5.27: 14.15 MB/31.29 MB
+Downloading next@15.5.27: 18.96 MB/31.29 MB
+Downloading next@15.5.27: 30.40 MB/31.29 MB
+Downloading @next/swc-linux-x64-musl@15.5.27: 46.63 MB/47.47 MB
+Packages: +96
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 96, reused 0, downloaded 96, added 96, done
+.../esbuild@0.28.2/node_modules/esbuild postinstall$ node install.js
+.../esbuild@0.28.2/node_modules/esbuild postinstall: Done
+
+dependencies:
++ lucide-react 1.47.0
++ next 15.5.27
++ react 19.2.8
++ react-dom 19.2.8
++ zod 4.6.5
+
+devDependencies:
++ @axe-core/playwright 4.13.0
++ @playwright/test 1.61.1
++ @tailwindcss/postcss 4.3.3
++ @types/node 22.20.5
++ @types/react 19.3.0
++ @types/react-dom 19.3.0
++ postcss 8.5.29
++ tailwindcss 4.3.3
++ typescript 5.9.3
++ vitest 3.2.7
+
+Done in 16.7s using pnpm v12.10.1
+ ---> Removed intermediate container 495fc6f3f605
+ ---> 22b90c35757a
+Step 6/23 : FROM node:22.20.0-alpine3.22 AS build
+ ---> dbcedd8aeab4
+Step 7/23 : WORKDIR /app/apps/web
+ ---> Using cache
+ ---> db38de5647b4
+Step 8/23 : RUN npm install -g pnpm@12.10.1 --no-audit --no-fund
+ ---> Using cache
+ ---> 3390432e3d8d
+Step 9/23 : COPY --from=deps /app/apps/web/node_modules ./node_modules
+ ---> 76c3743548b2
+Step 10/23 : COPY apps/web ./
+ ---> 968e2606464c
+Step 11/23 : ENV NEXT_TELEMETRY_DISABLED=1
+ ---> Running in 5c17f160601f
+ ---> Removed intermediate container 5c17f160601f
+ ---> cc42fa06459e
+Step 12/23 : RUN pnpm build
+ ---> Running in 49dc608ba0e8
+[91m$ next build
+[0m   ▲ Next.js 15.5.27
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 42s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/21) ...
+   Generating static pages (5/21) 
+   Generating static pages (10/21) 
+   Generating static pages (15/21) 
+ ✓ Generating static pages (21/21)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                    1.93 kB         108 kB
+├ ƒ /_not-found                            211 B         102 kB
+├ ƒ /about                                 206 B         106 kB
+├ ƒ /account                             1.59 kB         107 kB
+├ ƒ /admin                                 206 B         106 kB
+├ ƒ /admin/ai                              577 B         103 kB
+├ ƒ /admin/analytics                       577 B         103 kB
+├ ƒ /admin/businesses                      565 B         106 kB
+├ ƒ /admin/distribution                   1.5 kB         107 kB
+├ ƒ /admin/editorial                       206 B         106 kB
+├ ƒ /admin/editorial/[id]                1.82 kB         107 kB
+├ ƒ /admin/health                          577 B         103 kB
+├ ƒ /admin/moderation                      577 B         103 kB
+├ ƒ /admin/settings                        577 B         103 kB
+├ ƒ /admin/sources                         577 B         103 kB
+├ ƒ /admin/sponsors                        577 B         103 kB
+├ ƒ /admin/tenants                         577 B         103 kB
+├ ƒ /advertise                           1.56 kB         104 kB
+├ ƒ /ai-transparency                       206 B         106 kB
+├ ƒ /api/v1/admin/health                   211 B         102 kB
+├ ƒ /api/v1/admin/metrics                  211 B         102 kB
+├ ƒ /api/v1/analytics/events               211 B         102 kB
+├ ƒ /api/v1/businesses/[slug]              211 B         102 kB
+├ ƒ /api/v1/comments                       211 B         102 kB
+├ ƒ /api/v1/correction-requests            211 B         102 kB
+├ ƒ /api/v1/countries                      211 B         102 kB
+├ ƒ /api/v1/discussions/[slug]             211 B         102 kB
+├ ƒ /api/v1/feed                           211 B         102 kB
+├ ƒ /api/v1/feed/newer                     211 B         102 kB
+├ ƒ /api/v1/follows                        211 B         102 kB
+├ ƒ /api/v1/health                         211 B         102 kB
+├ ƒ /api/v1/profiles/[handle]              211 B         102 kB
+├ ƒ /api/v1/reports                        211 B         102 kB
+├ ƒ /api/v1/saves                          211 B         102 kB
+├ ƒ /api/v1/search                         211 B         102 kB
+├ ƒ /api/v1/sponsor-inquiries              211 B         102 kB
+├ ƒ /api/v1/stories/[slug]                 211 B         102 kB
+├ ƒ /api/v1/time-lens/[id]                 211 B         102 kB
+├ ƒ /api/v1/topics                         211 B         102 kB
+├ ƒ /api/v1/votes                          211 B         102 kB
+├ ƒ /auth/sign-in                        1.67 kB         107 kB
+├ ƒ /auth/sign-out                         211 B         102 kB
+├ ƒ /auth/sign-up                        1.67 kB         107 kB
+├ ƒ /auth/verify                           206 B         106 kB
+├ ƒ /business/[slug]                     2.85 kB         105 kB
+├ ƒ /communities                           206 B         106 kB
+├ ƒ /community/[slug]                     1.5 kB         107 kB
+├ ƒ /contact                               206 B         106 kB
+├ ƒ /corrections                           934 B         107 kB
+├ ƒ /countries                             206 B         106 kB
+├ ƒ /country/[slug]                        127 B         110 kB
+├ ƒ /developers                            211 B         102 kB
+├ ƒ /discover                             1.5 kB         107 kB
+├ ƒ /discussion/[slug]                     132 B         113 kB
+├ ƒ /editorial                             206 B         106 kB
+├ ƒ /feed/[mode]                         1.93 kB         108 kB
+├ ƒ /following                           4.38 kB         110 kB
+├ ƒ /forbidden                             211 B         102 kB
+├ ƒ /founders                             1.5 kB         107 kB
+├ ƒ /help                                  206 B         106 kB
+├ ƒ /my-agents                             211 B         102 kB
+├ ƒ /notifications                         211 B         102 kB
+├ ƒ /og/[slug]                             211 B         102 kB
+├ ƒ /privacy                               211 B         102 kB
+├ ƒ /profile/[handle]                    5.23 kB         111 kB
+├ ƒ /robots.txt                            211 B         102 kB
+├ ƒ /saved                               4.38 kB         110 kB
+├ ƒ /search                               1.5 kB         107 kB
+├ ƒ /sitemap.xml                           211 B         102 kB
+├ ƒ /stories                              1.5 kB         107 kB
+├ ƒ /story/[slug]                          132 B         113 kB
+├ ƒ /submit                              1.57 kB         104 kB
+├ ƒ /take-me-back                          206 B         106 kB
+├ ƒ /terms                                 211 B         102 kB
+├ ƒ /time-lens/[slug]                     1.5 kB         107 kB
+├ ƒ /topic/[slug]                          127 B         110 kB
+├ ƒ /topics                                206 B         106 kB
+└ ƒ /white-label                           206 B         106 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/602-6488c95861b0c051.js       46.1 kB
+  ├ chunks/ca42ebaa-44e32a5c17142f27.js  54.2 kB
+  └ other shared chunks (total)          1.93 kB
+
+
+ƒ Middleware                             33.8 kB
+
+ƒ  (Dynamic)  server-rendered on demand
+
+ ---> Removed intermediate container 49dc608ba0e8
+ ---> 496fe96d844d
+Step 13/23 : FROM node:22.20.0-alpine3.22 AS run
+ ---> dbcedd8aeab4
+Step 14/23 : WORKDIR /app
+ ---> Running in e3cd56ab92c7
+ ---> Removed intermediate container e3cd56ab92c7
+ ---> ef02a48e81fd
+Step 15/23 : ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
+ ---> Running in 87759758db40
+ ---> Removed intermediate container 87759758db40
+ ---> 0be0f783c8da
+Step 16/23 : RUN addgroup -S palavva && adduser -S palavva -G palavva
+ ---> Running in 99016e6d9328
+ ---> Removed intermediate container 99016e6d9328
+ ---> b12f6e5eafb3
+Step 17/23 : COPY --from=build --chown=palavva:palavva /app/apps/web/.next/standalone ./
+ ---> a65a034b4033
+Step 18/23 : COPY --from=build --chown=palavva:palavva /app/apps/web/.next/static ./.next/static
+ ---> 7ae2880268c9
+Step 19/23 : COPY --from=build --chown=palavva:palavva /app/apps/web/public ./public
+ ---> 6ef4d014c0d9
+Step 20/23 : USER palavva
+ ---> Running in 24d9d3529076
+ ---> Removed intermediate container 24d9d3529076
+ ---> bd1774fb94b9
+Step 21/23 : EXPOSE 3000
+ ---> Running in 4dbfd3d64839
+ ---> Removed intermediate container 4dbfd3d64839
+ ---> 4de5b446b5ee
+Step 22/23 : HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://127.0.0.1:3000/api/v1/health || exit 1
+ ---> Running in e20ffc13e8c1
+ ---> Removed intermediate container e20ffc13e8c1
+ ---> 62e2ee5734a3
+Step 23/23 : CMD ["node", "server.js"]
+ ---> Running in 867c0a049944
+ ---> Removed intermediate container 867c0a049944
+ ---> 5e67bba38406
+Successfully built 5e67bba38406
+Successfully tagged palavva-web:local

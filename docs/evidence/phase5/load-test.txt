@@ -1,0 +1,68 @@
+# Load test 2026-10-09T06:31:28Z: test stack (next start, production build) on this Mac (i7-6700K, 32 GB). Warm cache after first request.
+## concurrency=10 path=/ n=100
+Complete requests:      100
+Failed requests:        99
+Requests per second:    49.05 [#/sec] (mean)
+Time per request:       203.856 [ms] (mean)
+  50%    186
+  95%    302
+  99%    326
+ 100%    326 (longest request)
+web RSS 387 MB cpu 126.6%
+pocketbase RSS 45 MB cpu 12.4%
+## concurrency=10 path=/discussion/demo-cold-storage-coop-tomatoes n=100
+Complete requests:      100
+Failed requests:        0
+Requests per second:    42.21 [#/sec] (mean)
+Time per request:       236.907 [ms] (mean)
+  50%    212
+  95%    422
+  99%    491
+ 100%    491 (longest request)
+web RSS 443 MB cpu 114.5%
+pocketbase RSS 48 MB cpu 43.9%
+## concurrency=50 path=/ n=500
+Complete requests:      500
+Failed requests:        0
+Requests per second:    52.43 [#/sec] (mean)
+Time per request:       953.736 [ms] (mean)
+  50%    928
+  95%   1153
+  99%   1273
+ 100%   1295 (longest request)
+web RSS 580 MB cpu 97.8%
+pocketbase RSS 50 MB cpu 14.5%
+## concurrency=50 path=/discussion/demo-cold-storage-coop-tomatoes n=500
+Complete requests:      500
+Failed requests:        0
+Requests per second:    49.54 [#/sec] (mean)
+Time per request:       1009.330 [ms] (mean)
+  50%    966
+  95%   1189
+  99%   1266
+ 100%   1343 (longest request)
+web RSS 617 MB cpu 94.1%
+pocketbase RSS 71 MB cpu 43.1%
+## concurrency=100 path=/ n=1000
+Complete requests:      1000
+Failed requests:        1
+Requests per second:    62.64 [#/sec] (mean)
+Time per request:       1596.388 [ms] (mean)
+  50%   1566
+  95%   1802
+  99%   1846
+ 100%   1855 (longest request)
+web RSS 821 MB cpu 97.7%
+pocketbase RSS 78 MB cpu 16.3%
+## concurrency=100 path=/discussion/demo-cold-storage-coop-tomatoes n=1000
+Complete requests:      1000
+Failed requests:        0
+Requests per second:    53.65 [#/sec] (mean)
+Time per request:       1863.924 [ms] (mean)
+  50%   1784
+  95%   2269
+  99%   2394
+ 100%   2457 (longest request)
+web RSS 936 MB cpu 79.1%
+pocketbase RSS 109 MB cpu 42.0%
+pocketbase SQLITE_BUSY log lines: 0

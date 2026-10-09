@@ -18,7 +18,7 @@ export function Metric({ label, value, unit = "", period, source, state = "ok", 
 export function Table({ caption, head, children, empty }: { caption: string; head: string[]; children: React.ReactNode; empty?: string }) {
   const rows = Array.isArray(children) ? children.filter(Boolean) : children ? [children] : [];
   return (
-    <div className="card overflow-x-auto">
+    <div className="card overflow-x-auto" tabIndex={0} role="region" aria-label={caption}>
       <table className="w-full min-w-[640px] text-left text-sm">
         <caption className="p-3 text-left font-semibold">{caption}</caption>
         <thead className="border-y border-border bg-card-muted"><tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2 font-semibold">{h}</th>)}</tr></thead>

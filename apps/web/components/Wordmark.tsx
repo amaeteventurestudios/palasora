@@ -1,7 +1,7 @@
 // `palavva.`: lowercase wordmark, two v's, Tangerine dot (05 §4).
 export function Wordmark({ text = "palavva", size = 28, onDark = true, dot = true }: { text?: string; size?: number; onDark?: boolean; dot?: boolean }) {
   return (
-    <span className="inline-flex items-baseline font-extrabold tracking-tight leading-none select-none" style={{ fontSize: size }}
+    <span role="img" className="inline-flex items-baseline font-extrabold tracking-tight leading-none select-none" style={{ fontSize: size }}
       aria-label={text === "palavva" ? "Palavva" : text}>
       <span aria-hidden="true" style={{ color: onDark ? "#FFFFFF" : "var(--brand-midnight)" }}>{text}</span>
       {dot && <span aria-hidden="true" style={{ color: "var(--brand-accent)" }}>.</span>}

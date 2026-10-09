@@ -38,6 +38,22 @@ export function toSummary(r: Rec): PieceSummary {
   };
 }
 
+const feedCache = new Map<string, { at: number; rows: Promise<Rec[]> }>();
+const FEED_TTL_MS = 5_000;
+async function cachedList(filter: string): Promise<Rec[]> {
+  const hit = feedCache.get(filter);
+  if (hit && Date.now() - hit.at < FEED_TTL_MS) return hit.rows;
+  const rows = pb.list("editorial_pieces", { filter, sort: "-published_at", perPage: 300 });
+  feedCache.set(filter, { at: Date.now(), rows });
+  if (feedCache.size > 500) feedCache.clear();
+  rows.catch(() => feedCache.delete(filter));
+  return rows;
+}
+/** Called after publish/correction/retraction/vote so readers see changes immediately. */
+export function invalidateFeedCache(tenantId?: string) {
+  for (const k of feedCache.keys()) if (!tenantId || k.includes(tenantId)) feedCache.delete(k);
+}
+
 export type FeedQuery = { mode: FeedMode; country?: string; topic?: string; lang?: string; cursor?: string; limit?: number; seed?: string };
 
 export async function listFeed(t: Tenant, fq: FeedQuery): Promise<{ items: PieceSummary[]; nextCursor: string | null; total: number }> {
@@ -46,8 +62,9 @@ export async function listFeed(t: Tenant, fq: FeedQuery): Promise<{ items: Piece
   if (fq.topic && SLUG.test(fq.topic)) f += ` && topic_slugs~${q(`"${fq.topic}"`)}`;
   if (fq.lang && LANG.test(fq.lang)) f += ` && language=${q(fq.lang)}`;
   if (fq.mode === "discover") f += " && editor_pick=true";
-  // Bounded candidate window (MVP scale); ranking happens in feed.ts.
-  const rows = await pb.list("editorial_pieces", { filter: f, sort: "-published_at", perPage: 300 });
+  // Bounded candidate window (MVP scale); ranking happens in feed.ts. Published-only rows are
+  // micro-cached per tenant+filter for 5 s (keyed by tenant id, so no cross-tenant reuse).
+  const rows = await cachedList(f);
   const ranked = rankPieces(rows.map(toSummary), fq.mode, fq.seed);
   const limit = Math.min(Math.max(fq.limit ?? 20, 1), 20);
   const offset = decodeCursor(fq.cursor);

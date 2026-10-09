@@ -1,0 +1,21 @@
+# Compose smoke test 2026-10-09T06:45:37Z on Colima (linux/amd64). Not ARM64. Not deployed anywhere.
+editorial palavva_local-editorial Up 49 seconds (healthy) 8000/tcp
+pocketbase palavva_local-pocketbase Up 50 seconds (healthy) 8090/tcp
+web palavva_local-web Up 25 seconds (health: starting) 127.0.0.1:3400->3000/tcp
+worker palavva_local-worker Up 50 seconds (health: starting) 8000/tcp
+
+palavva_local-web-1 mem=110.2MiB / 5.781GiB cpu=0.00%
+palavva_local-worker-1 mem=26.93MiB / 5.781GiB cpu=0.10%
+palavva_local-editorial-1 mem=44.82MiB / 5.781GiB cpu=0.35%
+palavva_local-pocketbase-1 mem=22.92MiB / 5.781GiB cpu=0.00%
+
+GET / -> 200
+GET story -> 200
+PocketBase published to host? invalid IP:0
+palavva_local-web:latest 324MB 52cddcb3ea68
+palavva_local-editorial:latest 310MB cf68c4779b97
+palavva_local-worker:latest 310MB 72bedf208c2f
+palavva_local-pocketbase:latest 64.9MB 6930a95d8c22
+palavva-web:local 324MB 5e67bba38406
+palavva-editorial:local 310MB f192043a05ce
+palavva-pocketbase:local 64.9MB 7441258f5ee6

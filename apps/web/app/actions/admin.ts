@@ -1,4 +1,5 @@
 "use server";
+import { invalidateFeedCache } from "@/lib/repo/pieces";
 // Command Center actions. Every action: server-side role check, tenant scope, audit event.
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -95,6 +96,7 @@ export async function decidePiece(_: ActionState, f: FormData): Promise<ActionSt
     await editorialFetch("/reindex", { method: "POST" });
   } else return fail("Unknown decision.");
   revalidatePath("/", "layout");
+  invalidateFeedCache(tenant.id);
   return { ok: true, message: `Decision recorded: ${decision.replace("_", " ")}.` };
 }
 
@@ -129,6 +131,7 @@ export async function editPiece(_: ActionState, f: FormData): Promise<ActionStat
   }
   await audit(tenant.id, session.user.id, isCorrection ? "piece.corrected" : "piece.edited", "editorial_pieces", piece.id, {}, rev);
   revalidatePath("/", "layout");
+  invalidateFeedCache(tenant.id);
   return { ok: true, message: isCorrection ? "Correction published. The share image and page now show the new revision." : "Draft updated." };
 }
 
@@ -237,6 +240,7 @@ export async function moderate(_: ActionState, f: FormData): Promise<ActionState
     await audit(tenant.id, session.user.id, `submission.${action}`, "user_submissions", r.id);
   } else return fail("Unknown item.");
   revalidatePath("/", "layout");
+  invalidateFeedCache(tenant.id);
   return { ok: true, message: "Done." };
 }
 
@@ -271,6 +275,7 @@ export async function verifyBusiness(_: ActionState, f: FormData): Promise<Actio
   await pb.update("businesses", b.id, { verification_state: state });
   await audit(tenant.id, session.user.id, `business.${state}`, "businesses", b.id);
   revalidatePath("/", "layout");
+  invalidateFeedCache(tenant.id);
   return { ok: true, message: `Business marked ${state}.` };
 }
 
@@ -290,6 +295,7 @@ export async function updateBranding(_: ActionState, f: FormData): Promise<Actio
   await pb.update("tenants", t.id, { branding_json: { ...(t.branding_json ?? {}), wordmark_text: wordmark, masthead_color: masthead, accent_color: accent, primary_color: primary } });
   await audit(tenant.id, session.user.id, "tenant.branding_updated", "tenants", t.id, { masthead, accent, primary });
   revalidatePath("/", "layout");
+  invalidateFeedCache(tenant.id);
   return { ok: true, message: "Branding saved. Reload to see it (tenant cache refreshes within 30 seconds)." };
 }
 

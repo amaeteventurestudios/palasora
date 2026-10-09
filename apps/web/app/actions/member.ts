@@ -1,4 +1,5 @@
 "use server";
+import { invalidateFeedCache } from "@/lib/repo/pieces";
 // Member actions. Server Actions get Next.js's built-in Origin/Host CSRF check and work
 // without client JS (progressive enhancement). Every action resolves the tenant from the
 // trusted Host allowlist and derives identity from the server session, never from the form.
@@ -166,6 +167,7 @@ export async function postComment(_: ActionState, f: FormData): Promise<ActionSt
   await audit(tenant.id, s.user.id, "comment.create", "comments", c.id, { pending });
   if (!pending) await writeEvent(tenant.id, { event_name: "comment_created", story_id: piece.id, member_id: s.user.id });
   revalidatePath("/", "layout");
+  invalidateFeedCache(tenant.id);
   return { ok: true, message: pending ? "Thanks. Your comment includes several links, so a moderator will review it first." : "Your comment is posted.", data: { id: c.id } };
 }
 
@@ -197,6 +199,7 @@ export async function toggleVote(_: ActionState, f: FormData): Promise<ActionSta
   await pb.update(kind === "piece" ? "editorial_pieces" : "comments", targetId, { vote_score: score });
   if (voted) await writeEvent(tenant.id, { event_name: "vote_cast", story_id: kind === "piece" ? targetId : undefined, member_id: s.user.id });
   revalidatePath("/", "layout");
+  invalidateFeedCache(tenant.id);
   return { ok: true, message: voted ? "Vote recorded." : "Vote removed.", data: { voted: String(voted), score: String(score) } };
 }
 
@@ -212,6 +215,7 @@ export async function toggleSave(_: ActionState, f: FormData): Promise<ActionSta
   const n = await pb.count("saves", `tenant_id=${q(tenant.id)} && piece_id=${q(pieceId)}`);
   await pb.update("editorial_pieces", pieceId, { save_count: n });
   revalidatePath("/", "layout");
+  invalidateFeedCache(tenant.id);
   return { ok: true, message: existing ? "Removed from saved." : "Saved.", data: { saved: String(!existing) } };
 }
 
@@ -226,6 +230,7 @@ export async function toggleFollow(_: ActionState, f: FormData): Promise<ActionS
   if (existing) await pb.remove("follows", existing.id);
   else await pb.create("follows", { tenant_id: tenant.id, user_id: session.user.id, target_type: type, target_id: id });
   revalidatePath("/", "layout");
+  invalidateFeedCache(tenant.id);
   return { ok: true, message: existing ? "Unfollowed." : "Following.", data: { following: String(!existing) } };
 }
 

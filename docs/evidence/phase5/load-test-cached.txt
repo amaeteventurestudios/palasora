@@ -1,0 +1,55 @@
+# Load test (after 5s feed micro-cache) 2026-10-09T06:36:00Z: test stack, production build, this Mac
+## concurrency=10 path=/ n=100
+Complete requests:      100
+Failed requests:        0
+Requests per second:    67.85 [#/sec] (mean)
+  50%    139
+  95%    192
+  99%    226
+web RSS 406 MB
+pocketbase RSS 46 MB
+## concurrency=10 path=/discussion/demo-cold-storage-coop-tomatoes n=100
+Complete requests:      100
+Failed requests:        0
+Requests per second:    47.32 [#/sec] (mean)
+  50%    196
+  95%    323
+  99%    327
+web RSS 446 MB
+pocketbase RSS 49 MB
+## concurrency=50 path=/ n=500
+Complete requests:      500
+Failed requests:        0
+Requests per second:    69.70 [#/sec] (mean)
+  50%    699
+  95%    822
+  99%    851
+web RSS 531 MB
+pocketbase RSS 49 MB
+## concurrency=50 path=/discussion/demo-cold-storage-coop-tomatoes n=500
+Complete requests:      500
+Failed requests:        0
+Requests per second:    57.58 [#/sec] (mean)
+  50%    840
+  95%    931
+  99%    958
+web RSS 584 MB
+pocketbase RSS 70 MB
+## concurrency=100 path=/ n=1000
+Complete requests:      1000
+Failed requests:        0
+Requests per second:    76.40 [#/sec] (mean)
+  50%   1293
+  95%   1362
+  99%   1377
+web RSS 751 MB
+pocketbase RSS 70 MB
+## concurrency=100 path=/discussion/demo-cold-storage-coop-tomatoes n=1000
+Complete requests:      1000
+Failed requests:        0
+Requests per second:    59.99 [#/sec] (mean)
+  50%   1641
+  95%   1788
+  99%   1805
+web RSS 754 MB
+pocketbase RSS 123 MB

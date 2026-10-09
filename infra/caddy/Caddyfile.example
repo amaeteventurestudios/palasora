@@ -1,0 +1,6 @@
+# FUTURE (Phase 7 only, separate approval): public HTTPS for palavva.com. Not used locally.
+# palavva.com {
+#   encode zstd gzip
+#   header Strict-Transport-Security "max-age=31536000"   # enable only after HTTPS verified
+#   reverse_proxy web:3000
+# }
