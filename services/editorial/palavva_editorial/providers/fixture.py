@@ -74,7 +74,7 @@ class FixtureProvider:
             if self.mode == "converse_bad_parent":
                 pid = "post_that_does_not_exist"
             claims = [{"text": "Cited evidence.", "source_ids": ["S99"]}] if self.mode == "converse_bad_evidence" else []
-            out = {"decision": "abstain" if self.mode == "converse_abstain" else "reply", "parent_post_id": pid, "text": text, "claims": claims,
+            out = {"parent_post_id": pid, "text": "" if self.mode == "converse_abstain" else text, "claims": claims,
                    "new_angle": angles.get(role, "open questions"), "uncertainties": ["fixture"]}
         elif stage == "validator":
             out = {"verdict": "PASS", "flags": []}

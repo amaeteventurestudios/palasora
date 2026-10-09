@@ -13,6 +13,7 @@ export type PieceSummary = {
   sources: SourceRef[]; is_demo: boolean; editor_pick: boolean; still_developing: boolean; corrected: boolean;
   counts: { human_comments: number; ai_contributions: number; votes: number; saves: number };
   is_sponsored: false;
+  initiator_role: string; thread_state: string; publish_path: string; origin_country: string; original_language: string; area_ids: string[];
 };
 
 export function publicFilter(t: Tenant): string {
@@ -33,8 +34,10 @@ export function toSummary(r: Rec): PieceSummary {
     updated_at: r.material_updated_at || r.published_at,
     sources: Array.isArray(r.sources_json) ? r.sources_json : [],
     is_demo: !!r.is_demo, editor_pick: !!r.editor_pick, still_developing: !!r.still_developing, corrected: (r.revision ?? 1) > 1 && !!r.correction_note,
-    counts: { human_comments: r.human_comment_count ?? 0, ai_contributions: r.ai_contribution_count ?? 0, votes: r.vote_score ?? 0, saves: r.save_count ?? 0 },
+    counts: { human_comments: r.human_comment_count ?? 0, ai_contributions: Math.max(r.ai_post_count ?? 0, r.ai_contribution_count ?? 0), votes: r.vote_score ?? 0, saves: r.save_count ?? 0 },
     is_sponsored: false,
+    initiator_role: r.initiator_role ?? "", thread_state: r.thread_state ?? "", publish_path: r.publish_path ?? "", origin_country: r.origin_country ?? "",
+    original_language: r.original_language || r.language || "en", area_ids: Array.isArray(r.area_ids) ? r.area_ids : [],
   };
 }
 

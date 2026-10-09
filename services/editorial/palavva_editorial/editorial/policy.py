@@ -32,6 +32,13 @@ INJECTION_ECHO = re.compile(r"ignore (all |any )?(previous|prior) instructions|s
 OUTRAGE = re.compile(r"\b(outrageous|disgusting|shameful|evil|wicked)\b", re.I)
 NUM = re.compile(r"(?<![A-Za-z])\d[\d,.]*%?")
 URL = re.compile(r"https?://\S+")
+CITATION = re.compile(r"\b(claim_\d+|S\d+)\b")
+DIGITS = re.compile(r"\d+")
+
+
+def _norm(n: str) -> str:
+    n = n.strip(".,%")
+    return n.lstrip("0") or ("0" if n else "")
 
 
 @dataclass
@@ -70,7 +77,9 @@ def check_post(text: str, evidence_text: str, *, allow_numbers_from_evidence: bo
     rule("external_urls", bool(URL.search(t)), "posts must cite evidence IDs, not URLs")
     rule("outrage_language", len(OUTRAGE.findall(t)) >= 2, "repeated outrage words")
     if allow_numbers_from_evidence:
-        ev_nums = {n.strip(".,") for n in NUM.findall(evidence_text)}
-        bad = [n for n in NUM.findall(t) if n.strip(".,") and n.strip(".,") not in ev_nums]
+        # Citation tokens (claim_1, S2) are not figures; dates match by component ("October 9, 2026" vs "2026-10-09").
+        body = CITATION.sub(" ", t)
+        ev_nums = {_norm(n) for n in NUM.findall(evidence_text)} | {_norm(n) for n in DIGITS.findall(evidence_text)}
+        bad = [n for n in NUM.findall(body) if _norm(n) and _norm(n) not in ev_nums]
         rule("unsupported_numbers", bool(bad), ", ".join(bad[:5]))
     return PolicyResult("reject" if reasons else "allow", rules, reasons)

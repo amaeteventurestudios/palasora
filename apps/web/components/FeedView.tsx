@@ -8,7 +8,9 @@ import { FeedTabs } from "./FeedTabs";
 import { FilterBar } from "./FilterBar";
 import { StoryCard, pieceHref } from "./StoryCard";
 import { SponsoredSlot } from "./SponsoredSlot";
-import { NewStoriesToast } from "./NewStoriesToast";
+import { LiveEventsProvider } from "./live/LiveEvents";
+import { LiveActivity, NewDiscussionsBanner } from "./live/FeedLive";
+import { latestSeq, recentActivity, roleLabels } from "@/lib/repo/thread";
 import { Time } from "./Time";
 
 export type FeedParams = { country?: string; topic?: string; lang?: string; cursor?: string };
@@ -26,9 +28,9 @@ export function cleanParams(sp: Record<string, string | string[] | undefined>): 
 }
 
 export async function FeedView({ tenant, mode, params, base, showHero = true }: { tenant: Tenant; mode: FeedMode; params: FeedParams; base: string; showHero?: boolean }) {
-  const [tax, prio, feed, fresh] = await Promise.all([
+  const [tax, prio, feed, fresh, cursor, activity, labels] = await Promise.all([
     taxonomy(), priorityCountries(), listFeed(tenant, { mode, ...params, seed: `${new Date().toISOString().slice(0, 10)}:${params.cursor ?? ""}` }),
-    listFeed(tenant, { mode: "new", limit: 5 }),
+    listFeed(tenant, { mode: "new", limit: 5 }), latestSeq(tenant), recentActivity(tenant, 6), roleLabels(tenant),
   ]);
   const names = {
     countries: Object.fromEntries(tax.countries.map((c) => [c.iso2, c.name])),
@@ -39,7 +41,7 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
   const newest = fresh.items[0]?.published_at ?? new Date().toISOString();
   const filtered = Boolean(params.country || params.topic || params.lang);
   return (
-    <>
+    <LiveEventsProvider cursor={cursor}>
       <section className="container-pv pt-3 pb-2 sm:pt-6 sm:pb-3">
         {!showHero && <h1 className="mb-3 text-[24px] font-extrabold tracking-tight sm:text-[30px]">{MODE_LABELS[mode]} conversations</h1>}
         {showHero && (
@@ -51,7 +53,7 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
         <FilterBar base={base} countries={prio} allCountries={tax.countries} topics={tax.topics} country={params.country} topic={params.topic} lang={params.lang} />
         <div className="mt-2 sm:mt-3"><FeedTabs active={mode} params={params} /></div>
       </section>
-      <NewStoriesToast since={newest} query={filterQs} />
+      <NewDiscussionsBanner />
       <div className="container-pv grid grid-cols-1 gap-6 lg:grid-cols-12">
         <section aria-label="Fresh conversations" className="lg:col-span-8">
           <h2 className="sr-only">Fresh conversations</h2>
@@ -64,7 +66,7 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
           ) : (
             <ol className="flex flex-col gap-3" data-testid="feed-list">
               {feed.items.map((p, i) => (
-                <li key={p.id}><StoryCard p={p} names={names} featured={i === 0 && !params.cursor} headingLevel={2} /></li>
+                <li key={p.id}><StoryCard p={p} names={names} featured={i === 0 && !params.cursor} headingLevel={2} roleLabels={labels} /></li>
               ))}
             </ol>
           )}
@@ -72,6 +74,7 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
           <div className="mt-6"><SponsoredSlot tenant={tenant} position="feed_inline" /></div>
         </section>
         <aside aria-label="Discover" className="flex flex-col gap-4 lg:col-span-4">
+          <LiveActivity initial={activity} labels={labels} />
           <div className="card p-5">
             <h2 className="text-lg font-bold">Discover</h2>
             <ul className="mt-2 divide-y divide-border">
@@ -103,6 +106,6 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
           <SponsoredSlot tenant={tenant} position="home_rail" />
         </aside>
       </div>
-    </>
+    </LiveEventsProvider>
   );
 }

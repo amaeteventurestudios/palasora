@@ -315,15 +315,19 @@ def converse_step(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
         "limits": "70-160 words; cite claim_ids or source_ids for factual statements; no numbers that are not in the evidence",
     }
     if piece.get("is_demo") and not claims:
-        packet["evidence"]["note"] = "Conceptual evergreen question with no current-news evidence: reason about mechanisms and trade-offs; make no factual claims, no statistics, no named projects."
-    system = P.SYSTEM + "\n\n" + P.CONVERSE.format(role_label=ROLE_LABELS.get(role, role), expertise=tx.ROLE_EXPERTISE.get(role, ""))
+        packet["evidence"]["note"] = ("Conceptual evergreen discussion, not news. Reasoning about mechanisms, incentives, maintenance, financing logic, access and service "
+                                      "models is expected. Do not state statistics, prices, dates or named projects or places as facts.")
+    # The converse prompt is self-contained (it already carries the untrusted-data and no-invention rules);
+    # the drafting SYSTEM prompt made the model treat ALL reasoning as unsupported fact (observed: 100% abstention).
+    system = P.CONVERSE.format(role_label=ROLE_LABELS.get(role, role), expertise=tx.ROLE_EXPERTISE.get(role, ""))
     req = GenerateRequest(task_id=job["job_id"], role_id=role, tenant_id=tid, prompt_version=P.VERSIONS["converse"], system_instructions=system,
                           user_prompt=P.packet_block(packet) + f"\nReply to parent_post_id {parent_id_for_model}.", output_schema=P.SCHEMAS["converse"],
                           temperature=0.4, max_output_tokens=500, timeout_ms=settings.model_timeout_sec * 1000, idempotency_key=f"{job['job_id']}:converse")
     r = provider.generate(req)
     out = r.structured_output or {}
     status = "succeeded" if r.status == "succeeded" else ("timeout" if r.status == "timeout" else "failed")
-    if r.status == "succeeded" and out.get("decision") == "abstain":
+    abstained = r.status == "succeeded" and (out.get("decision") == "abstain" or len(str(out.get("text", "")).strip()) < 20)
+    if abstained:
         status = "abstained"
     run = pb.create("ai_runs", {"tenant_id": tid, "task_type": "converse", "role_id": role, "provider": r.provider, "model": r.model, "prompt_version": P.VERSIONS["converse"],
                                 "prompt_hash": P.prompt_hash("curator", system)[:16], "input_evidence_ids": [s["item_id"] for s in sources], "status": status,
@@ -334,7 +338,7 @@ def converse_step(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
         raise Deferred(f"MODEL_{r.status.upper()}:{r.error_code}", 600)
     if r.status != "succeeded":
         return _skip(pb, tid, piece, role, f"model output invalid ({r.error_code})", {"schema": "FAIL"}, run["id"])
-    if out.get("decision") == "abstain":
+    if abstained:
         return _skip(pb, tid, piece, role, "model abstained (no new angle)", {"abstain": "ABSTAIN"}, run["id"], decision_value="reject")
 
     # ---------------- validation gate (before anything is persisted publicly)
@@ -368,7 +372,8 @@ def converse_step(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
         reasons.append(f"novelty: similarity {worst:.2f} > {NOVELTY_MAX_SIMILARITY}")
     trace = uuid.uuid4().hex[:16]
     if reasons:
-        d = decision(pb, tid, "reply", "", piece["id"], "reject", "low", rules, reasons, text, trace)
+        # Staff-only audit copy of the rejected text (moderation_decisions is superuser-only; never public).
+        d = decision(pb, tid, "reply", "", piece["id"], "reject", "low", {**rules, "rejected_text": text[:1200], "role": role}, reasons, text, trace)
         pb.audit(tid, "reply.rejected", "editorial_pieces", piece["id"], {"role": role, "reasons": reasons[:5], "decision": d["id"]}, actor_type="system", actor_id="auto-validator")
         return {"outcome": "rejected", "reasons": reasons, "decision_id": d["id"], "run_id": run["id"]}
 
@@ -387,7 +392,8 @@ def converse_step(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
     n_ai = len(ai_posts) + 1
     pb.update("discussions", disc["id"], {"ai_comment_count": n_ai})
     pb.update("editorial_pieces", piece["id"], {"ai_post_count": n_ai, "ai_contribution_count": n_ai, "last_activity_at": now_pb(), "thread_state": "active"})
-    emit(pb, tid, "reply_published", piece["id"], post["id"], post.get("parent_id") or "", "editorial_ai", role, payload={"post": _post_view(post)})
+    emit(pb, tid, "reply_published", piece["id"], post["id"], post.get("parent_id") or "", "editorial_ai", role,
+         payload={"post": _post_view(post), "headline": piece["headline"], "slug": piece["slug"], "kind": piece.get("kind", "discussion")})
     analytics_writer.write(settings, tid, "ai_generation_completed")
     children = schedule_children(queue, pl, tid, post["id"])
     return {"outcome": "posted", "post_id": post["id"], "parent_id": post.get("parent_id") or "", "depth": depth, "children_scheduled": children,

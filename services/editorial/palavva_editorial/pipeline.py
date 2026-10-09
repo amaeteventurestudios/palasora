@@ -260,7 +260,11 @@ def draft_cluster(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
 
     held = verdict.verdict == "FAIL"
     rank = {"low": 0, "medium": 1, "high": 2}
-    risk = max(verdict.risk, cl.get("risk_tier") or "low", key=lambda r: rank.get(r, 0))
+    # Re-classify with the CURRENT ruleset (clusters may carry a tier computed by an older classifier).
+    fresh = [classify(it["title"], it.get("permitted_excerpt") or "", [], []) for it in items]
+    fresh_risk = max((c.risk for c in fresh), key=lambda r: rank.get(r, 0)) if fresh else "high"
+    risk_reasons = [r for c in fresh for r in c.reasons if "sensitive" in r or "INJECTION" in r]
+    risk = max(verdict.risk, fresh_risk, key=lambda r: rank.get(r, 0))
     tl_status = "NO_VERIFIED_COMPARISON"  # archive registry has no verified records: no model call, nothing invented
     body = {"what_happened": draft["what_happened"], "why_it_matters": draft["why_it_matters"], "unknowns": [str(u)[:300] for u in (draft.get("unknowns") or [])][:4]
             + [str(u)[:300] for u in ((res.structured_output or {}).get("unknowns") or [])][:2],
@@ -277,7 +281,7 @@ def draft_cluster(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
         "evidence_state": "complete" if not held else "incomplete", "claim_check_status": verdict.verdict, "ai_run_ids": "",
         "human_comment_count": 0, "ai_contribution_count": 0, "vote_score": 0, "save_count": 0, "still_developing": True,
         "thread_state": "candidate", "initiator_role": "researcher", "ai_post_count": 0, "original_language": (items[0].get("language") or "en"),
-        "origin_country": ((cl.get("primary_country_codes") or [""])[0]), "risk_basis": "; ".join(r for r in (items[0].get("decision_reason") or "").split("; ") if "sensitive" in r or "INJECTION" in r)[:1900],
+        "origin_country": ((cl.get("primary_country_codes") or [""])[0]), "risk_basis": "; ".join(risk_reasons)[:1900],
     })
     pb.create("discussions", {"tenant_id": tid, "piece_id": piece["id"], "status": "open", "human_comment_count": 0, "ai_comment_count": 0})
     pb.update("story_clusters", cid, {"status": "drafted", "risk_tier": risk})

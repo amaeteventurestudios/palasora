@@ -10,7 +10,10 @@ import { taxonomy } from "@/lib/repo/taxonomy";
 import { fullDate, parsePbDate } from "@/lib/format";
 import { DemoBadge, KindBadge } from "./Labels";
 import { Kicker, StoryCard, pieceHref } from "./StoryCard";
-import { AIContribution, AINote, ClaimText, HumanComment, SourceCitation, TimeLensEmpty, type Block } from "./Editorial";
+import { AINote, ClaimText, SourceCitation, TimeLensEmpty, type Block } from "./Editorial";
+import { getThreadPosts, latestSeq } from "@/lib/repo/thread";
+import { LiveCount, LiveEventsProvider } from "./live/LiveEvents";
+import { LiveThread } from "./live/LiveThread";
 import { ShareBar } from "./ShareBar";
 import { CommentForm } from "./CommentForm";
 import { SaveButton, VoteButton } from "./MemberButtons";
@@ -60,9 +63,10 @@ function articleJsonLd(tenant: Tenant, piece: Rec, url: string) {
 
 export async function PieceDetail({ tenant, piece, kind }: { tenant: Tenant; piece: Rec; kind: "story" | "discussion" }) {
   const session = await getSession(tenant);
-  const [tax, claims, disc, corrections, lens, related, roles] = await Promise.all([
+  const [tax, claims, disc, corrections, lens, related, roles, threadPosts, cursor] = await Promise.all([
     taxonomy(), getClaims(tenant, piece.cluster_id), getDiscussion(tenant, piece.id), getPublicCorrections(tenant, piece.id),
     getTimeLens(tenant, piece.id), relatedPieces(tenant, piece), pb.list("ai_roles", { filter: `tenant_id=${q(tenant.id)}`, perPage: 20 }),
+    getThreadPosts(tenant, piece.id), latestSeq(tenant),
   ]);
   const [myVote, mySave] = session ? await Promise.all([
     pb.first("votes", `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)} && target_kind='piece' && target_id=${q(piece.id)}`),
@@ -81,6 +85,7 @@ export async function PieceDetail({ tenant, piece, kind }: { tenant: Tenant; pie
   const signedIn = !!session;
   const verified = !!session?.user.verified;
   return (
+    <LiveEventsProvider cursor={cursor} piece={piece.id}>
     <article className="container-pv pt-6">
       <StoryTracker storyId={piece.id} country={summary.country_codes[0]} topic={summary.topic_slugs[0]} />
       {!piece.is_demo && !tenant.isDemo && (
@@ -112,7 +117,7 @@ export async function PieceDetail({ tenant, piece, kind }: { tenant: Tenant; pie
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <VoteButton kind="piece" id={piece.id} score={piece.vote_score ?? 0} voted={!!myVote} signedIn={signedIn} returnPath={path} />
               <SaveButton id={piece.id} saved={!!mySave} signedIn={signedIn} returnPath={path} />
-              <Link href="#conversation" className="btn btn-secondary !min-h-[40px] !px-3 text-sm">{summary.counts.human_comments} human {summary.counts.human_comments === 1 ? "reply" : "replies"}</Link>
+              <Link href="#conversation" className="btn btn-secondary !min-h-[40px] !px-3 text-sm"><LiveCount pieceId={piece.id} initial={threadPosts.filter((p) => p.author_kind === "editorial_ai").length} kind="ai" one="AI reply" many="AI replies" />&nbsp;·&nbsp;<LiveCount pieceId={piece.id} initial={threadPosts.filter((p) => p.author_kind === "human").length} kind="human" one="human reply" many="human replies" /></Link>
             </div>
           </header>
 
@@ -135,6 +140,7 @@ export async function PieceDetail({ tenant, piece, kind }: { tenant: Tenant; pie
           <section aria-labelledby="sources-h" className="mt-6 max-w-[760px]">
             <h2 id="sources-h" className="text-[22px] font-bold">Read the sources</h2>
             {summary.sources.length ? <ol className="divide-y divide-border">{summary.sources.map((s, i) => <SourceCitation key={i} s={s} i={i} />)}</ol>
+              : piece.is_demo ? <p className="text-muted">Conceptual demo discussion: there is no news source because it reports no event. AI replies may reason, but not state facts or figures.</p>
               : <p className="text-muted">This draft cannot be published until its claims are supported.</p>}
             {claims.length > 0 && (
               <details className="mt-2 rounded-xl border border-border bg-card p-4">
@@ -149,16 +155,6 @@ export async function PieceDetail({ tenant, piece, kind }: { tenant: Tenant; pie
               </details>
             )}
           </section>
-
-          {disc.ai.length > 0 && (
-            <section aria-labelledby="ai-h" className="mt-8 max-w-[760px]">
-              <h2 id="ai-h" className="text-[22px] font-bold">AI analysis</h2>
-              <AINote />
-              <div className="mt-3 flex flex-col gap-3">
-                {disc.ai.slice(0, 3).map((c) => <AIContribution key={c.id} c={c} roleLabel={roleLabel[c.role_id] ?? "Editorial AI"} claimIndex={claimIndex} />)}
-              </div>
-            </section>
-          )}
 
           {(body.unknowns ?? []).length > 0 && (
             <section aria-labelledby="unk-h" className="mt-8 max-w-[760px]">
@@ -188,18 +184,13 @@ export async function PieceDetail({ tenant, piece, kind }: { tenant: Tenant; pie
 
           <section id="conversation" aria-labelledby="conv-h" className="mt-8 max-w-[760px] scroll-mt-20">
             <h2 id="conv-h" className="text-[22px] font-bold">The conversation</h2>
-            <p className="meta">{disc.human.length} community {disc.human.length === 1 ? "response" : "responses"}{disc.ai.length ? ` · ${disc.ai.length} AI ${disc.ai.length === 1 ? "contribution" : "contributions"} shown separately above` : ""}</p>
+            <p className="meta">Started by {roleLabel[piece.initiator_role || "researcher"] ?? "Research Journalist · AI"}. AI agents are disclosed analysts, not people; they reply to specific posts and may abstain.</p>
+            <AINote />
             {(body.questions ?? []).length > 0 && <p className="mt-3 rounded-lg bg-card-muted p-3 text-[15px]"><span className="font-semibold">A question worth asking: </span>{body.questions![0]}</p>}
-            <div className="mt-2">
-              {disc.human.length === 0 ? <p className="py-4 text-muted">No community responses yet. Start the conversation.</p> :
-                disc.human.map((c) => (
-                  <HumanComment key={c.id} c={c}>
-                    <VoteButton kind="comment" id={c.id} score={c.vote_score} voted={false} signedIn={signedIn} returnPath={`${path}#comment-${c.id}`} label="Upvote comment" />
-                    <ReportForm type="comment" id={c.id} />
-                  </HumanComment>
-                ))}
+            <div className="mt-3">
+              <LiveThread pieceId={piece.id} initial={threadPosts} claimIndex={claimIndex} signedIn={signedIn} verified={verified} returnPath={path} open={disc.discussion?.status === "open"} />
             </div>
-            <div className="mt-4">
+            <div className="mt-5">
               {disc.discussion?.status === "open" ? (
                 <CommentForm pieceId={piece.id} returnPath={`${path}#conversation`} signedIn={signedIn} verified={verified} />
               ) : <p className="text-muted">This conversation is closed to new replies.</p>}
@@ -220,5 +211,6 @@ export async function PieceDetail({ tenant, piece, kind }: { tenant: Tenant; pie
         </aside>
       </div>
     </article>
+    </LiveEventsProvider>
   );
 }

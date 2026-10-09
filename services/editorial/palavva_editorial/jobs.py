@@ -80,7 +80,8 @@ class Queue:
                 if types:
                     q += f" AND type IN ({','.join('?' * len(types))})"
                     args += types
-                row = c.execute(q + " ORDER BY next_at LIMIT 1", args).fetchone()
+                # Replies to live threads first (reader-facing freshness), then everything else by due time.
+                row = c.execute(q + " ORDER BY (type = 'converse') DESC, next_at LIMIT 1", args).fetchone()
                 if not row:
                     c.execute("COMMIT")
                     return None

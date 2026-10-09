@@ -18,6 +18,8 @@ import { safeNext } from "@/lib/format";
 import { audit } from "@/lib/audit";
 import { writeEvent, dataRoot } from "@/lib/analytics-server";
 import { getPublishedPieceById } from "@/lib/repo/pieces";
+import { emitEvent } from "@/lib/repo/thread";
+import { editorialFetch } from "@/lib/editorial-client";
 
 export type ActionState = { ok: boolean; message: string; field?: string; data?: Record<string, string> };
 const fail = (message: string, field?: string): ActionState => ({ ok: false, message, field });
@@ -144,9 +146,11 @@ export async function postComment(_: ActionState, f: FormData): Promise<ActionSt
   if (!piece) return fail("This conversation is not available.");
   const disc = await pb.first("discussions", `tenant_id=${q(tenant.id)} && piece_id=${q(piece.id)}`);
   if (!disc || disc.status !== "open") return fail("This conversation is closed to new replies.");
+  let depth = 1;
   if (parentId) {
-    const parent = await pb.first("comments", `tenant_id=${q(tenant.id)} && id=${q(parentId)} && discussion_id=${q(disc.id)}`);
+    const parent = await pb.first("comments", `tenant_id=${q(tenant.id)} && id=${q(parentId)} && discussion_id=${q(disc.id)} && approval_state='approved' && moderation_status='visible'`);
     if (!parent) return fail("The comment you replied to is no longer available.");
+    depth = (parent.depth || 1) + 1;
   }
   // Idempotency: a retried submit with the same client_request_id returns the original comment.
   if (clientRequestId) {
@@ -159,13 +163,20 @@ export async function postComment(_: ActionState, f: FormData): Promise<ActionSt
   const c = await pb.create("comments", {
     tenant_id: tenant.id, discussion_id: disc.id, piece_id: piece.id, author_id: s.user.id, author_kind: "human", parent_id: parentId,
     body_text: text, approval_state: pending ? "pending" : "approved", moderation_status: "visible", edit_revision: 1,
-    client_request_id: clientRequestId, claim_ids: [], vote_score: 0,
+    client_request_id: clientRequestId, claim_ids: [], vote_score: 0, depth, language: "en",
   });
   const humanCount = await pb.count("comments", `tenant_id=${q(tenant.id)} && discussion_id=${q(disc.id)} && author_kind='human' && approval_state='approved' && moderation_status='visible'`);
   await pb.update("discussions", disc.id, { human_comment_count: humanCount });
   await pb.update("editorial_pieces", piece.id, { human_comment_count: humanCount });
   await audit(tenant.id, s.user.id, "comment.create", "comments", c.id, { pending });
-  if (!pending) await writeEvent(tenant.id, { event_name: "comment_created", story_id: piece.id, member_id: s.user.id });
+  if (!pending) {
+    await writeEvent(tenant.id, { event_name: "comment_created", story_id: piece.id, member_id: s.user.id });
+    // Persist first, then announce through the same ordered event log the AI engine uses.
+    await emitEvent(tenant, { event_type: "reply_published", piece_id: piece.id, post_id: c.id, parent_id: parentId, author_kind: "human",
+      payload: { headline: piece.headline, slug: piece.slug, kind: piece.kind, post: { id: c.id, parent_id: parentId, author_kind: "human", role_id: "", role_label: "",
+        author: { handle: s.user.handle, display_name: s.user.display_name }, body_text: text, created: c.created, depth, claim_ids: [], vote_score: 0, edited: false, new_angle: "" } } });
+    if (text.includes("?")) await editorialFetch(`/conversations/${piece.id}/human-question`, { method: "POST", body: JSON.stringify({ tenant_id: tenant.id, post_id: c.id }) });
+  }
   revalidatePath("/", "layout");
   invalidateFeedCache(tenant.id);
   return { ok: true, message: pending ? "Thanks. Your comment includes several links, so a moderator will review it first." : "Your comment is posted.", data: { id: c.id } };

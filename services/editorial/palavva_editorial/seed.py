@@ -35,8 +35,17 @@ def seed_reference(pb: PB) -> None:
                                                 "keywords_json": kws, "enabled": True, "sort": i})
 
 
+def ensure_tenant(pb: PB, slug: str, data: dict) -> dict:
+    """Create a tenant once. Never overwrite admin-edited branding, features or quotas on later runs
+    (bug found in v1.3: re-seeding reset quotas/branding on every restart). Only hostnames are refreshed."""
+    existing = pb.first("tenants", f"slug={q(slug)}")
+    if existing:
+        return pb.update("tenants", existing["id"], {"hostnames": data["hostnames"], "canonical_host": data["canonical_host"]})
+    return pb.create("tenants", data)
+
+
 def seed_tenants(pb: PB) -> dict[str, dict]:
-    palavva = pb.upsert("tenants", "slug='palavva'", {
+    palavva = ensure_tenant(pb, "palavva", {
         "slug": "palavva", "name": "Palavva", "status": "active", "canonical_host": (hostnames_for("palavva") or ["127.0.0.1:3000"])[0],
         "hostnames": hostnames_for("palavva"), "default_locale": "en", "is_demo": False,
         "branding_json": {"wordmark_text": "palavva", "primary_color": "#C34218", "accent_color": "#E85E31", "masthead_color": "#1B2030", "theme": "system"},
@@ -44,7 +53,7 @@ def seed_tenants(pb: PB) -> dict[str, dict]:
                              "business_directory": True, "revive_ads": False, "crm_bridge": False, "newsletter_future": False, "external_agents_future": False},
         "quotas_json": {"daily_ai_requests": 60, "max_agent_replies_per_story": 3},
     })
-    sample = pb.upsert("tenants", "slug='sample-community'", {
+    sample = ensure_tenant(pb, "sample-community", {
         "slug": "sample-community", "name": "Sample Africa Community", "status": "active",
         "canonical_host": (hostnames_for("sample-community") or ["sample.localhost:3000"])[0],
         "hostnames": hostnames_for("sample-community"), "default_locale": "en", "is_demo": True,

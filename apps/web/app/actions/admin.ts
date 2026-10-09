@@ -12,6 +12,7 @@ import { writeEvent } from "@/lib/analytics-server";
 import { editorialFetch } from "@/lib/editorial-client";
 import { forwardInquiry } from "@/lib/crm";
 import type { ActionState } from "./member";
+import { emitEvent } from "@/lib/repo/thread";
 
 const s = (f: FormData, k: string, max = 4000) => String(f.get(k) ?? "").slice(0, max).trim();
 const fail = (message: string): ActionState => ({ ok: false, message });
@@ -189,14 +190,22 @@ export async function sourceAction(_: ActionState, f: FormData): Promise<ActionS
     const items = await pb.list("source_items", { filter: `tenant_id=${q(tenant.id)} && source_id=${q(src.id)}`, perPage: 500 });
     for (const it of items) await pb.update("source_items", it.id, { permitted_excerpt: "", license_state: "revoked" });
     const clusterIds = [...new Set(items.map((i) => i.cluster_id).filter(Boolean))];
-    let held = 0;
+    let held = 0, unpublished = 0;
     for (const cid of clusterIds) {
-      const p = await pb.first("editorial_pieces", `tenant_id=${q(tenant.id)} && cluster_id=${q(cid)} && review_status!='published' && review_status!='retracted'`);
-      if (p) { await pb.update("editorial_pieces", p.id, { review_status: "held" }); held++; }
+      const p = await pb.first("editorial_pieces", `tenant_id=${q(tenant.id)} && cluster_id=${q(cid)} && review_status!='retracted'`);
+      if (!p) continue;
+      if (p.review_status === "published") {
+        // Derived public output is withdrawn: topic unpublished, thread closed, public correction, committed event (A-05).
+        await pb.update("editorial_pieces", p.id, { review_status: "held", thread_state: "closed" });
+        await pb.create("corrections", { tenant_id: tenant.id, piece_id: p.id, summary: `Withdrawn: the source's usage rights were revoked (${src.publisher_name}).`, public_at: pbDate(), status: "published" });
+        await emitEvent(tenant, { event_type: "thread_paused", piece_id: p.id, author_kind: "system", payload: { reason: "source rights revoked" } });
+        unpublished++;
+      } else { await pb.update("editorial_pieces", p.id, { review_status: "held" }); held++; }
     }
-    await audit(tenant.id, session.user.id, "source.rights_revoked", "sources", src.id, { items: items.length, drafts_held: held });
-    revalidatePath("/admin", "layout");
-    return { ok: true, message: `Rights revoked. Fetching disabled, ${items.length} stored excerpts cleared, ${held} drafts held. Review published pieces from this source.` };
+    await audit(tenant.id, session.user.id, "source.rights_revoked", "sources", src.id, { items: items.length, drafts_held: held, unpublished });
+    invalidateFeedCache(tenant.id);
+    revalidatePath("/", "layout");
+    return { ok: true, message: `Rights revoked. Fetching disabled, ${items.length} stored excerpts cleared, ${held} drafts held, ${unpublished} published topics withdrawn.` };
   } else return fail("Unknown action.");
   revalidatePath("/admin", "layout");
   return { ok: true, message: "Saved." };
@@ -322,4 +331,43 @@ export async function opsAction(_: ActionState, f: FormData): Promise<ActionStat
     return r?.requeued ? { ok: true, message: "Job requeued." } : fail("Could not requeue.");
   }
   return fail("Unknown action.");
+}
+
+// ---------------- v1.3 conversations ----------------
+
+export async function runDemoConversation(_: ActionState): Promise<ActionState> {
+  const { tenant, session } = await staff("editor");
+  const r = await editorialFetch<{ piece_id: string; slug: string; published: boolean; info: string }>("/conversations/demo", { method: "POST", body: JSON.stringify({ tenant_id: tenant.id }) }, 30000);
+  await audit(tenant.id, session.user.id, "conversation.demo_started", "editorial_pieces", r?.piece_id ?? "", { published: r?.published ?? false });
+  if (!r) return fail("Editorial service unavailable.");
+  invalidateFeedCache(tenant.id);
+  return r.published ? { ok: true, message: `Demo topic published. Replies arrive as real model calls complete (about 20–40 s each).`, data: { slug: r.slug } } : fail(`Demo not published: ${r.info}`);
+}
+
+export async function pauseThread(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await staff("editor");
+  const id = s(f, "piece_id", 30);
+  const paused = s(f, "paused", 5) === "true";
+  const piece = await ownPiece(tenant, id);
+  if (!piece) return fail("Not found.");
+  const r = await editorialFetch("/conversations/" + id + "/pause", { method: "POST", body: JSON.stringify({ tenant_id: tenant.id, paused, reason: s(f, "reason", 200) }) });
+  await audit(tenant.id, session.user.id, paused ? "conversation.paused" : "conversation.resumed", "editorial_pieces", id);
+  revalidatePath("/admin/conversations");
+  return r ? { ok: true, message: paused ? "Thread paused: no further AI replies." : "Thread resumed." } : fail("Editorial service unavailable.");
+}
+
+export async function unpublishPiece(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await staff("editor");
+  const piece = await ownPiece(tenant, s(f, "piece_id", 30));
+  const reason = s(f, "reason", 500);
+  if (!piece || piece.review_status !== "published") return fail("Only published topics can be unpublished.");
+  if (reason.length < 5) return fail("Give a reason.");
+  await pb.update("editorial_pieces", piece.id, { review_status: "held", thread_state: "closed" });
+  await pb.create("moderation_decisions", { tenant_id: tenant.id, scope: "topic", target_id: piece.id, piece_id: piece.id, decision: "hold", tier: "uncertain",
+    ruleset_version: "human-override", rules: {}, reasons: `Unpublished by editor: ${reason}`, actor: session.user.id, overridden: false });
+  await emitEvent(tenant, { event_type: "thread_paused", piece_id: piece.id, author_kind: "system", payload: { reason: "unpublished" } });
+  await audit(tenant.id, session.user.id, "piece.unpublished", "editorial_pieces", piece.id, { reason });
+  invalidateFeedCache(tenant.id);
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Unpublished. The topic is held and its thread closed." };
 }
