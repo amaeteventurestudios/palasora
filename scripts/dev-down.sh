@@ -16,3 +16,10 @@ for svc in web worker editorial pocketbase; do
     rm -f "$f"
   fi
 done
+# Next.js renames its server process; stop any listener on our ports whose cwd is inside this repo.
+for port in 3000 "${EDITORIAL_URL##*:}" "${PB_URL##*:}"; do
+  for pid in $(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null); do
+    cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p')
+    case "$cwd" in "$ROOT"*) kill -TERM "$pid" 2>/dev/null && echo "stopped listener on $port ($pid)";; esac
+  done
+done

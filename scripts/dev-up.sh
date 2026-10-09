@@ -11,7 +11,7 @@ port_busy() { lsof -iTCP:"$1" -sTCP:LISTEN -nP >/dev/null 2>&1; }
 if ! is_up pocketbase; then
   port_busy "$PBP" && { echo "Port $PBP busy (not ours). Aborting."; exit 1; }
   nohup "$PB_BIN" serve --dir="$PALAVVA_DATA_DIR/pb_data" --migrationsDir="$ROOT/services/pocketbase/pb_migrations" \
-    --hooksDir="$ROOT/services/pocketbase/pb_hooks" --http="127.0.0.1:$PBP" >> "$LOG/pocketbase.log" 2>&1 &
+    --hooksDir="$ROOT/services/pocketbase/pb_hooks" --http="127.0.0.1:$PBP" >> "$LOG/pocketbase.log" 2>&1 < /dev/null &
   echo $! > "$RUN/pocketbase.pid"
 fi
 for i in $(seq 1 40); do curl -sf "$PB_URL/api/health" >/dev/null && break; sleep 0.25; done
@@ -21,19 +21,19 @@ curl -sf "$PB_URL/api/health" >/dev/null || { echo "PocketBase failed to start; 
 EP="${EDITORIAL_URL##*:}"
 if ! is_up editorial; then
   port_busy "$EP" && { echo "Port $EP busy (not ours). Aborting."; exit 1; }
-  (cd "$ROOT/services/editorial" && nohup "$PY" -m uvicorn palavva_editorial.api:app --host 127.0.0.1 --port "$EP" >> "$LOG/editorial.log" 2>&1 & echo $! > "$RUN/editorial.pid")
+  (cd "$ROOT/services/editorial" && nohup "$PY" -m uvicorn palavva_editorial.api:app --host 127.0.0.1 --port "$EP" >> "$LOG/editorial.log" 2>&1 < /dev/null & echo $! > "$RUN/editorial.pid")
 fi
 if ! is_up worker; then
-  (cd "$ROOT/services/editorial" && nohup "$PY" -m palavva_editorial.worker >> "$LOG/worker.log" 2>&1 & echo $! > "$RUN/worker.pid")
+  (cd "$ROOT/services/editorial" && nohup "$PY" -m palavva_editorial.worker >> "$LOG/worker.log" 2>&1 < /dev/null & echo $! > "$RUN/worker.pid")
 fi
 if ! is_up web; then
   port_busy 3000 && { echo "Port 3000 busy (not ours). Aborting."; exit 1; }
   cd "$ROOT/apps/web"
   if [ "${1:-}" = "--prod" ]; then
     pnpm -s build >> "$LOG/web-build.log" 2>&1 || { echo "Web build failed; see $LOG/web-build.log"; exit 1; }
-    nohup pnpm -s start >> "$LOG/web.log" 2>&1 &
+    nohup pnpm -s start >> "$LOG/web.log" 2>&1 < /dev/null &
   else
-    nohup pnpm -s dev >> "$LOG/web.log" 2>&1 &
+    nohup pnpm -s dev >> "$LOG/web.log" 2>&1 < /dev/null &
   fi
   echo $! > "$RUN/web.pid"
 fi

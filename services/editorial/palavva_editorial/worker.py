@@ -5,6 +5,7 @@ on Qwen outage or budget exhaustion. Ctrl-C / SIGTERM finish the current step an
 """
 from __future__ import annotations
 
+import fcntl
 import logging
 import os
 import signal
@@ -71,11 +72,21 @@ def process_one(pb: PB, queue: Queue, s: config.Settings, provider, owner: str) 
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     s = config.load()
     pb = PB(s.pb_url, s.pb_email, s.pb_password)
     queue = Queue(s.jobs_db, lease_seconds=900)
     provider = make_provider(s)
     owner = f"worker-{os.getpid()}"
+    # Single-worker guarantee: model concurrency 1 must hold across processes, not just threads.
+    lock = open(s.data_dir / "run" / "worker.lock", "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        log.error("another worker holds %s; exiting", lock.name)
+        return
+    lock.write(str(os.getpid()))
+    lock.flush()
 
     def stop(*_):
         global STOP

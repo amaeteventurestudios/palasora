@@ -10,3 +10,4 @@ Times are US Pacific, 2026-10-08/09. Newest entries last.
 - **22:00** Schema migration for all `09` collections, plus DB hooks: tenant immutability, append-only audit, and a publish gate requiring a recorded human approval from an editorial role.
 - **22:05** Idempotent seed done. Commit `05cdcb0`.
 - **22:50** Phase 1 public app: all routes from 03 return correct status; typecheck clean. Commit 733ce0c.
+- **23:35** Phase 2 editorial service built. Real Qwen probe: 3.4 s, schema-valid JSON. pytest 38/38 (unit + integration against an isolated PocketBase). Commit b0212ec.
