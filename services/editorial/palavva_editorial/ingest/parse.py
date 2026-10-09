@@ -25,6 +25,7 @@ class RawItem:
     summary: str
     published: datetime | None
     language: str = ""
+    author: str = ""
 
 
 TAG = re.compile(r"<[^>]+>")
@@ -90,7 +91,8 @@ def parse_feed(data: bytes) -> list[RawItem]:
             guid = _text(it, "guid") or link
             date = _text(it, "pubdate") or _text(it, "date")
             items.append(RawItem(guid=guid, link=link, title=strip_html(_text(it, "title")),
-                                 summary=strip_html(_text(it, "description"))[:600], published=parse_date(date), language=lang))
+                                 summary=strip_html(_text(it, "description"))[:600], published=parse_date(date), language=lang,
+                                 author=strip_html(_text(it, "creator") or _text(it, "author"))[:200]))
     elif kind == "feed":
         lang = root.attrib.get("{http://www.w3.org/XML/1998/namespace}lang", "")
         for it in root:

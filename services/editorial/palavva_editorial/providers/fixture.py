@@ -76,6 +76,9 @@ class FixtureProvider:
             claims = [{"text": "Cited evidence.", "source_ids": ["S99"]}] if self.mode == "converse_bad_evidence" else []
             out = {"parent_post_id": pid, "text": "" if self.mode == "converse_abstain" else text, "claims": claims,
                    "new_angle": angles.get(role, "open questions"), "uncertainties": ["fixture"]}
+        elif stage == "translate":
+            fields = json.loads(re.search(r"EVIDENCE_PACKET_JSON:\n(.*)\nEND_EVIDENCE", req.user_prompt, re.S).group(1))["fields"]
+            out = {k: ("[FR] " + v if self.mode != "bad_translation" else "Traduction sans chiffres.") for k, v in fields.items()}
         elif stage == "validator":
             out = {"verdict": "PASS", "flags": []}
         elif stage == "timelens":

@@ -7,7 +7,7 @@ import time
 from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
-from . import analytics_etl, config, conversation, search as fts
+from . import analytics_etl, config, conversation, search as fts, translate
 from .ingest.fetch import FetchError, safe_fetch
 from .ingest.parse import ParseError, parse_feed
 from .jobs import Queue
@@ -151,3 +151,19 @@ def pause_thread(piece_id: str, body: PauseBody) -> dict:
 def conversation_stats(tenant_id: str) -> dict:
     return {"reply_budget_used_today": queue.budget_used(f"{tenant_id}:reply"), "reply_budget_limit": S.reply_daily_budget,
             "converse_pending": queue.pending_for("converse:"), "queue": queue.stats()["by_type"]}
+
+
+class TranslateBody(BaseModel):
+    tenant_id: str
+    target_type: str
+    target_id: str
+    locale: str
+    version: int = 1
+
+
+@app.post("/translations/request", dependencies=[Depends(auth)])
+def request_translation(body: TranslateBody) -> dict:
+    if body.target_type not in ("piece", "comment"):
+        raise HTTPException(422, "bad target")
+    return {"queued": translate.enqueue(queue, body.tenant_id, body.target_type, body.target_id, body.locale, body.version),
+            "machine_translation_enabled": body.locale in translate.MT_ENABLED}

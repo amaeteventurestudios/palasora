@@ -1,0 +1,655 @@
+{
+ "version": "locales-v1",
+ "locales": [
+  {
+   "code": "en",
+   "native": "English",
+   "english": "English",
+   "dir": "ltr",
+   "ui": "ready",
+   "mt": "enabled",
+   "note": "Source language for most current coverage."
+  },
+  {
+   "code": "fr",
+   "native": "Français",
+   "english": "French",
+   "dir": "ltr",
+   "ui": "beta",
+   "mt": "enabled",
+   "note": "Interface written by the build agent; pending native review. Content translations are machine output (Qwen), labeled unreviewed until an editor reviews them."
+  },
+  {
+   "code": "ar",
+   "native": "العربية",
+   "english": "Arabic",
+   "dir": "rtl",
+   "ui": "beta",
+   "mt": "enabled",
+   "note": "Right-to-left interface written by the build agent; pending native review. Machine translations labeled unreviewed."
+  },
+  {
+   "code": "pcm",
+   "native": "Naijá (Nigerian Pidgin)",
+   "english": "Nigerian Pidgin",
+   "dir": "ltr",
+   "ui": "beta",
+   "mt": "disabled",
+   "note": "Interface strings written by the build agent, pending native review. Machine translation disabled until native-speaker QA."
+  },
+  {
+   "code": "yo",
+   "native": "Yorùbá",
+   "english": "Yoruba",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned. Needs native-speaker QA before release."
+  },
+  {
+   "code": "ig",
+   "native": "Igbo",
+   "english": "Igbo",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned. Needs native-speaker QA before release."
+  },
+  {
+   "code": "ha",
+   "native": "Hausa",
+   "english": "Hausa",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned. Needs native-speaker QA before release."
+  },
+  {
+   "code": "sw",
+   "native": "Kiswahili",
+   "english": "Swahili",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Kenya/Tanzania editions."
+  },
+  {
+   "code": "am",
+   "native": "አማርኛ",
+   "english": "Amharic",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for the Ethiopia edition."
+  },
+  {
+   "code": "pt",
+   "native": "Português",
+   "english": "Portuguese",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Angola/Mozambique editions."
+  },
+  {
+   "code": "wo",
+   "native": "Wolof",
+   "english": "Wolof",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for the Senegal edition."
+  },
+  {
+   "code": "tw",
+   "native": "Twi",
+   "english": "Twi",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for the Ghana edition (distinct from Ghanaian Pidgin)."
+  },
+  {
+   "code": "zu",
+   "native": "isiZulu",
+   "english": "Zulu",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for South Africa."
+  }
+ ],
+ "countries": {
+  "DZ": {
+   "name": "Algeria",
+   "preferred_locale": "ar",
+   "alternates": [
+    "ar",
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "AO": {
+   "name": "Angola",
+   "preferred_locale": "pt",
+   "alternates": [
+    "pt",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "BJ": {
+   "name": "Benin",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "BW": {
+   "name": "Botswana",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "BF": {
+   "name": "Burkina Faso",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "BI": {
+   "name": "Burundi",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "CV": {
+   "name": "Cabo Verde",
+   "preferred_locale": "pt",
+   "alternates": [
+    "pt",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "CM": {
+   "name": "Cameroon",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "CF": {
+   "name": "Central African Republic",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "TD": {
+   "name": "Chad",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "KM": {
+   "name": "Comoros",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "CG": {
+   "name": "Congo",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "CD": {
+   "name": "DR Congo",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "CI": {
+   "name": "Côte d'Ivoire",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "DJ": {
+   "name": "Djibouti",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "EG": {
+   "name": "Egypt",
+   "preferred_locale": "ar",
+   "alternates": [
+    "ar",
+    "en",
+    "fr"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "GQ": {
+   "name": "Equatorial Guinea",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "ER": {
+   "name": "Eritrea",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "SZ": {
+   "name": "Eswatini",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "ET": {
+   "name": "Ethiopia",
+   "preferred_locale": "am",
+   "alternates": [
+    "am",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "GA": {
+   "name": "Gabon",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "GM": {
+   "name": "Gambia",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "GH": {
+   "name": "Ghana",
+   "preferred_locale": "en",
+   "alternates": [
+    "en",
+    "tw"
+   ],
+   "map": true,
+   "subdivision": "Regions"
+  },
+  "GN": {
+   "name": "Guinea",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "GW": {
+   "name": "Guinea-Bissau",
+   "preferred_locale": "pt",
+   "alternates": [
+    "pt",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "KE": {
+   "name": "Kenya",
+   "preferred_locale": "en",
+   "alternates": [
+    "en",
+    "sw"
+   ],
+   "map": true,
+   "subdivision": "Counties"
+  },
+  "LS": {
+   "name": "Lesotho",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "LR": {
+   "name": "Liberia",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "LY": {
+   "name": "Libya",
+   "preferred_locale": "ar",
+   "alternates": [
+    "ar",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "MG": {
+   "name": "Madagascar",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "MW": {
+   "name": "Malawi",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "ML": {
+   "name": "Mali",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "MR": {
+   "name": "Mauritania",
+   "preferred_locale": "ar",
+   "alternates": [
+    "ar",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "MU": {
+   "name": "Mauritius",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "MA": {
+   "name": "Morocco",
+   "preferred_locale": "ar",
+   "alternates": [
+    "ar",
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "MZ": {
+   "name": "Mozambique",
+   "preferred_locale": "pt",
+   "alternates": [
+    "pt",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "NA": {
+   "name": "Namibia",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "NE": {
+   "name": "Niger",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "NG": {
+   "name": "Nigeria",
+   "preferred_locale": "en",
+   "alternates": [
+    "en",
+    "pcm",
+    "yo",
+    "ig",
+    "ha"
+   ],
+   "map": true,
+   "subdivision": "States + FCT"
+  },
+  "RW": {
+   "name": "Rwanda",
+   "preferred_locale": "en",
+   "alternates": [
+    "en",
+    "fr"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "ST": {
+   "name": "São Tomé and Príncipe",
+   "preferred_locale": "pt",
+   "alternates": [
+    "pt",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "SN": {
+   "name": "Senegal",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "wo",
+    "en"
+   ],
+   "map": true,
+   "subdivision": "Regions"
+  },
+  "SC": {
+   "name": "Seychelles",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "SL": {
+   "name": "Sierra Leone",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "SO": {
+   "name": "Somalia",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "ZA": {
+   "name": "South Africa",
+   "preferred_locale": "en",
+   "alternates": [
+    "en",
+    "zu"
+   ],
+   "map": true,
+   "subdivision": "Provinces"
+  },
+  "SS": {
+   "name": "South Sudan",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "SD": {
+   "name": "Sudan",
+   "preferred_locale": "ar",
+   "alternates": [
+    "ar",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "TZ": {
+   "name": "Tanzania",
+   "preferred_locale": "sw",
+   "alternates": [
+    "sw",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "TG": {
+   "name": "Togo",
+   "preferred_locale": "fr",
+   "alternates": [
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "TN": {
+   "name": "Tunisia",
+   "preferred_locale": "ar",
+   "alternates": [
+    "ar",
+    "fr",
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "UG": {
+   "name": "Uganda",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "ZM": {
+   "name": "Zambia",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  },
+  "ZW": {
+   "name": "Zimbabwe",
+   "preferred_locale": "en",
+   "alternates": [
+    "en"
+   ],
+   "map": false,
+   "subdivision": ""
+  }
+ }
+}

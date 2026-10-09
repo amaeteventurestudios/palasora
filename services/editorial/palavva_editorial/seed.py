@@ -44,6 +44,32 @@ def ensure_tenant(pb: PB, slug: str, data: dict) -> dict:
     return pb.create("tenants", data)
 
 
+def seed_geo(pb: PB) -> int:
+    """geo_areas from versioned boundary files + gazetteer aliases (country -> admin1)."""
+    import json
+    from pathlib import Path
+    from . import geo
+    d = Path(__file__).resolve().parents[3] / "apps/web/public/geo"
+    n = 0
+    for f in sorted(d.glob("*.json")) if d.exists() else []:
+        j = json.loads(f.read_text())
+        cc = j["country"]
+        name = next((c[1] for c in tx.COUNTRIES if c[0] == cc), cc)
+        pb.upsert("geo_areas", f"code={q(cc)}", {"code": cc, "country": cc, "level": "country", "kind": "country", "name": name, "names": {"en": name}, "aliases": [],
+                                                  "ambiguous_aliases": [], "parent_code": "", "dataset": j["dataset"], "dataset_version": j["version"], "geometry_available": True})
+        kind = {"NG": "state", "ZA": "province", "KE": "county", "GH": "region", "SN": "region"}.get(cc, "admin1")
+        gaz = {"NG": geo.NG, "ZA": geo.ZA}.get(cc, {})
+        for a in j["areas"]:
+            g = gaz.get(a["code"])
+            aliases = g[1] if g else ({"GH": geo.GH_ALIASES, "SN": geo.SN_ALIASES}.get(cc, {}).get(a["code"], []))
+            pb.upsert("geo_areas", f"code={q(a['code'])}", {"code": a["code"], "country": cc, "level": "admin1", "kind": "federal capital territory" if a["code"] == "NG-FC" else kind,
+                                                            "name": g[0] if g else a["name"], "names": {"en": g[0] if g else a["name"]}, "aliases": aliases,
+                                                            "ambiguous_aliases": g[2] if g else [], "parent_code": cc, "centroid": [a["cx"], a["cy"]],
+                                                            "dataset": j["dataset"], "dataset_version": j["version"], "geometry_available": True})
+            n += 1
+    return n
+
+
 def seed_tenants(pb: PB) -> dict[str, dict]:
     palavva = ensure_tenant(pb, "palavva", {
         "slug": "palavva", "name": "Palavva", "status": "active", "canonical_host": (hostnames_for("palavva") or ["127.0.0.1:3000"])[0],
@@ -282,6 +308,7 @@ def main() -> int:
         print("PocketBase is not reachable at", url, file=sys.stderr)
         return 1
     seed_reference(pb)
+    seed_geo(pb)
     tenants = seed_tenants(pb)
     pw = os.environ.get("LOCAL_DEMO_PASSWORD", "")
     if len(pw) < 12:

@@ -12,7 +12,7 @@ import signal
 import time
 from datetime import datetime, timezone
 
-from . import analytics_etl, config, conversation, search as fts
+from . import analytics_etl, config, conversation, search as fts, translate
 from .jobs import Queue
 from .pb import PB, PBError, q
 from .pipeline import Deferred, draft_cluster, ingest_source, pbdate
@@ -57,6 +57,8 @@ def process_one(pb: PB, queue: Queue, s: config.Settings, provider, owner: str) 
         elif job["type"] == "converse":
             res = conversation.converse_step(pb, queue, s, provider, job)
             queue.complete(job["job_id"], owner, res)
+        elif job["type"] == "translate":
+            queue.complete(job["job_id"], owner, translate.translate_job(pb, queue, s, provider, job))
         elif job["type"] == "reindex_search":
             queue.complete(job["job_id"], owner, {"indexed": reindex_all(pb, s)})
         else:

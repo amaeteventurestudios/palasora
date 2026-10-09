@@ -250,3 +250,12 @@ def test_policy_blocks_degradation_but_allows_institutional_critique():
                 "Muslims are more dangerous than others here, so the officials should simply exclude them from this whole programme.",
                 "Anyone who supports this is an idiot and should stop talking about matters they clearly do not understand at all."]:
         assert not check_post(txt, "").ok, txt
+
+
+def test_multilingual_sensitive_terms_and_country_names():
+    fr = classify("Sénégal : des manifestants arrêtés par la police à Dakar", "")
+    assert fr.countries == ["SN"] and fr.risk == "high"
+    ar = classify("مصر: احتجاجات في القاهرة", "")
+    assert "EG" in ar.countries and ar.risk == "high"
+    calm = classify("Sénégal : une coopérative de femmes transforme le mil à Thiès", "")
+    assert calm.countries == ["SN"] and calm.risk == "low" and calm.africa_relevant

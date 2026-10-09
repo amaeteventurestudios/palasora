@@ -29,6 +29,8 @@ class Classification:
 
 
 def _has(text: str, term: str) -> bool:
+    if re.search(r"[\u0600-\u06FF]", term):  # Arabic: substring match (clitics attach to words)
+        return term in text
     return re.search(r"(?<![a-z])" + re.escape(term) + r"(?![a-z])", text) is not None
 
 
@@ -44,11 +46,11 @@ def detect_language(text: str, hint: str = "") -> str:
 
 
 def classify(title: str, summary: str, source_countries: list[str] | None = None, source_topics: list[str] | None = None, lang_hint: str = "") -> Classification:
-    text = f" {title} {summary} ".lower()
+    text = tx.fold(f" {title} {summary} ")
     reasons: list[str] = []
     countries: list[str] = []
     for iso, name, _region, _p in tx.COUNTRIES:
-        terms = [name.lower()] + tx.COUNTRY_ALIASES.get(iso, [])
+        terms = [tx.fold(name)] + tx.COUNTRY_ALIASES.get(iso, []) + tx.COUNTRY_ALIASES_I18N.get(iso, [])
         hit = next((t for t in terms if _has(text, t)), None)
         if hit:
             countries.append(iso)
@@ -71,14 +73,14 @@ def classify(title: str, summary: str, source_countries: list[str] | None = None
         level = tx.SENSITIVE_TOPICS.get(t)
         if level == "high" or (level == "medium" and risk == "low"):
             risk = level
-    sens = [k for k in tx.SENSITIVE_KEYWORDS if _has(text, k)]
+    sens = [k for k in tx.SENSITIVE_KEYWORDS + tx.SENSITIVE_KEYWORDS_I18N if _has(text, tx.fold(k))]
     if sens:
         risk = "high"
         reasons.append(f"sensitive terms: {sens[:3]}")
     if INJECTION.search(text):
         risk = "high"
         reasons.append("PROMPT_INJECTION_SUSPECTED")
-    africa = bool(countries) or _has(text, "africa") or _has(text, "african")
+    africa = bool(countries) or any(_has(text, tx.fold(a)) for a in tx.AFRICA_TERMS)
     conf = min(1.0, 0.3 * bool(countries) + 0.3 * bool(topics) + 0.1 * min(len(reasons), 4))
     ambiguous = len(countries) > 3 or not topics or not countries
     return Classification(countries[:4], topics, detect_language(title + " " + summary, lang_hint), risk, round(conf, 2), ambiguous, reasons, africa)

@@ -118,6 +118,7 @@ def _ingest_item(pb: PB, queue: Queue, settings: Settings, source: dict, it, res
             "published_at": pbdate(published), "fetched_at": pbdate(now), "license_state": policy, "content_hash": chash, "title_fingerprint": title_fingerprint(it.title),
             "language": cls.language, "country_candidates": cls.countries, "topic_candidates": cls.topics, "classification_confidence": cls.confidence,
             "classification_ambiguous": cls.ambiguous, "status": status, "decision_reason": reason, "is_fixture": bool(source.get("is_fixture")),
+            "author": it.author,
         })
     except PBError as e:
         if e.status == 400:  # unique index race: someone inserted it first
@@ -125,6 +126,8 @@ def _ingest_item(pb: PB, queue: Queue, settings: Settings, source: dict, it, res
             return
         raise
     res["new_items"] += 1
+    if status != "ignored":
+        record_geo(pb, tid, si, it.title, it.summary, cls.countries, source.get("publisher_area") or "")
     if status == "ignored":
         res["ignored"] += 1
         return
@@ -151,6 +154,37 @@ def _ingest_item(pb: PB, queue: Queue, settings: Settings, source: dict, it, res
     pb.update("source_items", si["id"], {"status": "clustered", "cluster_id": cl["id"]})
     _, created = queue.enqueue(tid, "draft_cluster", {"cluster_id": cl["id"]}, idempotency_key(tid, cl["id"], PIPELINE_VERSION, "draft"))
     res["enqueued"] += int(created)
+
+
+def attach_geo(pb: PB, tid: str, piece_id: str, items: list[dict]) -> list[str]:
+    """Link item-level geo evidence to the canonical piece; area_ids = mappable subject/event places only."""
+    codes: set[str] = set()
+    for it in items:
+        if not pb.first("story_geo_evidence", f"tenant_id={q(tid)} && source_item_id={q(it['id'])}"):
+            src = pb.get("sources", it["source_id"])
+            record_geo(pb, tid, it, it["title"], it.get("permitted_excerpt") or "", it.get("country_candidates") or [], src.get("publisher_area") or "")
+        for e in pb.list("story_geo_evidence", f"tenant_id={q(tid)} && source_item_id={q(it['id'])}", per_page=50):
+            if not e.get("piece_id"):
+                pb.update("story_geo_evidence", e["id"], {"piece_id": piece_id})
+            if e["role"] in ("subject", "event") and e["confidence"] in ("high_confidence", "verified") and e["status"] not in ("rejected", "disputed"):
+                codes.add(e["area_code"])
+    authors = sorted({it.get("author") for it in items if it.get("author")})
+    pb.update("editorial_pieces", piece_id, {"area_ids": sorted(codes), "source_authors": authors})
+    return sorted(codes)
+
+
+def record_geo(pb: PB, tid: str, item: dict, title: str, excerpt: str, countries: list[str], publisher_area: str) -> list[str]:
+    """Store evidence-aware geography for a source item; returns mappable area codes."""
+    from .geo import classify_geo, mappable, load_area_names
+    if pb.first("story_geo_evidence", f"tenant_id={q(tid)} && source_item_id={q(item['id'])}"):
+        return [e["area_code"] for e in pb.list("story_geo_evidence", f"tenant_id={q(tid)} && source_item_id={q(item['id'])} && (role='subject' || role='event') && (confidence='high_confidence' || confidence='verified') && status!='rejected'")]
+    out = []
+    for m in classify_geo(title, excerpt, countries, publisher_area, load_area_names()):
+        pb.create("story_geo_evidence", {"tenant_id": tid, "source_item_id": item["id"], "area_code": m.area_code, "role": m.role, "confidence": m.confidence,
+                                         "evidence_span": m.span[:480], "method": m.method, "status": "auto"})
+        if mappable(m):
+            out.append(m.area_code)
+    return sorted(set(out))
 
 
 # --------------------------------------------------------------------------- editorial
@@ -211,9 +245,10 @@ def draft_cluster(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
             pb.update("story_clusters", cid, {"status": "held"})
             return {"outcome": "held_rights"}
         packet_sources.append({"source_id": f"S{i + 1}", "publisher": src.get("publisher_name", ""), "title": it["title"], "url": it["canonical_url"],
-                               "published_at": it["published_at"], "excerpt": it.get("permitted_excerpt") or "", "item_id": it["id"]})
+                               "published_at": it["published_at"], "excerpt": it.get("permitted_excerpt") or "", "item_id": it["id"], "language": it.get("language") or "en",
+                               "author": it.get("author") or "", "license": src.get("license_name") or "", "license_url": src.get("license_url") or ""})
     packet = {"cluster_id": cid, "countries": cl.get("primary_country_codes") or [], "topics": cl.get("topic_slugs") or [], "risk_hint": cl.get("risk_tier"),
-              "rights_status": "approved", "sources": [{k: v for k, v in s.items() if k != "item_id"} for s in packet_sources]}
+              "rights_status": "approved", "sources": [{k: v for k, v in s.items() if k in ("source_id", "publisher", "title", "url", "published_at", "excerpt", "language")} for s in packet_sources]}
     packet_text = " ".join(f"{s['title']} {s['excerpt']} {s['published_at']}" for s in packet_sources)
     sid_to_item = {s["source_id"]: s["item_id"] for s in packet_sources}
     evidence_ids = [s["item_id"] for s in packet_sources]
@@ -277,13 +312,15 @@ def draft_cluster(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
         "lede": " ".join(b["text"] for b in draft["what_happened"])[:600], "body_blocks_json": body, "author_type": "editorial_ai_assisted", "risk_tier": risk,
         "review_status": "held" if held else "needs_review", "revision": 1, "is_demo": is_fixture, "country_codes": cl.get("primary_country_codes") or [],
         "topic_slugs": cl.get("topic_slugs") or [], "language": "en", "editor_pick": False,
-        "sources_json": [{"name": s["publisher"], "url": s["url"], "title": s["title"], "published_at": s["published_at"]} for s in packet_sources],
+        "sources_json": [{"name": s["publisher"], "url": s["url"], "title": s["title"], "published_at": s["published_at"], "language": s.get("language", "en"),
+                          "author": s.get("author", ""), "license": s.get("license", ""), "license_url": s.get("license_url", "")} for s in packet_sources],
         "evidence_state": "complete" if not held else "incomplete", "claim_check_status": verdict.verdict, "ai_run_ids": "",
         "human_comment_count": 0, "ai_contribution_count": 0, "vote_score": 0, "save_count": 0, "still_developing": True,
-        "thread_state": "candidate", "initiator_role": "researcher", "ai_post_count": 0, "original_language": (items[0].get("language") or "en"),
+        "thread_state": "candidate", "initiator_role": "researcher", "ai_post_count": 0, "original_language": "en",
         "origin_country": ((cl.get("primary_country_codes") or [""])[0]), "risk_basis": "; ".join(risk_reasons)[:1900],
     })
     pb.create("discussions", {"tenant_id": tid, "piece_id": piece["id"], "status": "open", "human_comment_count": 0, "ai_comment_count": 0})
+    attach_geo(pb, tid, piece["id"], items)
     pb.update("story_clusters", cid, {"status": "drafted", "risk_tier": risk})
     for it in items:
         pb.update("source_items", it["id"], {"status": "drafted"})

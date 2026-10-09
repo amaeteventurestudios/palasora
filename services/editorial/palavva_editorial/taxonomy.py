@@ -115,3 +115,32 @@ def slugify(s: str) -> str:
     import unicodedata
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
+
+
+# v1.3 multilingual classification (French / Arabic sources). Names are matched after accent folding.
+COUNTRY_ALIASES_I18N = {
+    "SN": ["senegal", "senegalais", "السنغال"], "NG": ["nigeria", "nigerian", "nigerians", "نيجيريا"], "CI": ["cote d'ivoire", "ivoirien", "ساحل العاج"],
+    "ZA": ["afrique du sud", "sud-africain", "جنوب أفريقيا", "جنوب افريقيا"], "EG": ["egypte", "egyptien", "مصر", "القاهرة"], "MA": ["maroc", "marocain", "المغرب", "الرباط"],
+    "DZ": ["algerie", "algerien", "الجزائر"], "TN": ["tunisie", "tunisien", "تونس"], "LY": ["libye", "ليبيا"], "SD": ["soudan", "السودان"], "MR": ["mauritanie", "موريتانيا"],
+    "CM": ["cameroun", "camerounais", "الكاميرون"], "ET": ["ethiopie", "ethiopien", "إثيوبيا", "اثيوبيا"], "KE": ["kenya", "kenyan", "كينيا"], "TZ": ["tanzanie", "تنزانيا"],
+    "UG": ["ouganda", "أوغندا"], "CD": ["republique democratique du congo", "rdc", "الكونغو الديمقراطية"], "CG": ["congo-brazzaville"], "ML": ["mali", "malien", "مالي"],
+    "BF": ["burkina faso", "burkinabe", "بوركينا فاسو"], "NE": ["niger", "nigerien", "النيجر"], "GN": ["guinee", "غينيا"], "BJ": ["benin", "beninois", "بنين"],
+    "TG": ["togo", "togolais", "توغو"], "GH": ["ghana", "ghaneen", "غانا"], "MZ": ["mozambique", "موزمبيق"], "AO": ["angola", "أنغولا"], "RW": ["rwanda", "rwandais", "رواندا"],
+    "MG": ["madagascar", "malgache", "مدغشقر"], "SO": ["somalie", "الصومال"], "TD": ["tchad", "تشاد"], "GA": ["gabon", "الغابون"], "ZW": ["zimbabwe", "زيمبابوي"],
+}
+AFRICA_TERMS = ["africa", "african", "afrique", "africain", "africaine", "أفريقيا", "إفريقيا", "افريقيا", "الأفريقية"]
+SENSITIVE_KEYWORDS_I18N = [
+    # French
+    "election", "elections", "electoral", "campagne electorale", "scrutin", "manifestation", "manifestants", "emeute", "police", "gendarmerie", "tribunal", "proces",
+    "arrete", "arrestation", "detenu", "tue", "tues", "meurtre", "attaque", "attentat", "corruption", "fraude", "guerre", "terroris", "coup d'etat", "putsch",
+    "epidemie", "maladie", "vaccin", "ethnique", "religieux", "xenophob", "enlevement", "repression", "opposant",
+    # Arabic
+    "انتخابات", "انتخابي", "احتجاج", "احتجاجات", "مظاهرة", "مظاهرات", "الشرطة", "محكمة", "اعتقال", "معتقل", "قتل", "مقتل", "هجوم", "فساد", "حرب", "إرهاب",
+    "انقلاب", "وباء", "لقاح", "عرقي", "طائفي", "اختطاف", "قمع",
+]
+
+
+def fold(text: str) -> str:
+    """Lower-case and strip Latin diacritics (é->e); Arabic script is left intact."""
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFKD", text.lower()) if not unicodedata.combining(c))
