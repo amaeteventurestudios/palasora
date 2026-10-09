@@ -1,0 +1,19 @@
+# Palavva listeners 2026-10-09T06:48:35Z (dev + test stacks). Expect 127.0.0.1 only.
+port 3000: node pid 89570 bind 127.0.0.1:3000
+port 8190: pocketbas pid 88641 bind 127.0.0.1:8190
+port 8100: Python pid 91678 bind 127.0.0.1:8100
+port 3300: node pid 94393 bind 127.0.0.1:3300
+port 8390: pocketbas pid 94319 bind 127.0.0.1:8390
+port 8400: Python pid 95600 bind 127.0.0.1:8400
+
+# Any Palavva process bound to a non-loopback address?
+(none above = PASS)
+
+LAN IP: 192.168.4.42
+connect 192.168.4.42:3000 -> 000
+refused (good)
+connect 192.168.4.42:8190 -> 000
+refused (good)
+connect 192.168.4.42:8100 -> 000
+refused (good)
+Ollama public exposure: Palavva never binds 11434 locally -> no local 11434 listener

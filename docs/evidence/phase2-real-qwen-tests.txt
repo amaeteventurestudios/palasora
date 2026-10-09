@@ -1,0 +1,5 @@
+..ROLE DECISIONS ABSTAIN ABSTAIN
+..
+REAL QWEN CALLS: [{"stage": "researcher", "status": "succeeded", "ms": 13674, "in": 508, "out": 161}, {"stage": "role", "status": "succeeded", "ms": 16387, "in": 455, "out": 70}, {"stage": "role", "status": "succeeded", "ms": 21034, "in": 456, "out": 58}, {"stage": "researcher", "status": "succeeded", "ms": 21991, "in": 509, "out": 96}]
+
+4 passed in 73.17s (0:01:13)

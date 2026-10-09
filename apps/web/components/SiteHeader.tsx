@@ -65,6 +65,7 @@ export function SiteHeader({ tenant, session }: { tenant: Tenant; session: Sessi
           <nav aria-label="Mobile" className="absolute right-0 z-50 mt-2 w-60 rounded-xl border border-border bg-card p-2 text-foreground shadow-lg">
             {NAV.map((n) => <Link key={n.href} href={n.href} className="block rounded-md px-3 py-3 font-semibold hover:bg-card-muted">{n.label}</Link>)}
             <Link href="/search" className="block rounded-md px-3 py-3 font-semibold hover:bg-card-muted">Search</Link>
+            <ThemeToggle variant="menu" />
           </nav>
         </details>
       </div>

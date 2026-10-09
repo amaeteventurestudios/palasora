@@ -6,6 +6,18 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ENVF="$ROOT/.env.test"
 CMD="${1:-up}"
+if [ "$CMD" = "editorial-stop" ] || [ "$CMD" = "editorial-start" ]; then
+  set -a; . "$ENVF"; set +a; D="$ROOT/data-test"; export PALAVVA_DATA_DIR="$D"
+  if [ "$CMD" = "editorial-stop" ]; then
+    kill -TERM "$(cat "$D/run/editorial.pid")" 2>/dev/null || true
+    for pid in $(lsof -tiTCP:8400 -sTCP:LISTEN 2>/dev/null); do
+      cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p'); case "$cwd" in "$ROOT"*) kill -TERM "$pid";; esac; done
+    for i in $(seq 1 20); do lsof -tiTCP:8400 -sTCP:LISTEN >/dev/null 2>&1 || exit 0; sleep 0.25; done; exit 1
+  fi
+  (cd "$ROOT/services/editorial" && exec nohup "$ROOT/services/editorial/.venv/bin/python" -m uvicorn palavva_editorial.api:app --host 127.0.0.1 --port 8400 >> "$D/logs/editorial.log" 2>&1 < /dev/null) &
+  echo $! > "$D/run/editorial.pid"
+  for i in $(seq 1 40); do curl -sf http://127.0.0.1:8400/health >/dev/null && exit 0; sleep 0.25; done; exit 1
+fi
 if [ "$CMD" = "down" ] || [ "$CMD" = "reset" ]; then
   for f in "$ROOT"/data-test/run/*.pid; do [ -f "$f" ] && { pkill -TERM -P "$(cat "$f")" 2>/dev/null || true; kill -TERM "$(cat "$f")" 2>/dev/null || true; rm -f "$f"; }; done
   for port in 3300 8390 8400; do for pid in $(lsof -tiTCP:$port -sTCP:LISTEN 2>/dev/null); do
