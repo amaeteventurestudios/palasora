@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="fr"><title>Fixture Atom</title>
+<entry><title>Sénégal : une coopérative fictive à Dakar</title><link rel="alternate" href="https://fixture.example/fr1"/><id>urn:fx:fr1</id><updated>2026-10-08T10:00:00+01:00</updated><summary>Le texte de la coopérative pour les tests.</summary></entry>
+</feed>

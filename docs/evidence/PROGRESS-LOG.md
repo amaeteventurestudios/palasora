@@ -9,3 +9,4 @@ Times are US Pacific, 2026-10-08/09. Newest entries last.
 - **21:56** PocketBase v0.40.5 pinned, SHA-256 verified. Web deps pinned; `pnpm audit`: 0 known vulnerabilities. Respected the pnpm minimum-release-age policy.
 - **22:00** Schema migration for all `09` collections, plus DB hooks: tenant immutability, append-only audit, and a publish gate requiring a recorded human approval from an editorial role.
 - **22:05** Idempotent seed done. Commit `05cdcb0`.
+- **22:50** Phase 1 public app: all routes from 03 return correct status; typecheck clean. Commit 733ce0c.

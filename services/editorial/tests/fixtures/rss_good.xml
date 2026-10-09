@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>Fixture Wire (synthetic)</title><language>en</language>
+<item><title>Kenya's fictional co-op opens solar cold room in Nakuru</title><link>https://fixture.example/a1?utm_source=x</link><guid>fx-1</guid><pubDate>{NOW}</pubDate><description>&lt;p&gt;A synthetic fixture about agriculture in Kenya.&lt;/p&gt;</description></item>
+<item><title>Ghana mobile money fees: fixture regulator note</title><link>https://fixture.example/a2</link><guid>fx-2</guid><pubDate>{NOW}</pubDate><description>Fixture text about fintech and the central bank in Ghana.</description></item>
+<item><title>Weather in Oslo is cold this week</title><link>https://fixture.example/a3</link><guid>fx-3</guid><pubDate>{NOW}</pubDate><description>A short weather note for Norway.</description></item>
+</channel></rss>
