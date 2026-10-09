@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { tenant, piece } = await loadPiece((await params).slug, "discussion");
-  const canonical = pieceHref(piece as { kind: string; slug: string });
+  const canonical = pieceHref(piece);
   if (!canonical.startsWith("/discussion/")) permanentRedirect(canonical);
   return <PieceDetail tenant={tenant} piece={piece} kind="discussion" />;
 }

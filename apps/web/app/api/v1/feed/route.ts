@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   if (!FEED_MODES.includes(mode)) return fail("INVALID", "Unknown feed mode");
   const res = await listFeed(t, {
     mode, country: u.searchParams.get("country")?.toUpperCase() ?? undefined, topic: u.searchParams.get("topic") ?? undefined,
-    lang: u.searchParams.get("lang") ?? undefined, cursor: u.searchParams.get("cursor"), limit: Number(u.searchParams.get("limit") ?? 20),
+    lang: u.searchParams.get("lang") ?? undefined, cursor: u.searchParams.get("cursor") ?? undefined, limit: Number(u.searchParams.get("limit") ?? 20),
   });
   return ok(res.items, { cursor: res.nextCursor });
 }

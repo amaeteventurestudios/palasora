@@ -33,7 +33,7 @@ export async function pieceMetadata(slug: string, kind: "story" | "discussion"):
   const tenant = await getTenant();
   const piece = await getPublishedPiece(tenant, slug);
   if (!piece) return { title: "Not found", robots: { index: false } };
-  const url = `${originFor(tenant)}${pieceHref(piece as { kind: string; slug: string })}`;
+  const url = `${originFor(tenant)}${pieceHref(piece)}`;
   const img = `${originFor(tenant)}/og/${piece.slug}?v=${piece.revision ?? 1}`;
   return {
     title: piece.headline,

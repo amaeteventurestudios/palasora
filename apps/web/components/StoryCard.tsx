@@ -4,7 +4,8 @@ import type { PieceSummary } from "@/lib/repo/pieces";
 import { DemoBadge, KindBadge } from "./Labels";
 import { Time } from "./Time";
 
-export function pieceHref(p: { kind: string; slug: string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function pieceHref(p: { [k: string]: any }): string {
   return p.kind === "story" ? `/story/${p.slug}` : `/discussion/${p.slug}`;
 }
 
