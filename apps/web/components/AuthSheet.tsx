@@ -3,6 +3,7 @@ import { useActionState, useEffect, useId, useRef } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { signIn, type ActionState } from "@/app/actions/member";
+import { JsFlag, useNavigateOnSuccess } from "./AuthNav";
 
 /** Accessible sign-in dialog (S09). Native <dialog> gives focus trapping and Esc; focus returns to the opener. */
 export function AuthSheet({ open, onClose, next, draftNotice }: { open: boolean; onClose: () => void; next: string; draftNotice: boolean }) {
@@ -10,6 +11,7 @@ export function AuthSheet({ open, onClose, next, draftNotice }: { open: boolean;
   const uid = useId();
   const opener = useRef<Element | null>(null);
   const [state, action, pending] = useActionState<ActionState, FormData>(signIn, { ok: false, message: "" });
+  useNavigateOnSuccess(state);
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
@@ -26,10 +28,10 @@ export function AuthSheet({ open, onClose, next, draftNotice }: { open: boolean;
         <p className="mt-1 text-sm text-muted">You can read and share freely. Sign in to comment, vote, follow, and save across devices.</p>
         {draftNotice && <p className="mt-3 rounded-lg bg-card-muted p-3 text-sm" role="note">We&apos;ll keep your comment here while you sign in.</p>}
         <form action={action} className="mt-4 flex flex-col gap-3">
-          <input type="hidden" name="next" value={next} />
+          <input type="hidden" name="next" value={next} /><JsFlag />
           <div><label className="field-label" htmlFor={`${uid}-email`}>Email</label><input id={`${uid}-email`} name="email" type="email" autoComplete="email" required className="input" /></div>
           <div><label className="field-label" htmlFor={`${uid}-pw`}>Password</label><input id={`${uid}-pw`} name="password" type="password" autoComplete="current-password" required className="input" /></div>
-          {state.message && <p role="alert" className="text-sm text-danger">{state.message}</p>}
+          {state.message && !state.ok && <p role="alert" className="text-sm text-danger">{state.message}</p>}
           <button type="submit" className="btn btn-primary" disabled={pending}>{pending ? "Signing in…" : "Continue with email"}</button>
         </form>
         <p className="mt-4 text-sm">New here? <Link className="link" href={`/auth/sign-up?next=${encodeURIComponent(next)}`}>Create an account</Link></p>

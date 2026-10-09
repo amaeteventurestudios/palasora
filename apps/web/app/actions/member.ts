@@ -29,6 +29,15 @@ async function ctx(): Promise<{ tenant: Tenant; session: Session | null; ip: str
   return { tenant, session, ip: clientKey(h) };
 }
 
+/**
+ * After auth changes, the next page must render with the new cookie and a fresh root layout.
+ * With JS (js=1) the client performs a full navigation to `data.next`; without JS we send a 303.
+ */
+function navigate(f: FormData, next: string): ActionState {
+  if (f.get("js") === "1") return { ok: true, message: "Signed in.", data: { next } };
+  redirect(next);
+}
+
 function isSecure(h: Headers) { return (h.get("x-forwarded-proto") ?? "http") === "https"; }
 
 // ---------- Authentication ----------
@@ -49,7 +58,7 @@ export async function signIn(_: ActionState, f: FormData): Promise<ActionState> 
   const h = await headers();
   await createSession(tenant, user.id, isSecure(h));
   await audit(tenant.id, user.id, "auth.sign_in", "users", user.id);
-  redirect(next);
+  return navigate(f, next);
 }
 
 async function sendVerification(tenant: Tenant, user: { id: string; email: string }): Promise<void> {
@@ -96,7 +105,8 @@ export async function signUp(_: ActionState, f: FormData): Promise<ActionState> 
   await createSession(tenant, user.id, isSecure(h));
   await audit(tenant.id, user.id, "auth.sign_up", "users", user.id);
   await writeEvent(tenant.id, { event_name: "signup_completed", member_id: user.id });
-  redirect(next.includes("?") ? `${next}&welcome=1` : `${next}?welcome=1`);
+  const [path, hash = ""] = next.split("#");
+  return navigate(f, `${path}${path.includes("?") ? "&" : "?"}welcome=1${hash ? `#${hash}` : ""}`);
 }
 
 export async function resendVerification(): Promise<ActionState> {

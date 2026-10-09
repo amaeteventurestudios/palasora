@@ -33,7 +33,8 @@ nohup "$PB" serve --dir="$D/pb_data" --migrationsDir="$ROOT/services/pocketbase/
 echo $! > "$D/run/pocketbase.pid"
 for i in $(seq 1 40); do curl -sf http://127.0.0.1:8390/api/health >/dev/null && break; sleep 0.25; done
 (cd "$ROOT/services/editorial" && "$PY" -m palavva_editorial.seed && "$PY" -m palavva_editorial.e2e_fixtures) >> "$D/logs/seed.log" 2>&1
-(cd "$ROOT/services/editorial" && nohup "$PY" -m uvicorn palavva_editorial.api:app --host 127.0.0.1 --port 8400 >> "$D/logs/editorial.log" 2>&1 < /dev/null & echo $! > "$D/run/editorial.pid")
+(cd "$ROOT/services/editorial" && exec nohup "$PY" -m uvicorn palavva_editorial.api:app --host 127.0.0.1 --port 8400 >> "$D/logs/editorial.log" 2>&1 < /dev/null) &
+echo $! > "$D/run/editorial.pid"
 cd "$ROOT/apps/web"
 if [ "${E2E_BUILD:-1}" = "1" ]; then NEXT_DIST_DIR=.next-test pnpm -s build >> "$D/logs/web-build.log" 2>&1; fi
 NEXT_DIST_DIR=.next-test nohup ./node_modules/.bin/next start -H 127.0.0.1 -p 3300 >> "$D/logs/web.log" 2>&1 < /dev/null &

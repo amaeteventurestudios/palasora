@@ -42,7 +42,12 @@ summary, <=100-word 'Why it matters' section, <=100-word additional context,
 and 1-2 intelligent reader questions when useful. Every factual sentence refers
 to one or more existing claim IDs. Preserve exact time and geographic scope.
 Do not reproduce copyrighted source text beyond approved usage. Output concise
-plain English. Mark uncertainty. Avoid made-up traffic, market size and quotes."""
+plain English. Mark uncertainty. Avoid made-up traffic, market size and quotes.
+The claims you receive were already checked against the source by the Researcher stage.
+When at least one claim is provided, return decision DRAFT and write only what those
+claims support (a short, careful draft is fine; a human editor reviews it). Return
+ABSTAIN only when the claims list is empty. Attribute government statements to their
+source ("the government said", "SAnews.gov.za reported"); do not present plans as done."""
 
 ROLE = """You are the assigned specialist role {role_id} ({role_label}). Read the existing draft and other
 accepted contributions. Contribute 80-170 words only if you have a DISTINCT,
@@ -57,7 +62,7 @@ supplied in the archive packet. Name the period, primary historical source IDs,
 and limits of the analogy. Never fabricate archive documents or quotes. If no
 eligible historic primary evidence exists, return NO_VERIFIED_COMPARISON."""
 
-VERSIONS = {"curator": "curator-v1", "researcher": "researcher-v2", "writer": "writer-v1", "role": "role-contribution-v1", "timelens": "timelens-v1"}
+VERSIONS = {"curator": "curator-v1", "researcher": "researcher-v2", "writer": "writer-v2", "role": "role-contribution-v1", "timelens": "timelens-v1"}
 
 TEXT_BLOCKS = {"type": "array", "maxItems": 3, "items": {"type": "object", "properties": {"text": {"type": "string"}, "claim_ids": {"type": "array", "items": {"type": "string"}}}, "required": ["text", "claim_ids"]}}
 

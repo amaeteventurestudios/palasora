@@ -20,7 +20,7 @@ test("T-010/T-011 draft survives sign-in, posts once, human count updates (AI se
   await dialog.getByLabel("Password").fill(PASSWORD);
   await dialog.getByRole("button", { name: "Continue with email" }).click();
   await expect(page).toHaveURL(new RegExp(STORY));
-  await expect(page.getByRole("link", { name: "Log in" })).toHaveCount(0);
+  await expect(page.getByLabel("Account menu")).toBeVisible(); // full navigation finished, header shows the session
   await expect(page.getByLabel("Join the discussion")).toHaveValue(draft); // exact draft restored
   await expect(page.getByText("Your unsent comment was restored.")).toBeVisible();
   await page.getByRole("button", { name: "Post comment" }).click();
