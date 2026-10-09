@@ -11,7 +11,11 @@ if [ "$CMD" = "editorial-stop" ] || [ "$CMD" = "editorial-start" ]; then
   if [ "$CMD" = "editorial-stop" ]; then
     kill -TERM "$(cat "$D/run/editorial.pid")" 2>/dev/null || true
     for pid in $(lsof -tiTCP:8400 -sTCP:LISTEN 2>/dev/null); do
-      cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p'); case "$cwd" in "$ROOT"*) kill -TERM "$pid";; esac; done
+      cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p'); case "$cwd" in "$ROOT"*) kill -TERM "$pid" 2>/dev/null || true;; esac; done
+    for i in $(seq 1 40); do lsof -tiTCP:8400 -sTCP:LISTEN >/dev/null 2>&1 || exit 0; sleep 0.25; done
+    # Graceful shutdown can stall on open requests under load: force it (test stack only, cwd-checked).
+    for pid in $(lsof -tiTCP:8400 -sTCP:LISTEN 2>/dev/null); do
+      cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p'); case "$cwd" in "$ROOT"*) kill -KILL "$pid" 2>/dev/null || true;; esac; done
     for i in $(seq 1 20); do lsof -tiTCP:8400 -sTCP:LISTEN >/dev/null 2>&1 || exit 0; sleep 0.25; done; exit 1
   fi
   (cd "$ROOT/services/editorial" && exec nohup "$ROOT/services/editorial/.venv/bin/python" -m uvicorn palavva_editorial.api:app --host 127.0.0.1 --port 8400 >> "$D/logs/editorial.log" 2>&1 < /dev/null) &
@@ -21,10 +25,15 @@ fi
 if [ "$CMD" = "down" ] || [ "$CMD" = "reset" ]; then
   for f in "$ROOT"/data-test/run/*.pid; do [ -f "$f" ] && { pkill -TERM -P "$(cat "$f")" 2>/dev/null || true; kill -TERM "$(cat "$f")" 2>/dev/null || true; rm -f "$f"; }; done
   for port in 3300 8390 8400; do for pid in $(lsof -tiTCP:$port -sTCP:LISTEN 2>/dev/null); do
-    cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p'); case "$cwd" in "$ROOT"*) kill -TERM "$pid";; esac; done; done
+    cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p'); case "$cwd" in "$ROOT"*) kill -TERM "$pid" 2>/dev/null || true;; esac; done; done
   sleep 1
   [ "$CMD" = "reset" ] && rm -rf "$ROOT/data-test"
   [ "$CMD" = "down" ] && exit 0
+fi
+# `up` on a running stack is a no-op: re-running `superuser upsert` would rotate tokens under live services,
+# and duplicate processes would overwrite pid files (leaving orphans that `down` cannot find).
+if [ "$CMD" = "up" ] && curl -sf -o /dev/null http://127.0.0.1:8390/api/health && curl -sf -o /dev/null http://127.0.0.1:3300/api/v1/health; then
+  echo "test stack up on http://127.0.0.1:3300 (already running)"; exit 0
 fi
 if [ ! -f "$ENVF" ]; then
   sed -e "s|^PALAVVA_DATA_DIR=.*|PALAVVA_DATA_DIR=./data-test|" -e "s|^PALAVVA_ENV=.*|PALAVVA_ENV=test|" \

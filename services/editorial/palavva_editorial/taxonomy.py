@@ -85,7 +85,9 @@ SENSITIVE_KEYWORDS = ["election", "elections", "electoral", "campaign", "ballot"
                       "coup", "protest", "protesters", "riot", "killed", "murder", "shooting", "arrest", "arrested", "police", "court", "on trial", "trial court", "charged with",
                       "allegation", "alleged", "accused", "fraud", "corruption", "bribe", "scandal", "vaccine", "outbreak", "disease", "epidemic", "medical",
                       "investment advice", "stock", "shares", "bankrupt", "war", "attack", "militant", "terror", "kidnap", "explosion",
-                      "ethnic", "tribal", "religious", "xenophob"]
+                      "ethnic", "tribal", "religious", "xenophob*", "kidnap*",
+                      # Migration enforcement and "illegal foreigner" framing are tied to xenophobic violence in the region: always human review.
+                      "illegal immigra*", "irregular migra*", "illegal foreigner*", "illegal migrant*", "undocumented", "asylum", "deport*", "foreign nationals"]
 
 # v1.3 registered editorial roles (22 §4). Labels are expertise, never a person, nationality or ethnicity.
 AI_ROLES = [
@@ -132,11 +134,12 @@ AFRICA_TERMS = ["africa", "african", "afrique", "africain", "africaine", "أفر
 SENSITIVE_KEYWORDS_I18N = [
     # French
     "election", "elections", "electoral", "campagne electorale", "scrutin", "manifestation", "manifestants", "emeute", "police", "gendarmerie", "tribunal", "proces",
-    "arrete", "arrestation", "detenu", "tue", "tues", "meurtre", "attaque", "attentat", "corruption", "fraude", "guerre", "terroris", "coup d'etat", "putsch",
-    "epidemie", "maladie", "vaccin", "ethnique", "religieux", "xenophob", "enlevement", "repression", "opposant",
+    "arrete", "arrestation", "detenu", "tue", "tues", "meurtre", "attaque", "attentat", "corruption", "fraude", "guerre", "coup d'etat", "putsch",
+    "epidemie", "maladie", "vaccin", "ethnique", "religieux", "xenophob*", "enlevement", "repression", "opposant",
+    "immigration clandestine", "immigration irreguliere", "sans-papiers", "expulsion*", "demandeur* d'asile", "terroris*",
     # Arabic
     "انتخابات", "انتخابي", "احتجاج", "احتجاجات", "مظاهرة", "مظاهرات", "الشرطة", "محكمة", "اعتقال", "معتقل", "قتل", "مقتل", "هجوم", "فساد", "حرب", "إرهاب",
-    "انقلاب", "وباء", "لقاح", "عرقي", "طائفي", "اختطاف", "قمع",
+    "انقلاب", "وباء", "لقاح", "عرقي", "طائفي", "اختطاف", "قمع", "الهجرة غير الشرعية", "ترحيل", "كراهية الأجانب", "لجوء",
 ]
 
 

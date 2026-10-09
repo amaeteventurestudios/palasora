@@ -355,3 +355,41 @@ test("S-v13 screenshots: home rail, Local Pulse, Explore Africa, My Africa at 32
     }
   }
 });
+
+// Runs last in this file: it revokes the fixture source, which withdraws its derived topic.
+test("A-05 rights revocation propagates: topic withdrawn, public correction, thread_paused event", async ({ page }) => {
+  await page.goto("/feed/new");
+  const card = page.getByTestId("story-card").filter({ hasText: "Fixture Wire (synthetic)" }).first();
+  await expect(card).toBeVisible();
+  const href = (await card.locator('a[href^="/discussion/"]').first().getAttribute("href"))!;
+  const pieceId = await card.getAttribute("data-piece-id");
+  expect((await page.request.get(href)).status()).toBe(200);
+  const cursor = (await (await page.request.get("/api/v1/events/replay")).json()).meta.latest_seq as number;
+  await signIn(page, "admin@palavva.local", BASE, "/admin/sources");
+  page.on("dialog", (d) => d.accept());
+  const row = page.getByTestId("source-row").filter({ hasText: "Fixture Wire (synthetic)" });
+  await row.getByRole("button", { name: "Revoke rights" }).click();
+  await expect(row).toContainText("Rights: revoked"); // the action's button (and its message) unmount once revoked
+  expect([404, 410]).toContain((await page.request.get(href)).status());
+  await page.goto("/corrections");
+  await expect(page.getByText(/Withdrawn: the source's usage rights were revoked/).first()).toBeVisible();
+  const evs = (await (await page.request.get(`/api/v1/events/replay?cursor=${cursor}`)).json()).data as { type: string; piece_id: string }[];
+  expect(evs.some((e) => e.type === "thread_paused" && e.piece_id === pieceId)).toBe(true);
+  await page.goto("/feed/new");
+  await expect(page.getByTestId("story-card").filter({ hasText: "Fixture Wire (synthetic)" })).toHaveCount(0);
+});
+
+test("L-03 header menus stay inside the viewport in RTL and LTR at 320/390", async ({ browser }) => {
+  for (const [loc, cc] of [["ar-EG", "EG"], ["en-NG", "NG"]] as const) {
+    for (const w of [320, 390]) {
+      const ctx = await guest(browser, cc, loc, { viewport: { width: w, height: 800 } });
+      const p = await ctx.newPage();
+      await p.goto("/");
+      await p.getByTestId("prefs-menu").locator("summary").click();
+      const box = (await p.getByTestId("prefs-menu").locator("form").boundingBox())!;
+      expect(box.x, `${loc} @${w}`).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width, `${loc} @${w}`).toBeLessThanOrEqual(w);
+      await ctx.close();
+    }
+  }
+});

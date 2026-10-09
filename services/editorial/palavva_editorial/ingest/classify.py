@@ -31,6 +31,8 @@ class Classification:
 def _has(text: str, term: str) -> bool:
     if re.search(r"[\u0600-\u06FF]", term):  # Arabic: substring match (clitics attach to words)
         return term in text
+    if term.endswith("*"):  # explicit stem: "xenophob*" matches xenophobia / xenophobic
+        return re.search(r"(?<![a-z])" + re.escape(term[:-1]), text) is not None
     return re.search(r"(?<![a-z])" + re.escape(term) + r"(?![a-z])", text) is not None
 
 

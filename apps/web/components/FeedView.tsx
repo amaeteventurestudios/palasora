@@ -13,7 +13,7 @@ import { LiveEventsProvider } from "./live/LiveEvents";
 import { LiveActivity, NewDiscussionsBanner } from "./live/FeedLive";
 import { latestSeq, recentActivity, roleLabels } from "@/lib/repo/thread";
 import { getT } from "@/lib/i18n/context";
-import { countryInfo } from "@/lib/i18n/context";
+import { countryInfo, subdivisionLabel } from "@/lib/i18n/context";
 import { localizeSummaries } from "@/lib/repo/localize";
 import { computeTrending } from "@/lib/repo/trending";
 import { getPulse } from "@/lib/repo/pulse";
@@ -92,8 +92,8 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
                 <h2 id="pulse-h" className="text-lg font-bold">{t("pulse.title", { country: countryInfo(pulse.country)?.name ?? pulse.country })}</h2>
                 <Link href={`/local-pulse?country=${pulse.country}`} className="text-sm link">{t("pulse.open")}</Link>
               </div>
-              <p className="meta mb-2">{t("pulse.sub", { unit: countryInfo(pulse.country)?.subdivision.toLowerCase() ?? "area" })}</p>
-              <PulseMap pulse={pulse} t={t} compact hrefFor={(code) => `/local-pulse?country=${pulse.country}&area=${code}`} />
+              <p className="meta mb-2">{t("pulse.sub", { unit: subdivisionLabel(pulse.country, ctx.ui) })}</p>
+              <PulseMap pulse={pulse} t={t} ui={ctx.ui} compact hrefFor={(code) => `/local-pulse?country=${pulse.country}&area=${code}`} />
             </section>
           )}
           <TrendingNow r={trendHome} t={t} edition={edition} />

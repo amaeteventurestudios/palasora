@@ -57,7 +57,7 @@ export function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; sessio
             <summary className="flex h-11 cursor-pointer list-none items-center gap-2 rounded-lg px-2 hover:bg-white/10" aria-label={t("nav.accountMenu")}>
               <User size={20} aria-hidden="true" /><span className="hidden text-sm font-semibold sm:inline">{session.user.display_name || session.user.handle}</span>
             </summary>
-            <div className="absolute end-0 z-50 mt-2 w-56 rounded-xl border border-border bg-card p-2 text-foreground shadow-lg">
+            <div className="fixed inset-x-4 top-16 z-50 rounded-xl sm:absolute sm:inset-x-auto sm:end-0 sm:top-auto sm:mt-2 sm:w-56 border border-border bg-card p-2 text-foreground shadow-lg">
               <Link className="block rounded-md px-3 py-2 hover:bg-card-muted" href="/account">{t("nav.account")}</Link>
               <Link className="block rounded-md px-3 py-2 hover:bg-card-muted" href="/saved">{t("nav.saved")}</Link>
               <Link className="block rounded-md px-3 py-2 hover:bg-card-muted" href="/my-africa">{t("nav.myAfrica")}</Link>

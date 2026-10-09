@@ -21,9 +21,9 @@ export function PrefsMenu({ edition, editionLabel, ui, reading, editionAuto, edi
   return (
     <details className="relative" data-testid="prefs-menu">
       <summary className="flex h-11 cursor-pointer list-none items-center gap-1 rounded-lg px-1.5 text-sm font-semibold sm:gap-1.5 sm:px-2 hover:bg-white/10" aria-label={`${t("prefs.title")}: ${editionLabel}, ${ui.toUpperCase()}`}>
-        <Globe size={18} aria-hidden="true" /><span className="hidden sm:inline">{editionLabel}</span><span>· {ui.toUpperCase()}</span>
+        <Globe size={18} aria-hidden="true" /><span className="hidden whitespace-nowrap sm:inline">{editionLabel}</span><span className="whitespace-nowrap">· {ui.toUpperCase()}</span>
       </summary>
-      <form action={action} className="absolute end-0 z-50 mt-2 flex w-[min(92vw,320px)] flex-col gap-3 rounded-xl border border-border bg-card p-4 text-foreground shadow-lg">
+      <form action={action} className="fixed inset-x-4 top-16 z-50 flex flex-col sm:absolute sm:inset-x-auto sm:end-0 sm:top-auto sm:mt-2 sm:w-[320px] gap-3 rounded-xl border border-border bg-card p-4 text-foreground shadow-lg">
         <p className="text-sm font-bold">{t("prefs.title")}</p>
         <input type="hidden" name="next" value={next} /><JsFlag />
         <div><label className="field-label" htmlFor="pref-ed">{t("prefs.edition")}{editionAuto ? ` (${t("prefs.auto")})` : ""}</label>

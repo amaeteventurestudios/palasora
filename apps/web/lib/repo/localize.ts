@@ -22,15 +22,21 @@ export async function localizationsFor(t: Tenant, type: "piece" | "comment", ids
   if (!ids.length) return m;
   for (let i = 0; i < ids.length; i += 40) {
     const chunk = ids.slice(i, i + 40);
-    const rows = await pb.list("localizations", { filter: `tenant_id=${q(t.id)} && target_type=${q(type)} && locale=${q(locale)} && (status='machine_unreviewed' || status='reviewed' || status='blocked') && (${chunk.map((x) => `target_id=${q(x)}`).join(" || ")})`, sort: "-source_version", perPage: 200 });
-    for (const r of rows) if (!m.has(r.target_id)) m.set(r.target_id, r);
+    const rows = await pb.list("localizations", { filter: `tenant_id=${q(t.id)} && target_type=${q(type)} && locale=${q(locale)} && (status='machine_unreviewed' || status='reviewed' || status='blocked' || status='failed') && (${chunk.map((x) => `target_id=${q(x)}`).join(" || ")})`, sort: "-source_version", perPage: 200 });
+    // Newest source version first; within a version an editor's block wins, then reviewed, machine, failed.
+    const order: Record<string, number> = { blocked: 3, reviewed: 2, machine_unreviewed: 1, failed: 0 };
+    const rank = (r: Rec) => r.source_version * 10 + (order[r.status] ?? 0);
+    for (const r of rows) { const cur = m.get(r.target_id); if (!cur || rank(r) > rank(cur)) m.set(r.target_id, r); }
   }
   return m;
 }
 
 export function stateFor(loc: Rec | undefined, sourceLocale: string, reading: string, currentVersion: number, mtEnabled: boolean): TranslationState {
   if (reading === sourceLocale) return { status: "original", from: sourceLocale, to: reading };
-  if (loc && loc.status !== "blocked" && loc.source_version === currentVersion) return { status: loc.status === "reviewed" ? "reviewed" : "machine", from: sourceLocale, to: reading, localization_id: loc.id };
+  // A translation that failed the fidelity gate is never shown and not retried in a loop: honest fallback to the original.
+  // Blocked by an editor, or failed the fidelity gate: never shown, not re-requested; honest fallback to the original.
+  if (loc && (loc.status === "failed" || loc.status === "blocked") && loc.source_version === currentVersion) return { status: "unavailable", from: sourceLocale, to: reading };
+  if (loc && loc.status !== "blocked" && loc.status !== "failed" && loc.source_version === currentVersion) return { status: loc.status === "reviewed" ? "reviewed" : "machine", from: sourceLocale, to: reading, localization_id: loc.id };
   return { status: mtEnabled ? "pending" : "unavailable", from: sourceLocale, to: reading };
 }
 

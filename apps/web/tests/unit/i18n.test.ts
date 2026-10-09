@@ -34,3 +34,26 @@ describe("reader context precedence (L-01..L-05, L-24)", () => {
     expect(browserLocale("yo-NG,en;q=0.2", ["en", "fr"])).toBe("en");
   });
 });
+
+describe("translation state (L-08/L-09)", async () => {
+  const { stateFor } = await import("../../lib/repo/localize");
+  const loc = (status: string, v = 1) => ({ id: "x", status, source_version: v }) as never;
+  it("a failed fidelity check falls back honestly and is not re-requested", () => {
+    expect(stateFor(loc("failed"), "en", "fr", 1, true).status).toBe("unavailable");
+  });
+  it("machine output is labelled machine; blocked is never shown; stale versions re-translate", () => {
+    expect(stateFor(loc("machine_unreviewed"), "en", "fr", 1, true).status).toBe("machine");
+    expect(stateFor(loc("blocked"), "en", "fr", 1, true).status).toBe("unavailable");
+    expect(stateFor(loc("machine_unreviewed", 1), "en", "fr", 2, true).status).toBe("pending");
+    expect(stateFor(undefined, "en", "pcm", 1, false).status).toBe("unavailable");
+  });
+});
+
+describe("plurals", async () => {
+  const { translator } = await import("../../lib/i18n/messages");
+  it("uses the singular form for n=1", () => {
+    expect(translator("en")("pulse.stories", { n: 1 })).toBe("1 story");
+    expect(translator("en")("pulse.stories", { n: 3 })).toBe("3 stories");
+    expect(translator("fr")("pulse.humanReplies", { n: 1 })).toBe("1 réponse humaine");
+  });
+});

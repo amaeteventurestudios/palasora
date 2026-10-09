@@ -17,7 +17,7 @@ if [ "${REAL_QWEN:-0}" = "1" ]; then
   echo "== real Qwen"; PALAVVA_REAL_QWEN=1 .venv/bin/python -m pytest -q -s tests/test_real_qwen.py > "$OUT/real-qwen.log" 2>&1 && echo "   PASS" || { echo "   FAIL"; rc=1; }
 fi
 cd "$ROOT"
-echo "== E2E stack (reset + build)"; bash scripts/test-stack.sh reset > /dev/null 2>&1; E2E_BUILD=1 bash scripts/test-stack.sh up > "$OUT/test-stack.log" 2>&1 < /dev/null; grep -q "test stack up" "$OUT/test-stack.log" && echo "   up" || { echo "   FAILED TO START"; rc=1; }
+echo "== E2E stack (reset + build)"; E2E_BUILD=1 bash scripts/test-stack.sh reset > "$OUT/test-stack.log" 2>&1 < /dev/null; grep -q "test stack up" "$OUT/test-stack.log" && echo "   up" || { echo "   FAILED TO START"; rc=1; }
 cd "$ROOT/apps/web"
 echo "== playwright"; npx playwright test > "$OUT/playwright.log" 2>&1 && echo "   PASS ($(grep -Eo '[0-9]+ passed' "$OUT/playwright.log" | tail -1))" || { echo "   FAIL ($(grep -Eo '[0-9]+ (passed|failed)' "$OUT/playwright.log" | tr '\n' ' '))"; rc=1; }
 cd "$ROOT"; bash scripts/test-stack.sh down > /dev/null 2>&1

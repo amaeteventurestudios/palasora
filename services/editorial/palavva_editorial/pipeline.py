@@ -100,7 +100,8 @@ def _ingest_item(pb: PB, queue: Queue, settings: Settings, source: dict, it, res
         res["duplicates"] += 1  # exact replay: no new story (T-016)
         return
     policy = source.get("usage_policy") or "link_only"
-    excerpt = it.summary[:400] if policy in ("permitted_excerpt", "licensed_full") else ""
+    # Cut at a word boundary: a word split mid-way ("Ntsh") invites the model to complete it into an invented name.
+    excerpt = word_cut(it.summary, 400) if policy in ("permitted_excerpt", "licensed_full") else ""
     chash = content_hash(it.title, excerpt or it.title)
     if pb.first("source_items", f"tenant_id={q(tid)} && source_id={q(source['id'])} && content_hash={q(chash)}"):
         res["duplicates"] += 1  # same text re-published under a new GUID
@@ -225,6 +226,14 @@ def _run(pb: PB, queue: Queue, settings: Settings, provider: ModelProvider, tid:
     return r
 
 
+def word_cut(text: str, limit: int) -> str:
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    sp = cut.rfind(" ")
+    return (cut[:sp] if sp > limit * 0.6 else cut).rstrip(" ,;:") + "…"
+
+
 def draft_cluster(pb: PB, queue: Queue, settings: Settings, provider: ModelProvider, job: dict) -> dict:
     tid = job["tenant_id"]
     cid = job["payload"]["cluster_id"]
@@ -249,7 +258,7 @@ def draft_cluster(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
                                "author": it.get("author") or "", "license": src.get("license_name") or "", "license_url": src.get("license_url") or ""})
     packet = {"cluster_id": cid, "countries": cl.get("primary_country_codes") or [], "topics": cl.get("topic_slugs") or [], "risk_hint": cl.get("risk_tier"),
               "rights_status": "approved", "sources": [{k: v for k, v in s.items() if k in ("source_id", "publisher", "title", "url", "published_at", "excerpt", "language")} for s in packet_sources]}
-    packet_text = " ".join(f"{s['title']} {s['excerpt']} {s['published_at']}" for s in packet_sources)
+    packet_text = " ".join(f"{s['publisher']} {s['title']} {s['excerpt']} {s['published_at']}" for s in packet_sources)
     sid_to_item = {s["source_id"]: s["item_id"] for s in packet_sources}
     evidence_ids = [s["item_id"] for s in packet_sources]
     jid = job["job_id"]
@@ -306,6 +315,8 @@ def draft_cluster(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
             "questions": [str(x)[:300] for x in (draft.get("questions") or [])][:2], "history": {"status": tl_status},
             "validation": {"verdict": verdict.verdict, "flags": verdict.flags}}
     slug = cl["slug"]
+    if slug.startswith("-"):  # non-Latin source title (e.g. Arabic) slugifies to nothing: use the English headline
+        slug = f"{tx.slugify(str(draft.get('headline', '')))[:60].strip('-') or 'topic'}{slug}"
     is_fixture = bool(cl.get("is_fixture")) or provider.name == "fixture"
     piece = pb.create("editorial_pieces", {
         "tenant_id": tid, "cluster_id": cid, "slug": slug, "kind": "discussion", "headline": str(draft.get("headline", ""))[:300] or packet_sources[0]["title"][:300],

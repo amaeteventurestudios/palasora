@@ -34,3 +34,12 @@ def test_translate_job_caches_and_versions(seeded, tmp_path):
     assert again["outcome"] == "cached"
     bad = translate.translate_job(pb, queue, s, FixtureProvider("bad_translation"), {**job, "payload": {**job["payload"], "locale": "ar"}})
     assert bad["outcome"] == "failed_fidelity" and pb.get("localizations", bad["id"])["fields"] == {}
+
+
+def test_fidelity_allows_cross_language_inflection_but_not_altered_names():
+    from palavva_editorial.translate import fidelity
+    src = {"headline": "Mozambique: Indigenous identity and the Mozambican citizen, says Minister Khumbudzo Ntshavheni"}
+    ok, qa = fidelity(src, {"headline": "Mozambique : identité indigène et citoyen mozambicain, selon la ministre Khumbudzo Ntshavheni"}, "fr")
+    assert ok, qa
+    ok, qa = fidelity(src, {"headline": "Mozambique : identité indigène et citoyen mozambicain, selon la ministre Khumbudzo Ntshau"}, "fr")
+    assert not ok and "Khumbudzo Ntshavheni" in qa["missing_names"]

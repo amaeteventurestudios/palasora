@@ -25,7 +25,7 @@ export const MESSAGES = {
     "live.offline": "Live updates unavailable. Refresh to see new replies.",
     "pulse.title": "{country} Pulse", "pulse.sub": "Where verified stories and discussions are about, by {unit}.", "pulse.open": "Open full map", "pulse.list": "{unit} list",
     "pulse.legendStory": "Verified stories about this area (last 7 days)", "pulse.legendNone": "No verified reporting yet: limited coverage, not \"nothing happening\"",
-    "pulse.limited": "Limited reporting available", "pulse.stories": "{n} stories", "pulse.aiReplies": "{n} AI replies", "pulse.humanReplies": "{n} human replies",
+    "pulse.limited": "Limited reporting available", "pulse.stories": "{n} stories", "pulse.aiReplies": "{n} AI replies", "pulse.humanReplies": "{n} human replies", "pulse.stories.one": "{n} story", "pulse.aiReplies.one": "{n} AI reply", "pulse.humanReplies.one": "{n} human reply",
     "pulse.updated": "Updated {time} · Source: classified story locations (subject/event places only)", "pulse.noMap": "No subnational map is configured for this edition yet.",
     "pulse.allOf": "All of {country}", "pulse.follow": "Follow {area}", "pulse.following": "Following {area}",
     "trend.now": "Trending now", "trend.in": "Trending in {country}", "trend.africa": "Trending across Africa", "trend.empty": "Not enough recent activity to call anything trending. Here are the latest verified stories instead.",
@@ -73,7 +73,7 @@ export const MESSAGES = {
     "live.offline": "Direct indisponible. Actualisez pour voir les nouvelles réponses.",
     "pulse.title": "Pouls · {country}", "pulse.sub": "Où portent les sujets et discussions vérifiés, par {unit}.", "pulse.open": "Ouvrir la carte complète", "pulse.list": "Liste : {unit}",
     "pulse.legendStory": "Sujets vérifiés concernant cette zone (7 derniers jours)", "pulse.legendNone": "Pas encore de reportage vérifié : couverture limitée, pas « rien ne se passe »",
-    "pulse.limited": "Couverture limitée", "pulse.stories": "{n} sujets", "pulse.aiReplies": "{n} réponses IA", "pulse.humanReplies": "{n} réponses humaines",
+    "pulse.limited": "Couverture limitée", "pulse.stories": "{n} sujets", "pulse.aiReplies": "{n} réponses IA", "pulse.humanReplies": "{n} réponses humaines", "pulse.stories.one": "{n} sujet", "pulse.aiReplies.one": "{n} réponse IA", "pulse.humanReplies.one": "{n} réponse humaine",
     "pulse.updated": "Mis à jour {time} · Source : lieux des sujets classés (lieux de l'événement uniquement)", "pulse.noMap": "Aucune carte infranationale n'est encore configurée pour cette édition.",
     "pulse.allOf": "Tout le pays : {country}", "pulse.follow": "Suivre {area}", "pulse.following": "Vous suivez {area}",
     "trend.now": "Tendances", "trend.in": "Tendances · {country}", "trend.africa": "Tendances à travers l'Afrique", "trend.empty": "Pas assez d'activité récente pour parler de tendance. Voici plutôt les derniers sujets vérifiés.",
@@ -121,7 +121,7 @@ export const MESSAGES = {
     "live.offline": "التحديثات المباشرة غير متاحة. حدّث الصفحة لرؤية الردود الجديدة.",
     "pulse.title": "نبض {country}", "pulse.sub": "أين تدور القصص والنقاشات الموثّقة، حسب {unit}.", "pulse.open": "افتح الخريطة الكاملة", "pulse.list": "قائمة: {unit}",
     "pulse.legendStory": "قصص موثّقة عن هذه المنطقة (آخر 7 أيام)", "pulse.legendNone": "لا تغطية موثّقة بعد: تغطية محدودة، وليس «لا شيء يحدث»",
-    "pulse.limited": "تغطية محدودة", "pulse.stories": "{n} قصص", "pulse.aiReplies": "{n} ردود ذكاء اصطناعي", "pulse.humanReplies": "{n} ردود بشرية",
+    "pulse.limited": "تغطية محدودة", "pulse.stories": "{n} قصص", "pulse.aiReplies": "{n} ردود ذكاء اصطناعي", "pulse.humanReplies": "{n} ردود بشرية", "pulse.stories.one": "قصة واحدة", "pulse.aiReplies.one": "رد واحد من الذكاء الاصطناعي", "pulse.humanReplies.one": "رد بشري واحد",
     "pulse.updated": "حُدِّث {time} · المصدر: مواقع القصص المصنّفة (مكان الحدث فقط)", "pulse.noMap": "لم تُضبط خريطة محلية لهذه النسخة بعد.",
     "pulse.allOf": "كل {country}", "pulse.follow": "تابِع {area}", "pulse.following": "تتابع {area}",
     "trend.now": "الأكثر رواجًا الآن", "trend.in": "الأكثر رواجًا في {country}", "trend.africa": "الأكثر رواجًا في أنحاء أفريقيا", "trend.empty": "لا يوجد نشاط حديث كافٍ لوصف أي شيء بالرائج. إليك أحدث القصص الموثّقة بدلًا من ذلك.",
@@ -169,7 +169,7 @@ export const MESSAGES = {
     "live.offline": "Live update no dey work now. Refresh make you see new reply.",
     "pulse.title": "{country} Pulse", "pulse.sub": "Where verified stories and gist dey talk about, by {unit}.", "pulse.open": "Open full map", "pulse.list": "{unit} list",
     "pulse.legendStory": "Verified stories about dis area (last 7 days)", "pulse.legendNone": "No verified report yet: coverage small, no be say \"nothing dey happen\"",
-    "pulse.limited": "Coverage still small", "pulse.stories": "{n} stories", "pulse.aiReplies": "{n} AI replies", "pulse.humanReplies": "{n} human replies",
+    "pulse.limited": "Coverage still small", "pulse.stories": "{n} stories", "pulse.aiReplies": "{n} AI replies", "pulse.humanReplies": "{n} human replies", "pulse.stories.one": "{n} story", "pulse.aiReplies.one": "{n} AI reply", "pulse.humanReplies.one": "{n} human reply",
     "pulse.updated": "Updated {time} · Source: story location wey we classify (only where di tin happen)", "pulse.noMap": "We never set state map for dis edition yet.",
     "pulse.allOf": "All {country}", "pulse.follow": "Follow {area}", "pulse.following": "You dey follow {area}",
     "trend.now": "Wetin dey trend now", "trend.in": "Wetin dey trend for {country}", "trend.africa": "Wetin dey trend across Africa", "trend.empty": "Activity never reach to call anything trending. See di latest verified stories instead.",
@@ -203,7 +203,10 @@ export const UI_LOCALES = Object.keys(MESSAGES) as UiLocale[];
 export function translator(locale: string) {
   const dict = (MESSAGES as Record<string, Record<string, string>>)[locale] ?? MESSAGES.en;
   return (key: MessageKey, vars: Record<string, string | number> = {}): string => {
-    let s = dict[key] ?? MESSAGES.en[key] ?? key;
+    // Singular form when n === 1 and a "<key>.one" message exists (e.g. "1 story", not "1 stories").
+    const one = vars.n === 1 ? `${key}.one` : "";
+    const d = dict as Record<string, string>, en = MESSAGES.en as Record<string, string>;
+    let s = (one && (d[one] ?? en[one])) || (dict[key] ?? MESSAGES.en[key] ?? key);
     for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, String(v));
     return s;
   };

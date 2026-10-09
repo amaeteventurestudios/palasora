@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getTenant } from "@/lib/tenant";
 import { getSession } from "@/lib/session";
 import { pb, q } from "@/lib/pb";
-import { getT, countryInfo, allCountries } from "@/lib/i18n/context";
+import { getT, countryInfo, allCountries, subdivisionLabel } from "@/lib/i18n/context";
 import { getPulse } from "@/lib/repo/pulse";
 import { listFeed } from "@/lib/repo/pieces";
 import { taxonomy } from "@/lib/repo/taxonomy";
@@ -44,13 +44,13 @@ export default async function LocalPulse({ searchParams }: { searchParams: Promi
         {area && <li aria-current="page">{areaRec!.name}</li>}
       </ol></nav>
       <h1 className="mt-2 text-[28px] font-extrabold tracking-tight">{area ? areaRec!.name : t("pulse.title", { country: cname })}</h1>
-      <p className="text-muted">{t("pulse.sub", { unit: (countryInfo(country)!.subdivision || "areas").toLowerCase() })}</p>
+      <p className="text-muted">{t("pulse.sub", { unit: subdivisionLabel(country, ctx.ui) })}</p>
       <div role="group" aria-label={t("nav.countries")} className="scroll-row mt-3">
         {mapCountries.map((c) => <Link key={c} href={`/local-pulse?country=${c}`} className="chip" aria-current={c === country ? "true" : undefined}>{countryInfo(c)!.name}</Link>)}
       </div>
       <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-12">
         <section className="card p-4 lg:col-span-7" aria-label={t("pulse.title", { country: cname })}>
-          <PulseMap pulse={pulse} t={t} selected={area} hrefFor={(code) => `/local-pulse?country=${country}&area=${code}`} />
+          <PulseMap pulse={pulse} t={t} ui={ctx.ui} selected={area} hrefFor={(code) => `/local-pulse?country=${country}&area=${code}`} />
         </section>
         <section className="lg:col-span-5" aria-labelledby="area-feed">
           <div className="flex flex-wrap items-center justify-between gap-2">

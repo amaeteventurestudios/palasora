@@ -4,8 +4,9 @@
 - every hop's DNS answers are checked: loopback/private/link-local/multicast/reserved/
   CGNAT/metadata addresses are refused; redirects are followed manually (max 3) and re-checked
 - bounded size (streamed), timeout, content-type allowlist, honest User-Agent, conditional GET
-Residual risk: a DNS answer could change between our check and httpx's own lookup
-(rebinding). Documented in DECISIONS.md ADR-012; acceptable for allowlisted publisher hosts.
+- DNS rebinding: the connection is pinned to the exact address that passed the check (the
+  request goes to the IP; Host header and TLS SNI/certificate verification use the hostname),
+  so a second, different DNS answer can never be used. Closes the ADR-012 residual risk.
 """
 from __future__ import annotations
 
@@ -67,7 +68,8 @@ def resolve_public(host: str, port: int, resolver=socket.getaddrinfo) -> list[st
     return ips
 
 
-def check_url(url: str, allowed_hosts: set[str], resolver=socket.getaddrinfo) -> None:
+def check_url(url: str, allowed_hosts: set[str], resolver=socket.getaddrinfo) -> str:
+    """Validate scheme/host/allowlist and DNS; return the public IP the request must be pinned to."""
     parts = urlsplit(url)
     if parts.scheme not in ("https", "http"):
         raise FetchError("BAD_SCHEME", parts.scheme)
@@ -82,10 +84,24 @@ def check_url(url: str, allowed_hosts: set[str], resolver=socket.getaddrinfo) ->
         ipaddress.ip_address(host)
         if not ip_is_public(host):
             raise FetchError("PRIVATE_ADDRESS", host)
-        return
+        return host
     except ValueError:
         pass
-    resolve_public(host, parts.port or (443 if parts.scheme == "https" else 80), resolver)
+    return resolve_public(host, parts.port or (443 if parts.scheme == "https" else 80), resolver)[0]
+
+
+def pinned_request(url: str, ip: str) -> tuple[httpx.URL, dict[str, str], dict]:
+    """Target the validated IP directly while keeping Host and TLS server name = the original hostname."""
+    u = httpx.URL(url)
+    host = u.host
+    try:
+        ipaddress.ip_address(host)
+        return u, {}, {}
+    except ValueError:
+        pass
+    hdr = {"Host": host if u.port is None else f"{host}:{u.port}"}
+    ext = {"sni_hostname": host} if u.scheme == "https" else {}
+    return u.copy_with(host=ip), hdr, ext
 
 
 def safe_fetch(url: str, allowed_hosts: set[str] | None = None, timeout: float = 15.0, etag: str = "", last_modified: str = "",
@@ -102,9 +118,10 @@ def safe_fetch(url: str, allowed_hosts: set[str] | None = None, timeout: float =
     try:
         current = url
         for _ in range(max_redirects + 1):
-            check_url(current, allowed, resolver)
+            ip = check_url(current, allowed, resolver)
             hops.append(current)
-            with c.stream("GET", current, headers=headers) as r:
+            target, host_hdr, ext = pinned_request(current, ip)
+            with c.stream("GET", target, headers={**headers, **host_hdr}, extensions=ext) as r:
                 if r.status_code in (301, 302, 303, 307, 308):
                     loc = r.headers.get("location")
                     if not loc:

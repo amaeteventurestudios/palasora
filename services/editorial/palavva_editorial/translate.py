@@ -12,6 +12,7 @@ import json
 import re
 from pathlib import Path
 
+from . import taxonomy as tx
 from .config import Settings
 from .editorial import prompts as P
 from .jobs import Queue
@@ -69,8 +70,13 @@ def fidelity(src: dict[str, str], out: dict[str, str], dst: str) -> tuple[bool, 
         qa["missing_citations"] += mc
         ok &= not mc
         if dst in LATIN:
-            names = {n for n in NAME.findall(v) if len(n) > 3 and n.split()[0] not in NOT_NAMES}
-            mn = [n for n in names if n not in t]
+            # Strip office titles ("Minister Khumbudzo Ntshavheni" -> "Khumbudzo Ntshavheni") rather than skipping the name.
+            names = {" ".join(w for w in n.split() if w not in NOT_NAMES) for n in NAME.findall(v)}
+            names = {n for n in names if len(n) > 3}
+            # Cross-language inflection: "Mozambican" -> "mozambicain", "Indigenous" -> "indigènes". A name is kept when
+            # the translation has it verbatim or a word sharing its first 6 folded letters; altered names still fail.
+            tw = {tx.fold(w)[:6] for w in re.findall(r"[^\W\d_]+", t)}
+            mn = [n for n in names if n not in t and not all(tx.fold(part)[:6] in tw for part in n.split())]
             # Allow small inflection/translation of common nouns: fail only if >25% of names vanish.
             qa["missing_names"] += mn
             qa["checks"][f"{k}:names"] = "FAIL" if names and len(mn) / len(names) > 0.25 else "PASS"

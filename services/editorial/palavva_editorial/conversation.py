@@ -114,8 +114,10 @@ def auto_publish(pb: PB, queue: Queue, settings: Settings, piece: dict, tier: st
     tid = piece["tenant_id"]
     trace = uuid.uuid4().hex[:16]
     if path == "auto_low_risk":
-        if tenant_switch(pb, tid, "AUTO_PUBLISH_DISABLED") is True:
-            d = decision(pb, tid, "topic", piece["id"], piece["id"], "hold", tier, rules, ["auto-publication disabled by tenant switch"], piece["headline"], trace)
+        # Two independent kill switches: deployment-wide (env) and per tenant (Command Center). Either one holds.
+        off = "deployment env AUTO_PUBLISH_DISABLED" if settings.auto_publish_disabled else ("tenant switch" if tenant_switch(pb, tid, "AUTO_PUBLISH_DISABLED") is True else "")
+        if off:
+            d = decision(pb, tid, "topic", piece["id"], piece["id"], "hold", tier, rules, [f"auto-publication disabled by {off}"], piece["headline"], trace)
             pb.update("editorial_pieces", piece["id"], {"thread_state": "held", "auto_decision_id": d["id"]})
             return False, "auto-publication disabled"
         since = datetime.fromtimestamp(time.time() - 3600, timezone.utc).strftime("%Y-%m-%d %H:%M:%S.000Z")

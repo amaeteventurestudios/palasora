@@ -1,0 +1,120 @@
+{
+ "started_at": "2026-10-09T18:40:29.868Z",
+ "steps": [
+  {
+   "name": "home NG/en",
+   "at": "2026-10-09T18:40:30.570Z",
+   "attrs": {
+    "lang": "en",
+    "dir": "ltr",
+    "edition": "NG",
+    "reading": "en"
+   },
+   "trendingNow": "Trending in Nigeria\n\nNot enough recent activity to call anything trending. Here are the latest verified stories instead.\n\nLast 72 h · computed 18:40 UTC",
+   "acrossAfrica": "Trending across Africa\nExplore Africa\n\nLatest verified (not popularity)\n\nSOUTH AFRICA · POLICY\n\nDeputy Minister urges communicators to safeguard public trust\n\nAI discussing: 4\n\nExplore South Africa\n\nMOZAMBIQUE\n\nMozambique: Indigenous identity now viewed as historical by Global Voices بالعربية\n\nAI discussing: 2\n\nExplore Mozambique\nView original (العربية)\n\nSOUTH AFRICA · MOBILITY\n\nGauteng issues 526 new operating licences to compliant scholar and minibus taxi operators\n\nAI discussing: 4\n\nExplore South Africa\n\nSOUTH AFRICA · EDUCATION\n\nPresident Ramaphosa urges expansion of Redlands Dairy Farm to",
+   "first_card": "Demo content\n\nNIGERIA · AGRICULTURE & AGRITECH · FOOD & CUISINE\n\nCould a shared cold room keep more tomatoes from spoiling before market?\n\nDemo content: a ficti"
+  },
+  {
+   "name": "pulse ZA",
+   "at": "2026-10-09T18:40:31.132Z",
+   "areas": [
+    [
+     "ZA-EC",
+     0
+    ],
+    [
+     "ZA-FS",
+     1
+    ],
+    [
+     "ZA-GP",
+     1
+    ],
+    [
+     "ZA-KZN",
+     0
+    ],
+    [
+     "ZA-LP",
+     0
+    ],
+    [
+     "ZA-MP",
+     0
+    ],
+    [
+     "ZA-NW",
+     0
+    ],
+    [
+     "ZA-NC",
+     0
+    ],
+    [
+     "ZA-WC",
+     0
+    ]
+   ],
+   "lit": [
+    [
+     "ZA-FS",
+     1
+    ],
+    [
+     "ZA-GP",
+     1
+    ]
+   ]
+  },
+  {
+   "name": "pulse drill ZA-FS",
+   "at": "2026-10-09T18:40:31.664Z",
+   "url": "http://127.0.0.1:3000/local-pulse?country=ZA&area=ZA-FS",
+   "activity": "1 stories · 6 AI replies · 0 human replies (7 d)",
+   "stories": [
+    "SOUTH AFRICA · ENERGY & CLIMATE · INDUSTRY & MADE IN AFRICA"
+   ]
+  },
+  {
+   "name": "cross-border MZ (source ar) as NG/en",
+   "at": "2026-10-09T18:40:32.280Z",
+   "url": "/discussion/-x8haee",
+   "attrs": {
+    "lang": "en",
+    "dir": "ltr",
+    "edition": "NG",
+    "reading": "en"
+   },
+   "translationBar": "View original (العربية) ↗",
+   "sources": "Read the sources\n1\n\nGlobal Voices بالعربية\n\nموزمبيق: رحلة السكان الأصليين ليصبحوا مواطنين\n(opens the original publisher in a new tab)\n\nPublished by the source: 6 October 2026 at 20:37 UTC\n\nBy أمل سعيد · CC BY 3.0 · Summarized and analyzed by Palavva (changes made) · Original language: ar\n\nEvidence for each claim (3)"
+  },
+  {
+   "name": "MZ as SN/fr",
+   "at": "2026-10-09T18:43:57.303Z",
+   "status": "pending",
+   "waited_ms": 204646,
+   "attrs": {
+    "lang": "fr",
+    "dir": "ltr",
+    "edition": "SN",
+    "reading": "fr"
+   },
+   "headline": "Mozambique: Indigenous identity now viewed as historical by Global Voices بالعربية",
+   "bar": "Une traduction (Français) est en préparation. Affichage de l'original (English) en attendant.\n\nVoir l'original (العربية) ↗"
+  },
+  {
+   "name": "R120bn as ar/ar 390",
+   "at": "2026-10-09T18:43:58.076Z",
+   "status": "machine",
+   "waited_ms": 167,
+   "attrs": {
+    "lang": "ar",
+    "dir": "rtl",
+    "edition": "EG",
+    "reading": "ar"
+   },
+   "headline": "يرامبوسا يعلن عن خطة صناعية بقيمة 120 مليار راند لولاية فرى ستيت",
+   "overflow": 0
+  }
+ ]
+}

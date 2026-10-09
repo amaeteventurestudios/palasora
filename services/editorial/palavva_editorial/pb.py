@@ -42,7 +42,9 @@ class PB:
     def _req(self, method: str, path: str, **kw) -> Any:
         for attempt in range(2):
             r = self._http.request(method, f"{self.url}{path}", headers={"Authorization": self._auth()}, **kw)
-            if r.status_code == 401 and attempt == 0:
+            # A rotated superuser token key (e.g. `superuser upsert`) makes PocketBase treat the stale token as a
+            # guest: 401, or 403 on superuser-only collections. Re-authenticate once, then fail normally.
+            if attempt == 0 and (r.status_code == 401 or (r.status_code == 403 and "superuser" in r.text.lower())):
                 self._token = None
                 continue
             if r.status_code >= 400:

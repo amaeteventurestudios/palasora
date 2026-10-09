@@ -273,3 +273,41 @@ def test_researcher_schema_generates_claims_before_decision():
     from palavva_editorial.editorial.prompts import SCHEMAS
     keys = list(SCHEMAS["researcher"]["properties"])
     assert keys.index("claims") < keys.index("decision")
+
+
+def test_dns_rebinding_connection_is_pinned_to_checked_ip():
+    """A second DNS answer (rebinding to loopback) is never consulted: the request targets the checked IP."""
+    answers = iter(["93.184.216.34", "127.0.0.1", "127.0.0.1"])
+    calls = []
+    def rebinding_resolver(host, port, proto=0):
+        ip = next(answers); calls.append(ip)
+        return [(socket.AF_INET, socket.SOCK_STREAM, proto, "", (ip, port))]
+    seen = {}
+    def h(req):
+        seen.update(host=req.url.host, host_header=req.headers.get("host"), sni=req.extensions.get("sni_hostname"))
+        return httpx.Response(200, content=b"<rss/>", headers={"content-type": "application/rss+xml"})
+    res = safe_fetch("https://good.example/feed", {"good.example"}, client=_client(h), resolver=rebinding_resolver)
+    assert res.status == 200 and res.final_url == "https://good.example/feed"
+    assert seen == {"host": "93.184.216.34", "host_header": "good.example", "sni": "good.example"}
+    assert calls == ["93.184.216.34"]  # resolved exactly once per hop
+
+
+def test_name_fidelity_flags_invented_or_truncation_completed_names():
+    from palavva_editorial.editorial.validate import unsupported_names
+    packet = "Government reiterates position. Minister in the Presidency Khumbudzo Ntsh"
+    assert unsupported_names("South Africa's Minister Ntshau reiterates stance on immigration", [], packet) == ["Ntshau"]
+    assert unsupported_names("Ramaphosa Announces R120 Billion Free State Industrialisation Plan", [], "Ramaphosa announces R120 billion plan") == []
+    assert unsupported_names("Minister Khumbudzo Ntsh spoke on Thursday", ["The President said in October that the plan stands."], packet) == []
+
+
+def test_sensitive_stems_and_migration_terms_force_review():
+    from palavva_editorial.ingest.classify import classify
+    for t in ["Government reiterates position on illegal immigration", "Xenophobic attacks reported in Durban", "Ntshavheni on irregular migration claims",
+              "Les sans-papiers manifestent à Dakar"]:
+        assert classify(t, "", ["ZA"], []).risk == "high", t
+    assert classify("Warn residents of floods in Durban", "", ["ZA"], []).risk != "high"
+
+
+def test_excerpt_is_cut_at_a_word_boundary():
+    from palavva_editorial.pipeline import word_cut
+    assert word_cut("Minister in the Presidency Khumbudzo Ntshavheni said", 35) == "Minister in the Presidency…"

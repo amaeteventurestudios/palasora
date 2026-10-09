@@ -31,7 +31,7 @@ def pb_server(tmp_path_factory):
             time.sleep(0.2)
     env = {"PB_URL": url, "PB_SERVICE_EMAIL": "svc@test.local", "PB_SERVICE_PASSWORD": "test-password-123", "PB_WORKER_EMAIL": "svc@test.local",
            "PB_WORKER_PASSWORD": "test-password-123", "LOCAL_DEMO_PASSWORD": "test-demo-password-1", "PALAVVA_DATA_DIR": str(tmp_path_factory.mktemp("data")),
-           "TENANT_HOSTS": '{"a.test:3000":"palavva","b.test:3000":"sample-community"}', "MODEL_PROVIDER": "fixture", "EDITORIAL_SERVICE_TOKEN": "t"}
+           "TENANT_HOSTS": '{"a.test:3000":"palavva","b.test:3000":"sample-community"}', "MODEL_PROVIDER": "fixture", "EDITORIAL_SERVICE_TOKEN": "t", "AUTO_PUBLISH_DISABLED": "false"}
     old = {k: os.environ.get(k) for k in env}
     os.environ.update(env)
     yield {"url": url, "data": data}

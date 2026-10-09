@@ -149,6 +149,19 @@ def test_A08_caps_switches_and_outage(env):
     queue.complete(job["job_id"], "w", {})
 
 
+def test_auto_publish_env_kill_switch_holds_even_when_tenant_allows(env):
+    import dataclasses
+    pb, t, s, queue = env
+    s_off = dataclasses.replace(s, auto_publish_disabled=True)
+    src = source(pb, t, "Fixture Env Switch")
+    ingest_source(pb, queue, s_off, src, fetcher=fetcher(rss([("env-1", "Zambia farmers cooperative pools tractor hire bookings by text message", "x")])))
+    job = queue.claim("w", ["draft_cluster"])
+    o = draft_cluster(pb, queue, s_off, FixtureProvider(), job)
+    assert o["outcome"] != "auto_published", o
+    d = pb.first("moderation_decisions", f"tenant_id={q(t['id'])} && scope='topic' && reasons~'deployment env'")
+    assert d and d["decision"] == "hold"
+
+
 def test_auto_publish_switch_and_db_gate_fail_closed(env):
     pb, t, s, queue = env
     sw = pb.first("tenant_settings", f"tenant_id={q(t['id'])} && key='AUTO_PUBLISH_DISABLED'")

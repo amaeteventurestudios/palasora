@@ -93,3 +93,15 @@ export async function getT(tenant: Tenant | null) {
   const ctx = await getReaderContext(tenant);
   return { t: translator(ctx.ui), ctx };
 }
+
+const UNIT_I18N: Record<string, Record<string, string>> = {
+  "States + FCT": { en: "states + FCT", fr: "États + FCT", ar: "الولايات + إقليم العاصمة الاتحادية", pcm: "states + FCT" },
+  Counties: { en: "counties", fr: "comtés", ar: "المقاطعات", pcm: "counties" },
+  Provinces: { en: "provinces", fr: "provinces", ar: "المقاطعات", pcm: "provinces" },
+  Regions: { en: "regions", fr: "régions", ar: "الأقاليم", pcm: "regions" },
+};
+/** Localized, correctly-cased subdivision unit for a country ("states + FCT", "régions", ...). */
+export function subdivisionLabel(iso: string, ui: string): string {
+  const sub = COUNTRIES[iso]?.subdivision || "";
+  return UNIT_I18N[sub]?.[ui] ?? UNIT_I18N[sub]?.en ?? (ui === "fr" ? "zones" : ui === "ar" ? "المناطق" : "areas");
+}

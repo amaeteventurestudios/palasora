@@ -57,6 +57,38 @@ def remap_ids(blocks: list[dict], claims: list[dict]) -> list[dict]:
     return out
 
 
+NAME_TOK = re.compile(r"[A-Z][A-Za-z'\u2019\-]{2,}")
+NAME_STOP = set(("The This That These Those They There Their When What Why How While Without With After Before During Under Over And But For From Into "
+                 "Will Would Could Should Can May Might Must Has Have Had Does Did Not Its Our Your Who Whom Which Where Africa African "
+                 "January February March April May June July August September October November December "
+                 "Monday Tuesday Wednesday Thursday Friday Saturday Sunday "
+                 "President Minister Deputy Premier Mayor Governor Senator Chief Department Ministry Government Commissioner Director "
+                 "Speaker Parliament Assembly Presidency Cabinet Council").split())
+
+
+def unsupported_names(headline: str, blocks: list[str], packet_text: str) -> list[str]:
+    """Proper-name fidelity: capitalised mid-sentence words must occur in the evidence. Catches invented or
+    mis-completed names (e.g. an excerpt cut at "Ntsh" completed as "Ntshau"). Title-Case headlines are checked
+    only for the truncation pattern (a word that extends a shorter capitalised word of the evidence)."""
+    low = packet_text.lower()
+    caps = {w for w in NAME_TOK.findall(packet_text)}
+    out: list[str] = []
+    def check(text: str, full: bool) -> None:
+        for sent in re.split(r"(?<=[.!?:])\s+", text):
+            for m in NAME_TOK.finditer(sent):
+                base = re.sub(r"['\u2019]s$", "", m.group(0)).strip("-")
+                if m.start() == 0 or base in NAME_STOP or len(base) < 4 or base.lower() in low:
+                    continue
+                if full or any(len(c) >= 3 and base.startswith(c) and base != c for c in caps):
+                    out.append(base)
+    words = [w for w in re.findall(r"[A-Za-z]{4,}", headline)]
+    title_case = bool(words) and sum(w[0].isupper() for w in words) / len(words) > 0.6
+    check(headline, not title_case)
+    for b in blocks:
+        check(b, True)
+    return sorted(set(out))
+
+
 def validate_draft(draft: dict, claims: list[dict], packet_text: str, topics: list[str]) -> Verdict:
     v = Verdict("PASS")
     known = {c["claim_id"] for c in claims}
@@ -81,6 +113,8 @@ def validate_draft(draft: dict, claims: list[dict], packet_text: str, topics: li
     for n in NUM.findall(all_text):
         if n.strip(".,") and n not in src_nums and n.strip(".,") not in src_nums:
             v.add(f"UNSUPPORTED_NUMBER:{n}", "NEEDS_REVIEW")
+    for name in unsupported_names(headline, [b.get("text", "") for b in blocks], packet_text):
+        v.add(f"UNSUPPORTED_NAME:{name}", "NEEDS_REVIEW")
     for qt in QUOTE.findall(all_text):
         if qt.lower() not in packet_text.lower():
             v.add("POSSIBLE_FABRICATED_QUOTE", "NEEDS_REVIEW")
@@ -93,7 +127,8 @@ def validate_draft(draft: dict, claims: list[dict], packet_text: str, topics: li
         if lvl == "high" or (lvl == "medium" and risk == "low"):
             risk = lvl
     low = all_text.lower()
-    if any(re.search(r"(?<![a-z])" + re.escape(k) + r"(?![a-z])", low) for k in tx.SENSITIVE_KEYWORDS):
+    from ..ingest.classify import _has
+    if any(_has(tx.fold(low), tx.fold(k)) for k in tx.SENSITIVE_KEYWORDS + tx.SENSITIVE_KEYWORDS_I18N):
         risk = "high"
         v.flags.append("SENSITIVE_TERMS")
     v.risk = risk

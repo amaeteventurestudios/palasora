@@ -1,16 +1,16 @@
 import Link from "next/link";
 import type { Pulse } from "@/lib/repo/pulse";
 import type { T } from "@/lib/i18n/messages";
-import { countryInfo } from "@/lib/i18n/context";
+import { countryInfo, subdivisionLabel } from "@/lib/i18n/context";
 
 /**
  * Country map with real boundaries. Each area is a keyboard-focusable link (SVG <a>) with an accessible
  * name; color intensity = verified stories about the area in the window. Areas with no verified reporting
  * stay neutral and are labeled "limited coverage". A text list mirrors the map (L-19).
  */
-export function PulseMap({ pulse, t, selected, compact = false, hrefFor }: { pulse: Pulse; t: T; selected?: string; compact?: boolean; hrefFor: (code: string) => string }) {
+export function PulseMap({ pulse, t, ui = "en", selected, compact = false, hrefFor }: { pulse: Pulse; t: T; ui?: string; selected?: string; compact?: boolean; hrefFor: (code: string) => string }) {
   const info = countryInfo(pulse.country);
-  const unit = info?.subdivision || "areas";
+  const unit = subdivisionLabel(pulse.country, ui);
   if (!pulse.geo) return <p className="text-sm text-muted">{t("pulse.noMap")}</p>;
   const now = Date.now();
   const areas = [...pulse.geo.areas].sort((a, b) => (pulse.activity[b.code]?.stories ?? 0) - (pulse.activity[a.code]?.stories ?? 0) || a.name.localeCompare(b.name));
