@@ -17,3 +17,4 @@ playwright-report/
 .audit/
 .next-test/
 /data-test/
+services/editorial/data/
