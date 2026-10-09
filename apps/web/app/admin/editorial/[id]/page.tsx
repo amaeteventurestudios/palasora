@@ -36,7 +36,7 @@ export default async function Review({ params }: { params: Promise<{ id: string 
   return (
     <div className="max-w-6xl">
       <p className="meta"><Link className="link" href="/admin/editorial">Editorial Queue</Link></p>
-      <H1 sub={`Revision ${p.revision} · ${p.review_status.replace("_", " ")} · created `}>{p.headline}</H1>
+      <H1 sub={`Revision ${p.revision} · ${p.review_status.replace("_", " ")} · created ${String(p.created).slice(0, 16)} UTC`}>{p.headline}</H1>
       <div className="mb-4 flex flex-wrap gap-2">
         <Pill tone={p.risk_tier === "high" ? "bad" : p.risk_tier === "medium" ? "warn" : "neutral"}>Risk: {p.risk_tier}</Pill>
         <Pill tone={p.claim_check_status === "PASS" ? "good" : p.claim_check_status === "FAIL" ? "bad" : "warn"}>Claim check: {p.claim_check_status}</Pill>
