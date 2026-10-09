@@ -129,19 +129,22 @@ def test_ingest_dedup_cluster_and_pipeline(seeded, tmp_path):
 
     provider = FixtureProvider()
     done = []
-    while (job := queue.claim("w")):
+    while (job := queue.claim("w", ["draft_cluster"])):
         out = draft_cluster(pb, queue, s, provider, job)
         queue.complete(job["job_id"], "w", out)
         done.append(out)
-    assert {d["outcome"] for d in done} == {"needs_review"}
-    pieces = pb.list("editorial_pieces", f"tenant_id={q(t['id'])} && author_type='editorial_ai_assisted'")
-    assert len(pieces) == 2 and all(p["review_status"] == "needs_review" for p in pieces)  # never published by the worker
+    assert {d["outcome"] for d in done} <= {"needs_review", "auto_published", "held"}
+    pieces = [pb.get("editorial_pieces", d["piece_id"]) for d in done if d.get("piece_id")]
+    gh_or_ke = [p for p in pieces if set(p["country_codes"]) & {"GH", "KE"}]
+    assert len(gh_or_ke) == 2
+    # The medium-risk Ghana fintech item is never auto-published (v1.3 risk tiers).
+    assert all(p["review_status"] != "published" for p in gh_or_ke if "GH" in p["country_codes"])
     gh_piece = next(p for p in pieces if "GH" in p["country_codes"])
     assert gh_piece["risk_tier"] in ("medium", "high")
     claims = pb.list("evidence_claims", f"tenant_id={q(t['id'])} && cluster_id={q(gh_piece['cluster_id'])}")
     assert claims and all(c["source_item_ids"] for c in claims)
-    ai_comments = pb.list("comments", f"tenant_id={q(t['id'])} && piece_id={q(gh_piece['id'])}")
-    assert ai_comments and all(c["approval_state"] == "pending" and c["author_kind"] == "editorial_ai" for c in ai_comments)
+    # v1.3: no flat AI "analysis" cards are attached to a held topic.
+    assert pb.list("comments", f"tenant_id={q(t['id'])} && piece_id={q(gh_piece['id'])}") == []
     runs = pb.list("ai_runs", f"tenant_id={q(t['id'])} && is_fixture_provider=true")
     assert runs and all(r["provider"] == "fixture" for r in runs)
     # Idempotent replay of a finished job never creates a second piece (T-036).
@@ -178,6 +181,7 @@ def test_model_offline_defers_without_inventing(seeded, tmp_path):
     out = draft_cluster(pb, queue, s, FixtureProvider(), job)
     p = pb.get("editorial_pieces", out["piece_id"])
     assert p["review_status"] in ("needs_review", "held") and p["risk_tier"] == "high"
+    assert out["outcome"] != "auto_published"
 
 
 def test_ai_paused_switch_defers(seeded, tmp_path):

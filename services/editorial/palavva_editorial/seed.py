@@ -56,13 +56,21 @@ def seed_tenants(pb: PB) -> dict[str, dict]:
     for t in (palavva, sample):
         pb.upsert("tenant_entitlements", f"tenant_id={q(t['id'])}", {"tenant_id": t["id"], "plan_key": "platform" if t["slug"] == "palavva" else "sample",
                                                                    "cycle": "monthly", "billing_status": "not_enabled", "feature_flags_json": {}})
-        for key, val in {"INGEST_PAUSED": False, "AI_PAUSED": False, "AUTO_PUBLISH_DISABLED": True, "AD_SLOTS_DISABLED": False,
-                         "PUBLISHING_PAUSED": False, "ANALYTICS_ENABLED": True}.items():
+        for key, val in {"INGEST_PAUSED": False, "AI_PAUSED": False, "AUTO_PUBLISH_DISABLED": False, "AD_SLOTS_DISABLED": False,
+                         "PUBLISHING_PAUSED": False, "ANALYTICS_ENABLED": True, "DEMO_THREADS_ENABLED": True}.items():
             if not pb.first("tenant_settings", f"tenant_id={q(t['id'])} && key={q(key)}"):
                 pb.create("tenant_settings", {"tenant_id": t["id"], "key": key, "value": val, "changed_by": "seed", "reason": "initial default"})
+        # v1.3 founder decision (19 §2): low-risk, evidenced topics publish automatically. Only flip a value
+        # that no human has touched; any explicit admin choice is preserved.
+        ap = pb.first("tenant_settings", f"tenant_id={q(t['id'])} && key='AUTO_PUBLISH_DISABLED'")
+        if ap and ap.get("value") is True and ap.get("changed_by") == "seed":
+            pb.update("tenant_settings", ap["id"], {"value": False, "changed_by": "seed-v1.3", "reason": "v1.3: risk-tiered automation for LOW/evidenced topics (19 §2)"})
+            pb.audit(t["id"], "settings.switch", "tenant_settings", "AUTO_PUBLISH_DISABLED", {"value": False, "reason": "v1.3 founder decision"}, actor_type="system", actor_id="seed")
         for key, label, purpose, use_when in tx.AI_ROLES:
-            pb.upsert("ai_roles", f"tenant_id={q(t['id'])} && key={q(key)}", {"tenant_id": t["id"], "key": key, "label": label,
-                                                                              "purpose": purpose, "use_when": use_when, "prompt_version": "role-contribution-v1", "enabled": True})
+            pb.upsert("ai_roles", f"tenant_id={q(t['id'])} && key={q(key)}", {"tenant_id": t["id"], "key": key, "label": label, "short_label": label.replace(" · AI", ""),
+                                                                              "purpose": purpose, "use_when": use_when, "prompt_version": "converse-v1", "enabled": True,
+                                                                              "expertise": tx.ROLE_EXPERTISE.get(key, ""), "daily_quota": 40, "novelty_threshold": 0.45,
+                                                                              "refusal_rules": "Abstain without a distinct new angle; no group generalizations, insults, invented testimony or unsupported numbers."})
         for pos in ("home_rail", "topic_hub", "country_hub", "feed_inline"):
             if not pb.first("sponsor_placements", f"tenant_id={q(t['id'])} && position_key={q(pos)}"):
                 pb.create("sponsor_placements", {"tenant_id": t["id"], "position_key": pos, "revive_zone_id": "", "enabled": False,

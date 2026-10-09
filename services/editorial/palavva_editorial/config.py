@@ -29,6 +29,7 @@ class Settings:
     ingest_paused: bool
     ai_paused: bool
     auto_publish_disabled: bool
+    reply_daily_budget: int = 150
 
     @property
     def jobs_db(self) -> Path:
@@ -62,4 +63,5 @@ def load() -> Settings:
         ingest_paused=_bool("INGEST_PAUSED"),
         ai_paused=_bool("AI_PAUSED"),
         auto_publish_disabled=_bool("AUTO_PUBLISH_DISABLED", True),
+        reply_daily_budget=int(os.environ.get("CONVERSATION_DAILY_REPLY_BUDGET", "150")),
     )

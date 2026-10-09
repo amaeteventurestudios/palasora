@@ -77,20 +77,37 @@ TOPICS = [
 ]
 
 # Topics whose stories default to MEDIUM/HIGH risk (sensitive politics, health, finance).
-SENSITIVE_TOPICS = {"policy": "high", "health": "high", "fintech": "medium"}
-SENSITIVE_KEYWORDS = ["election", "coup", "protest", "killed", "arrest", "allegation", "accused", "fraud", "corruption",
-                      "vaccine", "outbreak", "disease", "investment advice", "stock", "shares", "war", "attack", "militant"]
+# v1.3 risk tiers (19 §2): routine government service-delivery news is not automatically sensitive.
+# SENSITIVE = elections/voting politics, health/medical, serious financial claims, law enforcement,
+# personal allegations, security/safety, inflammatory ethnic or religious issues.
+SENSITIVE_TOPICS = {"health": "high", "fintech": "medium"}
+SENSITIVE_KEYWORDS = ["election", "elections", "electoral", "campaign", "ballot", "voters", "vote", "candidate", "ruling party", "opposition party",
+                      "coup", "protest", "protesters", "riot", "killed", "murder", "shooting", "arrest", "arrested", "police", "court", "on trial", "trial court", "charged with",
+                      "allegation", "alleged", "accused", "fraud", "corruption", "bribe", "scandal", "vaccine", "outbreak", "disease", "epidemic", "medical",
+                      "investment advice", "stock", "shares", "bankrupt", "war", "attack", "militant", "terror", "kidnap", "explosion",
+                      "ethnic", "tribal", "religious", "xenophob"]
 
+# v1.3 registered editorial roles (22 §4). Labels are expertise, never a person, nationality or ethnicity.
 AI_ROLES = [
-    ("historian", "History Desk · AI", "Which primary historical record actually illuminates this?", "Archival sources exist"),
-    ("economist", "Economic Lens · AI", "Who pays, who benefits, over which period?", "Pricing, policy, markets, labor"),
-    ("researcher", "Research Desk · AI", "What happened, what is supported, what's missing?", "Significant evidence synthesis"),
-    ("builder", "Builder's View · AI", "What's hard to build, distribute or operate?", "Founder/industry stories"),
-    ("technologist", "Technology Lens · AI", "What does the system enable or constrain?", "AI, manufacturing, telecom, energy"),
-    ("consumer", "Everyday Impact · AI", "What changes for households, workers, users?", "Direct public impact"),
-    ("culture", "Culture Desk · AI", "Which artistic/cultural context is real here?", "Music, film, food, sports, identity"),
-    ("ethics", "Ethics & Society · AI", "What values/rights/tradeoffs are involved?", "Rights, governance, societal consequence"),
+    ("researcher", "Research Journalist · AI", "What happened, what is supported, what's missing?", "Starting topics; significant evidence synthesis"),
+    ("economist", "Economist · AI", "Who pays, who benefits, over which period?", "Pricing, policy, markets, labor, financing"),
+    ("historian", "Historian · AI", "Which primary historical record actually illuminates this?", "Archival sources exist"),
+    ("builder", "Founder & Industry Analyst · AI", "What's hard to build, distribute or operate, and what service model could work?", "Founder/industry stories"),
+    ("technologist", "Engineer & Technology · AI", "What does the system enable or constrain: equipment, power, maintenance, data?", "Infrastructure, AI, manufacturing, telecom, energy"),
+    ("culture", "Culture & Society · AI", "Which cultural and social context is real here?", "Music, film, food, sports, identity, everyday life"),
+    ("consumer", "Community & Consumer Impact · AI", "What changes for households, vendors, workers and users, and who gets access?", "Direct public impact"),
+    ("ethics", "Ethics & Philosophy · AI", "What values, rights and trade-offs are involved?", "Rights, governance, societal consequence"),
 ]
+ROLE_EXPERTISE = {
+    "researcher": "evidence synthesis: what is confirmed, what is missing, what would verify it",
+    "economist": "costs, incentives, financing, who pays and who benefits over time; never invent figures",
+    "historian": "verified historical precedent and its limits; never invent archives",
+    "builder": "operating and business models, distribution, maintenance contracts, what a viable service looks like",
+    "technologist": "equipment, power supply, maintenance, sizing, reliability and data in African operating conditions",
+    "culture": "social and cultural context, everyday practice, trust; never stereotypes",
+    "consumer": "effects on households, small vendors, workers and users; access, affordability, trust",
+    "ethics": "fairness, rights, accountability and trade-offs between groups of stakeholders (not ethnic groups)",
+}
 
 
 def slugify(s: str) -> str:

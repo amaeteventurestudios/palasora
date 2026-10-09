@@ -12,7 +12,7 @@ import signal
 import time
 from datetime import datetime, timezone
 
-from . import analytics_etl, config, search as fts
+from . import analytics_etl, config, conversation, search as fts
 from .jobs import Queue
 from .pb import PB, PBError, q
 from .pipeline import Deferred, draft_cluster, ingest_source, pbdate
@@ -54,6 +54,9 @@ def process_one(pb: PB, queue: Queue, s: config.Settings, provider, owner: str) 
         elif job["type"] == "draft_cluster":
             res = draft_cluster(pb, queue, s, provider, job)
             queue.complete(job["job_id"], owner, res)
+        elif job["type"] == "converse":
+            res = conversation.converse_step(pb, queue, s, provider, job)
+            queue.complete(job["job_id"], owner, res)
         elif job["type"] == "reindex_search":
             queue.complete(job["job_id"], owner, {"indexed": reindex_all(pb, s)})
         else:
@@ -94,7 +97,7 @@ def main() -> None:
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
     log.info("worker started provider=%s model=%s", provider.name, provider.model)
-    last_sched = last_index = last_etl = 0.0
+    last_sched = last_index = last_etl = last_rest = 0.0
     while not STOP:
         now = time.time()
         try:
@@ -104,6 +107,9 @@ def main() -> None:
             if now - last_index > 600:
                 reindex_all(pb, s)
                 last_index = now
+            if now - last_rest > 600:
+                conversation.rest_idle_threads(pb, queue)
+                last_rest = now
             if now - last_etl > 3600:
                 analytics_etl.run(s, pb)
                 last_etl = now

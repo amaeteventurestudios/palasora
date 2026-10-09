@@ -7,7 +7,7 @@ import time
 from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
-from . import analytics_etl, config, search as fts
+from . import analytics_etl, config, conversation, search as fts
 from .ingest.fetch import FetchError, safe_fetch
 from .ingest.parse import ParseError, parse_feed
 from .jobs import Queue
@@ -110,3 +110,44 @@ def requeue(job_id: str) -> dict:
 @app.post("/analytics/etl", dependencies=[Depends(auth)])
 def etl() -> dict:
     return analytics_etl.run(S, pb())
+
+
+# ---------------- v1.3 conversations ----------------
+
+@app.post("/conversations/demo", dependencies=[Depends(auth)])
+def demo_conversation(body: TenantBody) -> dict:
+    """Admin: Run safe demo conversation (labeled, local-only, evergreen)."""
+    return conversation.create_demo_topic(pb(), queue, S, body.tenant_id)
+
+
+class HumanQuestion(BaseModel):
+    tenant_id: str
+    post_id: str
+
+
+@app.post("/conversations/{piece_id}/human-question", dependencies=[Depends(auth)])
+def human_question(piece_id: str, body: HumanQuestion) -> dict:
+    ok, info = conversation.schedule_human_question(queue, pb(), body.tenant_id, piece_id, body.post_id)
+    return {"scheduled": ok, "info": info}
+
+
+class PauseBody(BaseModel):
+    tenant_id: str
+    paused: bool
+    reason: str = ""
+
+
+@app.post("/conversations/{piece_id}/pause", dependencies=[Depends(auth)])
+def pause_thread(piece_id: str, body: PauseBody) -> dict:
+    p = pb().get("editorial_pieces", piece_id)
+    if p["tenant_id"] != body.tenant_id:
+        raise HTTPException(404, "not found")
+    pb().update("editorial_pieces", piece_id, {"thread_state": "closed" if body.paused else "resting"})
+    conversation.emit(pb(), body.tenant_id, "thread_paused" if body.paused else "thread_resumed", piece_id, payload={"reason": body.reason[:200]})
+    return {"ok": True}
+
+
+@app.get("/conversations/stats", dependencies=[Depends(auth)])
+def conversation_stats(tenant_id: str) -> dict:
+    return {"reply_budget_used_today": queue.budget_used(f"{tenant_id}:reply"), "reply_budget_limit": S.reply_daily_budget,
+            "converse_pending": queue.pending_for("converse:"), "queue": queue.stats()["by_type"]}

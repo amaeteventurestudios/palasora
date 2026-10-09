@@ -251,32 +251,12 @@ def draft_cluster(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
         pb.audit(tid, "cluster.writer_abstained", "story_clusters", cid, {"flags": verdict.flags})
         return {"outcome": "held_writer", "flags": verdict.flags}
 
-    # 0–3 role contributions, each may abstain; duplicates are discarded.
-    roles = []
-    for t in (cl.get("topic_slugs") or []):
-        r = ROLE_FOR_TOPIC.get(t)
-        if r and r not in roles:
-            roles.append(r)
-    roles = roles[:2]
-    role_rows = {r["key"]: r for r in pb.list("ai_roles", f"tenant_id={q(tid)} && enabled=true", per_page=20)}
-    draft_text = " ".join(b["text"] for b in draft["what_happened"] + draft["why_it_matters"])
-    contribs = []
-    for role_id in roles:
-        row = role_rows.get(role_id)
-        if not row:
-            continue
-        rr = _run(pb, queue, settings, provider, tid, "role", P.packet_block(claims_packet) + "\nDRAFT:\n" + json.dumps({"what_happened": draft["what_happened"], "why_it_matters": draft["why_it_matters"]})
-                  + "\nAccepted contributions so far: " + json.dumps([c["text"] for c in contribs]),
-                  cid, jid, role_id=role_id, system_extra=P.ROLE.format(role_id=role_id, role_label=row["label"]), max_tokens=400, evidence_ids=evidence_ids)
-        out = rr.structured_output or {}
-        if rr.status == "succeeded" and out.get("decision") == "CONTRIBUTE" and str(out.get("text", "")).strip():
-            ids = remap_ids([{"text": "", "claim_ids": out.get("claim_ids") or []}], claims)[0]["claim_ids"]
-            if any(i not in {c["claim_id"] for c in claims} for i in ids):
-                verdict.flags.append(f"ROLE_UNKNOWN_CLAIM:{role_id}")
-                continue
-            contribs.append({"role_id": role_id, "text": str(out["text"]).strip()[:1400], "claim_ids": ids, "run": rr})
-    kept, dropped = distinct_contributions(draft_text, contribs)
-    verdict.flags += dropped
+    # v1.3: no flat role "analysis" cards. Replies are generated later by the conversation
+    # engine, each against a specific parent post (conversation.py).
+    kept: list[dict] = []
+    injection = any("PROMPT_INJECTION_SUSPECTED" in (it.get("decision_reason") or "") for it in items)
+    if injection:
+        verdict.flags.append("SOURCE_PROMPT_INJECTION_SUSPECTED")
 
     held = verdict.verdict == "FAIL"
     rank = {"low": 0, "medium": 1, "high": 2}
@@ -289,24 +269,32 @@ def draft_cluster(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
     slug = cl["slug"]
     is_fixture = bool(cl.get("is_fixture")) or provider.name == "fixture"
     piece = pb.create("editorial_pieces", {
-        "tenant_id": tid, "cluster_id": cid, "slug": slug, "kind": "discussion" if kept else "short", "headline": str(draft.get("headline", ""))[:300] or packet_sources[0]["title"][:300],
+        "tenant_id": tid, "cluster_id": cid, "slug": slug, "kind": "discussion", "headline": str(draft.get("headline", ""))[:300] or packet_sources[0]["title"][:300],
         "lede": " ".join(b["text"] for b in draft["what_happened"])[:600], "body_blocks_json": body, "author_type": "editorial_ai_assisted", "risk_tier": risk,
         "review_status": "held" if held else "needs_review", "revision": 1, "is_demo": is_fixture, "country_codes": cl.get("primary_country_codes") or [],
         "topic_slugs": cl.get("topic_slugs") or [], "language": "en", "editor_pick": False,
         "sources_json": [{"name": s["publisher"], "url": s["url"], "title": s["title"], "published_at": s["published_at"]} for s in packet_sources],
         "evidence_state": "complete" if not held else "incomplete", "claim_check_status": verdict.verdict, "ai_run_ids": "",
-        "human_comment_count": 0, "ai_contribution_count": len(kept), "vote_score": 0, "save_count": 0, "still_developing": True,
+        "human_comment_count": 0, "ai_contribution_count": 0, "vote_score": 0, "save_count": 0, "still_developing": True,
+        "thread_state": "candidate", "initiator_role": "researcher", "ai_post_count": 0, "original_language": (items[0].get("language") or "en"),
+        "origin_country": ((cl.get("primary_country_codes") or [""])[0]), "risk_basis": "; ".join(r for r in (items[0].get("decision_reason") or "").split("; ") if "sensitive" in r or "INJECTION" in r)[:1900],
     })
-    disc = pb.create("discussions", {"tenant_id": tid, "piece_id": piece["id"], "status": "open", "human_comment_count": 0, "ai_comment_count": len(kept)})
-    runs = pb.list("ai_runs", f"tenant_id={q(tid)} && job_id={q(jid)} && role_id != ''", "-created", 10)
-    for c in kept:
-        run = next((r for r in runs if r["role_id"] == c["role_id"]), None)
-        if run:
-            # Pending until an editor approves the piece; never public before review.
-            pb.create("comments", {"tenant_id": tid, "discussion_id": disc["id"], "piece_id": piece["id"], "author_id": "", "author_kind": "editorial_ai", "role_id": c["role_id"],
-                                   "body_text": c["text"], "approval_state": "pending", "moderation_status": "visible", "ai_run_id": run["id"], "claim_ids": c["claim_ids"], "edit_revision": 1, "vote_score": 0})
+    pb.create("discussions", {"tenant_id": tid, "piece_id": piece["id"], "status": "open", "human_comment_count": 0, "ai_comment_count": 0})
     pb.update("story_clusters", cid, {"status": "drafted", "risk_tier": risk})
     for it in items:
         pb.update("source_items", it["id"], {"status": "drafted"})
-    pb.audit(tid, "piece.drafted", "editorial_pieces", piece["id"], {"verdict": verdict.verdict, "flags": verdict.flags[:20], "roles": [c["role_id"] for c in kept], "provider": provider.name})
-    return {"outcome": "held" if held else "needs_review", "piece_id": piece["id"], "verdict": verdict.verdict, "flags": verdict.flags, "roles": [c["role_id"] for c in kept]}
+    pb.audit(tid, "piece.drafted", "editorial_pieces", piece["id"], {"verdict": verdict.verdict, "flags": verdict.flags[:20], "provider": provider.name})
+    # v1.3 risk-tiered publication (19 §2): only LOW + evidenced topics publish automatically.
+    from . import conversation
+    rights_ok = all(sources_meta.get(it["source_id"], {}).get("rights_status") == "approved" for it in items)
+    tier, dec, reasons = conversation.assess_topic(piece, cl, verdict.flags, claims, rights_ok)
+    if injection:
+        tier, dec = "uncertain", "hold"
+        reasons = reasons + ["prompt injection suspected in source text"]
+    rules = {"rights": "PASS" if rights_ok else "FAIL", "risk_tier": risk, "claim_check": verdict.verdict, "claims": len(claims), "injection": "FAIL" if injection else "PASS"}
+    if dec == "allow" and not held:
+        ok, info = conversation.auto_publish(pb, queue, settings, pb.get("editorial_pieces", piece["id"]), tier, rules, reasons)
+        return {"outcome": "auto_published" if ok else "held", "piece_id": piece["id"], "verdict": verdict.verdict, "flags": verdict.flags, "info": info}
+    d = conversation.decision(pb, tid, "topic", piece["id"], piece["id"], dec, tier, rules, reasons, piece["headline"], piece["id"][:16])
+    pb.update("editorial_pieces", piece["id"], {"thread_state": "held", "auto_decision_id": d["id"], "review_status": "held" if dec == "reject" or held else piece["review_status"]})
+    return {"outcome": "held" if held else "needs_review", "piece_id": piece["id"], "verdict": verdict.verdict, "flags": verdict.flags, "tier": tier, "reasons": reasons}

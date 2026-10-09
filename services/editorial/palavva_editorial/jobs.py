@@ -142,6 +142,14 @@ class Queue:
             c.execute("DELETE FROM dead_letters WHERE job_id=?", (job_id,))
             return cur.rowcount == 1
 
+    def exists(self, idempotency_key: str) -> bool:
+        with self._conn() as c:
+            return c.execute("SELECT 1 FROM jobs WHERE idempotency_key=?", (idempotency_key,)).fetchone() is not None
+
+    def pending_for(self, key_prefix: str) -> int:
+        with self._conn() as c:
+            return c.execute("SELECT COUNT(*) FROM jobs WHERE idempotency_key LIKE ? AND state IN ('queued','running')", (key_prefix + "%",)).fetchone()[0]
+
     def stats(self) -> dict[str, Any]:
         with self._conn() as c:
             by_state = {r["state"]: r["n"] for r in c.execute("SELECT state, COUNT(*) n FROM jobs GROUP BY state")}
