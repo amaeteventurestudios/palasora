@@ -43,3 +43,9 @@ def test_fidelity_allows_cross_language_inflection_but_not_altered_names():
     assert ok, qa
     ok, qa = fidelity(src, {"headline": "Mozambique : identité indigène et citoyen mozambicain, selon la ministre Khumbudzo Ntshau"}, "fr")
     assert not ok and "Khumbudzo Ntshavheni" in qa["missing_names"]
+
+
+def test_fidelity_word_after_colon_is_not_a_name():
+    from palavva_editorial.translate import fidelity
+    ok, qa = fidelity({"headline": "Mozambique: Indigenous identity is now history"}, {"headline": "Mozambique : l'identité autochtone appartient au passé"}, "fr")
+    assert ok, qa

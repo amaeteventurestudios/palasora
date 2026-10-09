@@ -32,6 +32,17 @@ export default async function Translations() {
             <Pill tone={l.status === "reviewed" ? "good" : l.status === "blocked" || l.status === "failed" ? "bad" : "warn"}>{l.status}</Pill>
             <span className="meta">{l.source_locale} → {l.locale} · v{l.source_version} · {l.model} · {l.prompt_version} · reports {l.report_count ?? 0} · <Ago v={l.created} /></span></div>
           <p className="meta mt-1">QA: {Object.entries(l.qa?.checks ?? {}).filter(([, v]) => v === "FAIL").map(([k]) => k).join(", ") || "all checks passed"}{l.qa?.missing_numbers?.length ? ` · missing numbers ${l.qa.missing_numbers.join(", ")}` : ""}{l.qa?.missing_names?.length ? ` · missing names ${l.qa.missing_names.join(", ")}` : ""}</p>
+          {l.status === "failed" && l.qa?.rejected_output && (
+            <details className="mt-2"><summary className="cursor-pointer text-sm font-semibold">Rejected machine output (not shown to readers)</summary>
+              <dl className="mt-1 text-xs">{Object.entries(l.qa.rejected_output as Record<string, string>).map(([k, v]) => <div key={k}><dt className="font-semibold">{k}</dt><dd dir="auto">{v}</dd></div>)}</dl>
+              <AdminForm action={translationDecision} submit="Correct and mark reviewed" className="mt-2">
+                <input type="hidden" name="id" value={l.id} /><input type="hidden" name="action" value="correct" />
+                {/* Every field is shown: nothing the editor has not seen can become "reviewed". */}
+                {Object.entries(l.qa.rejected_output as Record<string, string>).map(([k, v]) => (
+                  <div key={k}><label className="field-label" htmlFor={`r-${l.id}-${k}`}>{k}</label><textarea id={`r-${l.id}-${k}`} name={`field_${k}`} defaultValue={v} rows={2} className="input" dir={l.locale === "ar" ? "rtl" : "ltr"} /></div>))}
+              </AdminForm>
+            </details>
+          )}
           {Object.keys(l.fields ?? {}).length > 0 && (
             <AdminForm action={translationDecision} submit="Save correction" className="mt-2">
               <input type="hidden" name="id" value={l.id} /><input type="hidden" name="action" value="correct" />

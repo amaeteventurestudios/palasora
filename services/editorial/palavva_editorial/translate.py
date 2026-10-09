@@ -38,7 +38,7 @@ Return JSON with the same keys and translated values."""
 NUM = re.compile(r"\d[\d,.\s]*\d|\d")
 ARABIC_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹", "01234567890123456789")
 CITE = re.compile(r"\b(claim_\d+|S\d+)\b")
-NAME = re.compile(r"(?<![.!?]\s)(?<!^)\b([A-Z][a-zà-ÿ]+(?:[- ][A-Z][a-zà-ÿ]+)*)\b")
+NAME = re.compile(r"(?<![.!?:]\s)(?<!^)\b([A-Z][a-zà-ÿ]+(?:[- ][A-Z][a-zà-ÿ]+)*)\b")
 NOT_NAMES = set("January February March April May June July August September October November December Monday Tuesday Wednesday Thursday Friday Saturday Sunday "
                 "President Minister Deputy Premier Mayor Governor Senator Chief Department Ministry Government Commissioner Director Speaker Parliament Assembly "
                 "This That These Those They There Their When What Why How While Without With After Before During Under Over".split())
@@ -137,6 +137,8 @@ def translate_job(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
         raise Deferred(f"MODEL_{r.status.upper()}", 600)
     out = r.structured_output or {}
     ok, qa = fidelity(fields, out, loc) if r.status == "succeeded" else (False, {"error": r.error_code})
+    if not ok and out:  # kept for editor review only (admin Translations page); never published
+        qa["rejected_output"] = {k: str(out.get(k, ""))[:4000] for k in fields}
     data = {"tenant_id": tid, "target_type": pl["target_type"], "target_id": rec["id"], "piece_id": piece_id, "locale": loc, "source_locale": src_locale,
             "source_version": version, "fields": {k: str(out.get(k, ""))[:4000] for k in fields} if ok else {}, "status": "machine_unreviewed" if ok else "failed",
             "provider": r.provider, "model": r.model, "prompt_version": PROMPT_VERSION, "qa": qa, "report_count": 0, "error_code": "" if ok else "FIDELITY_FAILED"}

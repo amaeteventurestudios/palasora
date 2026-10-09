@@ -13,3 +13,29 @@ Times are US Pacific, 2026-10-08/09. Newest entries last.
 - **23:35** Phase 2 editorial service built. Real Qwen probe: 3.4 s, schema-valid JSON. pytest 38/38 (unit + integration against an isolated PocketBase). Commit b0212ec.
 - **00:55** E2E 26/26 passing on isolated test stack; vitest 17/17; pytest 38/38. Fixed real bugs found by tests: duplicate dialog label ids, stale layout after sign-in (server-action redirect render), same-page hash reload, concurrent vote delete. Commit be463a3.
 - **00:05 (10-09)** Evidence documents complete; production stack restarted for review; final backup + restore drill OK. Report: OVERNIGHT-BUILD-REPORT.md.
+
+## v1.3 (2026-10-09, US Pacific)
+
+- **09:30** Baseline recorded and backed up (`V1_3-BASELINE.md`). v1.3 specs committed (`c9049ed`).
+- **10:00–10:30** Conversation engine, database gate automated path and migrations (`8e14083`). Real-Qwen prompt tuning; the root cause of 100% abstention was schema field order.
+- **10:05** Live timed demo: 4 real-Qwen replies, nested to depth 3, arriving in the browser without reload (`fccd823`).
+- **10:30–11:00** Built:
+  - locale registry, translations and fidelity gate;
+  - geoBoundaries maps and geography classifier;
+  - Global Voices sources (`54ab1dd`);
+  - frontend for locale, trends, Local Pulse, Explore Africa, My Africa and admin QA (`10b4181`).
+- **11:00–12:00** v13 E2E suite added. Fixed:
+  - 320 px header and RTL skip-link overflow;
+  - researcher-v3;
+  - language detection;
+  - test-stack worker.
+- **11:20–11:50** Acceptance found and fixed:
+  - the invented "Ntshau" headline (2 topics withdrawn, public correction);
+  - an ignored env kill switch;
+  - an open DNS-rebinding window;
+  - broken stem keywords;
+  - dishonest pending state for failed and blocked translations;
+  - RTL menus;
+  - test-infrastructure races (`f1f5465`).
+- **14:20** Canonical run `20261009T212100Z`: typecheck clean, vitest 27/27, pytest 66 (+3 opt-in skipped), Playwright 53/53. Backup and restore drill OK.
+- **14:40** Rejected translation output kept for editor correction; colon-capitalisation fix. Evidence docs written: decisions, conversation demo, locale and pulse demo, 79-row matrix, acceptance, deployment state, report.

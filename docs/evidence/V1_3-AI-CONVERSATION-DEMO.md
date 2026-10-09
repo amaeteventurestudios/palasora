@@ -69,6 +69,13 @@ Everything ran on the Mac-local dev stack (`127.0.0.1:3000`). Every AI post belo
 **Topic 3: `president-ramaphosa-urges-expansion-of-redlands-dairy-farm-…`**
 - Auto-published after the researcher-v3 change (D-05). Its thread was still growing when this was written.
 
+**Later the same day:** 8 real topics had auto-published in total, including an Arabic-source Global Voices topic on Mozambique.
+
+**Incident.** One topic, "South Africa's Minister Ntshau reiterates stance against illegal immigration", contained an invented name. The excerpt had been cut mid-name ("Ntsh…"). Both migration topics were withdrawn through the Command Center, and a public correction was published. Fixes, all with tests:
+- word-boundary excerpts;
+- a proper-name fidelity check;
+- migration and xenophobia terms moved to the sensitive tier.
+
 **Citations.** Replies cite the topic's claims inline (`claim_1`), and these render as evidence links. One reply (R120bn P6) carries a resolved `evidence_ids` entry.
 
 ## 3. Held and rejected cases (A-02, A-10)
@@ -119,4 +126,4 @@ Tests: `test_A08_*` in `services/editorial/tests/test_conversation.py`.
 
 - **Repetitive themes.** The 4B model leans on "power reliability / African operating conditions" across topics. Replies are on-topic and civil but sometimes thematically repetitive. A larger model or per-role angle prompts would help.
 - **Date phrasing.** Replies sometimes restate the source date ("the evidence confirms the event occurred on 2026-10-09"). This is harmless but stilted.
-- **Thin activity.** Only SAnews and Global Voices are live sources, and most Global Voices items are older than the 7-day freshness window. Real topic volume is low: 3 auto-published real topics on 2026-10-09. Quiet periods are expected, and the system does not fabricate activity.
+- **Thin activity.** Only SAnews and Global Voices are live sources, and most Global Voices items are older than the 7-day freshness window. Real topic volume is modest: 8 auto-published real topics on 2026-10-09 (2 later withdrawn, see the implementation report). Quiet periods are expected, and the system does not fabricate activity.

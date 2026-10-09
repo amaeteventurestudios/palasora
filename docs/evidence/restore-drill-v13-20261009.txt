@@ -1,0 +1,8 @@
+  tenants: backup=2 live_now=2
+  editorial_pieces: backup=35 live_now=35
+  comments: backup=39 live_now=39
+  users: backup=7 live_now=7
+  sources: backup=12 live_now=12
+  audit_events: backup=134 live_now=134
+  jobs.db ok
+RESTORE DRILL OK: palavva-20261009T212118Z.tar.gz

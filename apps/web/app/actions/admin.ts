@@ -382,7 +382,8 @@ export async function translationDecision(_: ActionState, f: FormData): Promise<
   if (action === "approve") await pb.update("localizations", loc.id, { status: "reviewed", reviewer_id: session.user.id });
   else if (action === "block") await pb.update("localizations", loc.id, { status: "blocked", reviewer_id: session.user.id });
   else if (action === "correct") {
-    const fields = { ...(loc.fields ?? {}) } as Record<string, string>;
+    // Correcting a failed translation starts from the rejected output kept in QA.
+    const fields = { ...(loc.qa?.rejected_output ?? {}), ...(loc.fields ?? {}) } as Record<string, string>;
     for (const k of Object.keys(fields)) { const v = s(f, `field_${k}`, 4000); if (v) fields[k] = v; }
     await pb.update("localizations", loc.id, { fields, status: "reviewed", reviewer_id: session.user.id, qa: { ...(loc.qa ?? {}), corrected_by_editor: true } });
   } else return fail("Unknown action.");
