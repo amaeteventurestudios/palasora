@@ -20,7 +20,7 @@ export function PrefsMenu({ edition, editionLabel, ui, reading, editionAuto, edi
   const next = `${path}${sp.toString() ? `?${sp}` : ""}`;
   return (
     <details className="relative" data-testid="prefs-menu">
-      <summary className="flex h-11 cursor-pointer list-none items-center gap-1.5 rounded-lg px-2 text-sm font-semibold hover:bg-white/10" aria-label={`${t("prefs.title")}: ${editionLabel}, ${ui.toUpperCase()}`}>
+      <summary className="flex h-11 cursor-pointer list-none items-center gap-1 rounded-lg px-1.5 text-sm font-semibold sm:gap-1.5 sm:px-2 hover:bg-white/10" aria-label={`${t("prefs.title")}: ${editionLabel}, ${ui.toUpperCase()}`}>
         <Globe size={18} aria-hidden="true" /><span className="hidden sm:inline">{editionLabel}</span><span>· {ui.toUpperCase()}</span>
       </summary>
       <form action={action} className="absolute end-0 z-50 mt-2 flex w-[min(92vw,320px)] flex-col gap-3 rounded-xl border border-border bg-card p-4 text-foreground shadow-lg">

@@ -47,6 +47,9 @@ for i in $(seq 1 40); do curl -sf http://127.0.0.1:8390/api/health >/dev/null &&
 (cd "$ROOT/services/editorial" && "$PY" -m palavva_editorial.seed && "$PY" -m palavva_editorial.e2e_fixtures) >> "$D/logs/seed.log" 2>&1
 (cd "$ROOT/services/editorial" && exec nohup "$PY" -m uvicorn palavva_editorial.api:app --host 127.0.0.1 --port 8400 >> "$D/logs/editorial.log" 2>&1 < /dev/null) &
 echo $! > "$D/run/editorial.pid"
+# Worker: converse/translate/draft jobs (fixture provider). flock in the worker keeps it single-instance.
+(cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.worker >> "$D/logs/worker.log" 2>&1 < /dev/null) &
+echo $! > "$D/run/worker.pid"
 cd "$ROOT/apps/web"
 if [ "${E2E_BUILD:-1}" = "1" ]; then NEXT_DIST_DIR=.next-test pnpm -s build >> "$D/logs/web-build.log" 2>&1; fi
 NEXT_DIST_DIR=.next-test nohup ./node_modules/.bin/next start -H 127.0.0.1 -p 3300 >> "$D/logs/web.log" 2>&1 < /dev/null &

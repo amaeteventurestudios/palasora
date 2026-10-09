@@ -35,7 +35,12 @@ Only state what the packet text itself says. The publisher's title and permitted
 excerpt ARE citable evidence: restate what they say as attributed claims (for example
 "SAnews.gov.za reported that ..."). A publication date is not an event date.
 When the packet holds only a headline, the claim is "<publisher> reported that
-<headline content>", nothing more. ABSTAIN only if the packet says nothing verifiable."""
+<headline content>", nothing more. For analysis, opinion or explainer pieces, what is
+verifiable is what the piece argues or describes: "<publisher> published an analysis
+arguing that ..." or "<publisher> reported that ...". Write claims in English even when
+the packet is in French or Arabic (translate faithfully; keep names and numbers exact).
+One clear sentence in the title or excerpt is enough for one claim; missing dates or
+details belong in "unknowns", they are not a reason to abstain. ABSTAIN only if the packet says nothing verifiable."""
 
 WRITER = """Write a question-led but not misleading headline, a <=65-word 'What happened'
 summary, <=100-word 'Why it matters' section, <=100-word additional context,
@@ -64,7 +69,7 @@ supplied in the archive packet. Name the period, primary historical source IDs,
 and limits of the analogy. Never fabricate archive documents or quotes. If no
 eligible historic primary evidence exists, return NO_VERIFIED_COMPARISON."""
 
-VERSIONS = {"curator": "curator-v1", "researcher": "researcher-v2", "writer": "writer-v3", "role": "role-contribution-v1", "timelens": "timelens-v1"}
+VERSIONS = {"curator": "curator-v1", "researcher": "researcher-v3", "writer": "writer-v3", "role": "role-contribution-v1", "timelens": "timelens-v1"}
 
 TEXT_BLOCKS = {"type": "array", "maxItems": 3, "items": {"type": "object", "properties": {"text": {"type": "string"}, "claim_ids": {"type": "array", "items": {"type": "string"}}}, "required": ["text", "claim_ids"]}}
 
@@ -76,12 +81,14 @@ SCHEMAS = {
         "risk_category": {"type": "string", "enum": ["low", "medium", "high"]},
         "additional_evidence_needed": {"type": "array", "items": {"type": "string"}, "maxItems": 3}},
         "required": ["decision", "scores", "reasons", "risk_category"]},
+    # Property order matters under constrained decoding: claims are generated before the decision,
+    # so the model does not commit to ABSTAIN before reading what it can actually support.
     "researcher": {"type": "object", "properties": {
-        "decision": {"type": "string", "enum": ["CLAIMS", "ABSTAIN"]},
         "claims": {"type": "array", "maxItems": 6, "items": {"type": "object", "properties": {
             "claim_id": {"type": "string"}, "text": {"type": "string"}, "kind": {"type": "string", "enum": ["observation", "interpretation", "projection"]},
             "source_ids": {"type": "array", "items": {"type": "string"}}, "uncertainty": {"type": "string"}}, "required": ["claim_id", "text", "kind", "source_ids"]}},
-        "unknowns": {"type": "array", "items": {"type": "string"}, "maxItems": 4}}, "required": ["decision", "claims"]},
+        "unknowns": {"type": "array", "items": {"type": "string"}, "maxItems": 4},
+        "decision": {"type": "string", "enum": ["CLAIMS", "ABSTAIN"]}}, "required": ["claims", "decision"]},
     "writer": {"type": "object", "properties": {
         "decision": {"type": "string", "enum": ["DRAFT", "ABSTAIN"]}, "headline": {"type": "string"},
         "what_happened": TEXT_BLOCKS, "why_it_matters": TEXT_BLOCKS,

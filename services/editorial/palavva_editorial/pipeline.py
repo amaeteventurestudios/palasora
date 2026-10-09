@@ -212,7 +212,7 @@ def _run(pb: PB, queue: Queue, settings: Settings, provider: ModelProvider, tid:
                           idempotency_key=f"{job_id}:{stage}:{role_id}")
     r = provider.generate(req)
     status = {"succeeded": "succeeded", "timeout": "timeout", "invalid_output": "invalid_output"}.get(r.status, "failed")
-    if r.status == "succeeded" and (r.structured_output or {}).get("decision") == "ABSTAIN":
+    if r.status == "succeeded" and (r.structured_output or {}).get("decision") == "ABSTAIN" and not (r.structured_output or {}).get("claims"):
         status = "abstained"
     pb.create("ai_runs", {"tenant_id": tid, "task_type": stage, "role_id": role_id, "provider": r.provider, "model": r.model, "prompt_version": P.VERSIONS[stage],
                           "prompt_hash": P.prompt_hash(stage, system_extra), "input_evidence_ids": evidence_ids or [], "status": status, "duration_ms": r.elapsed_ms,

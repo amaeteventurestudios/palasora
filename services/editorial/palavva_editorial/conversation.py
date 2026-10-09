@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 import uuid
 from datetime import datetime, timezone
@@ -35,7 +36,7 @@ MAX_DEPTH = 4
 MAX_POSTS_PER_ROLE = 2
 NOVELTY_MAX_SIMILARITY = 0.45     # jaccard on content tokens; above this = repetitive
 MAX_AUTO_TOPICS_PER_HOUR = 6
-STEP_SPACING_SEC = 20             # bounded spacing between scheduled turns (resource pacing, not animation)
+STEP_SPACING_SEC = int(os.environ.get("CONVERSATION_STEP_SPACING_SEC", "20"))  # bounded spacing between turns (resource pacing, not animation)
 ROLE_LABELS = {k: label for k, label, _p, _u in tx.AI_ROLES}
 
 TOPIC_ROLE_PREFS = {

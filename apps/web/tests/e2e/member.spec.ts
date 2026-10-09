@@ -8,7 +8,7 @@ const STORY = "/discussion/demo-rainy-season-delivery-routes";
 
 test("T-010/T-011 draft survives sign-in, posts once, human count updates (AI separate)", async ({ page }) => {
   await page.goto(STORY);
-  const countText = async () => Number((await page.getByText(/\d+ community responses?/).first().innerText()).match(/(\d+)/)![1]);
+  const countText = async () => Number((await page.getByTestId("thread-counts").innerText()).match(/(\d+) human/)![1]);
   const before = await countText();
   const draft = `E2E draft ${Date.now()}: riders could flag closures with a timestamp so stale reports expire.`;
   await page.getByLabel("Join the discussion").fill(draft);
@@ -26,11 +26,11 @@ test("T-010/T-011 draft survives sign-in, posts once, human count updates (AI se
   await page.getByRole("button", { name: "Post comment" }).click();
   await expect(page.getByText("Your comment is posted.")).toBeVisible();
   await page.reload();
-  const comments = page.getByTestId("human-comment").filter({ hasText: draft });
+  const comments = page.getByTestId("human-post").filter({ hasText: draft });
   await expect(comments).toHaveCount(1);
-  await expect(comments.first()).toContainText("Community response");
+  await expect(comments.first()).toContainText("Human");
   expect(await countText()).toBe(before + 1);
-  await expect(page.getByText(/· 1 AI contribution shown separately/)).toBeVisible(); // AI counted separately, unchanged
+  await expect(page.getByTestId("thread-counts")).toContainText("1 AI replies"); // AI counted separately, unchanged
   await page.goto("/feed/new?country=KE");
   await expect(page.getByTestId("story-card").filter({ hasText: "delivery rider" }).first()).toContainText(`${before + 1} human repl`);
 });
@@ -112,7 +112,7 @@ test("T-012 report → moderator quarantines → comment hidden and count drops;
   await reader.getByRole("button", { name: "Post comment" }).click();
   await expect(reader.getByText("Your comment is posted.")).toBeVisible();
   await reader.reload();
-  const c = reader.getByTestId("human-comment").filter({ hasText: text });
+  const c = reader.getByTestId("human-post").filter({ hasText: text });
   await c.getByText("Report", { exact: true }).click();
   await c.getByLabel("Reason").selectOption("spam");
   await c.getByRole("button", { name: "Send report" }).click();
@@ -122,12 +122,12 @@ test("T-012 report → moderator quarantines → comment hidden and count drops;
   const row = mod.locator("tr", { hasText: text.slice(0, 30) }).first();
   await row.getByRole("button", { name: "Quarantine" }).click();
   await expect(mod.locator("tr", { hasText: text.slice(0, 30) }).filter({ has: mod.getByRole("button", { name: "Quarantine" }) })).toHaveCount(0);
-  await expect(async () => { await reader.reload(); await expect(reader.getByTestId("human-comment").filter({ hasText: text })).toHaveCount(0, { timeout: 1000 }); }).toPass({ timeout: 15000 });
+  await expect(async () => { await reader.reload(); await expect(reader.getByTestId("human-post").filter({ hasText: text })).toHaveCount(0, { timeout: 1000 }); }).toPass({ timeout: 15000 });
   await mod.goto("/admin/settings");
   await expect(mod.getByText("moderation.report_quarantine").first()).toBeVisible();
   // Appeal path: restore from the quarantined list.
   await mod.goto("/admin/moderation");
   const q = mod.locator("tr", { hasText: text.slice(0, 30) }).filter({ hasText: "quarantined" }).first();
   await q.getByRole("button", { name: "Restore" }).click();
-  await expect(async () => { await reader.reload(); await expect(reader.getByTestId("human-comment").filter({ hasText: text })).toHaveCount(1, { timeout: 1000 }); }).toPass({ timeout: 15000 });
+  await expect(async () => { await reader.reload(); await expect(reader.getByTestId("human-post").filter({ hasText: text })).toHaveCount(1, { timeout: 1000 }); }).toPass({ timeout: 15000 });
 });

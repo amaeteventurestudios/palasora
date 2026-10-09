@@ -38,7 +38,7 @@ def main() -> None:
     body = (FX / "rss_good.xml").read_bytes().replace(b"{NOW}", now)
     queue = Queue(s.jobs_db)
     ingest_source(pb, queue, s, src, fetcher=lambda url, allowed=None, **kw: FetchResult(200, body, url, "application/rss+xml"), force=True)
-    while (job := queue.claim("e2e")):
+    while (job := queue.claim("e2e", ["draft_cluster"])):
         queue.complete(job["job_id"], "e2e", draft_cluster(pb, queue, s, FixtureProvider(), job))
     pw = os.environ["LOCAL_DEMO_PASSWORD"]
     u = ensure_user(pb, t, "unverified@palavva.local", pw, "unverified", "Unverified Member", "member")

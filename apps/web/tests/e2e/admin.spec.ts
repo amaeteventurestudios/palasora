@@ -35,6 +35,38 @@ test("T-029 Overview shows real, labeled metrics and integration states; screens
   }
 });
 
+test("T-021 revision conflict (409-style) and publishing kill switch", async ({ browser }) => {
+  const a = await (await browser.newContext()).newPage();
+  const b = await (await browser.newContext()).newPage();
+  await signIn(a, "editor@palavva.local", BASE, "/admin/editorial");
+  await signIn(b, "admin@palavva.local", BASE, "/admin/editorial");
+  await openDraft(a, "Fixture");
+  const url = a.url();
+  await b.goto(url);
+  await b.getByLabel("Headline").fill("Fixture draft edited in another tab");
+  await b.getByRole("button", { name: "Save edit" }).click();
+  await expect(b.getByText("Draft updated.")).toBeVisible();
+  a.on("dialog", (d) => d.accept());
+  await a.getByLabel(/Review note/).fill("Trying to approve a stale revision");
+  await a.getByRole("button", { name: "Approve and publish" }).click();
+  await expect(a.getByText(/revision conflict/)).toBeVisible();
+  // Kill switch: pause publishing, approval is blocked, then resume.
+  await b.goto("/admin/settings");
+  const sw = b.getByTestId("switch-PUBLISHING_PAUSED");
+  await sw.getByPlaceholder("Reason (required)").fill("E2E kill-switch drill");
+  await sw.getByRole("button", { name: "Turn on" }).click();
+  await expect(sw).toContainText("ON");
+  await a.goto(url);
+  await expect(a.getByText("Publishing paused for this tenant.")).toBeVisible();
+  await a.getByLabel(/Review note/).fill("Should be blocked while paused");
+  await a.getByRole("button", { name: "Approve and publish" }).click();
+  await expect(a.getByText(/Publishing is paused/)).toBeVisible();
+  await b.goto("/admin/settings");
+  await b.getByTestId("switch-PUBLISHING_PAUSED").getByPlaceholder("Reason (required)").fill("Drill complete");
+  await b.getByTestId("switch-PUBLISHING_PAUSED").getByRole("button", { name: "Turn off" }).click();
+  await expect(b.getByTestId("switch-PUBLISHING_PAUSED")).toContainText("OFF");
+});
+
 test("T-021/T-022 medium-risk draft: moderator/reviewer limits, flags need a note, editor publishes; AI roles ≤3 go public with it", async ({ browser }) => {
   const ed = await (await browser.newContext()).newPage();
   await signIn(ed, "editor@palavva.local", BASE, "/admin/editorial");
@@ -57,9 +89,9 @@ test("T-021/T-022 medium-risk draft: moderator/reviewer limits, flags need a not
   await ed.getByRole("link", { name: "View public page" }).click();
   await expect(ed.getByRole("heading", { level: 1 })).toHaveText(head);
   await expect(ed.getByRole("heading", { name: "Read the sources" })).toBeVisible();
-  const ai = ed.getByTestId("ai-contribution");
+  const ai = ed.getByTestId("ai-post");
   expect(await ai.count()).toBeLessThanOrEqual(3);
-  if (await ai.count()) await expect(ai.first()).toContainText("AI analysis");
+  if (await ai.count()) await expect(ai.first()).toContainText("· AI");
   await ed.screenshot({ path: `${shotDir}/e2e-published-fixture-story-1440.png`, fullPage: true });
 });
 
@@ -78,38 +110,6 @@ test("T-024 correction: revision bump, public banner, corrections index, OG vers
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", new RegExp(`v=${rev + 1}`));
   await page.goto("/corrections");
   await expect(page.getByText("misdescribed the fixture source").first()).toBeVisible();
-});
-
-test("T-021 revision conflict (409-style) and publishing kill switch", async ({ browser }) => {
-  const a = await (await browser.newContext()).newPage();
-  const b = await (await browser.newContext()).newPage();
-  await signIn(a, "editor@palavva.local", BASE, "/admin/editorial");
-  await signIn(b, "admin@palavva.local", BASE, "/admin/editorial");
-  await openDraft(a, "Fixture");
-  const url = a.url();
-  await b.goto(url);
-  await b.getByLabel("Headline").fill("Edited in another tab");
-  await b.getByRole("button", { name: "Save edit" }).click();
-  await expect(b.getByText("Draft updated.")).toBeVisible();
-  a.on("dialog", (d) => d.accept());
-  await a.getByLabel(/Review note/).fill("Trying to approve a stale revision");
-  await a.getByRole("button", { name: "Approve and publish" }).click();
-  await expect(a.getByText(/revision conflict/)).toBeVisible();
-  // Kill switch: pause publishing, approval is blocked, then resume.
-  await b.goto("/admin/settings");
-  const sw = b.getByTestId("switch-PUBLISHING_PAUSED");
-  await sw.getByPlaceholder("Reason (required)").fill("E2E kill-switch drill");
-  await sw.getByRole("button", { name: "Turn on" }).click();
-  await expect(sw).toContainText("ON");
-  await a.goto(url);
-  await expect(a.getByText("Publishing paused for this tenant.")).toBeVisible();
-  await a.getByLabel(/Review note/).fill("Should be blocked while paused");
-  await a.getByRole("button", { name: "Approve and publish" }).click();
-  await expect(a.getByText(/Publishing is paused/)).toBeVisible();
-  await b.goto("/admin/settings");
-  await b.getByTestId("switch-PUBLISHING_PAUSED").getByPlaceholder("Reason (required)").fill("Drill complete");
-  await b.getByTestId("switch-PUBLISHING_PAUSED").getByRole("button", { name: "Turn off" }).click();
-  await expect(b.getByTestId("switch-PUBLISHING_PAUSED")).toContainText("OFF");
 });
 
 test("T-013 rights: pending source test-fetch makes no network request; revoke holds drafts", async ({ page }) => {

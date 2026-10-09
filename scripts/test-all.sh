@@ -12,7 +12,7 @@ cd "$ROOT/apps/web"
 echo "== typecheck"; npx tsc --noEmit > "$OUT/typecheck.log" 2>&1 && echo "   PASS" || { echo "   FAIL"; rc=1; }
 echo "== vitest"; npx vitest run > "$OUT/vitest.log" 2>&1 && echo "   PASS ($(grep -Eo 'Tests +[0-9]+ passed' "$OUT/vitest.log"))" || { echo "   FAIL"; rc=1; }
 cd "$ROOT/services/editorial"
-echo "== pytest"; .venv/bin/python -m pytest -q tests/test_unit.py tests/test_integration.py tests/test_real_qwen.py > "$OUT/pytest.log" 2>&1 && echo "   PASS ($(tail -1 "$OUT/pytest.log"))" || { echo "   FAIL"; rc=1; }
+echo "== pytest"; .venv/bin/python -m pytest -q tests/ > "$OUT/pytest.log" 2>&1 && echo "   PASS ($(tail -1 "$OUT/pytest.log"))" || { echo "   FAIL"; rc=1; }
 if [ "${REAL_QWEN:-0}" = "1" ]; then
   echo "== real Qwen"; PALAVVA_REAL_QWEN=1 .venv/bin/python -m pytest -q -s tests/test_real_qwen.py > "$OUT/real-qwen.log" 2>&1 && echo "   PASS" || { echo "   FAIL"; rc=1; }
 fi

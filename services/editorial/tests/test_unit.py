@@ -259,3 +259,17 @@ def test_multilingual_sensitive_terms_and_country_names():
     assert "EG" in ar.countries and ar.risk == "high"
     calm = classify("Sénégal : une coopérative de femmes transforme le mil à Thiès", "")
     assert calm.countries == ["SN"] and calm.risk == "low" and calm.africa_relevant
+
+
+def test_detect_language_text_beats_mislabelled_feed_hint():
+    from palavva_editorial.ingest.classify import detect_language
+    assert detect_language("موزمبيق: رحلة السكان الأصليين ليصبحوا مواطنين", "en-US") == "ar"
+    assert detect_language("Les inondations au Népal: reportage de la journée du 27 août", "en") == "fr"
+    assert detect_language("Nigeria fuel prices", "fr") == "fr"  # inconclusive text: the hint decides
+    assert detect_language("Nigeria fuel prices rise again this week", "") == "en"
+
+
+def test_researcher_schema_generates_claims_before_decision():
+    from palavva_editorial.editorial.prompts import SCHEMAS
+    keys = list(SCHEMAS["researcher"]["properties"])
+    assert keys.index("claims") < keys.index("decision")

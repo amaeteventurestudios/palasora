@@ -35,11 +35,18 @@ def _has(text: str, term: str) -> bool:
 
 
 def detect_language(text: str, hint: str = "") -> str:
+    """Clear evidence in the text beats the feed's <language> hint (some feeds mislabel it,
+    e.g. an Arabic-language feed declaring en-US); the hint decides only when text is inconclusive."""
+    letters = [c for c in text if c.isalpha()]
+    if letters and sum(bool(ARABIC.match(c)) for c in letters) / len(letters) > 0.3:
+        return "ar"
+    words = re.findall(r"[a-zàâçéèêëîïôûùüÿœ]+", text.lower())
+    if len(words) >= 6 and sum(w in FRENCH for w in words) / len(words) > 0.12:
+        return "fr"
     if hint:
         return hint.split("-")[0].lower()[:2]
     if ARABIC.search(text):
         return "ar"
-    words = re.findall(r"[a-zàâçéèêëîïôûùüÿœ]+", text.lower())
     if words and sum(w in FRENCH for w in words) / len(words) > 0.12:
         return "fr"
     return "en"

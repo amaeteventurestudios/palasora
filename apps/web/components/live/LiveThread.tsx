@@ -79,7 +79,7 @@ export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, r
   };
 
   return (
-    <div data-testid="live-thread">
+    <div data-testid="live-thread" data-piece-id={pieceId}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="meta" data-testid="thread-counts">{t("thread.counts", { ai: aiCount, human: humanCount })}</p>
         <LiveStatus />

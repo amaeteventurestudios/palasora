@@ -27,7 +27,7 @@ export function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; sessio
     <header className="bg-masthead text-white" style={{ borderBottom: "3px solid var(--brand-accent)" }}>
       <a href="#main" className="skip-link">{t("nav.skip")}</a>
       <div className="container-pv flex h-14 items-center gap-1 sm:gap-3 lg:h-16">
-        <Link href="/" className="me-2 shrink-0 rounded" aria-label={`${tenant.name} home`}>
+        <Link href="/" className="me-0 shrink-0 rounded sm:me-2" aria-label={`${tenant.name} home`}>
           {isPalavva ? <Wordmark size={30} /> : <Wordmark text={tenant.branding.wordmark_text} size={22} dot={false} />}
         </Link>
         <nav aria-label="Main" className="hidden flex-1 items-center gap-0.5 lg:flex">
@@ -43,12 +43,15 @@ export function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; sessio
               className="h-10 w-44 bg-transparent text-[15px] text-white placeholder:text-white/70 outline-none xl:w-56" />
           </div>
         </form>
-        <Link href="/search" className="ms-auto inline-flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10 xl:hidden" aria-label={t("nav.search")}>
+        {/* Below sm, Search lives in the menu (it is listed there) so the 320px header never overflows. */}
+        <span className="ms-auto sm:hidden" aria-hidden="true" />
+        <Link href="/search" className="ms-auto hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg hover:bg-white/10 sm:inline-flex xl:hidden" aria-label={t("nav.search")}>
           <Search size={22} aria-hidden="true" />
         </Link>
         <Suspense><PrefsMenu edition={ctx.edition} editionLabel={editionLabel} ui={ctx.ui} reading={ctx.reading} editionAuto={ctx.sources.edition !== "explicit" && ctx.sources.edition !== "saved"}
           editions={editions} uiLocales={uiLocales} readingLocales={readingLocales} /></Suspense>
-        <ThemeToggle />
+        {/* On the narrowest phones the theme switch lives in the menu so the header never overflows. */}
+        <div className="hidden sm:block"><ThemeToggle /></div>
         {session ? (
           <details className="relative">
             <summary className="flex h-11 cursor-pointer list-none items-center gap-2 rounded-lg px-2 hover:bg-white/10" aria-label={t("nav.accountMenu")}>
