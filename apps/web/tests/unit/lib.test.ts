@@ -37,7 +37,7 @@ const piece = (id: string, hoursAgo: number, votes = 0, comments = 0, extra: Par
   published_at: new Date(Date.now() - hoursAgo * 3600_000).toISOString(), first_published_at: "", updated_at: new Date(Date.now() - hoursAgo * 3600_000).toISOString(),
   sources: [], is_demo: false, editor_pick: extra.editor_pick ?? false, still_developing: false, corrected: false,
   counts: { human_comments: comments, ai_contributions: 5, votes, saves: 0 }, is_sponsored: false,
-  initiator_role: "", thread_state: "", publish_path: "", origin_country: "", original_language: "en", area_ids: [],
+  initiator_role: "", thread_state: "", publish_path: "", origin_country: "", original_language: "en", area_ids: [], revision: 1, source_language: "en",
 });
 
 describe("feed modes (human-only signals)", () => {

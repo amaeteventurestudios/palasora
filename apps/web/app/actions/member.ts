@@ -235,11 +235,15 @@ export async function toggleFollow(_: ActionState, f: FormData): Promise<ActionS
   if (!session) return fail("Join the conversation to do that.", "auth");
   const type = str(f, "target_type", 12);
   const id = str(f, "target_id", 60);
-  if (!["country", "topic", "member", "community"].includes(type) || !/^[A-Za-z0-9_-]{1,60}$/.test(id)) return fail("Not available.");
+  if (!["country", "topic", "member", "community", "area"].includes(type) || !/^[A-Za-z0-9_-]{1,60}$/.test(id)) return fail("Not available.");
+  if (type === "area" && !(await pb.first("geo_areas", `code=${q(id)}`))) return fail("Not available.");
   if (type === "member" && !(await pb.first("users", `tenant_id=${q(tenant.id)} && handle=${q(id)}`))) return fail("Not available.");
   const existing = await pb.first("follows", `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)} && target_type=${q(type)} && target_id=${q(id)}`);
   if (existing) await pb.remove("follows", existing.id);
-  else await pb.create("follows", { tenant_id: tenant.id, user_id: session.user.id, target_type: type, target_id: id });
+  else {
+    await pb.create("follows", { tenant_id: tenant.id, user_id: session.user.id, target_type: type, target_id: id });
+    if (type === "area" || type === "country") await writeEvent(tenant.id, { event_name: "follow_location_created" });
+  }
   revalidatePath("/", "layout");
   invalidateFeedCache(tenant.id);
   return { ok: true, message: existing ? "Unfollowed." : "Following.", data: { following: String(!existing) } };
@@ -319,4 +323,17 @@ export async function requestAccountDeletion(_: ActionState, f: FormData): Promi
   for (const s of sessions) await pb.remove("sessions", s.id);
   await audit(tenant.id, session.user.id, "account.delete_requested", "users", session.user.id);
   redirect("/?account=deleted");
+}
+
+export async function reportTranslation(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session, ip } = await ctx();
+  if (!rateLimit(`trreport:${ip}`, 10, 600_000).ok) return fail("Too many requests for now. Please try again shortly.");
+  const locId = str(f, "localization_id", 30), issue = str(f, "issue", 2000);
+  if (issue.length < 5) return fail("Tell us what is wrong with the translation.", "issue");
+  const loc = await pb.first("localizations", `tenant_id=${q(tenant.id)} && id=${q(locId)}`);
+  if (!loc) return fail("Not available.");
+  await pb.create("translation_reports", { tenant_id: tenant.id, localization_id: loc.id, piece_id: loc.piece_id, locale: loc.locale, issue, reporter_id: session?.user.id ?? "", status: "open" });
+  await pb.update("localizations", loc.id, { report_count: (loc.report_count ?? 0) + 1 });
+  await writeEvent(tenant.id, { event_name: "translation_quality_reported" });
+  return { ok: true, message: "Thanks. An editor will review this translation." };
 }

@@ -50,7 +50,7 @@ export default async function Review({ params }: { params: Promise<{ id: string 
           <p className="mt-2 text-muted">{p.lede}</p>
           <h3 className="mt-3 font-semibold">What happened?</h3>{(body.what_happened ?? []).map((b, i) => <p key={i}>{b.text} <span className="meta">[{(b.claim_ids ?? []).join(", ") || "uncited"}]</span></p>)}
           <h3 className="mt-3 font-semibold">Why it matters</h3>{(body.why_it_matters ?? []).map((b, i) => <p key={i}>{b.text} <span className="meta">[{(b.claim_ids ?? []).join(", ") || "uncited"}]</span></p>)}
-          {(body.unknowns ?? []).length > 0 && <><h3 className="mt-3 font-semibold">Unknowns</h3><ul className="list-disc pl-5">{body.unknowns!.map((u, i) => <li key={i}>{u}</li>)}</ul></>}
+          {(body.unknowns ?? []).length > 0 && <><h3 className="mt-3 font-semibold">Unknowns</h3><ul className="list-disc ps-5">{body.unknowns!.map((u, i) => <li key={i}>{u}</li>)}</ul></>}
           <h3 className="mt-3 font-semibold">AI role contributions ({comments.length})</h3>
           {comments.map((c) => <p key={c.id} className="mt-1 rounded-lg bg-ai-surface p-2 text-sm"><strong>{c.role_id}</strong> ({c.approval_state}): {c.body_text} <span className="meta">[{(c.claim_ids ?? []).join(", ")}]</span></p>)}
         </section>

@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/client";
 // One EventSource per page. Events are committed rows from thread_events, delivered in seq order.
 // Reconnects use Last-Event-ID (browser default) so missed events are replayed; duplicates are
 // dropped by seq. No synthetic activity is ever created client-side.
@@ -39,8 +40,9 @@ export function useLive() { return useContext(LiveCtx); }
 
 export function LiveStatus() {
   const ctx = useLive();
+  const t = useT();
   if (!ctx) return null;
-  const label = { connecting: "Connecting to live updates…", live: "Live: new replies appear as they are published", reconnecting: "Reconnecting… (missed updates will be replayed)", offline: "Live updates unavailable. Refresh to see new replies." }[ctx.status];
+  const label = { connecting: t("live.connecting"), live: t("live.on"), reconnecting: t("live.reconnecting"), offline: t("live.offline") }[ctx.status];
   return (
     <p className="meta inline-flex items-center gap-2" role="status" aria-live="polite" data-live-status={ctx.status}>
       <span aria-hidden="true" className={`inline-block h-2 w-2 rounded-full ${ctx.status === "live" ? "bg-success motion-safe:animate-pulse" : "bg-[var(--muted-foreground)]"}`} />{label}

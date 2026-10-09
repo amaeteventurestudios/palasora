@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Activity, BarChart3, Building2, Cpu, Inbox, LayoutDashboard, Megaphone, MessagesSquare, Rss, Settings, Share2, Shield, ShieldAlert, Users } from "lucide-react";
+import { Activity, BarChart3, Building2, Cpu, Inbox, LayoutDashboard, Megaphone, MessagesSquare, Rss, Languages, MapPin, TrendingUp, Settings, Share2, Shield, ShieldAlert, Users } from "lucide-react";
 import { getTenant } from "@/lib/tenant";
 import { getSession, isStaff } from "@/lib/session";
 import { getSwitch } from "@/lib/settings";
@@ -9,7 +9,7 @@ export const metadata = { title: { default: "Command Center", template: "%s | Co
 export const dynamic = "force-dynamic";
 
 const NAV = [
-  ["/admin", "Overview", LayoutDashboard], ["/admin/conversations", "Conversations", MessagesSquare], ["/admin/exceptions", "Exceptions", ShieldAlert], ["/admin/editorial", "Editorial Queue", Inbox], ["/admin/sources", "News Sources", Rss], ["/admin/ai", "AI Operations", Cpu],
+  ["/admin", "Overview", LayoutDashboard], ["/admin/conversations", "Conversations", MessagesSquare], ["/admin/exceptions", "Exceptions", ShieldAlert], ["/admin/editorial", "Editorial Queue", Inbox], ["/admin/translations", "Translations", Languages], ["/admin/geo", "Geography", MapPin], ["/admin/trends", "Trend audit", TrendingUp], ["/admin/sources", "News Sources", Rss], ["/admin/ai", "AI Operations", Cpu],
   ["/admin/moderation", "Content & Moderation", Shield], ["/admin/analytics", "Audience Analytics", BarChart3], ["/admin/distribution", "Distribution & Search", Share2],
   ["/admin/sponsors", "Sponsors & Inquiries", Megaphone], ["/admin/businesses", "Businesses & Founders", Building2], ["/admin/tenants", "Tenants", Users],
   ["/admin/health", "System Health", Activity], ["/admin/settings", "Settings & Audit", Settings],

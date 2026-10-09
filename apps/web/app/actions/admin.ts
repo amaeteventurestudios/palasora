@@ -371,3 +371,49 @@ export async function unpublishPiece(_: ActionState, f: FormData): Promise<Actio
   revalidatePath("/", "layout");
   return { ok: true, message: "Unpublished. The topic is held and its thread closed." };
 }
+
+// ---------------- v1.3 translation QA & geography QA ----------------
+
+export async function translationDecision(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await staff("editor");
+  const loc = await pb.first("localizations", `tenant_id=${q(tenant.id)} && id=${q(s(f, "id", 30))}`);
+  if (!loc) return fail("Not found.");
+  const action = s(f, "action", 20);
+  if (action === "approve") await pb.update("localizations", loc.id, { status: "reviewed", reviewer_id: session.user.id });
+  else if (action === "block") await pb.update("localizations", loc.id, { status: "blocked", reviewer_id: session.user.id });
+  else if (action === "correct") {
+    const fields = { ...(loc.fields ?? {}) } as Record<string, string>;
+    for (const k of Object.keys(fields)) { const v = s(f, `field_${k}`, 4000); if (v) fields[k] = v; }
+    await pb.update("localizations", loc.id, { fields, status: "reviewed", reviewer_id: session.user.id, qa: { ...(loc.qa ?? {}), corrected_by_editor: true } });
+  } else return fail("Unknown action.");
+  for (const r of await pb.list("translation_reports", { filter: `tenant_id=${q(tenant.id)} && localization_id=${q(loc.id)} && status='open'`, perPage: 50 })) await pb.update("translation_reports", r.id, { status: "actioned" });
+  await audit(tenant.id, session.user.id, `translation.${action}`, "localizations", loc.id, { locale: loc.locale });
+  invalidateFeedCache(tenant.id);
+  revalidatePath("/", "layout");
+  return { ok: true, message: `Translation ${action === "approve" ? "marked reviewed" : action === "block" ? "blocked (readers see the original)" : "corrected and marked reviewed"}.` };
+}
+
+export async function geoDecision(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await staff("editor");
+  const ev = await pb.first("story_geo_evidence", `tenant_id=${q(tenant.id)} && id=${q(s(f, "id", 30))}`);
+  if (!ev) return fail("Not found.");
+  const action = s(f, "action", 20);
+  if (action === "confirm") await pb.update("story_geo_evidence", ev.id, { status: "confirmed", confidence: "verified", role: ev.role === "incidental" ? "subject" : ev.role, reviewer_id: session.user.id });
+  else if (action === "reject") await pb.update("story_geo_evidence", ev.id, { status: "rejected", reviewer_id: session.user.id });
+  else if (action === "correct") {
+    const code = s(f, "area_code", 12).toUpperCase();
+    if (!(await pb.first("geo_areas", `code=${q(code)}`))) return fail("Unknown area code.");
+    await pb.update("story_geo_evidence", ev.id, { status: "corrected", reviewer_id: session.user.id, note: `moved from ${ev.area_code}` });
+    await pb.create("story_geo_evidence", { tenant_id: tenant.id, piece_id: ev.piece_id, source_item_id: ev.source_item_id, area_code: code, role: "subject", confidence: "verified",
+      evidence_span: ev.evidence_span, method: "editor-correction", status: "confirmed", reviewer_id: session.user.id });
+  } else return fail("Unknown action.");
+  if (ev.piece_id) {
+    const all = await pb.list("story_geo_evidence", { filter: `tenant_id=${q(tenant.id)} && piece_id=${q(ev.piece_id)}`, perPage: 100 });
+    const codes = [...new Set(all.filter((e) => (e.role === "subject" || e.role === "event") && (e.confidence === "verified" || e.confidence === "high_confidence") && !["rejected", "disputed", "corrected"].includes(e.status)).map((e) => e.area_code))].sort();
+    await pb.update("editorial_pieces", ev.piece_id, { area_ids: codes });
+  }
+  await audit(tenant.id, session.user.id, `geo.${action}`, "story_geo_evidence", ev.id, { area: ev.area_code });
+  invalidateFeedCache(tenant.id);
+  revalidatePath("/", "layout");
+  return { ok: true, message: `Geography ${action}ed.` };
+}

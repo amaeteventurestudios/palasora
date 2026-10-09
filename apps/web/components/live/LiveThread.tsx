@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MessageSquare } from "lucide-react";
 import type { PostView } from "@/lib/repo/thread";
@@ -20,6 +21,7 @@ export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, r
   const [offscreen, setOffscreen] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const ctx = useLive();
+  const t = useT();
   const known = useRef(new Set(initial.map((p) => p.id)));
 
   useEffect(() => ctx?.subscribe((e) => {
@@ -62,12 +64,12 @@ export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, r
           <li key={p.id} className="flex flex-col gap-3">
             <PostCard p={p} isNew={fresh.has(p.id)} claimIndex={claimIndex} parentLabel={level >= MAX_VISUAL_INDENT && p.parent_id ? label(byId.get(p.parent_id)) : undefined}>
               {open && <button type="button" className="inline-flex min-h-[32px] items-center gap-1 text-sm font-semibold text-muted hover:text-foreground" aria-expanded={replyTo === p.id}
-                onClick={() => setReplyTo(replyTo === p.id ? null : p.id)}><MessageSquare size={14} aria-hidden="true" />Reply</button>}
+                onClick={() => setReplyTo(replyTo === p.id ? null : p.id)}><MessageSquare size={14} aria-hidden="true" />{t("thread.reply")}</button>}
               {p.author_kind === "human" && <VoteButton kind="comment" id={p.id} score={p.vote_score} voted={false} signedIn={signedIn} returnPath={`${returnPath}#post-${p.id}`} label="Upvote reply" />}
               <ReportForm type="comment" id={p.id} />
             </PostCard>
             {replyTo === p.id && (
-              <div className="ms-3 sm:ms-5"><CommentForm pieceId={pieceId} parentId={p.id} returnPath={`${returnPath}#post-${p.id}`} signedIn={signedIn} verified={verified} label={`Reply to ${label(p)}`} /></div>
+              <div className="ms-3 sm:ms-5"><CommentForm pieceId={pieceId} parentId={p.id} returnPath={`${returnPath}#post-${p.id}`} signedIn={signedIn} verified={verified} label={`${t("thread.reply")}: ${label(p)}`} /></div>
             )}
             {render(p.id, level + 1)}
           </li>
@@ -79,13 +81,13 @@ export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, r
   return (
     <div data-testid="live-thread">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="meta" data-testid="thread-counts">{aiCount} AI {aiCount === 1 ? "reply" : "replies"} · {humanCount} human {humanCount === 1 ? "reply" : "replies"}</p>
+        <p className="meta" data-testid="thread-counts">{t("thread.counts", { ai: aiCount, human: humanCount })}</p>
         <LiveStatus />
       </div>
-      <div className="mt-3">{posts.length ? render("", 0) : <p className="text-muted">No replies yet. AI analysts reply when they have something new to add; quiet periods are normal.</p>}</div>
+      <div className="mt-3">{posts.length ? render("", 0) : <p className="text-muted">{t("thread.none")}</p>}</div>
       {offscreen && (
         <button type="button" className="btn btn-primary fixed bottom-20 left-1/2 z-30 -translate-x-1/2 shadow-lg" onClick={() => { document.getElementById(`post-${offscreen}`)?.scrollIntoView({ block: "center" }); setOffscreen(null); }}>
-          1 new reply below
+          {t("thread.newBelow")}
         </button>
       )}
     </div>

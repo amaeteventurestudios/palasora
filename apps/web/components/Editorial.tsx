@@ -13,7 +13,7 @@ export function ClaimText({ block, claimIndex }: { block: Block; claimIndex: Rec
     <p>
       {block.text}
       {ids.map((c) => (
-        <sup key={c} className="ml-0.5"><a href={`#evidence-${c}`} className="link text-xs" aria-label={`Evidence ${claimIndex[c]}`}>[{claimIndex[c]}]</a></sup>
+        <sup key={c} className="ms-0.5"><a href={`#evidence-${c}`} className="link text-xs" aria-label={`Evidence ${claimIndex[c]}`}>[{claimIndex[c]}]</a></sup>
       ))}
     </p>
   );
@@ -31,10 +31,17 @@ export function SourceCitation({ s, i }: { s: SourceRef; i: number }) {
           <p className="text-sm text-muted break-words">{s.title ?? s.url} <span className="italic">(fixture link, intentionally not clickable)</span></p>
         ) : (
           <a href={s.url} target="_blank" rel="noopener noreferrer nofollow" data-source-link={String(i)} className="link break-words text-sm">
-            {s.title ?? s.url}<ExternalLink size={12} className="ml-1 inline" aria-hidden="true" /><span className="sr-only"> (opens the original publisher in a new tab)</span>
+            {s.title ?? s.url}<ExternalLink size={12} className="ms-1 inline" aria-hidden="true" /><span className="sr-only"> (opens the original publisher in a new tab)</span>
           </a>
         )}
         {d && <p className="meta">Published by the source: <time dateTime={d.toISOString()}>{fullDate(d)}</time></p>}
+        {(s as SourceRef & { author?: string; license?: string; license_url?: string; language?: string }).license && (
+          <p className="meta" data-testid="source-license">
+            {(s as { author?: string }).author ? <>By {(s as { author?: string }).author} · </> : null}
+            {(s as { license_url?: string }).license_url ? <a className="link" href={(s as { license_url?: string }).license_url} target="_blank" rel="noopener noreferrer license">{(s as { license?: string }).license}</a> : (s as { license?: string }).license}
+            {" "}· Summarized and analyzed by Palavva (changes made){(s as { language?: string }).language && (s as { language?: string }).language !== "en" ? ` · Original language: ${(s as { language?: string }).language}` : ""}
+          </p>
+        )}
       </div>
     </li>
   );

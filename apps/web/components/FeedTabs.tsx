@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { FEED_MODES, MODE_LABELS, type FeedMode } from "@/lib/feed";
+import { FEED_MODES, type FeedMode } from "@/lib/feed";
+import type { T } from "@/lib/i18n/messages";
 
 export function feedHref(mode: FeedMode, params: { country?: string; topic?: string; lang?: string }) {
   const sp = new URLSearchParams();
@@ -10,12 +11,12 @@ export function feedHref(mode: FeedMode, params: { country?: string; topic?: str
   return `/feed/${mode}${qs ? `?${qs}` : ""}`;
 }
 
-export function FeedTabs({ active, params }: { active: FeedMode; params: { country?: string; topic?: string; lang?: string } }) {
+export function FeedTabs({ active, params, t }: { active: FeedMode; params: { country?: string; topic?: string; lang?: string }; t: T }) {
   return (
-    <nav aria-label="Feed" className="border-b border-border">
+    <nav aria-label={t("feed.label")} className="border-b border-border">
       <div className="scroll-row !pb-0">
         {FEED_MODES.map((m) => (
-          <Link key={m} href={feedHref(m, params)} className="tab" aria-current={m === active ? "page" : undefined}>{MODE_LABELS[m]}</Link>
+          <Link key={m} href={feedHref(m, params)} className="tab" aria-current={m === active ? "page" : undefined}>{t(`tab.${m}` as never)}</Link>
         ))}
       </div>
     </nav>

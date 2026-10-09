@@ -36,12 +36,12 @@ export default async function TimeLens({ params, searchParams }: { params: Promi
         <section key={e.id} className="card mt-6 p-5" style={{ borderTop: "4px solid var(--brand-gold)" }}>
           <h2 className="text-xl font-bold">{e.era}: {e.title}</h2>
           <div className="mt-3 grid gap-4 md:grid-cols-2">
-            <div><h3 className="font-semibold">Then</h3><ul className="list-disc pl-5">{list(e.then_points).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
-            <div><h3 className="font-semibold">Now</h3><ul className="list-disc pl-5">{list(e.now_points).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
-            <div><h3 className="font-semibold">What&apos;s similar</h3><ul className="list-disc pl-5">{list(e.similarities).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
-            <div><h3 className="font-semibold">What&apos;s different</h3><ul className="list-disc pl-5">{list(e.differences).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+            <div><h3 className="font-semibold">Then</h3><ul className="list-disc ps-5">{list(e.then_points).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+            <div><h3 className="font-semibold">Now</h3><ul className="list-disc ps-5">{list(e.now_points).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+            <div><h3 className="font-semibold">What&apos;s similar</h3><ul className="list-disc ps-5">{list(e.similarities).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+            <div><h3 className="font-semibold">What&apos;s different</h3><ul className="list-disc ps-5">{list(e.differences).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
           </div>
-          <h3 className="mt-3 font-semibold">What isn&apos;t clear</h3><ul className="list-disc pl-5">{list(e.unknowns).map((x, i) => <li key={i}>{x}</li>)}</ul>
+          <h3 className="mt-3 font-semibold">What isn&apos;t clear</h3><ul className="list-disc ps-5">{list(e.unknowns).map((x, i) => <li key={i}>{x}</li>)}</ul>
         </section>
       ))}
       {archives.length > 0 && <section className="mt-6"><h2 className="text-xl font-bold">Original records</h2>

@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n/client";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { postComment, type ActionState } from "@/app/actions/member";
 import { AuthSheet } from "./AuthSheet";
@@ -10,7 +11,7 @@ const MAX = 4000;
  * Comment editor with draft preservation (T-010): the unsent text lives in sessionStorage,
  * never in a URL, and is restored after sign-in returns the reader here.
  */
-export function CommentForm({ pieceId, returnPath, signedIn, verified, parentId = "", label = "Join the discussion" }: {
+export function CommentForm({ pieceId, returnPath, signedIn, verified, parentId = "", label }: {
   pieceId: string; returnPath: string; signedIn: boolean; verified: boolean; parentId?: string; label?: string;
 }) {
   const [text, setText] = useState("");
@@ -19,6 +20,7 @@ export function CommentForm({ pieceId, returnPath, signedIn, verified, parentId 
   const [reqId, setReqId] = useState("");
   const [state, action, pending] = useActionState<ActionState, FormData>(postComment, { ok: false, message: "" });
   const area = useRef<HTMLTextAreaElement>(null);
+  const t = useT();
 
   useEffect(() => {
     setReqId(crypto.randomUUID());
@@ -51,17 +53,17 @@ export function CommentForm({ pieceId, returnPath, signedIn, verified, parentId 
         <input type="hidden" name="piece_id" value={pieceId} />
         <input type="hidden" name="parent_id" value={parentId} />
         <input type="hidden" name="client_request_id" value={reqId} />
-        <label htmlFor={`c-${pieceId}-${parentId}`} className="field-label">{label}</label>
+        <label htmlFor={`c-${pieceId}-${parentId}`} className="field-label">{label ?? t("thread.join")}</label>
         {restored && <p className="text-sm text-muted" role="status">Your unsent comment was restored.</p>}
         <textarea id={`c-${pieceId}-${parentId}`} ref={area} name="text" rows={4} maxLength={MAX} value={text} onChange={(e) => setText(e.target.value)}
-          placeholder="Add something helpful to the conversation..." className="input min-h-[110px] resize-y" aria-describedby={`c-hint-${pieceId}-${parentId}`} />
+          placeholder={t("thread.placeholder")} className="input min-h-[110px] resize-y" aria-describedby={`c-hint-${pieceId}-${parentId}`} />
         <div id={`c-hint-${pieceId}-${parentId}`} className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
-          <span>Challenge ideas, not people&apos;s dignity. Source factual claims when you can.</span>
+          <span>{t("thread.rules")}</span>
           <span aria-live="polite">{text.length}/{MAX}</span>
         </div>
         {signedIn && !verified && <p className="text-sm text-danger" role="note">Confirm your email address to post. Your draft is saved in this tab.</p>}
         <div className="flex items-center gap-3">
-          <button type="submit" className="btn btn-primary" disabled={pending || (signedIn && text.trim().length < 2)}>{pending ? "Posting…" : "Post comment"}</button>
+          <button type="submit" className="btn btn-primary" disabled={pending || (signedIn && text.trim().length < 2)}>{pending ? "…" : t("thread.post")}</button>
           <p role="status" aria-live="polite" className={`text-sm ${state.ok ? "text-success" : "text-danger"}`}>{state.message}</p>
         </div>
       </form>

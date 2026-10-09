@@ -22,7 +22,7 @@ export default async function Tenants() {
       <H1 sub="Each tenant is resolved from a trusted host allowlist; there is no in-app tenant switch. Platform admins administer a tenant by visiting its host.">Tenants</H1>
       <Table caption={platform ? "All tenants (platform admin)" : "Your tenant"} head={["Tenant", "Hosts", "Status", "Features enabled", "Quota (AI/day)", "Billing"]}>
         {rows.map((r) => <tr key={r.id}><td className="px-3 py-2 font-semibold">{r.name}{r.is_demo ? " (demo)" : ""}</td>
-          <td className="px-3 py-2">{Object.entries(env.tenantHosts).filter(([, s]) => s === r.slug).map(([h]) => <a key={h} className="link mr-2" href={`http://${h}/admin/tenants`}>{h}</a>)}</td>
+          <td className="px-3 py-2">{Object.entries(env.tenantHosts).filter(([, s]) => s === r.slug).map(([h]) => <a key={h} className="link me-2" href={`http://${h}/admin/tenants`}>{h}</a>)}</td>
           <td className="px-3 py-2"><Pill tone="good">{r.status}</Pill></td><td className="px-3 py-2 text-xs">{Object.entries(r.enabled_features ?? {}).filter(([, v]) => v).map(([k]) => k).join(", ")}</td>
           <td className="px-3 py-2">{r.quotas_json?.daily_ai_requests ?? "–"}</td><td className="px-3 py-2">Not enabled</td></tr>)}
       </Table>

@@ -8,9 +8,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return pieceMetadata((await params).slug, "discussion");
 }
 
-export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
+export default async function Page({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ original?: string }> }) {
   const { tenant, piece } = await loadPiece((await params).slug, "discussion");
   const canonical = pieceHref(piece);
   if (!canonical.startsWith("/discussion/")) permanentRedirect(canonical);
-  return <PieceDetail tenant={tenant} piece={piece} kind="discussion" />;
+  return <PieceDetail tenant={tenant} piece={piece} kind="discussion" showOriginal={(await searchParams).original === "1"} />;
 }

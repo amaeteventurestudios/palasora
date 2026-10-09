@@ -22,7 +22,7 @@ export function ShareBar({ url, title, storyId }: { url: string; title: string; 
   };
   return (
     <div id="share" className="flex flex-wrap items-center gap-2" aria-label="Share">
-      <span className="mr-1 inline-flex items-center gap-1 text-sm font-semibold"><Share2 size={16} aria-hidden="true" />Share</span>
+      <span className="me-1 inline-flex items-center gap-1 text-sm font-semibold"><Share2 size={16} aria-hidden="true" />Share</span>
       {links.map((l) => (
         <a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" className="btn btn-secondary !min-h-[40px] !px-3 text-sm"
           data-share={l.name} onClick={() => track("share_clicked", { story_id: storyId, channel: l.name.toLowerCase() })}>

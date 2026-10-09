@@ -25,7 +25,7 @@ export function VoteButton({ kind, id, score, voted, signedIn, returnPath, label
           aria-label={`${label}. ${n} human ${n === 1 ? "vote" : "votes"}`}>
           <ArrowUp size={16} aria-hidden="true" /><span>{n}</span>
         </button>
-        {state.message && !state.ok && <span role="alert" className="ml-2 text-sm text-danger">{state.message}</span>}
+        {state.message && !state.ok && <span role="alert" className="ms-2 text-sm text-danger">{state.message}</span>}
       </form>
       <AuthSheet open={g.open} onClose={() => g.setOpen(false)} next={returnPath} draftNotice={false} />
     </>
@@ -50,7 +50,7 @@ export function SaveButton({ id, saved, signedIn, returnPath }: { id: string; sa
 }
 
 export function FollowButton({ type, id, following, signedIn, returnPath, label }: {
-  type: "country" | "topic" | "member" | "community"; id: string; following: boolean; signedIn: boolean; returnPath: string; label: string;
+  type: "country" | "topic" | "member" | "community" | "area"; id: string; following: boolean; signedIn: boolean; returnPath: string; label: string;
 }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(toggleFollow, { ok: false, message: "" });
   const g = useGate(signedIn);

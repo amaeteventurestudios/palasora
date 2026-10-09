@@ -8,7 +8,7 @@ export function Metric({ label, value, unit = "", period, source, state = "ok", 
   return (
     <div className="card p-4" data-testid="admin-metric">
       <p className="text-sm font-semibold text-muted">{label}</p>
-      <p className={`mt-1 font-extrabold ${typeof shown === "number" || /^\d/.test(String(shown)) ? "text-[28px]" : "text-[18px]"}`}>{shown}{state === "ok" && unit ? <span className="ml-1 text-base font-semibold text-muted">{unit}</span> : null}</p>
+      <p className={`mt-1 font-extrabold ${typeof shown === "number" || /^\d/.test(String(shown)) ? "text-[28px]" : "text-[18px]"}`}>{shown}{state === "ok" && unit ? <span className="ms-1 text-base font-semibold text-muted">{unit}</span> : null}</p>
       <p className="meta mt-1">{period} · Source: {source}</p>
       {hint && <p className="meta">{hint}</p>}
     </div>
@@ -19,8 +19,8 @@ export function Table({ caption, head, children, empty }: { caption: string; hea
   const rows = Array.isArray(children) ? children.filter(Boolean) : children ? [children] : [];
   return (
     <div className="card overflow-x-auto" tabIndex={0} role="region" aria-label={caption}>
-      <table className="w-full min-w-[640px] text-left text-sm">
-        <caption className="p-3 text-left font-semibold">{caption}</caption>
+      <table className="w-full min-w-[640px] text-start text-sm">
+        <caption className="p-3 text-start font-semibold">{caption}</caption>
         <thead className="border-y border-border bg-card-muted"><tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2 font-semibold">{h}</th>)}</tr></thead>
         <tbody className="divide-y divide-border">{rows.length ? children : <tr><td colSpan={head.length} className="px-3 py-4 text-muted">{empty ?? "Nothing here yet."}</td></tr>}</tbody>
       </table>

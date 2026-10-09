@@ -12,6 +12,9 @@ import { DemoBadge, KindBadge } from "./Labels";
 import { Kicker, StoryCard, pieceHref } from "./StoryCard";
 import { AINote, ClaimText, SourceCitation, TimeLensEmpty, type Block } from "./Editorial";
 import { getThreadPosts, latestSeq } from "@/lib/repo/thread";
+import { getT, localeInfo } from "@/lib/i18n/context";
+import { localizePiece } from "@/lib/repo/localize";
+import { TranslationBar } from "./TranslationBar";
 import { LiveCount, LiveEventsProvider } from "./live/LiveEvents";
 import { LiveThread } from "./live/LiveThread";
 import { ShareBar } from "./ShareBar";
@@ -61,8 +64,13 @@ function articleJsonLd(tenant: Tenant, piece: Rec, url: string) {
   };
 }
 
-export async function PieceDetail({ tenant, piece, kind }: { tenant: Tenant; piece: Rec; kind: "story" | "discussion" }) {
+export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal = false }: { tenant: Tenant; piece: Rec; kind: "story" | "discussion"; showOriginal?: boolean }) {
   const session = await getSession(tenant);
+  const { t, ctx } = await getT(tenant);
+  const loc = await localizePiece(tenant, canonical, ctx.reading);
+  const piece = showOriginal ? canonical : loc.piece;
+  const lname = (c: string) => localeInfo(c)?.native ?? c;
+  const srcLang = (canonical.sources_json ?? [])[0]?.language as string | undefined;
   const [tax, claims, disc, corrections, lens, related, roles, threadPosts, cursor] = await Promise.all([
     taxonomy(), getClaims(tenant, piece.cluster_id), getDiscussion(tenant, piece.id), getPublicCorrections(tenant, piece.id),
     getTimeLens(tenant, piece.id), relatedPieces(tenant, piece), pb.list("ai_roles", { filter: `tenant_id=${q(tenant.id)}`, perPage: 20 }),
@@ -121,6 +129,9 @@ export async function PieceDetail({ tenant, piece, kind }: { tenant: Tenant; pie
             </div>
           </header>
 
+          <TranslationBar status={loc.translation.status} fromLabel={lname(loc.translation.from)} toLabel={lname(loc.translation.to)} path={path}
+            showingOriginal={showOriginal} localizationId={loc.translation.localization_id} originalUrl={(canonical.sources_json ?? [])[0]?.url}
+            sourceLangLabel={srcLang && srcLang !== "en" ? lname(srcLang) : undefined} />
           {corrections.length > 0 && (
             <aside className="mt-5 max-w-[760px] rounded-xl border border-border bg-card-muted p-4" role="note" aria-label="Correction">
               <p className="flex items-center gap-2 font-semibold"><AlertTriangle size={16} aria-hidden="true" />Correction</p>
@@ -132,13 +143,13 @@ export async function PieceDetail({ tenant, piece, kind }: { tenant: Tenant; pie
           )}
 
           <div className="prose-pv mt-6 max-w-[720px] text-[17px] leading-[1.7]">
-            <h2>What happened?</h2>
+            <h2>{t("story.whatHappened")}</h2>
             {(body.what_happened ?? []).map((b, i) => <ClaimText key={i} block={b} claimIndex={claimIndex} />)}
-            {(body.why_it_matters ?? []).length > 0 && <><h2>Why it matters</h2>{body.why_it_matters!.map((b, i) => <ClaimText key={i} block={b} claimIndex={claimIndex} />)}</>}
+            {(body.why_it_matters ?? []).length > 0 && <><h2>{t("story.whyMatters")}</h2>{body.why_it_matters!.map((b, i) => <ClaimText key={i} block={b} claimIndex={claimIndex} />)}</>}
           </div>
 
           <section aria-labelledby="sources-h" className="mt-6 max-w-[760px]">
-            <h2 id="sources-h" className="text-[22px] font-bold">Read the sources</h2>
+            <h2 id="sources-h" className="text-[22px] font-bold">{t("story.sources")}</h2>
             {summary.sources.length ? <ol className="divide-y divide-border">{summary.sources.map((s, i) => <SourceCitation key={i} s={s} i={i} />)}</ol>
               : piece.is_demo ? <p className="text-muted">Conceptual demo discussion: there is no news source because it reports no event. AI replies may reason, but not state facts or figures.</p>
               : <p className="text-muted">This draft cannot be published until its claims are supported.</p>}
@@ -158,13 +169,13 @@ export async function PieceDetail({ tenant, piece, kind }: { tenant: Tenant; pie
 
           {(body.unknowns ?? []).length > 0 && (
             <section aria-labelledby="unk-h" className="mt-8 max-w-[760px]">
-              <h2 id="unk-h" className="text-[22px] font-bold">What we still don&apos;t know</h2>
-              <ul className="mt-2 list-disc pl-6">{body.unknowns!.map((u, i) => <li key={i}>{u}</li>)}</ul>
+              <h2 id="unk-h" className="text-[22px] font-bold">{t("story.unknowns")}</h2>
+              <ul className="mt-2 list-disc ps-6">{body.unknowns!.map((u, i) => <li key={i}>{u}</li>)}</ul>
             </section>
           )}
 
           <section aria-labelledby="lens-h" className="mt-8 max-w-[760px]">
-            <h2 id="lens-h" className="text-[22px] font-bold">A look back</h2>
+            <h2 id="lens-h" className="text-[22px] font-bold">{t("story.lookBack")}</h2>
             <div className="mt-2">
               {lens.length ? lens.map((l) => (
                 <Link key={l.id} href={`/time-lens/${piece.slug}?era=${l.era}`} data-time-lens className="block rounded-xl border border-border p-4 hover:bg-card-muted" style={{ background: "var(--gold-surface)" }}>
@@ -183,7 +194,7 @@ export async function PieceDetail({ tenant, piece, kind }: { tenant: Tenant; pie
           </section>
 
           <section id="conversation" aria-labelledby="conv-h" className="mt-8 max-w-[760px] scroll-mt-20">
-            <h2 id="conv-h" className="text-[22px] font-bold">The conversation</h2>
+            <h2 id="conv-h" className="text-[22px] font-bold">{t("story.conversation")}</h2>
             <p className="meta">Started by {roleLabel[piece.initiator_role || "researcher"] ?? "Research Journalist · AI"}. AI agents are disclosed analysts, not people; they reply to specific posts and may abstain.</p>
             <AINote />
             {(body.questions ?? []).length > 0 && <p className="mt-3 rounded-lg bg-card-muted p-3 text-[15px]"><span className="font-semibold">A question worth asking: </span>{body.questions![0]}</p>}
