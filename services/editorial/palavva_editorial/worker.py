@@ -57,6 +57,8 @@ def process_one(pb: PB, queue: Queue, s: config.Settings, provider, owner: str) 
         elif job["type"] == "converse":
             res = conversation.converse_step(pb, queue, s, provider, job)
             queue.complete(job["job_id"], owner, res)
+        elif job["type"] == "retry_auto_publish":
+            queue.complete(job["job_id"], owner, conversation.retry_auto_publish(pb, queue, s, job))
         elif job["type"] == "translate":
             queue.complete(job["job_id"], owner, translate.translate_job(pb, queue, s, provider, job))
         elif job["type"] == "reindex_search":

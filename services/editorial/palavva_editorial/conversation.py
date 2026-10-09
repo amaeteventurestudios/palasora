@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from . import analytics_writer
 from . import taxonomy as tx
 from .config import Settings
-from .editorial import policy
+from .editorial import diversity, policy
 from .editorial import prompts as P
 from .ingest.normalize import idempotency_key, jaccard, title_fingerprint
 from .jobs import Queue
@@ -35,7 +35,10 @@ MAX_POSTS_PER_THREAD = 8          # AI posts per topic (plan + human-triggered)
 MAX_DEPTH = 4
 MAX_POSTS_PER_ROLE = 2
 NOVELTY_MAX_SIMILARITY = 0.45     # jaccard on content tokens; above this = repetitive
+CROSS_THREAD_MAX_SIMILARITY = 0.5  # restating a post from ANOTHER topic
+DUPLICATE_TOPIC_SIMILARITY = 0.5   # a new topic this close to one published in the last 72 h goes to an editor
 MAX_AUTO_TOPICS_PER_HOUR = 6
+MAX_RATE_CAP_RETRIES = 6
 STEP_SPACING_SEC = int(os.environ.get("CONVERSATION_STEP_SPACING_SEC", "20"))  # bounded spacing between turns (resource pacing, not animation)
 ROLE_LABELS = {k: label for k, label, _p, _u in tx.AI_ROLES}
 
@@ -109,7 +112,8 @@ def assess_topic(piece: dict, cluster: dict | None, verdict_flags: list[str], cl
     return ("uncertain", "hold", reasons) if reasons else ("low", "allow", ["low risk, rights approved, every block cited, claim check PASS"])
 
 
-def auto_publish(pb: PB, queue: Queue, settings: Settings, piece: dict, tier: str, rules: dict, reasons: list[str], path: str = "auto_low_risk") -> tuple[bool, str]:
+def auto_publish(pb: PB, queue: Queue, settings: Settings, piece: dict, tier: str, rules: dict, reasons: list[str], path: str = "auto_low_risk",
+                 retry_attempt: int = 0) -> tuple[bool, str]:
     """Publish through the automated validator path; PocketBase's gate re-checks every condition (fail closed)."""
     tid = piece["tenant_id"]
     trace = uuid.uuid4().hex[:16]
@@ -120,12 +124,30 @@ def auto_publish(pb: PB, queue: Queue, settings: Settings, piece: dict, tier: st
             d = decision(pb, tid, "topic", piece["id"], piece["id"], "hold", tier, rules, [f"auto-publication disabled by {off}"], piece["headline"], trace)
             pb.update("editorial_pieces", piece["id"], {"thread_state": "held", "auto_decision_id": d["id"]})
             return False, "auto-publication disabled"
+        # Repetitive topics: a near-duplicate of a topic published in the last 72 h goes to an editor instead.
+        since72 = datetime.fromtimestamp(time.time() - 72 * 3600, timezone.utc).strftime("%Y-%m-%d %H:%M:%S.000Z")
+        pubs = pb.list("editorial_pieces", f"tenant_id={q(tid)} && review_status='published' && is_demo=false && id!={q(piece['id'])} && published_at >= {q(since72)}",
+                       "-published_at", 100)
+        sim, dup = diversity.similar_recent_topic(piece.get("headline", ""), piece.get("lede", ""), pubs, DUPLICATE_TOPIC_SIMILARITY)
+        if dup:
+            d = decision(pb, tid, "topic", piece["id"], piece["id"], "hold", tier, {**rules, "duplicate_topic": "FAIL"},
+                         [f"near-duplicate ({sim:.2f}) of recently published topic '{dup['headline'][:80]}' ({dup['slug']}): editor decides"], piece["headline"], trace)
+            pb.update("editorial_pieces", piece["id"], {"thread_state": "held", "auto_decision_id": d["id"]})
+            return False, "duplicate topic"
         since = datetime.fromtimestamp(time.time() - 3600, timezone.utc).strftime("%Y-%m-%d %H:%M:%S.000Z")
         recent = pb.list("moderation_decisions", f"tenant_id={q(tid)} && scope='topic' && decision='allow' && created >= {q(since)}", per_page=50)
         if len(recent) >= MAX_AUTO_TOPICS_PER_HOUR:
-            d = decision(pb, tid, "topic", piece["id"], piece["id"], "hold", tier, rules, [f"publication rate cap {MAX_AUTO_TOPICS_PER_HOUR}/hour reached"], piece["headline"], trace)
+            # Deferred, not dropped: an eligible topic is re-attempted when the hourly window frees up (re-checked then).
+            exhausted = retry_attempt >= MAX_RATE_CAP_RETRIES
+            why = f"publication rate cap {MAX_AUTO_TOPICS_PER_HOUR}/hour reached" + ("; retry attempts exhausted, editor decides" if exhausted else f"; automatic retry {retry_attempt + 1}/{MAX_RATE_CAP_RETRIES} scheduled")
+            d = decision(pb, tid, "topic", piece["id"], piece["id"], "hold", tier, rules, [why], piece["headline"], trace)
             pb.update("editorial_pieces", piece["id"], {"thread_state": "held", "auto_decision_id": d["id"]})
-            return False, "rate cap"
+            if not exhausted:
+                oldest = min((time_of(r["created"]) for r in recent), default=time.time() - 3600)
+                delay = max(60.0, oldest + 3600 - time.time() + 30 + 60 * retry_attempt)
+                queue.enqueue(tid, "retry_auto_publish", {"piece_id": piece["id"], "tier": tier, "rules": rules, "reasons": reasons, "attempt": retry_attempt + 1},
+                              f"retry_auto_publish:{piece['id']}:{retry_attempt + 1}", delay=delay)
+            return False, "rate cap" + (" (retries exhausted)" if exhausted else " (retry scheduled)")
     d = decision(pb, tid, "topic", piece["id"], piece["id"], "allow", tier, rules, reasons, piece["headline"], trace)
     pb.create("editorial_reviews", {"tenant_id": tid, "piece_id": piece["id"], "decision": "auto_publish", "reviewer_id": "system:auto-validator",
                                     "reason": f"{policy.RULESET_VERSION} trace {trace}: " + "; ".join(reasons)[:2000], "risk_tier": "low", "expected_revision": piece.get("revision") or 1})
@@ -295,6 +317,14 @@ def converse_step(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
         raise Deferred("REPLY_BUDGET_EXHAUSTED", 3600)
 
     claims, sources, evidence_text = _evidence(pb, piece)
+    # Cross-thread memory (v1.3.1): what AI posts said recently in OTHER topics, to stop recycled framings.
+    since7 = datetime.fromtimestamp(time.time() - 7 * 86400, timezone.utc).strftime("%Y-%m-%d %H:%M:%S.000Z")
+    recent_other = [p for p in pb.list("comments", f"tenant_id={q(tid)} && author_kind='editorial_ai' && piece_id!={q(piece['id'])} && created >= {q(since7)}",
+                                       "-created", 150)
+                    # The deterministic test stub is templated by design (identical per role across topics); only real
+                    # model output is compared, so production (never the stub) is unaffected.
+                    if p.get("moderation_status") == "visible" and (p.get("provenance") or {}).get("provider") != "fixture"]
+    themes = diversity.overused_themes(recent_other, evidence_text)
     by_id = {p["id"]: p for p in posts}
     ancestors = []
     cur = parent
@@ -314,6 +344,7 @@ def converse_step(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
         "parent_post": {"post_id": parent_id_for_model, "author": label(parent) if parent else "Research Journalist · AI (topic starter)",
                         "text": parent["body_text"] if parent else piece["headline"] + " " + (piece.get("lede") or "")},
         "angles_already_covered": [p.get("new_angle") for p in ai_posts if p.get("new_angle")][:8],
+        "themes_overused_elsewhere": themes,
         "locale": "en",
         "limits": "70-160 words; cite claim_ids or source_ids for factual statements; no numbers that are not in the evidence",
     }
@@ -373,6 +404,14 @@ def converse_step(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
     rules["novelty"] = "FAIL" if worst > NOVELTY_MAX_SIMILARITY else "PASS"
     if worst > NOVELTY_MAX_SIMILARITY:
         reasons.append(f"novelty: similarity {worst:.2f} > {NOVELTY_MAX_SIMILARITY}")
+    hits = diversity.theme_hits(text, themes)
+    rules["cross_thread_themes"] = "FAIL" if len(hits) >= 2 else "PASS"
+    if len(hits) >= 2:
+        reasons.append(f"cross_thread_themes: leans on themes recycled from other topics {hits[:4]}")
+    xsim, xid = diversity.cross_thread_similarity(text, recent_other)
+    rules["cross_thread_novelty"] = "FAIL" if xsim > CROSS_THREAD_MAX_SIMILARITY else "PASS"
+    if xsim > CROSS_THREAD_MAX_SIMILARITY:
+        reasons.append(f"cross_thread_novelty: similarity {xsim:.2f} to post {xid} in another topic")
     trace = uuid.uuid4().hex[:16]
     if reasons:
         # Staff-only audit copy of the rejected text (moderation_decisions is superuser-only; never public).
@@ -440,3 +479,33 @@ def create_demo_topic(pb: PB, queue: Queue, settings: Settings, tenant_id: str) 
     pb.create("discussions", {"tenant_id": tenant_id, "piece_id": piece["id"], "status": "open", "human_comment_count": 0, "ai_comment_count": 0})
     ok, info = auto_publish(pb, queue, settings, piece, "demo", {"demo_label": "PASS", "no_factual_claims": "PASS"}, ["local demo topic, labeled, no factual claims"], path="demo")
     return {"piece_id": piece["id"], "slug": slug, "published": ok, "info": info}
+
+
+def time_of(pb_ts: str) -> float:
+    return datetime.strptime(pb_ts[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc).timestamp()
+
+
+def retry_auto_publish(pb: PB, queue: Queue, settings: Settings, job: dict) -> dict:
+    """Re-attempt a topic held ONLY by the publication rate cap. Everything is re-checked now: the topic must
+    still be untouched by humans, LOW risk under the current ruleset, claim check PASS; the DB gate re-checks again."""
+    from .editorial.validate import sensitive_hit
+    tid, pl = job["tenant_id"], job["payload"]
+    piece = pb.get("editorial_pieces", pl["piece_id"])
+    if piece["tenant_id"] != tid:
+        raise ValueError("tenant mismatch")
+    if piece.get("review_status") != "needs_review" or piece.get("thread_state") != "held":
+        return {"outcome": "no_longer_eligible", "status": piece.get("review_status")}
+    last = pb.get("moderation_decisions", piece["auto_decision_id"]) if piece.get("auto_decision_id") else {}
+    if "rate cap" not in str(last.get("reasons", "")):
+        return {"outcome": "held_for_other_reason"}
+    if pb.first("editorial_reviews", f"tenant_id={q(tid)} && piece_id={q(piece['id'])} && reviewer_id!~'system:'"):
+        return {"outcome": "human_reviewed"}  # an editor acted: never override a human
+    body = piece.get("body_blocks_json") or {}
+    text = " ".join([piece.get("headline", ""), piece.get("lede", "")] + [b.get("text", "") for k in ("what_happened", "why_it_matters") for b in body.get(k) or []])
+    if piece.get("risk_tier") != "low" or piece.get("claim_check_status") != "PASS" or sensitive_hit(text):
+        d = decision(pb, tid, "topic", piece["id"], piece["id"], "hold", "uncertain", pl.get("rules") or {}, ["retry re-check: no longer LOW/PASS under the current ruleset"], piece["headline"], uuid.uuid4().hex[:16])
+        pb.update("editorial_pieces", piece["id"], {"auto_decision_id": d["id"]})
+        return {"outcome": "no_longer_low_risk"}
+    ok, info = auto_publish(pb, queue, settings, piece, pl.get("tier") or "low", pl.get("rules") or {}, (pl.get("reasons") or []) + [f"rate-cap retry {pl.get('attempt')}"],
+                            retry_attempt=int(pl.get("attempt") or 1))
+    return {"outcome": "auto_published" if ok else "held", "info": info}

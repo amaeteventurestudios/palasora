@@ -2,7 +2,7 @@
 
 **Period:** 2026-10-09, 09:30–14:45 PT.
 
-**Commits:** `8e14083` → final (see `git log c9049ed..HEAD`).
+**Commits:** `b850f60` → final (see `git log 6120cfa..HEAD`).
 
 **Policy:**
 - `ORACLE_DEPLOYMENT_AUTHORIZED=false`, `PUBLIC_LAUNCH_AUTHORIZED=false`, `PAID_FALLBACKS_ENABLED=false`.

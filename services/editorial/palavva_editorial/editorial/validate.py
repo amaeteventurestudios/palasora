@@ -89,6 +89,12 @@ def unsupported_names(headline: str, blocks: list[str], packet_text: str) -> lis
     return sorted(set(out))
 
 
+def sensitive_hit(text: str) -> bool:
+    from ..ingest.classify import _has
+    low = tx.fold(text.lower())
+    return any(_has(low, tx.fold(k)) for k in tx.SENSITIVE_KEYWORDS + tx.SENSITIVE_KEYWORDS_I18N)
+
+
 def validate_draft(draft: dict, claims: list[dict], packet_text: str, topics: list[str]) -> Verdict:
     v = Verdict("PASS")
     known = {c["claim_id"] for c in claims}
@@ -127,8 +133,7 @@ def validate_draft(draft: dict, claims: list[dict], packet_text: str, topics: li
         if lvl == "high" or (lvl == "medium" and risk == "low"):
             risk = lvl
     low = all_text.lower()
-    from ..ingest.classify import _has
-    if any(_has(tx.fold(low), tx.fold(k)) for k in tx.SENSITIVE_KEYWORDS + tx.SENSITIVE_KEYWORDS_I18N):
+    if sensitive_hit(low):
         risk = "high"
         v.flags.append("SENSITIVE_TERMS")
     v.risk = risk

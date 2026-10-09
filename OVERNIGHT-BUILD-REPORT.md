@@ -58,13 +58,13 @@ Home and story at 320/390/768/1440 in light and dark (`home-*`, `story-*`); Comm
 | `05cdcb0` | Phase 0: Mac audit, OpenMolt decision, PocketBase schema/hooks, seed, local scripts |
 | `34ba065` | Phase 1: Next.js app shell, design tokens, feed modes, story detail, member actions |
 | `733ce0c` | Phase 1: all public, member, trust and commerce routes; tenant-bound sessions |
-| `b0212ec` | Phase 2: editorial service with 38 passing tests |
-| `78d72e0` | Phase 2–4: Command Center, publish gate, corrections, SEO/OG, API v1, SAnews rights review |
-| `8f48c88` | E2E test stack, Playwright + vitest; fixes |
-| `be463a3` | Full E2E suite; auth navigation fix |
-| `a1373e1` | Phase 5: backup/restore, Docker/Compose, load tests, feed cache, axe suite |
-| `025af07` | Outage E2E, real-Qwen tests, network evidence, SBOM, scripts |
-| `d58442f` | Evidence docs, ADRs, real-draft screenshots |
+| `804f028` | Phase 2: editorial service with 38 passing tests |
+| `bb4de61` | Phase 2–4: Command Center, publish gate, corrections, SEO/OG, API v1, SAnews rights review |
+| `a3dc5e9` | E2E test stack, Playwright + vitest; fixes |
+| `438cb70` | Full E2E suite; auth navigation fix |
+| `80f7515` | Phase 5: backup/restore, Docker/Compose, load tests, feed cache, axe suite |
+| `c87369f` | Outage E2E, real-Qwen tests, network evidence, SBOM, scripts |
+| `6d384de` | Evidence docs, ADRs, real-draft screenshots |
 | *(final)* | This report |
 
 The repo has no remote; nothing was pushed.

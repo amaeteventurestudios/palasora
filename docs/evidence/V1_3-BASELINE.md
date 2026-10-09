@@ -1,6 +1,6 @@
 # v1.3 baseline (observed 2026-10-09 ~09:30 PT, before any v1.3 change)
 
-**Last commit before v1.3:** `b98e39f` (overnight report); v1.3 specs committed as `c9049ed`. Branch `main`, no remote configured. **Safety backup:** `backups/palavva-20261009T163013Z.tar.gz` (sha256 `fbb6afeb…1ee0`-style file alongside).
+**Last commit before v1.3:** `62fb286` (overnight report); v1.3 specs committed as `6120cfa`. Branch `main`, no remote configured. **Safety backup:** `backups/palavva-20261009T163013Z.tar.gz` (sha256 `fbb6afeb…1ee0`-style file alongside).
 
 ## Services (all loopback)
 

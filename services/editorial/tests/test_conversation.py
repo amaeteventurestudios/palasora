@@ -61,7 +61,7 @@ def test_A01_A04_low_risk_topic_auto_publishes_and_grows_nested_branches(env):
     piece = pb.get("editorial_pieces", draft["piece_id"])
     assert piece["review_status"] == "published" and piece["publish_path"] == "auto_low_risk" and piece["reviewer_id"] == "system:auto-validator"
     allow = pb.first("moderation_decisions", f"piece_id={q(piece['id'])} && scope='topic' && decision='allow'")
-    assert allow and allow["ruleset_version"] == "conv-rules-v1"
+    assert allow and allow["ruleset_version"] == "conv-rules-v2"
     posts = pb.list("comments", f"piece_id={q(piece['id'])} && author_kind='editorial_ai'", "created")
     assert len(posts) == 4
     by = {p["id"]: p for p in posts}
@@ -209,3 +209,61 @@ def test_demo_conversation_and_human_question(env):
     run_all(pb, queue, s, FixtureProvider(), ["converse"])
     ans = pb.list("comments", f"parent_id={q(h['id'])}")
     assert len(ans) == 1 and ans[0]["author_kind"] == "editorial_ai"
+
+
+def test_cross_thread_repetition_and_recycled_themes_are_rejected(env):
+    """v1.3.1: a reply that restates what a real model said on ANOTHER topic, or leans on themes recycled across
+    topics, is rejected; the same reply on a fresh tenant history passes."""
+    from palavva_editorial.editorial import diversity
+    pb, t, s, queue = env
+    other = [{"id": f"o{i}", "piece_id": f"topic{i}", "body_text": "Grid reliability and power supply reliability shape whether equipment survives; "
+              "maintenance costs and spare parts decide uptime under African operating conditions."} for i in range(4)]
+    themes = diversity.overused_themes(other, "A cooperative bakery shares one oven between members in Lilongwe.")
+    assert "power supply" in themes or "supply reliability" in themes, themes
+    reply = ("Power supply reliability and maintenance costs decide everything here, because African operating conditions punish equipment "
+             "that has no spare parts plan.")
+    assert len(diversity.theme_hits(reply, themes)) >= 2
+    sim, _ = diversity.cross_thread_similarity(other[0]["body_text"], other[1:])
+    assert sim > conversation.CROSS_THREAD_MAX_SIMILARITY
+    # Grounded themes are not "recycled": a topic about power supply may discuss it.
+    assert "power supply" not in diversity.overused_themes(other, "Utility announces power supply reliability programme for grid customers.")
+
+
+def test_reply_naming_unsupported_entities_is_rejected():
+    from palavva_editorial.editorial import policy
+    ev = "SAnews.gov.za reported that Ramaphosa announced an R120 billion Free State plan."
+    bad = ("Unlike earlier plans, Ramaphosa's approach could work if the World Bank and Eskom co-finance it, since it is the largest programme in Africa "
+           "and officials said \"this will transform the province\".")
+    r = policy.check_post(bad, ev)
+    assert r.rules["unsupported_entities"] == "FAIL", r.reasons
+    ok = ("Ramaphosa's plan could work if financing reaches small suppliers, and comparing it with Kenyan or Nigerian industrial zones is a fair test "
+          "of whether incentives outlast the announcement.")
+    assert policy.check_post(ok, ev).rules["unsupported_entities"] == "PASS"
+
+
+def test_rate_capped_topic_is_retried_automatically_with_recheck(env):
+    pb, t, s, queue = env
+    old = conversation.MAX_AUTO_TOPICS_PER_HOUR
+    conversation.MAX_AUTO_TOPICS_PER_HOUR = 0  # everything hits the cap
+    try:
+        src = source(pb, t, "Fixture Rate Cap")
+        ingest_source(pb, queue, s, src, fetcher=fetcher(rss([("rc-1", "Lesotho wool cooperative opens a shared shearing shed in Maseru", "x")])))
+        job = queue.claim("w", ["draft_cluster"])
+        o = draft_cluster(pb, queue, s, FixtureProvider(), job)
+        assert o["outcome"] == "held" and "retry scheduled" in o["info"], o
+    finally:
+        conversation.MAX_AUTO_TOPICS_PER_HOUR = old
+    with queue._conn() as c:
+        c.execute("UPDATE jobs SET next_at=0 WHERE type='retry_auto_publish'")
+    rj = queue.claim("w", ["retry_auto_publish"])
+    assert rj and rj["payload"]["attempt"] == 1
+    conversation.MAX_AUTO_TOPICS_PER_HOUR = 1000  # the window has freed up (other tests publish in the same hour)
+    try:
+        res = conversation.retry_auto_publish(pb, queue, s, rj)
+    finally:
+        conversation.MAX_AUTO_TOPICS_PER_HOUR = old
+    assert res["outcome"] == "auto_published", res
+    # A second retry for the same piece is a no-op (already published).
+    assert conversation.retry_auto_publish(pb, queue, s, rj)["outcome"] == "no_longer_eligible"
+    piece = pb.get("editorial_pieces", o["piece_id"])
+    assert piece["review_status"] == "published" and piece["reviewer_id"] == "system:auto-validator"
