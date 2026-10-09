@@ -2,7 +2,11 @@
 // Replace with a shared store if the web tier is ever scaled out.
 const buckets = new Map<string, { count: number; reset: number }>();
 
+// RATE_LIMIT_SCALE (default 1) is raised only on the isolated E2E stack, where every request comes from one loopback client.
+const SCALE = Math.max(1, Number(process.env.RATE_LIMIT_SCALE ?? 1));
+
 export function rateLimit(key: string, limit: number, windowMs: number): { ok: boolean; retryAfter: number } {
+  limit = limit * SCALE;
   const now = Date.now();
   const b = buckets.get(key);
   if (!b || b.reset < now) {

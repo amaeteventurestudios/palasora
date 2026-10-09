@@ -31,8 +31,11 @@ meaning, source date, occurrence date, unit/currency and uncertainty where neede
 Flag contradictions and distinguish primary records from commentary. Include
 what remains unknown. If nothing verifiable, ABSTAIN. Never supply a citation
 ID not found in the provided evidence packet.
-Only state what the packet text itself says. When the packet holds only a headline,
-the claim is "<publisher> reported that <headline content>", nothing more."""
+Only state what the packet text itself says. The publisher's title and permitted
+excerpt ARE citable evidence: restate what they say as attributed claims (for example
+"SAnews.gov.za reported that ..."). A publication date is not an event date.
+When the packet holds only a headline, the claim is "<publisher> reported that
+<headline content>", nothing more. ABSTAIN only if the packet says nothing verifiable."""
 
 WRITER = """Write a question-led but not misleading headline, a <=65-word 'What happened'
 summary, <=100-word 'Why it matters' section, <=100-word additional context,
@@ -54,7 +57,7 @@ supplied in the archive packet. Name the period, primary historical source IDs,
 and limits of the analogy. Never fabricate archive documents or quotes. If no
 eligible historic primary evidence exists, return NO_VERIFIED_COMPARISON."""
 
-VERSIONS = {"curator": "curator-v1", "researcher": "researcher-v1", "writer": "writer-v1", "role": "role-contribution-v1", "timelens": "timelens-v1"}
+VERSIONS = {"curator": "curator-v1", "researcher": "researcher-v2", "writer": "writer-v1", "role": "role-contribution-v1", "timelens": "timelens-v1"}
 
 TEXT_BLOCKS = {"type": "array", "maxItems": 3, "items": {"type": "object", "properties": {"text": {"type": "string"}, "claim_ids": {"type": "array", "items": {"type": "string"}}}, "required": ["text", "claim_ids"]}}
 

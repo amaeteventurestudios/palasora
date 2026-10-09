@@ -15,3 +15,5 @@ services/pocketbase/pb_data*/
 test-results/
 playwright-report/
 .audit/
+.next-test/
+/data-test/

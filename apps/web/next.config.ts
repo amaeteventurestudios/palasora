@@ -16,6 +16,7 @@ const csp = [
 ].join("; ");
 
 const config: NextConfig = {
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   poweredByHeader: false,
   reactStrictMode: true,
   output: "standalone",

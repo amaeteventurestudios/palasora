@@ -24,7 +24,11 @@ export function CommentForm({ pieceId, returnPath, signedIn, verified, parentId 
     setReqId(crypto.randomUUID());
     try {
       const d = sessionStorage.getItem(KEY(pieceId));
-      if (d) { setText(d); setRestored(true); }
+      if (d) {
+        setText(d); setRestored(true);
+        // Bring the reader back to their draft after the sign-in round trip.
+        requestAnimationFrame(() => { area.current?.scrollIntoView({ block: "center" }); area.current?.focus(); });
+      }
     } catch { /* storage blocked */ }
   }, [pieceId]);
   useEffect(() => {

@@ -174,7 +174,10 @@ export async function toggleVote(_: ActionState, f: FormData): Promise<ActionSta
   if (kind === "comment" && target.author_kind !== "human") return fail("Votes are for community responses only.");
   const existing = await pb.first("votes", `tenant_id=${q(tenant.id)} && user_id=${q(s.user.id)} && target_kind=${q(kind)} && target_id=${q(targetId)}`);
   let voted: boolean;
-  if (existing) { await pb.remove("votes", existing.id); voted = false; }
+  if (existing) {
+    try { await pb.remove("votes", existing.id); } catch (e) { if (!(e instanceof PBError && e.status === 404)) throw e; } // concurrent toggle already removed it
+    voted = false;
+  }
   else {
     try { await pb.create("votes", { tenant_id: tenant.id, user_id: s.user.id, target_kind: kind, target_id: targetId, direction: 1 }); }
     catch (e) { if (!(e instanceof PBError && e.status === 400)) throw e; } // unique index: concurrent double-submit
@@ -194,7 +197,7 @@ export async function toggleSave(_: ActionState, f: FormData): Promise<ActionSta
   const piece = await getPublishedPieceById(tenant, pieceId);
   if (!piece) return fail("Not available.");
   const existing = await pb.first("saves", `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)} && piece_id=${q(pieceId)}`);
-  if (existing) await pb.remove("saves", existing.id);
+  if (existing) { try { await pb.remove("saves", existing.id); } catch (e) { if (!(e instanceof PBError && e.status === 404)) throw e; } }
   else { try { await pb.create("saves", { tenant_id: tenant.id, user_id: session.user.id, piece_id: pieceId }); } catch (e) { if (!(e instanceof PBError)) throw e; } }
   const n = await pb.count("saves", `tenant_id=${q(tenant.id)} && piece_id=${q(pieceId)}`);
   await pb.update("editorial_pieces", pieceId, { save_count: n });
