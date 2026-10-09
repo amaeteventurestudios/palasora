@@ -18,31 +18,34 @@ test("v1.3.1 reads count after 5 s visible, once per visitor per day; shares cou
   const before = await summary(admin);
 
   // A real (non-headless) browser user agent, anonymous visitor.
-  const ctx = await browser.newContext({ userAgent: CHROME });
+  // A distinct (but ordinary) browser build per run = a fresh visitor for the daily dedupe.
+  const ctx = await browser.newContext({ userAgent: CHROME.replace("141.0.0.0", `141.0.${Date.now() % 10000}.0`) });
   await ctx.addInitScript(() => { try { localStorage.setItem("pv_consent", "denied"); } catch { /* */ } });
   const p = await ctx.newPage();
   await p.goto("/feed/new");
   const href = (await p.locator('a[href^="/discussion/"]').first().getAttribute("href"))!;
-  const counted = p.waitForRequest((r) => r.url().endsWith("/api/v1/engagement") && (r.postData() ?? "").includes('"view"'), { timeout: 15_000 });
+  // sendBeacon bodies are not exposed to Playwright, so assert on the endpoint's answers instead.
+  const eng = (pg: Page) => pg.waitForResponse((r) => r.url().endsWith("/api/v1/engagement"), { timeout: 15_000 }).then((r) => r.json());
+  const first = eng(p);
   await p.goto(href);
-  await counted; // fired only after ~5 s of visibility
+  expect(await first).toEqual({ counted: true, reason: "counted" }); // fired only after ~5 s of visibility
+  const again = eng(p);
   await p.reload();
-  await p.waitForRequest((r) => r.url().endsWith("/api/v1/engagement") && (r.postData() ?? "").includes('"view"'), { timeout: 15_000 }); // same visitor again
-  const share = p.waitForRequest((r) => r.url().endsWith("/api/v1/engagement") && (r.postData() ?? "").includes('"share"'));
+  expect(await again).toEqual({ counted: false, reason: "duplicate" }); // same visitor, same day
+  const share = eng(p);
   await p.getByRole("button", { name: "Copy link" }).click();
-  await share;
-  await p.waitForTimeout(1000);
+  expect(await share).toEqual({ counted: true, reason: "counted" });
 
   // The default Playwright browser is headless: its read is refused as automated.
   const bot = await (await browser.newContext()).newPage();
+  const botAnswer = eng(bot);
   await bot.goto(href);
-  await bot.waitForRequest((r) => r.url().endsWith("/api/v1/engagement"), { timeout: 15_000 });
-  await bot.waitForTimeout(1000);
+  expect(await botAnswer).toEqual({ counted: false, reason: "bot" });
 
   // Staff reading a story never count.
-  const r = await admin.request.post("/api/v1/engagement", { data: { piece_id: href.split("/").pop(), kind: "view" }, headers: { origin: BASE, "user-agent": CHROME } });
-  expect([200, 404]).toContain(r.status());
-  if (r.status() === 200) expect((await r.json()).counted).toBe(false);
+  const pieceId = await p.getByTestId("live-thread").getAttribute("data-piece-id");
+  const r = await admin.request.post("/api/v1/engagement", { data: { piece_id: pieceId, kind: "view" }, headers: { origin: BASE, "user-agent": CHROME } });
+  expect(await r.json()).toEqual({ counted: false, reason: "staff" });
 
   await expect.poll(async () => (await summary(admin)).reads, { timeout: 10_000 }).toBe(before.reads + 1);
   const after = await summary(admin);

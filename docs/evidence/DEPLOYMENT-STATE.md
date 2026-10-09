@@ -1,4 +1,4 @@
-# Deployment state (as of 2026-10-09, end of v1.3 Mac-local implementation)
+# Deployment state (as of 2026-10-09 16:20 PT, end of v1.3.1 Mac-local work)
 
 ```
 ORACLE_DEPLOYMENT_AUTHORIZED=false
@@ -11,7 +11,7 @@ PAID_FALLBACKS_ENABLED=false
 | Service | Bind | Process | Data |
 | --- | --- | --- | --- |
 | Next.js web/BFF (production build, incl. SSE `/api/v1/events`) | 127.0.0.1:3000 | `scripts/dev-up.sh --prod` | n/a |
-| PocketBase 0.40.5 (migrations through `1760200000_v13_locale_geo_trends`) | 127.0.0.1:8190 | native binary | `data/pb_data` |
+| PocketBase 0.40.5 (migrations through `1760300000_v131_engagement`) | 127.0.0.1:8190 | native binary | `data/pb_data` |
 | Editorial API (FastAPI) | 127.0.0.1:8100 | uvicorn | `data/jobs.db`, `data/search.db` |
 | Editorial worker (ingest, draft, converse, translate) | no port | python (single instance, flock on `data/run/worker.lock`) | queue, analytics |
 | E2E test stack (only while tests run) | 127.0.0.1:3300 / 8390 / 8400 | `scripts/test-stack.sh` (now also runs a fixture worker) | `data-test/` |
@@ -38,17 +38,18 @@ No other external services. The maps are static local SVG data, with no tile ser
   - `INGEST_PAUSED`;
   - per-thread pause and unpublish.
 
-**Dev data at handoff:**
+**Dev data at handoff (v1.3.1):**
 
 | Item | Count |
 | --- | --- |
 | Real topics | 26 |
-| Auto-published and live | 6 |
+| Auto-published and live | 8 (2 of them via the automatic rate-cap retry) |
 | Withdrawn by an editor, with correction | 2 |
-| Awaiting review | 18 |
-| AI replies on real topics | 31 |
-| Translations (machine/unreviewed) | 18 |
-| Failed translations (held) | 7 |
+| Awaiting review (sensitive or uncertain) | 16 |
+| AI replies on real topics | 33 |
+| French translations: machine (unreviewed) / failed | 17 / 0 |
+| Arabic translations: machine (unreviewed) / failed | 12 / 5 (held for native review) |
+| Human reads / shares recorded | 0 / 0 (no real people have browsed); 2 automated reads refused |
 | Demo items | labelled; excluded from trends and sitemap |
 
 ## Not touched
@@ -61,7 +62,11 @@ No other external services. The maps are static local SVG data, with no tile ser
 
 ## Containers
 
-The v1.2 compose smoke test images (`palavva-*:local`) were removed after testing. v1.3 did not rebuild containers. The SSE route and the new migrations were therefore not smoke-tested inside containers (open item).
+Rebuilt for v1.3.1 (`palavva_local-*` images on Colima, linux/amd64). `scripts/compose-smoke.sh` ran the stack on 127.0.0.1:3400 with the fixture model and ingestion paused: 18/18 checks passed, only web was published (loopback), and everything was removed afterwards (`down -v`). No registry push. ARM64 not built.
+
+## Source control
+
+`origin` = `https://github.com/amaeteventurestudios/palavva.git` (`main`, never force-pushed). `.env.local`, `.env.test`, `.env.compose`, `data/`, `data-test/` and `backups/` are gitignored and were never pushed.
 
 ## Source approvals
 
@@ -74,6 +79,7 @@ The v1.2 compose smoke test images (`palavva-*:local`) were removed after testin
 ## Backups
 
 Local only; no off-host destination approved.
-- Newest: `backups/palavva-20261009T212118Z.tar.gz` (sha256 `0e79fbac…5e48`).
+- Newest: `backups/palavva-20261009T221255Z.tar.gz` (taken before the v1.3.1 schema change; sha256 `365faf5e…e83c`).
+- Rollback drill: passed 2026-10-09 (code `043fe79` + that backup), see `docs/evidence/v131/rollback-drill.txt`.
 - Restore drill: passed 2026-10-09, see `docs/evidence/restore-drill-v13-20261009.txt`.
 - Pre-v1.3 safety backup: `backups/palavva-20261009T163013Z.tar.gz`.

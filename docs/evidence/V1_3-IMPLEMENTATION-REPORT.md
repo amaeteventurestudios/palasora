@@ -105,3 +105,80 @@ Raw evidence:
 - `docs/evidence/screenshots/v13-*`;
 - `docs/evidence/test-runs/20261009T212100Z/`;
 - `docs/evidence/restore-drill-v13-20261009.txt`.
+
+---
+
+# v1.3.1 continuation (2026-10-09, 14:55–16:20 PT)
+
+**Scope.** The founder's 8-step follow-up:
+- GitHub push;
+- keep low-risk auto-publication;
+- conversation-engine quality;
+- real engagement for trending;
+- translation fixes;
+- containers and locally solvable partials;
+- full regression;
+- report and push.
+
+**Same policy:** no Oracle, no Hetzner, no paid APIs, no publication of unreviewed sensitive material.
+
+## Results
+
+| Step | Outcome |
+| --- | --- |
+| 1. GitHub | `main` pushed to `github.com/amaeteventurestudios/palavva` without force; remote = local verified (`043fe79` before v1.3.1). History scan: no secrets. An empty `jobs.db` was purged before the first push; a harmless 32 KB WAL index residue remains in two pushed commits (removal would need a force-push) (D-18). |
+| 2. Auto-publication | Still on for LOW-risk, evidenced topics; both kill switches honoured. Sensitive topics are still held: 16 real topics await review, and 2 were withdrawn with a correction. |
+| 3. Engine | Entity/acronym/quote/superlative grounding (`conv-rules-v2`); cross-thread theme and similarity checks; near-duplicate topic hold; `converse-v5`; automatic re-checked retry of rate-capped topics (D-21 to D-23). |
+| 4. Engagement | Real reads (after 5 s visible) and shares, deduplicated daily with no stored identifiers; bots, headless browsers, staff and GPC/DNT excluded; feeds `trend-v2`; audit numbers in `/admin/trends` (D-19, D-20). |
+| 5. Translation | Repair pass, Arabic Latin-name rule, dictionary-based name test, re-validation of older outputs, automatic re-tries (D-24). French: 17 accepted, **0 failed** (all earlier French failures fixed automatically). Arabic: 12 accepted, 5 held for native review. See `v131/TRANSLATION-REVIEW.md`. |
+| 6. Containers and partials | Images rebuilt; container smoke 18/18. A container import crash was found and fixed (D-25). Rollback rehearsed. T-009, T-012, T-026, T-028, T-032 and T-042 moved to PASS; external dependencies recorded separately (`v131/EXTERNAL-DEPENDENCIES.md`). |
+| 7. Regression | Canonical run `20261009T231434Z`: typecheck clean, vitest 54/54, pytest 77 (+3 opt-in skipped), Playwright **57/57**. Real-Qwen dev browser regression 6/6: live nested replies, Local Pulse, language switching, trending, Command Center. |
+| 8. Report and push | This section; matrix totals now **73 PASS, 5 PARTIAL, 1 BLOCKED, 0 FAIL** of 79. |
+
+## Real-Qwen evidence (dev stack)
+
+**Live demo, 22:39 UTC** (`v131/dev-regression/`). Four expert roles replied, nested to depth 3:
+- Engineer → topic;
+- Community → topic;
+- Economist → Engineer;
+- Founder → Economist.
+
+Each reply was seen in the browser 0.5 to 2.8 s after it was committed, with no reload. The replies were on-topic and civil, with fewer stock phrases than before `converse-v5`.
+
+**New rules on live output** since the v1.3.1 restart:
+- 6 replies allowed;
+- 3 rejected: an unsupported entity ("Committee"), recycled cross-thread themes ("practical constraint", "operating conditions"), and a near-copy within the thread.
+
+**Rate-cap retry.** Two topics held by the cap were back-filled into the new retry path; both were re-checked and auto-published.
+
+**Engagement.** The dev stack had 0 human reads (no real people have browsed it) and refused 2 automated reads. The counting path itself is proven in `v131.spec.ts`: counted, duplicate, share, bot refused, staff refused.
+
+## Defects found and fixed during v1.3.1
+
+1. **Editorial container crashed on import.** `parents[3]` didn't exist inside the image, and translations would have been silently disabled (D-25).
+2. **Retention purge skipped tenants whose events were all old** (D-28).
+3. **Translation gate false positives** on Title Case and institutional words, sentence-initial names, British spellings, modern words and demonyms. Meanwhile real names went unchecked when preceded by a title (D-24).
+4. **Older accepted Arabic translations** had never been name-checked. 10 were withdrawn and re-translated under the current gate.
+5. **Model echoing the prompt.** The converse prompt's own list of insight types was being parroted across threads ("practical constraint"), so it was rephrased (`converse-v5`).
+6. **Test infrastructure:**
+   - compose checks were false negatives (`grep -q` under `pipefail`, and a port probe that saw an unrelated app on host :8090);
+   - the rollback drill couldn't build through a `node_modules` symlink, fixed with an APFS clone;
+   - the engagement test filtered on beacon bodies Playwright can't see.
+7. **My own process error.** I twice started overlapping test runs that reset each other's shared test stack, which produced spurious failures. Those runs are discarded; the canonical run above was executed alone.
+
+## Still open
+
+All of these need something external; details are in `v131/EXTERNAL-DEPENDENCIES.md`.
+
+- **L-06:** a fresh Senegalese French source.
+- **L-07:** Nigerian rights-approved sources.
+- **L-18 and translation quality:** native reviewers.
+- **T-023:** archival data.
+- **T-040:** a human screen-reader pass.
+- **T-031:** Revive.
+- **Remote halves:** real email, sponsors, off-host backup, Oracle/ARM64.
+
+Known engineering limits:
+- names that are ordinary words are not name-checked;
+- local engagement dedupe is per user agent (no proxy locally);
+- the 4B model's replies are better but still generic at times.

@@ -1,0 +1,15 @@
+# Rollback drill 2026-10-09T22:23:59Z
+current HEAD: 0ba6b67  ->  rolling back to: 043fe79 (v1.3: evidence docs (79-row matrix, locale/pulse demo, acceptance, deployment st)
+backup: palavva-20261009T221255Z.tar.gz
+PASS pocketbase (rolled-back migrations/hooks) healthy on 127.0.0.1:8397
+PASS restored data integrity_check ok; pieces=35 comments=39
+PASS anonymous access still denied (403)
+PASS editorial API from the rolled-back code healthy on 127.0.0.1:8398
+PASS production web build of the rolled-back commit
+PASS GET / -> 200
+PASS GET /local-pulse -> 200
+PASS GET /explore-africa -> 200
+PASS real published topic renders on the rolled-back version: /discussion/government-communicators-urged-to-safeguard-public-trust-dwxwzb
+ROLLBACK DRILL OK: code 043fe79 + data palavva-20261009T221255Z.tar.gz; live checkout and live data untouched
+scripts/rollback-drill.sh: line 20: 41987 Terminated: 15          ( cd "$S/services/editorial" && PALAVVA_DATA_DIR="$W/data" PB_URL=http://127.0.0.1:8397 MODEL_PROVIDER=fixture INGEST_PAUSED=true AI_PAUSED=true exec "$ROOT/services/editorial/.venv/bin/python" -m uvicorn palavva_editorial.api:app --host 127.0.0.1 --port 8398 > "$W/data/logs/editorial.log" 2>&1 )
+rc=0

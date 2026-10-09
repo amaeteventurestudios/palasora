@@ -1,0 +1,46 @@
+# Compose smoke 2026-10-09T22:51:03Z on Colima (linux/amd64). Local only; not deployed.
+## build
+ Container palavva_local-editorial-1 Starting 
+ Container palavva_local-worker-1 Starting 
+ Container palavva_local-editorial-1 Started 
+ Container palavva_local-web-1 Starting 
+ Container palavva_local-worker-1 Started 
+ Container palavva_local-web-1 Started 
+seed ok
+## status
+editorial Up 19 seconds (health: starting) 8000/tcp
+pocketbase Up 27 seconds (health: starting) 8090/tcp
+web Up 25 seconds (health: starting) 127.0.0.1:3400->3000/tcp
+worker Up 9 seconds (health: starting) 8000/tcp
+## checks
+PASS web /
+PASS web /local-pulse NG has 37 areas
+PASS web /explore-africa
+PASS web /my-africa
+PASS web Arabic RTL via prefs cookie
+PASS web SSE /api/v1/events streams
+PASS web events replay JSON
+PASS web engagement refuses cross-origin
+PASS editorial imports translate with registry (MT fr/ar enabled)
+PASS editorial geo boundary names available
+PASS seed created 5-country geo areas
+PASS v1.3.1 migrations applied (engagement_daily)
+PASS demo conversation publishes inside containers
+PASS worker posted nested AI replies (fixture) inside containers
+PASS PocketBase container publishes NO host port
+PASS editorial container publishes NO host port
+PASS worker container publishes NO host port
+PASS web published on loopback only (127.0.0.1:3400)
+## resources
+palavva_local-web-1 mem=110.7MiB / 5.781GiB cpu=0.00%
+palavva_local-editorial-1 mem=48.14MiB / 5.781GiB cpu=2.25%
+palavva_local-worker-1 mem=47.36MiB / 5.781GiB cpu=0.00%
+palavva_local-pocketbase-1 mem=26.21MiB / 5.781GiB cpu=0.15%
+## images
+palavva_local-web:latest 326MB
+palavva_local-worker:latest 312MB
+palavva_local-editorial:latest 312MB
+palavva_local-pocketbase:latest 64.9MB
+## result: 18 passed, 0 failed
+ Network palavva_local_internal Removed 
+ Network palavva_local_egress Removed 

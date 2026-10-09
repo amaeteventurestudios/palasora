@@ -114,6 +114,7 @@ def main() -> None:
             if now - last_rest > 600:
                 conversation.rest_idle_threads(pb, queue)
                 translate.retry_outdated_failures(pb, queue)
+                translate.revalidate_outdated(pb, queue)
                 last_rest = now
             if now - last_etl > 3600:
                 analytics_etl.run(s, pb)

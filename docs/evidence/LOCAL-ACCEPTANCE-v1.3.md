@@ -13,6 +13,10 @@
 
 ## Results
 
+**v1.3.1 update (2026-10-09 23:14 UTC):** 79 scenarios: **73 PASS, 5 PARTIAL, 1 BLOCKED, 0 FAIL**. Canonical run `test-runs/20261009T231434Z`: typecheck clean, vitest 54/54, pytest 77 (+3 opt-in skipped), Playwright 57/57. Plus container smoke 18/18, rollback drill OK, and the real-Qwen dev browser regression 6/6. Remaining items are external: `v131/EXTERNAL-DEPENDENCIES.md`. Native-review queue: `v131/TRANSLATION-REVIEW.md`.
+
+The v1.3 results below are kept for history.
+
 The full matrix is in `V1_3-TEST-MATRIX.md`, 79 scenarios:
 
 | Group | Result |

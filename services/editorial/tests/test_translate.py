@@ -92,3 +92,27 @@ def test_title_case_and_institution_words_are_not_treated_as_names():
     assert ok, qa
     ok, qa = fidelity(src, {"headline": "Dube exhorte les élèves de 12e année à viser la tech, selon le ministère"}, "fr")
     assert not ok and "Dube-Ncube" in qa["missing_names"]
+
+
+def test_old_accepted_translation_failing_the_current_gate_is_withdrawn_and_requeued(seeded, tmp_path):
+    pb, t = seeded["pb"], seeded["palavva"]
+    piece = pb.first("editorial_pieces", f"tenant_id={q(t['id'])} && slug='demo-rainy-season-delivery-routes'")
+    for old in pb.list("localizations", f"target_id={q(piece['id'])} && locale='ar'", per_page=10):
+        pb.delete("localizations", old["id"])
+    src = translate.piece_fields(piece)
+    bad = {k: "ترجمة بدون أسماء أو أرقام" for k in src}  # names and numbers dropped
+    loc = pb.create("localizations", {"tenant_id": t["id"], "target_type": "piece", "target_id": piece["id"], "piece_id": piece["id"], "locale": "ar", "source_locale": "en",
+                                      "source_version": piece["revision"], "fields": bad, "status": "machine_unreviewed", "prompt_version": "translate-v1", "qa": {}, "report_count": 0})
+    queue = Queue(tmp_path / "rv.db")
+    out = translate.revalidate_outdated(pb, queue)
+    assert out["withdrawn"] >= 1 and out["requeued"] >= 1
+    after = pb.get("localizations", loc["id"])
+    assert after["status"] == "failed" and after["fields"] == {} and after["qa"]["rejected_output"] == bad
+
+
+def test_common_word_stems_british_spelling_and_country_names():
+    from palavva_editorial.translate import is_common_word as c
+    for w in ["Pricing", "Ensuring", "Industrialisation", "Organisation", "Africa", "African", "Nigerian", "Mozambican", "Demo", "Fintech"]:
+        assert c(w), w
+    for w in ["Ramaphosa", "Ntshavheni", "Morolong", "Gauteng", "Dube-Ncube"]:  # names and sub-national places must survive
+        assert not c(w), w

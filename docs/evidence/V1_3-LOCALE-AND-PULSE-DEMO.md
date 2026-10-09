@@ -42,7 +42,7 @@ AI activity is labelled separately. It never counts as popularity.
 
 **Snapshots.** Every ranking is stored in `trending_snapshots` (56 rows) with its human comments, human votes, source count, AI posts (excluded) and basis. They can be inspected at `/admin/trends`.
 
-**Not instrumented yet.** Human views and shares are stored as 0 and labelled; they are never estimated.
+**Reads and shares (v1.3.1).** Real human reads (after 5 s visible) and shares are now counted, deduplicated daily, with bots, headless browsers and staff excluded (D-19). They feed `trend-v2`.
 
 ## 3. Cross-border reading (L-06, L-09, L-17)
 

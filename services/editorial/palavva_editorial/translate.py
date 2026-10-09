@@ -19,7 +19,7 @@ from .jobs import Queue
 from .pb import PB, q
 from .providers.base import GenerateRequest, ModelProvider
 
-PROMPT_VERSION = "translate-v2.2"  # v2.2: modern common words (demo, fintech...); v2.1: dictionary-based name test (ordinary capitalised words may be translated); v2: Latin names kept for Arabic, one gated repair pass, auto re-try of v1 failures
+PROMPT_VERSION = "translate-v2.3"  # v2.3: stems (pricing, ensuring), British spellings, country/demonym names translatable; v2.2: modern common words (demo, fintech...); v2.1: dictionary-based name test (ordinary capitalised words may be translated); v2: Latin names kept for Arabic, one gated repair pass, auto re-try of v1 failures
 _REG_PATH = shared_path("lib/i18n/registry.json")
 if not _REG_PATH.exists():  # fail loudly: a missing registry would silently disable every translation
     raise RuntimeError(f"locale registry not found at {_REG_PATH}; set PALAVVA_SHARED_DIR")
@@ -55,6 +55,7 @@ LATIN = {"en", "fr", "pcm", "yo", "ig", "ha", "sw", "pt", "wo", "tw", "zu"}
 
 
 _WORDS: set[str] = set()
+_GEO: set[str] = set()
 # Ordinary words newer than the 1934 list (capitalised in headlines, never names).
 MODERN_WORDS = set("""demo online offline internet website web app apps email smartphone smartphones startup startups fintech agritech edtech healthtech
 ecommerce e-commerce blockchain crypto bitcoin cryptocurrency software hardware broadband wifi data cloud digital podcast video videos selfie
@@ -69,8 +70,24 @@ def is_common_word(w: str) -> bool:
             _WORDS.update(x.strip() for x in f)
         _WORDS.update(MODERN_WORDS)
     lw = re.sub(r"['\u2019]s$", "", w.lower())
-    return any(c in _WORDS for c in (lw, lw[:-1] if lw.endswith("s") else "", lw[:-2] if lw.endswith(("es", "ed")) else "",
-                                     lw[:-3] if lw.endswith("ing") else "", lw[:-1] if lw.endswith("d") else "") if c)
+    us = lw.replace("isation", "ization").replace("ise", "ize").replace("our", "or")  # British -> web2 American spelling
+    cands = set()
+    for x in (lw, us):
+        cands |= {x, x[:-1] if x.endswith("s") else "", x[:-2] if x.endswith(("es", "ed")) else "", x[:-1] if x.endswith("d") else "",
+                  x[:-3] if x.endswith("ing") else "", x[:-3] + "e" if x.endswith("ing") else "",          # pricing -> price, ensuring -> ensure
+                  x[:-3] if x.endswith("ion") else "", x[:-3] + "e" if x.endswith("ion") else "",
+                  x[:-7] + "ize" if x.endswith("ization") else "", x[:-7] if x.endswith("ization") else ""}  # industrialization -> industrialize/industrial
+    return any(c in _WORDS for c in cands if c) or is_geo_word(w)
+
+
+def is_geo_word(w: str) -> bool:
+    """Countries, demonyms and macro-regions have standard forms in every target language (Nigeria -> Nigéria, نيجيريا),
+    so translating them is correct, not a fidelity loss. Sub-national places (Gauteng, Lagos) are still checked."""
+    if not _GEO:
+        _GEO.update({"afric", "sahel", "maghr", "sub-s", "europ", "asia", "ameri", "arab"})
+        for _iso, name, region, _p in tx.COUNTRIES:
+            _GEO.update(tx.fold(x)[:5] for x in f"{name} {region}".split() if len(x) >= 4 and x not in ("North", "South", "East", "West", "Central", "Southern"))
+    return tx.fold(w)[:5] in _GEO
 
 
 def _nums(t: str) -> list[str]:
@@ -206,3 +223,32 @@ def retry_outdated_failures(pb: PB, queue: Queue, limit: int = 20) -> int:
                                    "version": loc.get("source_version") or 1}, f"translate:{loc['target_type']}:{loc['target_id']}:{loc['locale']}:{loc.get('source_version') or 1}:{PROMPT_VERSION}")
         n += int(created)
     return n
+
+
+def revalidate_outdated(pb: PB, queue: Queue, limit: int = 50) -> dict:
+    """Accepted machine translations from an OLDER pipeline are re-checked against the CURRENT gate. Any that now
+    fail are withdrawn (status failed: readers see the original) and re-queued; passing ones are left untouched."""
+    out = {"checked": 0, "withdrawn": 0, "requeued": 0}
+    for loc in pb.list("localizations", f"status='machine_unreviewed' && prompt_version!={q(PROMPT_VERSION)}", "-created", limit):
+        coll = "editorial_pieces" if loc["target_type"] == "piece" else "comments"
+        try:
+            rec = pb.get(coll, loc["target_id"])
+        except Exception:  # noqa: BLE001 - target deleted
+            continue
+        version = int(rec.get("revision") or rec.get("edit_revision") or 1)
+        if version != (loc.get("source_version") or 1):
+            continue  # superseded by a newer source version anyway
+        src = piece_fields(rec) if coll == "editorial_pieces" else {"body_text": rec.get("body_text", "")}
+        ok, qa = fidelity(src, loc.get("fields") or {}, loc["locale"])
+        out["checked"] += 1
+        if ok:
+            continue
+        qa["rejected_output"] = loc.get("fields") or {}
+        qa["withdrawn_on_revalidation"] = PROMPT_VERSION
+        pb.update("localizations", loc["id"], {"status": "failed", "fields": {}, "qa": qa, "error_code": "FIDELITY_FAILED_ON_REVALIDATION"})
+        out["withdrawn"] += 1
+        if loc["locale"] in MT_ENABLED:
+            _, created = queue.enqueue(loc["tenant_id"], "translate", {"target_type": loc["target_type"], "target_id": loc["target_id"], "locale": loc["locale"],
+                                       "version": version}, f"translate:{loc['target_type']}:{loc['target_id']}:{loc['locale']}:{version}:{PROMPT_VERSION}")
+            out["requeued"] += int(created)
+    return out

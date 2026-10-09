@@ -324,6 +324,9 @@ def converse_step(pb: PB, queue: Queue, settings: Settings, provider: ModelProvi
                     # The deterministic test stub is templated by design (identical per role across topics); only real
                     # model output is compared, so production (never the stub) is unaffected.
                     if p.get("moderation_status") == "visible" and (p.get("provenance") or {}).get("provider") != "fixture"]
+    # Re-runs of the SAME question (e.g. the evergreen demo) are not "other topics".
+    same_q = {x["id"] for x in pb.list("editorial_pieces", f"tenant_id={q(tid)} && headline={q(piece['headline'])}", per_page=50)}
+    recent_other = [p for p in recent_other if p.get("piece_id") not in same_q]
     themes = diversity.overused_themes(recent_other, evidence_text)
     by_id = {p["id"]: p for p in posts}
     ancestors = []

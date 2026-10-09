@@ -39,3 +39,25 @@ Times are US Pacific, 2026-10-08/09. Newest entries last.
   - test-infrastructure races (`47b41a0`).
 - **14:20** Canonical run `20261009T212100Z`: typecheck clean, vitest 27/27, pytest 66 (+3 opt-in skipped), Playwright 53/53. Backup and restore drill OK.
 - **14:40** Rejected translation output kept for editor correction; colon-capitalisation fix. Evidence docs written: decisions, conversation demo, locale and pulse demo, 79-row matrix, acceptance, deployment state, report.
+
+## v1.3.1 (2026-10-09, US Pacific)
+
+- **14:30–14:59** History purged of an empty SQLite file before the first GitHub push. `main` pushed without force; remote = local `043fe79`. Secret scan clean.
+- **15:00–15:10** Engine:
+  - named-entity grounding (`conv-rules-v2`);
+  - cross-thread diversity and near-duplicate topic hold;
+  - re-checked retry of rate-capped topics;
+  - `converse-v4`.
+- **15:10–15:20** Real engagement: reads after 5 s visible and shares, deduplicated with a salted daily hash; bots, headless browsers, staff and GPC excluded; `trend-v2`; trend audit numbers.
+- **15:12–16:10** Translation:
+  - repair pass and Arabic Latin-name rule;
+  - dictionary-based name test (web2), with modern words, stems and British spellings;
+  - re-validation withdrew 10 older Arabic outputs;
+  - French failures 6 → 0; Arabic 5 held for native review.
+- **15:14–15:55** Containers:
+  - found and fixed the editorial import crash (shared-asset resolver);
+  - compose smoke 18/18;
+  - rollback drill OK;
+  - T-009/T-012/T-026/T-028/T-032/T-042 moved to PASS (session expiry test, comment self-edit, real NewsArticle, purge fix, URL safety, rollback).
+- **15:39** Real-Qwen dev browser regression 6/6: live depth-3 thread, 0.5–2.8 s arrival.
+- **16:14** Canonical run `20261009T231434Z`: vitest 54, pytest 77, Playwright 57/57. Matrix: 73 PASS / 5 PARTIAL / 1 BLOCKED / 0 FAIL.

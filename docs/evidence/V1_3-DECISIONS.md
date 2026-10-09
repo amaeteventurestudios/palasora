@@ -183,7 +183,7 @@ Editors confirm, reject or move evidence in `/admin/geo`. Area IDs are recompute
 
 These are always excluded: AI posts (shown separately as "AI replies"), demo items and fixtures. Every ranking is written to `trending_snapshots` with its components and basis. With no human activity, the panel says so ("Not enough recent activity…") and shows latest verified stories, labelled as such. It never shows invented numbers.
 
-Human views and shares are **not yet instrumented**. They are stored as 0 and labelled, not estimated.
+Human views and shares were not instrumented in v1.3 (stored as 0, labelled). **Superseded by D-19/D-20 (v1.3.1):** real deduplicated reads and shares now feed `trend-v2`.
 
 ## D-14 Source additions: Global Voices (CC BY 3.0) and SAnews metadata
 
@@ -231,3 +231,150 @@ The SSE endpoint `/api/v1/events`:
 - The skip link uses a logical inset plus `translateY(-200%)`.
 
 Both are covered by the T-005 and L-03 tests.
+
+---
+
+# v1.3.1 decisions (2026-10-09, afternoon)
+
+## D-18 Repository history and the GitHub push
+
+**What happened.** An empty test SQLite file, `services/editorial/data/jobs.db` (no rows), had been committed in Phase 2. Before the first push, `main` was rewritten (`git filter-branch`) to drop it, and pushed without force to `github.com/amaeteventurestudios/palavva`. The rewrite was local only, and the pre-rewrite tip is kept at `refs/backup/pre-jobsdb-purge`.
+
+**Verification:**
+- `origin/main` matched local `main` (`043fe79`) before v1.3.1 work began.
+- A scan of every pushed blob found no secrets: only `__generated__` placeholders in `.env.example`, no private keys, no API tokens.
+
+**Residue (not removed, because removal would need a force-push):** two pushed commits still carry `jobs.db-shm`, a 32 KB SQLite WAL index with no rows and no strings, and an empty `jobs.db-wal`.
+
+**Docs:** documentation now cites the rewritten commit hashes.
+
+## D-19 Real human engagement: reads and shares
+
+**What counts:**
+- A **read** counts after 5 s of actual visibility (client beacon). Prefetch and background tabs never count.
+- A **share** counts on a share click (WhatsApp, X, Facebook, copy, native share).
+
+**Privacy:**
+- Nothing identifying is stored. Deduplication is one per visitor per story per day, via `sha256(daily-rotating random salt | day | network key | UA | story | event)`.
+- The salt changes every UTC day, so visitors cannot be linked across days.
+- Hash rows are purged after 48 h. Only per-story daily counters remain (`engagement_daily`).
+- This means no consent cookie is needed. Global Privacy Control and Do Not Track are honoured: nothing is counted.
+
+**Anti-inflation:**
+- not counted: bots, crawlers, link-preview fetchers, scripts and **headless browsers**; staff sessions (editors reviewing content);
+- not possible: cross-origin requests (403);
+- enforced: per-client rate limit; refusals are themselves counted (`rejected_bot`, `rejected_duplicate`) and shown in `/admin/trends`.
+
+**Consequence for tests.** Automated browser tests and the dev regression script run headless, so they are refused, which is why they cannot inflate trends.
+
+**Limit.** Local dev has no proxy, so every local visitor shares one network key. Deduplication is therefore per user agent locally; behind a proxy with `x-forwarded-for` it is per network plus user agent.
+
+## D-20 trend-v2
+
+Formula:
+
+```
+(2*human_comments + human_votes + 1.5*human_shares + 0.5*log2(1 + human_views)
+  + 0.5*(sources - 1) + 1) / (age_h + 2)^1.2
+```
+
+- AI posts are still excluded.
+- Views are log-scaled: a read is a weaker signal than a reply or a share, and log-scaling stops raw traffic from dominating.
+- Snapshots now store real `human_views` and `human_shares`.
+
+## D-21 Reply grounding: `conv-rules-v2`
+
+**New rule, `unsupported_entities`.** An AI reply is rejected if it contains any of the following that are not in the topic's evidence or the visible thread:
+- a capitalised name (person, organisation, programme), including at sentence start when it begins a multi-word name;
+- an acronym;
+- a quotation;
+- a factual superlative ("the largest… in Africa").
+
+**Allowed:** countries, demonyms and regions, because geographic comparison is reasoning.
+
+**Prompt.** The converse prompt (`converse-v4`/`v5`) now tells the model these limits explicitly.
+
+**Live observation.** A real-Qwen reply naming "Committee" was rejected.
+
+## D-22 Cross-thread diversity
+
+**Problem.** The 4B model recycled the same framing ("power reliability", "operating conditions") across unrelated topics.
+
+**Rules (`editorial/diversity.py`):**
+- **Overused themes.** Content bigrams used by AI posts in at least 3 other topics in the past 7 days, and not grounded in this topic's evidence, are passed to the model as themes to avoid. A reply hitting 2 or more of them is rejected.
+- **Cross-topic restatement.** A reply more than 0.5 similar to a post in another topic is rejected.
+- **Near-duplicate topics.** A new topic more than 0.5 similar to one published in the last 72 h is held for an editor rather than auto-published.
+
+**Exclusions:**
+- Re-runs of the *same* question (the evergreen demo) are not "other topics".
+- The deterministic test stub is excluded from comparison; it is templated by design and never runs with the real provider.
+
+**Live observation.** A reply leaning on "practical constraint" and "operating conditions" was rejected. Both phrases came from our own prompt's list of insight types, so `converse-v5` rephrases that list and forbids stock labels.
+
+## D-23 Rate-capped topics are retried automatically
+
+A LOW-risk topic held only by the 6-per-hour cap gets a scheduled `retry_auto_publish` job, timed for when the window frees up, with up to 6 attempts.
+
+**At retry time everything is re-checked:**
+- still untouched by any human;
+- still LOW risk;
+- claim check PASS;
+- no sensitive terms under the *current* ruleset.
+
+The database gate checks again on publish.
+
+**Live:** two topics held by the cap before this existed were back-filled and both auto-published on retry.
+
+## D-24 Translation pipeline v2.x
+
+1. **Repair pass.** On a fidelity failure, the model gets the exact missing names, numbers and citations and one chance to fix them. The same gate decides.
+2. **Arabic names.** Arabic output must keep every Latin-script person or organisation name in Latin letters after the Arabic form, e.g. رامافوزا (Ramaphosa). This makes names machine-verifiable and catches mis-transliterations like "يرامبوسا".
+3. **Name test.** A capitalised token is a *name* only if it isn't an ordinary word. The test uses the public-domain web2 list, plus modern words, stems, British spellings, and country/demonym names. Title Case headlines and ministry names may therefore be translated, while proper names must survive.
+4. **Automatic re-tries:**
+   - failures from older pipeline versions are re-queued once;
+   - accepted translations from older pipelines are **re-validated** against the current gate, and any that now fail are withdrawn (readers see the original) and re-queued.
+
+   **Live:** 10 Arabic v1 translations were withdrawn this way.
+5. Rejected machine output is kept for editors only, and can be corrected into a reviewed translation in `/admin/translations`.
+
+**Limit.** Names that are also ordinary words ("Bloom", "Grace") are not checked. Meaning and register still need a native speaker.
+
+## D-25 Shared-asset resolver (container crash fix)
+
+**Finding.** The editorial service read the locale registry and boundary files via `Path(__file__).parents[3]/apps/web/...`. Inside the image that path has only 3 levels, so `translate.py` raised `IndexError` on import, and translations would have been silently disabled even if it hadn't crashed.
+
+**Fix:**
+- `config.shared_path()`, driven by `PALAVVA_SHARED_DIR`, with the repo layout as fallback;
+- the Dockerfile copies `registry.json` and `public/geo` into the image;
+- a missing registry now fails loudly.
+
+Verified by the container smoke test.
+
+## D-26 Comment self-edit (T-012 "edit")
+
+- Authors can edit their own visible reply for 15 minutes. Posting rules apply again; a reply with too many links goes back to moderation.
+- The previous text is kept in the staff-only audit trail.
+- Readers see "edited", and open threads update live via `post_corrected`.
+- Other members never see an Edit control.
+
+## D-27 Outbound URL safety (T-032)
+
+`safeExternalUrl` replaces the scheme-only check on business pages, the business API and sponsor inquiries. It blocks:
+- non-http(s) schemes;
+- embedded credentials;
+- loopback, private, link-local and CGNAT IP literals, plus integer and hex IP encodings;
+- IPv6 literals;
+- `localhost`, `.local` and `.internal` hosts;
+- control characters, quotes and spaces.
+
+Unit-tested with 22 malicious cases.
+
+## D-28 Raw-event retention purge (T-028)
+
+**Bug fixed.** The 30-day purge ran only for tenants that also had *recent* events, so a tenant with only old data was never purged. The purge now runs first. Integration test added.
+
+## D-29 Container smoke and rollback drill
+
+**`scripts/compose-smoke.sh`** builds the three images and runs the stack on `127.0.0.1:3400`, using the fixture model with ingestion paused (no external calls). It checks v1.3 pages, live events (SSE), the RTL page, translation and geo assets, migrations, and a containerised nested conversation. It confirms with `docker port` that only web is published, on loopback. Then it removes everything.
+
+**`scripts/rollback-drill.sh`** boots a prior commit in an isolated git worktree with the matching pre-change backup on spare ports, verifies it, and tears down. Neither script pushes images or deploys.
