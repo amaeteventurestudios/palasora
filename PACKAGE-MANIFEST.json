@@ -1,0 +1,170 @@
+{
+  "version": "1.2",
+  "prepared": "2026-10-08",
+  "brand": "Midnight + Tangerine",
+  "canonical_colors": {
+    "midnight": "#1B2030",
+    "tangerine": "#E85E31",
+    "gold": "#F8C45C",
+    "ivory": "#F8F5F0"
+  },
+  "contents": {
+    "00-PROJECT-HANDOFF.md": {
+      "bytes": 85171,
+      "sha256": "40c1a104d2bcfabc1a966ca4428638ddb97c83ec232a398fbf4c4dd9d86ba463"
+    },
+    "01-PRODUCT-REQUIREMENTS.md": {
+      "bytes": 7335,
+      "sha256": "9198901bc5f8b4de34cac78411a2a35b4964e9bbab59051d463b0358472eb2f4"
+    },
+    "02-BRAND-VOICE-EDITORIAL-ETHICS.md": {
+      "bytes": 5992,
+      "sha256": "278e2e2c9fadfc309c767e8334094c1b789b99929fec3b1d85ae69349bc92563"
+    },
+    "03-INFORMATION-ARCHITECTURE.md": {
+      "bytes": 5833,
+      "sha256": "bcd5315b663d0ecbb23244588e4b39c72939ad9cb01b6f232e2f75462abf6ec2"
+    },
+    "04-UX-SCREEN-SPECIFICATIONS.md": {
+      "bytes": 15130,
+      "sha256": "9fe7085127362fd5e9530bb3d8079f11f647ba0ad2f26cf91d2e26f1e40a5b2d"
+    },
+    "05-UI-DESIGN-SYSTEM.md": {
+      "bytes": 11056,
+      "sha256": "3d8349544729b7c03356cd4f2b24e9f2840b2fa61d5850f5ee42f110289b96fe"
+    },
+    "06-WEBSITE-COPY.md": {
+      "bytes": 15947,
+      "sha256": "2a51f4b14a9a3f9c6327ba772098983e93c2dff6d910496cf3ec6d9fe5f45362"
+    },
+    "07-NEWS-SOURCES-AND-INGESTION.md": {
+      "bytes": 9227,
+      "sha256": "1263d5c9f46ae9c9b3aa36f67fbddf3608000ccfcc4e1719b37724df24269976"
+    },
+    "08-EDITORIAL-AI-AND-TIME-LENS.md": {
+      "bytes": 12418,
+      "sha256": "d59376c5e5416ee2f63e3cf86f662b46fc5ec8c652e33988d415255405d451ca"
+    },
+    "09-DATA-MODEL-AND-APIS.md": {
+      "bytes": 13997,
+      "sha256": "10cfb7d9e9aca9ebfa646f0c4d0e0812e7236f457365eb338f8f1165c643aff7"
+    },
+    "10-TECH-ARCHITECTURE.md": {
+      "bytes": 10883,
+      "sha256": "3bc9996009028158b956f1e26abd4962302135045e31ccf71da9988bd5e6f25e"
+    },
+    "11-ANALYTICS-AND-COMMAND-CENTER.md": {
+      "bytes": 9547,
+      "sha256": "84f86596173130ff344162110f24d4a97f9cdee4acb342a0783a2c685c6841ad"
+    },
+    "12-SPONSORS-AND-COMMERCE.md": {
+      "bytes": 6614,
+      "sha256": "ddadcd27591629ec6b22d58e0b6fd0c6ff67f4ae31983bc04c0fbdd01244bb50"
+    },
+    "13-WHITE-LABEL-TENANCY.md": {
+      "bytes": 5393,
+      "sha256": "26801a27911930bf399dbf94713b49314ad5783e452614d70f6bf45c1022cab9"
+    },
+    "14-SEO-SOCIAL-DISTRIBUTION.md": {
+      "bytes": 4684,
+      "sha256": "31f72b02197d0bfedad46e208c4cb00637cfb61f38f7e5e4716b6575df054846"
+    },
+    "15-VISUAL-ASSET-BRIEFS.md": {
+      "bytes": 13111,
+      "sha256": "b7e8a2577fa1c1b3d05623f49e1b20210059b7181f9300bc863acc88aa660c64"
+    },
+    "16-DEVOPS-SECURITY-BACKUPS.md": {
+      "bytes": 13568,
+      "sha256": "7e4d6944876f68a3dfe49c04c1ed2bea329d3878d66918eb3e271ee123774e3e"
+    },
+    "17-TEST-PLAN-AND-ACCEPTANCE.md": {
+      "bytes": 11130,
+      "sha256": "8df875ef9787fbd9a529d3536cc46256924a365fdacac9566f11a142b5d619d3"
+    },
+    "18-IMPLEMENTATION-PHASES.md": {
+      "bytes": 9183,
+      "sha256": "bd49e629a9aa13e4623d1efa68b925e08a78f76b605a66dccf8a4f9c8b788f48"
+    },
+    "19-AUTONOMOUS-BUILD-PROMPT.md": {
+      "bytes": 21763,
+      "sha256": "0a8ee9922d96e79592fe343673ec5eb82243c964fe8c3635cab9c4b357ef5b7b"
+    },
+    "20-OPEN-QUESTIONS-RISKS.md": {
+      "bytes": 7950,
+      "sha256": "489dfedc5b8bdeec9146c66e355616b9053bd158108dc518bb721069955e8447"
+    },
+    "21-LOCAL-FIRST-DEVELOPMENT.md": {
+      "bytes": 10386,
+      "sha256": "16222fb53c5265113533bdc2196ede294a39dede228f20ec9482286669979a24"
+    },
+    "BRAND-DECISION-2026-10-08.md": {
+      "bytes": 1859,
+      "sha256": "87fb37468c6addaa87dbc0cece09c0ed540607e1c1232e12040cee5ceaf87871"
+    },
+    "EXECUTION-DECISION-LOCAL-FIRST-2026-10-08.md": {
+      "bytes": 857,
+      "sha256": "cfc5087ad863d8204cc34aaffcecbbb7b09ab31693ecf255440fcfbbfaee3908"
+    },
+    "README.md": {
+      "bytes": 9543,
+      "sha256": "c8f86cf596872c560283c16e83b30d7968265b8eabc877b8d45e407be40cb1da"
+    },
+    "assets/README.md": {
+      "bytes": 1964,
+      "sha256": "5fef48d042765b09fd271f99982709aab08ab8a70e0072ebe6719b4a8ea0a9ac"
+    },
+    "assets/palavva-admin-concept.png": {
+      "bytes": 98506,
+      "sha256": "e12924b7eaeb8c7efec5ca4069f60f1ea696249087ed71d31de29acb9015df25"
+    },
+    "assets/palavva-admin-concept.svg": {
+      "bytes": 9511,
+      "sha256": "b943af5316af9aff22b44523bb5d0b778561e0f75e4680d6b98ef254d1c28625"
+    },
+    "assets/palavva-default-og-draft.png": {
+      "bytes": 55554,
+      "sha256": "4faabaa83751ea20441c98fa4181276305cd0f8f2c282c9533be30d9e55cca9b"
+    },
+    "assets/palavva-default-og-draft.svg": {
+      "bytes": 1727,
+      "sha256": "3e39158e6f5e7c563b3499836717abca3962560576ed084ac08dcb35fe5055f7"
+    },
+    "assets/palavva-desktop-concept.png": {
+      "bytes": 128410,
+      "sha256": "2f2ad6548541b16ba2ad59b3f46c998957b2273ec4e9be05793aaefefd944463"
+    },
+    "assets/palavva-desktop-concept.svg": {
+      "bytes": 10497,
+      "sha256": "bde51a6ec8b41039dd4888fbb7a8123e67d307162e0efd82e1cf7c0f81b6f36d"
+    },
+    "assets/palavva-mark-draft.png": {
+      "bytes": 3735,
+      "sha256": "97cd41d6805e3d9d569f6a6e3c51adc9c8c4dc115795c93155fd3fc6f0884912"
+    },
+    "assets/palavva-mark-draft.svg": {
+      "bytes": 377,
+      "sha256": "7b3991dab0827e0f7abee507c62c6f9737c5692e52d28056f8fb5ad59ddfbc4f"
+    },
+    "assets/palavva-mobile-concept.png": {
+      "bytes": 54399,
+      "sha256": "7ac85c01c7f6265aff64fe94a82f34a9e65cc9a4061df56e370faae83cbc1cf5"
+    },
+    "assets/palavva-mobile-concept.svg": {
+      "bytes": 6074,
+      "sha256": "a0fe48cd4ae7282b3b88a04b657a424f4f0d9fe7561c3cc06321cb406f2eb502"
+    },
+    "assets/palavva-wordmark-draft.png": {
+      "bytes": 6843,
+      "sha256": "d618f459e4b86f1de6a41785be0129f72a85f8b93166183f8649e5e896c9dbcf"
+    },
+    "assets/palavva-wordmark-draft.svg": {
+      "bytes": 316,
+      "sha256": "4db7bba4ee9daf8107060f6c4da8ed316bab5720a5bbf3962f330892ad4f4568"
+    }
+  },
+  "implementation_order": "Mac local-first. No Oracle connection or deployment before separate founder approval.",
+  "source_of_truth_overrides": [
+    "05-UI-DESIGN-SYSTEM.md for palette",
+    "21-LOCAL-FIRST-DEVELOPMENT.md for build location and approval gates"
+  ]
+}
