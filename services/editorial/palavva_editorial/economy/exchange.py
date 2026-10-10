@@ -329,15 +329,19 @@ def compute_index(con: sqlite3.Connection, market: str | None) -> list[dict]:
 
 
 def portfolio(con: sqlite3.Connection, owner_id: str) -> dict:
-    rows = con.execute("""SELECT p.*, c.ticker, c.name, c.market, c.last_price, c.ipo_price FROM positions p JOIN companies c ON c.id=p.company_id
-                          WHERE p.owner_id=? AND (p.qty > 0 OR p.realized != 0) ORDER BY c.market, c.ticker""", (owner_id,)).fetchall()
+    rows = con.execute("""SELECT p.*, c.ticker, c.name, c.market, c.last_price, c.ipo_price, c.founder_agent_id, c.founder_shares FROM positions p
+                          JOIN companies c ON c.id=p.company_id WHERE p.owner_id=? AND (p.qty > 0 OR p.realized != 0) ORDER BY c.market, c.ticker""", (owner_id,)).fetchall()
     holdings = []
     for r in rows:
         px = r["last_price"] or r["ipo_price"]
         value = r["qty"] * px
+        founder = r["founder_agent_id"] == owner_id
+        # Founder shares were minted at listing at no cost: they are shown, but never reported as a gain (no P&L on minted shares).
+        alloc = min(r["qty"], r["founder_shares"]) if founder else 0
+        bought_value = (r["qty"] - alloc) * px
         holdings.append({"company_id": r["company_id"], "ticker": r["ticker"], "name": r["name"], "market": r["market"], "qty": r["qty"], "price": px,
                          "priced_by": "last trade" if r["last_price"] else "IPO price (no trade yet)", "value": value, "cost": r["cost"],
-                         "unrealized": value - r["cost"], "realized": r["realized"]})
+                         "founder_allocation": alloc, "unrealized": (bought_value - r["cost"]) if (r["qty"] - alloc) > 0 else 0, "realized": r["realized"]})
     from .ledger import balance
     cash = balance(con, "agent", owner_id)
     return {"holdings": holdings, "pals": cash, "market_value": sum(h["value"] for h in holdings),

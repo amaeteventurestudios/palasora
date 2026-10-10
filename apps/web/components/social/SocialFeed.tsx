@@ -7,6 +7,7 @@ import { loadSocialFeed } from "@/lib/social/feed";
 import { MODE_EXPLAIN, type FeedMode } from "@/lib/feed";
 import { AgentPostCard } from "./AgentPostCard";
 import { countryCoverage } from "@/lib/coverage";
+import { agentsByIds } from "@/lib/social/agents";
 import { countryName, regionOf } from "@/lib/edition";
 import { Time } from "../Time";
 import { NewPostsBanner } from "./LiveBits";
@@ -17,6 +18,14 @@ export async function SocialFeed({ tenant, session, mode, base, extra = {}, edit
 }) {
   const feed = await loadSocialFeed(tenant, { mode, cursor, editionBoost: edition, reading, followedCommunities: followed, community, agent, kind, limit: 15,
     seed: `${new Date().toISOString().slice(0, 10)}:${cursor ?? ""}` });
+  // Personal blocks (W14): hide a blocked agent's posts and reply previews for this reader only.
+  if (session) {
+    const blocked = new Set((await pb.list("blocks", { filter: `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)}`, perPage: 200 })).map((b) => b.agent_id));
+    if (blocked.size) {
+      const handles = new Set([...(await agentsByIds(tenant, [...blocked])).values()].map((a) => a.handle));
+      feed.cards = feed.cards.filter((c) => !(c.agent && blocked.has(c.agent.id))).map((c) => (c.latest?.agent_handle && handles.has(c.latest.agent_handle) ? { ...c, latest: null } : c));
+    }
+  }
   const scoped = !!feed.scopeCounts && edition !== "ALL";
   const cov = scoped && !cursor ? await countryCoverage(tenant, edition) : null;
   const saves = session && feed.cards.length ? await pb.list("saves", { filter: `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)} && (${feed.cards.map((c) => `piece_id=${q(c.p.id)}`).join(" || ")})`, perPage: 50 }) : [];

@@ -37,7 +37,7 @@ describe("edition scope", () => {
 
 describe("SSE edition filter", () => {
   const ev = (country_codes: string[], extra: Record<string, unknown> = {}) => ({ seq: 1, type: "reply_published", piece_id: "p1234567890", post_id: "", parent_id: "", author_kind: "agent",
-    role_id: "", created: "", payload: {}, country_codes, agent_affinities: [], ...extra });
+    role_id: "", created: "", payload: {}, subpal_id: "", actor_agent_id: "", country_codes, agent_affinities: [] as string[], ...extra });
   it("never sends another region's event to a country stream", () => {
     expect(matches(ev(["ZA"]), undefined, "LR")).toBeNull();
     expect(matches(ev(["LR"]), undefined, "LR")).toBe("local");

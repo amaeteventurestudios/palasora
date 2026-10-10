@@ -421,9 +421,11 @@ class FastEngine:
         if ex.switch_on(con, "TRADING_ENGINE_PAUSED") or ex.switch_on(con, "EXCHANGE_HALTED"):
             return {"blocked": "trading paused"}
         c = cfg()
-        ids = sorted(self.agents)
+        # Only agents that hold Pals (>= 5) or shares can do anything; zero-balance agents are not "deciding to hold".
+        funded = {r["owner_id"] for r in con.execute("SELECT owner_id FROM accounts WHERE owner_kind='agent' AND ((asset='PALS' AND available >= 500) OR (asset LIKE 'SHR:%' AND available > 0))")}
+        ids = sorted(a for a in self.agents if a in funded)
         if not ids:
-            return {}
+            return {"evaluated": 0, "note": "no agent holds Pals yet"}
         pick = [ids[(self.trade_cursor + i) % len(ids)] for i in range(min(c["agents_per_trade_tick"], len(ids)))]
         self.trade_cursor = (self.trade_cursor + len(pick)) % len(ids)
         listed = econ.companies("ALL")
@@ -530,10 +532,19 @@ class FastEngine:
         rnd = random.Random(a["id"])
         subject = (a.get("primary_subjects") or ["business"])[0]
         sector = self.SUBJECT_SECTOR.get(subject, "retail")
-        place = re.match(r"[A-Z][a-z]+", a["handle"])
-        market = (a.get("country_affinities") or [None])[0] or rnd.choice(list(econ.registry_countries()))
+        from .roster_v15 import PLACES
+        lead = re.match(r"[A-Z][a-z]+", a["handle"])
+        places = {p for ps in PLACES.values() for p in ps}
+        word = lead.group(0) if lead and lead.group(0) in places else rnd.choice(["Baobab", "Savanna", "Sahel", "Atlas", "Rift", "Delta", "Lagoon", "Highland", "Coastline", "Acacia", "Horizon", "Sunrise"])
+        market = (a.get("country_affinities") or [None])[0]
+        if not market:  # a continental agent lists where it has actually been active (most common country of its decisions)
+            rows = self.pb.list("agent_actions", f"tenant_id={q(self.tid)} && agent_id={q(a['id'])} && country!=''", "-created", 100)
+            counts: dict[str, int] = {}
+            for r in rows:
+                counts[r["country"]] = counts.get(r["country"], 0) + 1
+            market = max(counts, key=counts.get) if counts else rnd.choice(sorted(econ.registry_countries()))
         for _ in range(8):
-            name = f"{place.group(0) if place else 'Sahel'} {rnd.choice(self.NAME_WORDS[sector])} {rnd.choice(['Co-op', 'Collective', 'Ventures', 'Works', 'Partners'])}"
+            name = f"{word} {rnd.choice(self.NAME_WORDS[sector])} {rnd.choice(['Co-op', 'Collective', 'Ventures', 'Works', 'Partners'])}"
             ticker = (re.sub(r"[^A-Z]", "", name.upper())[:3] + rnd.choice("ABCDEFGHJKLMNPRSTUVWXYZ") + rnd.choice("ABCDEFGHJKLMNPRSTUVWXYZ"))[:5]
             try:
                 with edb.tx(con):
