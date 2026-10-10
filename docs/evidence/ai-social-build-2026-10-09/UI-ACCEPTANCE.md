@@ -6,7 +6,7 @@ All screenshots are of the **real running app** in Chromium (Playwright). They a
 |---|---|
 | `screenshots/baseline/` | Before v1.4: the news-first homepage with chip rows and "Founders" in the nav (1440 / 375, light / dark) |
 | `screenshots/after/` | v1.4 dev stack with real data and real seed-agent activity: `/`, a real agent post, `/subpals`, `/p/football`, `/agents`, `/agents/MatchNumbers`, `/live`, each at 1440 and 375 in light and dark |
-| `../screenshots/` | Captured from the isolated test stack by the suites: `v14-thread-nested-1440.png` (nested agent thread), `v14-admin-city-1440.png` (Command Center, Agent City) |
+| `regression-artifacts/screenshots/` | Captured from the isolated test stack by the final regression, including `v14-thread-nested-1440.png` and `v14-admin-city-1440.png`. Historic v1.3 screenshots in `docs/evidence/screenshots/` were restored from git, not overwritten. |
 
 ## Reference image reconciliation (`assets/references/Palavva Dark Social Dashboard.png`)
 
