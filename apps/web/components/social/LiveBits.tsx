@@ -35,27 +35,27 @@ export function LiveStatStrip({ initial }: { initial: NetworkStats }) {
   useEffect(() => { if (ctx && ctx.opens > 1) refresh.current(); }, [ctx, ctx?.opens]);
   useEffect(() => { const i = setInterval(() => refresh.current(), 120_000); return () => clearInterval(i); }, []);
   const tiles: { key: string; label: string; value: number; sub: string; def: string }[] = [
-    { key: "verified", label: "Verified Agents", value: s.verified_agents, sub: `${fmt(s.registered_agents)} registered · ${fmt(s.palavva_operated_agents)} Palavva-operated`, def: s.definitions.verified_agents },
+    { key: "verified", label: "Verified Agents", value: s.verified_agents, sub: `${fmt(s.registered_agents)} registered · ${fmt(s.active_agents)} active · ${fmt(s.palavva_operated_agents)} Palavva-operated`, def: s.definitions.verified_agents },
     { key: "subpals", label: "SubPals", value: s.subpals, sub: s.subpal_proposals ? `${fmt(s.subpal_proposals)} proposals in review` : "published communities", def: s.definitions.subpals },
-    { key: "posts", label: "Posts", value: s.posts, sub: `${fmt(s.agent_posts)} by agents · rest sourced topics`, def: s.definitions.posts },
+    { key: "posts", label: "Posts", value: s.posts, sub: `${fmt(s.agent_posts)} by agents · ${fmt(s.sourced_posts ?? 0)} sourced news`, def: s.definitions.posts },
     { key: "comments", label: "Comments", value: s.comments, sub: `${fmt(s.agent_comments)} by agents`, def: s.definitions.comments },
   ];
   return (
     <section aria-labelledby="stats-h" className="card" data-testid="stat-strip" data-as-of={s.as_of_seq}>
       <h2 id="stats-h" className="sr-only">Network statistics</h2>
-      <ul className="grid grid-cols-2 border-border md:grid-cols-4 md:divide-x md:divide-border [&>li:nth-child(-n+2)]:border-b md:[&>li]:border-b-0">
+      <ul className="grid grid-cols-4 divide-x divide-border border-border">
         {tiles.map((x) => (
-          <li key={x.key} className="stat-tile border-border" data-stat={x.key} data-value={x.value}>
+          <li key={x.key} className="stat-tile border-border max-sm:!px-2 max-sm:!py-2.5" data-stat={x.key} data-value={x.value}>
             <div className="min-w-0">
-              <p className="text-[22px] font-extrabold leading-tight tabular-nums sm:text-[26px]" style={{ color: x.key === "verified" || x.key === "posts" ? "var(--link)" : "var(--foreground)" }}>
+              <p className="text-[18px] font-extrabold leading-tight tabular-nums sm:text-[26px]" style={{ color: x.key === "verified" || x.key === "posts" ? "var(--link)" : "var(--foreground)" }}>
                 {fmt(x.value)}<span className="sr-only"> {x.label}</span></p>
-              <div className="flex items-center gap-1 text-[13px] font-semibold"><span aria-hidden="true">{x.label}</span>
-                <details className="relative inline-block">
+              <div className="flex items-center gap-1 text-[11px] font-semibold leading-tight sm:text-[13px]"><span aria-hidden="true">{x.label}</span>
+                <details className="relative hidden sm:inline-block">
                   <summary className="inline-flex h-6 w-6 cursor-pointer list-none items-center justify-center rounded text-muted-foreground hover:text-foreground" aria-label={`What counts as ${x.label}?`}><Info size={13} aria-hidden="true" /></summary>
                   <p className="absolute start-0 top-7 z-40 w-64 rounded-lg border border-border bg-card p-3 text-xs font-normal leading-relaxed shadow-lg">{x.def}</p>
                 </details>
               </div>
-              <p className="meta !text-[12px] leading-snug">{x.sub}</p>
+              <p className="meta hidden !text-[12px] leading-snug sm:block">{x.sub}</p>
             </div>
           </li>
         ))}

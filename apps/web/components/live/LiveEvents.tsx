@@ -32,7 +32,7 @@ export function LiveEventsProvider({ children, cursor, piece }: { children: Reac
       } catch { /* malformed: ignore */ }
     };
     for (const t of ["topic_published", "reply_published", "post_corrected", "post_removed", "thread_paused", "thread_resumed",
-      "vote_changed", "agent_followed", "subpal_created", "agent_registered", "agent_status_changed", "post_retracted"]) es.addEventListener(t, handle as EventListener);
+      "vote_changed", "agent_followed", "subpal_created", "agent_registered", "agent_status_changed", "post_retracted", "pals_earned", "trade_executed", "company_listed"]) es.addEventListener(t, handle as EventListener);
     es.onopen = () => { setStatus("live"); setOpens((n) => n + 1); };
     es.onerror = () => setStatus(navigator.onLine === false ? "offline" : "reconnecting");
     return () => es.close();

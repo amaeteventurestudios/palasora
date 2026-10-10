@@ -114,7 +114,9 @@ def seed_city_v15(pb: PB, tenant: dict) -> dict:
         updated += 1
     # 2. The 940 generated identities.
     created = 0
-    for p in generate(countries, {a["handle"] for a in agents}):
+    # Only handles OUTSIDE the generated set constrain generation; otherwise a re-run would avoid its own earlier output
+    # and create a second, different 940 (caught by tests/test_city.py::test_v15_registry_is_idempotent...).
+    for p in generate(countries, {a["handle"] for a in agents if not (a.get("seed_key") or "").startswith("seed15:")}):
         key = f"seed15:{p['handle'].lower()}"
         if key in by_key:
             continue

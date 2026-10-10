@@ -28,6 +28,10 @@ if ! is_up worker; then
   (cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.worker >> "$LOG/worker.log" 2>&1 < /dev/null) &
   echo $! > "$RUN/worker.pid"
 fi
+if ! is_up fast; then  # v1.5 fast action engine (model-free decisions, rewards sweep, simulated trading)
+  (cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.city.fast >> "$LOG/fast.log" 2>&1 < /dev/null) &
+  echo $! > "$RUN/fast.pid"
+fi
 if ! is_up web; then
   port_busy 3000 && { echo "Port 3000 busy (not ours). Aborting."; exit 1; }
   cd "$ROOT/apps/web"

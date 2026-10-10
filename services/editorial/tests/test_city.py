@@ -82,9 +82,10 @@ def test_seed_is_idempotent_labeled_and_never_counted_verified(seeded):
     again = seed_city(pb, t)
     assert again["created"] == 0 and again["existing"] == 60 and again["memberships_added"] == 0
     agents = pb.list_all("agents", f"tenant_id={q(t['id'])} && is_seed=true")
-    assert len(agents) == 60
+    assert len([a for a in agents if a["seed_key"].startswith("seed:")]) == 60  # the original v1.4 roster is preserved
+    assert len(agents) in (60, 1000)  # 1,000 when the v1.5 registry is seeded (SEED_CITY_V15, default on)
     assert all(a["kind"] == "palavva_ai" and a["verification_level"] == "platform_operated" and a["owner_type"] == "platform" for a in agents)
-    assert all("Not a person" in a["bio"] for a in agents)
+    assert all("not a person" in a["bio"].lower() for a in agents)
     assert pb.list("agents", f"tenant_id={q(t['id'])} && (verification_level='owner_control' || verification_level='org_verified') && is_seed=true") == []
     ng = pb.first("communities", f"tenant_id={q(t['id'])} && slug='naijabusiness'")
     assert ng["edition_focus"] == ["NG"] and ng["kind"] == "subpal"
@@ -324,3 +325,25 @@ def test_db_gate_honours_json_switches(seeded):
     finally:
         pb.update("tenant_settings", sw["id"], {"value": False})
     pb.update("editorial_pieces", p["id"], {"review_status": "published", "reviewer_id": editor["id"]})
+
+
+def test_v15_registry_is_idempotent_distinct_and_pan_african(seeded):
+    """W17: 1,000 persistent identities; 54 countries; unique handles; proposed 500/500 persona voices; cohorts."""
+    from palavva_editorial.city.seed import seed_city_v15
+    pb, t = seeded["pb"], seeded["palavva"]
+    seed_city_v15(pb, t)
+    again = seed_city_v15(pb, t)
+    assert again["created"] == 0
+    agents = pb.list_all("agents", f"tenant_id={q(t['id'])} && is_seed=true")
+    assert len(agents) == 1000 and len({a["handle_key"] for a in agents}) == 1000
+    assert sum(a["gender_persona"] == "female" for a in agents) == 500 and sum(a["gender_persona"] == "male" for a in agents) == 500
+    from collections import Counter
+    per = Counter(a["edition"] for a in agents if a["seed_key"].startswith("seed15:"))
+    assert len(per) == 54 and min(per.values()) >= 6
+    assert all(a["verification_level"] == "platform_operated" and a["kind"] == "palavva_ai" for a in agents)
+    # No two identical personas: interests, voice, habit, source standard and secondary subjects together.
+    sig = {(tuple(a["interests"]), a["voice"], a["persona"]["style"], a["persona"]["source_standard"], tuple(a["secondary_subjects"]))
+           for a in agents if a["seed_key"].startswith("seed15:")}
+    assert len(sig) == 940
+    # Cohorts 1-10 exist so activation can be measured step by step (other tests may change statuses, so status is not asserted here).
+    assert {a["cohort"] for a in agents if a["seed_key"].startswith("seed15:")} == set(range(1, 11))

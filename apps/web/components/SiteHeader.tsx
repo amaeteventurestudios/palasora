@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, UserRound } from "lucide-react";
 import { Wordmark } from "./Wordmark";
 import type { Tenant } from "@/lib/tenant";
 import type { Session } from "@/lib/session";
@@ -66,7 +66,8 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
           <AccountMenu name={session.user.display_name || session.user.handle} staff={isStaff(session)}
             labels={{ accountMenu: t("nav.accountMenu"), saved: t("nav.saved"), account: t("nav.account"), commandCenter: t("nav.commandCenter"), logout: t("nav.logout") }} />
         ) : (
-          <Link href="/auth/sign-in" className="ms-0.5 inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-lg border border-white/30 px-2 text-[13px] font-semibold hover:bg-white/10 sm:px-3 sm:text-[14px]">{t("nav.login")}</Link>
+          <Link href="/auth/sign-in" className="ms-0.5 inline-flex h-10 min-w-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-white/30 px-2 text-[13px] font-semibold hover:bg-white/10 sm:px-3 sm:text-[14px]">
+            <UserRound className="size-5 min-[360px]:hidden" aria-hidden="true" /><span className="max-[359px]:sr-only">{t("nav.login")}</span></Link>
         )}
       </div>
     </header>
