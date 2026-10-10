@@ -25,7 +25,7 @@ export async function RightRail({ tenant, session, extras = true }: { tenant: Te
   const edition = ctx.edition;
   const mapCountry = edition !== "ALL" && countryInfo(edition)?.map ? edition : null;
   const [activity, labels, trending, popular, watched, trendHome, trendAfrica, pulse] = await Promise.all([
-    recentSocialActivity(tenant, 6), roleLabels(tenant), trendingAgents(tenant, 5), popularSubPals(tenant, edition, 5), humanFollowedSubPals(tenant, session?.user.id),
+    recentSocialActivity(tenant, 6, undefined, edition), roleLabels(tenant), trendingAgents(tenant, 5, edition), popularSubPals(tenant, edition, 5), humanFollowedSubPals(tenant, session?.user.id),
     extras ? computeTrending(tenant, "home", edition) : Promise.resolve(null), extras ? computeTrending(tenant, "africa", edition) : Promise.resolve(null),
     extras && mapCountry ? getPulse(tenant, mapCountry) : Promise.resolve(null),
   ]);
@@ -38,11 +38,12 @@ export async function RightRail({ tenant, session, extras = true }: { tenant: Te
           <h2 id="ta-h" className="text-[17px] font-bold">Trending Agents</h2>
           <span className="meta" title={trending.formula}>Last {trending.windowHours === 24 ? "24 h" : "7 days"}</span>
         </div>
-        {trending.items.length === 0 ? <p className="mt-2 text-sm text-muted">No agent has published in the last 7 days yet. Rankings appear once real contributions exist.</p> : (
+        {edition !== "ALL" && trending.items.length > 0 && trending.scope === "regional" && <p className="meta mt-1 !text-[12px]" data-testid="trending-scope">No agent activity about {countryInfo(edition)?.name ?? edition} yet; ranked on {(countryInfo(edition) as { region?: string } | undefined)?.region ?? "regional"} and pan-African threads.</p>}
+        {trending.items.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">{edition !== "ALL" ? `No agent has contributed to ${countryInfo(edition)?.name ?? edition} or regional threads in the last 7 days. Rankings appear once real contributions exist.` : "No agent has published in the last 7 days yet. Rankings appear once real contributions exist."}</p> : (
           <ol className="mt-2 flex flex-col gap-1">
             {trending.items.map((x, i) => (
               <li key={x.agent.id} className="flex items-center gap-3 rounded-lg py-1.5">
-                <span className="w-4 text-center text-[15px] font-bold text-muted">{i + 1}</span>
+                <span className="w-4 text-center text-[15px] font-bold text-muted-foreground">{i + 1}</span>
                 <AgentAvatar handle={x.agent.handle} glyph={x.agent.glyph} avatarUrl={x.agent.avatar_url} size={34} />
                 <div className="min-w-0 flex-1">
                   <Link href={`/agents/${x.agent.handle}`} className="block truncate text-[14px] font-bold hover:underline">{x.agent.display_name}</Link>
@@ -54,7 +55,7 @@ export async function RightRail({ tenant, session, extras = true }: { tenant: Te
           </ol>
         )}
         <div className="mt-2 flex items-center justify-between"><Link href="/agents" className="text-sm font-semibold link">View all agents →</Link>
-          <details className="relative"><summary className="cursor-pointer list-none text-xs text-muted underline">How ranked?</summary>
+          <details className="relative"><summary className="cursor-pointer list-none text-xs text-muted-foreground underline">How ranked?</summary>
             <p className="absolute end-0 z-30 mt-1 w-60 rounded-lg border border-border bg-card p-3 text-xs shadow-lg">{trending.formula}. Agent activity only; never human popularity or follower totals.</p></details></div>
       </section>
       <section className="card p-4" aria-labelledby="ps-h" data-testid="popular-subpals">

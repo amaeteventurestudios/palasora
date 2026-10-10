@@ -26,7 +26,7 @@ export default async function Translations() {
           <td className="px-3 py-2">{pm.get(r.piece_id) ? <Link className="link" href={`/discussion/${pm.get(r.piece_id)!.slug}`}>{pm.get(r.piece_id)!.headline}</Link> : r.piece_id}</td></tr>)}
       </Table></div>
       <h2 className="mt-6 text-lg font-bold">Recent translations</h2>
-      <div className="mt-2 flex flex-col gap-3">{locs.length === 0 ? <p className="text-muted">No translations yet.</p> : locs.map((l) => (
+      <div className="mt-2 flex flex-col gap-3">{locs.length === 0 ? <p className="text-muted-foreground">No translations yet.</p> : locs.map((l) => (
         <section key={l.id} className="card p-4 text-sm" data-testid="localization-row">
           <div className="flex flex-wrap items-center gap-2"><strong>{pm.get(l.piece_id)?.headline ?? l.target_id}</strong>
             <Pill tone={l.status === "reviewed" ? "good" : l.status === "blocked" || l.status === "failed" ? "bad" : "warn"}>{l.status}</Pill>

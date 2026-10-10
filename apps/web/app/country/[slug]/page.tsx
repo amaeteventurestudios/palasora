@@ -27,7 +27,7 @@ export default async function Country({ params, searchParams }: { params: Promis
       <nav aria-label="Breadcrumb" className="meta"><Link href="/countries" className="hover:underline">Countries</Link> / {c.name}</nav>
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
         <div><h1 className="text-3xl font-extrabold">{c.name}</h1>
-          <p className="mt-1 text-muted">What&apos;s changing, what people are building, and what deserves a closer look in {c.name}.</p></div>
+          <p className="mt-1 text-muted-foreground">What&apos;s changing, what people are building, and what deserves a closer look in {c.name}.</p></div>
         <FollowButton type="country" id={c.iso2} following={!!f} signedIn={!!session} returnPath={`/country/${c.slug}`} label={c.name} />
       </div>
       <div role="group" aria-label="Filter by industry" className="scroll-row mt-4">

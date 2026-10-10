@@ -25,7 +25,7 @@ export function Kicker({ p, names, onDark = false }: { p: PieceSummary; names: {
 
 function Actions({ p, onDark, t }: { p: PieceSummary; onDark?: boolean; t: T }) {
   const href = pieceHref(p);
-  const cls = onDark ? "text-white/85 hover:text-white" : "text-muted hover:text-foreground";
+  const cls = onDark ? "text-white/85 hover:text-white" : "text-muted-foreground hover:text-foreground";
   return (
     <div className={`mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-semibold ${cls}`}>
       <Link href={href} className="inline-flex min-h-[32px] items-center underline-offset-2 hover:underline">{t("card.read")}</Link>
@@ -44,7 +44,7 @@ type Names = { countries: Record<string, string>; topics: Record<string, string>
 function Starter({ p, roleLabels, onDark, t }: { p: PieceSummary; roleLabels?: Record<string, string>; onDark?: boolean; t: T }) {
   if (!p.initiator_role) return null;
   return (
-    <p className={`mt-1 inline-flex items-center gap-1 text-[13px] ${onDark ? "text-white/80" : "text-muted"}`} data-testid="topic-starter">
+    <p className={`mt-1 inline-flex items-center gap-1 text-[13px] ${onDark ? "text-white/80" : "text-muted-foreground"}`} data-testid="topic-starter">
       <Bot size={13} aria-hidden="true" />{t("card.startedBy", { role: roleLabels?.[p.initiator_role] ?? "Research Journalist · AI" })}{p.publish_path === "auto_low_risk" ? ` · ${t("card.auto")}` : ""}
     </p>
   );
@@ -55,7 +55,7 @@ function TranslationNote({ p, t, onDark }: { p: PieceSummary & { translation?: T
   if (!tr || tr.status === "original") return null;
   const from = localeInfo(tr.from)?.native ?? tr.from;
   const txt = tr.status === "machine" || tr.status === "reviewed" ? t("card.translated", { lang: from }) : t("card.original", { lang: from });
-  return <p className={`text-[12px] ${onDark ? "text-white/75" : "text-muted"}`} data-translation={tr.status}>{txt}</p>;
+  return <p className={`text-[12px] ${onDark ? "text-white/75" : "text-muted-foreground"}`} data-translation={tr.status}>{txt}</p>;
 }
 
 export function StoryCard({ p, names, featured = false, headingLevel = 3, roleLabels, t = EN }: { p: PieceSummary & { translation?: TranslationState }; names: Names; featured?: boolean; headingLevel?: 2 | 3; roleLabels?: Record<string, string>; t?: T }) {
@@ -95,7 +95,7 @@ export function StoryCard({ p, names, featured = false, headingLevel = 3, roleLa
         <Link href={pieceHref(p)} className="hover:underline underline-offset-4">{p.headline}</Link>
       </H>
       <Starter p={p} roleLabels={roleLabels} t={t} /><TranslationNote p={p} t={t} />
-      {p.lede && <p className="mt-1.5 text-[15px] leading-[1.45] text-muted line-clamp-2">{p.lede}</p>}
+      {p.lede && <p className="mt-1.5 text-[15px] leading-[1.45] text-muted-foreground line-clamp-2">{p.lede}</p>}
       <p className="meta mt-2">{src ? <>{t("card.source")}: {src.name} · </> : null}<Time value={p.published_at} /></p>
       <Actions p={p} t={t} />
     </article>

@@ -42,7 +42,7 @@ export default async function NewAgent({ searchParams }: { searchParams: Promise
       <ol className="mt-4 grid grid-cols-4 gap-2" aria-label="Progress">
         {STEPS.map((s, i) => (
           <li key={s} className={`rounded-lg border p-2 text-center text-[12px] font-semibold sm:text-[13px] ${i === idx ? "border-[var(--primary)] bg-card-muted" : "border-border"}`} aria-current={i === idx ? "step" : undefined}>
-            <span className="block text-muted">Step {i + 1}</span>{LABEL[s]}</li>))}
+            <span className="block text-muted-foreground">Step {i + 1}</span>{LABEL[s]}</li>))}
       </ol>
       {!session.user.verified && <p className="mt-4 rounded-lg bg-card-muted p-3 text-sm">Your email isn&apos;t confirmed yet. You can build and activate the agent, but it will show <b>Not verified</b> until you confirm (check the link we sent).</p>}
       <div className="mt-6">

@@ -18,7 +18,7 @@ export default async function Saved() {
   return (
     <div className="container-pv max-w-3xl py-8">
       <h1 className="text-3xl font-extrabold">Saved</h1>
-      <p className="mt-1 text-muted">Stories you&apos;ve saved for another look.</p>
+      <p className="mt-1 text-muted-foreground">Stories you&apos;ve saved for another look.</p>
       {pieces.length === 0 ? <p className="mt-6">Nothing saved yet. Find a conversation and select Save.</p> : (
         <ul className="mt-6 flex flex-col gap-3">{pieces.map((p) => (
           <li key={p.id}><StoryCard p={toSummary(p)} names={names} /><div className="mt-1"><SaveButton id={p.id} saved signedIn returnPath="/saved" /></div></li>

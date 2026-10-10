@@ -1,17 +1,18 @@
 "use client";
-import { useT } from "@/lib/i18n/client";
+import { useEdition, useT } from "@/lib/i18n/client";
 // One EventSource per page. Events are committed rows from thread_events, delivered in seq order.
 // Reconnects use Last-Event-ID (browser default) so missed events are replayed; duplicates are
 // dropped by seq. No synthetic activity is ever created client-side.
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 export type LiveEvent = { seq: number; type: string; piece_id: string; post_id: string; parent_id: string; author_kind: string; role_id: string; created: string; payload: Record<string, any>;
-  subpal_id?: string; actor_agent_id?: string };
+  subpal_id?: string; actor_agent_id?: string; country_codes?: string[]; scope?: "local" | "regional" | "pan" };
 type Status = "connecting" | "live" | "reconnecting" | "offline";
 type Ctx = { status: Status; subscribe: (fn: (e: LiveEvent) => void) => () => void; lastSeq: number; opens: number };
 const LiveCtx = createContext<Ctx | null>(null);
 
 export function LiveEventsProvider({ children, cursor, piece }: { children: React.ReactNode; cursor: number; piece?: string }) {
+  const edition = useEdition(); // a thread page follows its thread; every other page follows the viewed edition
   const [status, setStatus] = useState<Status>("connecting");
   const [lastSeq, setLastSeq] = useState(cursor);
   const [opens, setOpens] = useState(0); // >1 means a reconnect happened: consumers reconcile with an authoritative snapshot
@@ -19,7 +20,7 @@ export function LiveEventsProvider({ children, cursor, piece }: { children: Reac
   const seen = useRef(cursor);
   useEffect(() => {
     if (typeof EventSource === "undefined") { setStatus("offline"); return; }
-    const url = `/api/v1/events?cursor=${cursor}${piece ? `&piece=${piece}` : ""}`;
+    const url = `/api/v1/events?cursor=${cursor}${piece ? `&piece=${piece}` : `&edition=${edition}`}`;
     const es = new EventSource(url);
     const handle = (msg: MessageEvent) => {
       try {
@@ -35,7 +36,7 @@ export function LiveEventsProvider({ children, cursor, piece }: { children: Reac
     es.onopen = () => { setStatus("live"); setOpens((n) => n + 1); };
     es.onerror = () => setStatus(navigator.onLine === false ? "offline" : "reconnecting");
     return () => es.close();
-  }, [cursor, piece]);
+  }, [cursor, piece, edition]);
   return <LiveCtx.Provider value={{ status, lastSeq, opens, subscribe: (fn) => { subs.current.add(fn); return () => { subs.current.delete(fn); }; } }}>{children}</LiveCtx.Provider>;
 }
 

@@ -1,7 +1,9 @@
 // Live Activity items (master §8.8, §13.6) built ONLY from committed public thread_events. Pure functions: used by the
 // server render and by the browser when a new SSE event arrives, so both always describe an event the same way.
 export type ActivityActor = { label: string; handle?: string; kind?: string; glyph?: string; avatar_url?: string; editorial?: boolean };
-export type ActivityItem = { seq: number; type: string; created: string; actor: ActivityActor; verb: string; target: { label: string; href: string } | null; is_demo: boolean };
+export type ActivityItem = { seq: number; type: string; created: string; actor: ActivityActor; verb: string; target: { label: string; href: string } | null; is_demo: boolean;
+  /** v1.5: set when the event is regional or pan-African relative to the viewed country edition. */
+  scopeLabel?: string };
 export type RawEvent = { seq: number; type: string; created: string; piece_id: string; post_id: string; author_kind: string; role_id: string; payload: Record<string, any> };
 
 export const ACTIVITY_TYPES = ["topic_published", "reply_published", "vote_changed", "agent_followed", "subpal_created", "agent_registered", "post_retracted", "post_corrected"];

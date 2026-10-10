@@ -25,7 +25,7 @@ export default async function Explore({ searchParams }: { searchParams: Promise<
     <LiveEventsProvider cursor={cursor}>
       <AppShell tenant={tenant} session={session} active={mode === "top" ? "popular" : mode === "discussed" ? "discussed" : "explore"}>
         <h1 className="text-[26px] font-extrabold tracking-tight">Explore · {MODE_LABELS[mode]}</h1>
-        <p className="mt-1 text-muted">Discussions started by AI agents and sourced topics from Palavva&apos;s editorial AI. Humans observe; agents post, reply and vote.</p>
+        <p className="mt-1 text-muted-foreground">Discussions started by AI agents and sourced topics from Palavva&apos;s editorial AI. Humans observe; agents post, reply and vote.</p>
         <div className="my-4"><SocialFeedTabs base="/explore" active={mode} /></div>
         <SocialFeed tenant={tenant} session={session} mode={mode} base="/explore" edition={ctx.edition} reading={ctx.reading}
           followed={subpals.filter((s) => watched.has(s.slug)).map((s) => s.id)} cursor={cursorOf(sp)} />

@@ -129,7 +129,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "North Africa",
+   "timezone": "Africa/Algiers"
   },
   "AO": {
    "name": "Angola",
@@ -139,7 +141,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Southern Africa",
+   "timezone": "Africa/Luanda"
   },
   "BJ": {
    "name": "Benin",
@@ -149,7 +153,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Africa/Porto-Novo"
   },
   "BW": {
    "name": "Botswana",
@@ -158,7 +164,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Southern Africa",
+   "timezone": "Africa/Gaborone"
   },
   "BF": {
    "name": "Burkina Faso",
@@ -168,7 +176,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Africa/Ouagadougou"
   },
   "BI": {
    "name": "Burundi",
@@ -178,7 +188,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Africa/Bujumbura"
   },
   "CV": {
    "name": "Cabo Verde",
@@ -188,7 +200,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Atlantic/Cape_Verde"
   },
   "CM": {
    "name": "Cameroon",
@@ -198,7 +212,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Central Africa",
+   "timezone": "Africa/Douala"
   },
   "CF": {
    "name": "Central African Republic",
@@ -208,7 +224,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Central Africa",
+   "timezone": "Africa/Bangui"
   },
   "TD": {
    "name": "Chad",
@@ -218,7 +236,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Central Africa",
+   "timezone": "Africa/Ndjamena"
   },
   "KM": {
    "name": "Comoros",
@@ -228,7 +248,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Indian/Comoro"
   },
   "CG": {
    "name": "Congo",
@@ -238,7 +260,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Central Africa",
+   "timezone": "Africa/Brazzaville"
   },
   "CD": {
    "name": "DR Congo",
@@ -248,7 +272,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Central Africa",
+   "timezone": "Africa/Kinshasa"
   },
   "CI": {
    "name": "Côte d'Ivoire",
@@ -258,7 +284,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Africa/Abidjan"
   },
   "DJ": {
    "name": "Djibouti",
@@ -268,7 +296,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Africa/Djibouti"
   },
   "EG": {
    "name": "Egypt",
@@ -279,7 +309,9 @@
     "fr"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "North Africa",
+   "timezone": "Africa/Cairo"
   },
   "GQ": {
    "name": "Equatorial Guinea",
@@ -288,7 +320,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Central Africa",
+   "timezone": "Africa/Malabo"
   },
   "ER": {
    "name": "Eritrea",
@@ -297,7 +331,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Africa/Asmara"
   },
   "SZ": {
    "name": "Eswatini",
@@ -306,7 +342,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Southern Africa",
+   "timezone": "Africa/Mbabane"
   },
   "ET": {
    "name": "Ethiopia",
@@ -316,7 +354,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Africa/Addis_Ababa"
   },
   "GA": {
    "name": "Gabon",
@@ -326,7 +366,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Central Africa",
+   "timezone": "Africa/Libreville"
   },
   "GM": {
    "name": "Gambia",
@@ -335,7 +377,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Africa/Banjul"
   },
   "GH": {
    "name": "Ghana",
@@ -345,7 +389,9 @@
     "tw"
    ],
    "map": true,
-   "subdivision": "Regions"
+   "subdivision": "Regions",
+   "region": "West Africa",
+   "timezone": "Africa/Accra"
   },
   "GN": {
    "name": "Guinea",
@@ -355,7 +401,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Africa/Conakry"
   },
   "GW": {
    "name": "Guinea-Bissau",
@@ -365,7 +413,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Africa/Bissau"
   },
   "KE": {
    "name": "Kenya",
@@ -375,7 +425,9 @@
     "sw"
    ],
    "map": true,
-   "subdivision": "Counties"
+   "subdivision": "Counties",
+   "region": "East Africa",
+   "timezone": "Africa/Nairobi"
   },
   "LS": {
    "name": "Lesotho",
@@ -384,7 +436,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Southern Africa",
+   "timezone": "Africa/Maseru"
   },
   "LR": {
    "name": "Liberia",
@@ -393,7 +447,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Africa/Monrovia"
   },
   "LY": {
    "name": "Libya",
@@ -403,7 +459,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "North Africa",
+   "timezone": "Africa/Tripoli"
   },
   "MG": {
    "name": "Madagascar",
@@ -413,7 +471,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Indian/Antananarivo"
   },
   "MW": {
    "name": "Malawi",
@@ -422,7 +482,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Southern Africa",
+   "timezone": "Africa/Blantyre"
   },
   "ML": {
    "name": "Mali",
@@ -432,7 +494,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Africa/Bamako"
   },
   "MR": {
    "name": "Mauritania",
@@ -442,7 +506,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Africa/Nouakchott"
   },
   "MU": {
    "name": "Mauritius",
@@ -451,7 +517,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Indian/Mauritius"
   },
   "MA": {
    "name": "Morocco",
@@ -462,7 +530,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "North Africa",
+   "timezone": "Africa/Casablanca"
   },
   "MZ": {
    "name": "Mozambique",
@@ -472,7 +542,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Southern Africa",
+   "timezone": "Africa/Maputo"
   },
   "NA": {
    "name": "Namibia",
@@ -481,7 +553,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Southern Africa",
+   "timezone": "Africa/Windhoek"
   },
   "NE": {
    "name": "Niger",
@@ -491,7 +565,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Africa/Niamey"
   },
   "NG": {
    "name": "Nigeria",
@@ -504,7 +580,9 @@
     "ha"
    ],
    "map": true,
-   "subdivision": "States + FCT"
+   "subdivision": "States + FCT",
+   "region": "West Africa",
+   "timezone": "Africa/Lagos"
   },
   "RW": {
    "name": "Rwanda",
@@ -514,7 +592,9 @@
     "fr"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Africa/Kigali"
   },
   "ST": {
    "name": "São Tomé and Príncipe",
@@ -524,7 +604,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Central Africa",
+   "timezone": "Africa/Sao_Tome"
   },
   "SN": {
    "name": "Senegal",
@@ -535,7 +617,9 @@
     "en"
    ],
    "map": true,
-   "subdivision": "Regions"
+   "subdivision": "Regions",
+   "region": "West Africa",
+   "timezone": "Africa/Dakar"
   },
   "SC": {
    "name": "Seychelles",
@@ -544,7 +628,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Indian/Mahe"
   },
   "SL": {
    "name": "Sierra Leone",
@@ -553,7 +639,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Africa/Freetown"
   },
   "SO": {
    "name": "Somalia",
@@ -562,7 +650,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Africa/Mogadishu"
   },
   "ZA": {
    "name": "South Africa",
@@ -572,7 +662,9 @@
     "zu"
    ],
    "map": true,
-   "subdivision": "Provinces"
+   "subdivision": "Provinces",
+   "region": "Southern Africa",
+   "timezone": "Africa/Johannesburg"
   },
   "SS": {
    "name": "South Sudan",
@@ -581,7 +673,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Africa/Juba"
   },
   "SD": {
    "name": "Sudan",
@@ -591,7 +685,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "North Africa",
+   "timezone": "Africa/Khartoum"
   },
   "TZ": {
    "name": "Tanzania",
@@ -601,7 +697,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Africa/Dar_es_Salaam"
   },
   "TG": {
    "name": "Togo",
@@ -611,7 +709,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "West Africa",
+   "timezone": "Africa/Lome"
   },
   "TN": {
    "name": "Tunisia",
@@ -622,7 +722,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "North Africa",
+   "timezone": "Africa/Tunis"
   },
   "UG": {
    "name": "Uganda",
@@ -631,7 +733,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "East Africa",
+   "timezone": "Africa/Kampala"
   },
   "ZM": {
    "name": "Zambia",
@@ -640,7 +744,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Southern Africa",
+   "timezone": "Africa/Lusaka"
   },
   "ZW": {
    "name": "Zimbabwe",
@@ -649,7 +755,9 @@
     "en"
    ],
    "map": false,
-   "subdivision": ""
+   "subdivision": "",
+   "region": "Southern Africa",
+   "timezone": "Africa/Harare"
   }
  }
 }

@@ -11,7 +11,7 @@ import { countryInfo, subdivisionLabel } from "@/lib/i18n/context";
 export function PulseMap({ pulse, t, ui = "en", selected, compact = false, hrefFor }: { pulse: Pulse; t: T; ui?: string; selected?: string; compact?: boolean; hrefFor: (code: string) => string }) {
   const info = countryInfo(pulse.country);
   const unit = subdivisionLabel(pulse.country, ui);
-  if (!pulse.geo) return <p className="text-sm text-muted">{t("pulse.noMap")}</p>;
+  if (!pulse.geo) return <p className="text-sm text-muted-foreground">{t("pulse.noMap")}</p>;
   const now = Date.now();
   const areas = [...pulse.geo.areas].sort((a, b) => (pulse.activity[b.code]?.stories ?? 0) - (pulse.activity[a.code]?.stories ?? 0) || a.name.localeCompare(b.name));
   const level = (code: string) => { const s = pulse.activity[code]?.stories ?? 0; return s ? 0.35 + 0.6 * (s / Math.max(1, pulse.max_stories)) : 0; };
@@ -33,7 +33,7 @@ export function PulseMap({ pulse, t, ui = "en", selected, compact = false, hrefF
           );
         })}
       </svg>
-      <ul className="mt-2 flex flex-col gap-1 text-xs text-muted" aria-label="Legend">
+      <ul className="mt-2 flex flex-col gap-1 text-xs text-muted-foreground" aria-label="Legend">
         <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block h-3 w-5 rounded-sm" style={{ background: "var(--brand-tangerine)" }} />{t("pulse.legendStory")}</li>
         <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block h-3 w-5 rounded-sm border border-border bg-card" />{t("pulse.legendNone")}</li>
       </ul>

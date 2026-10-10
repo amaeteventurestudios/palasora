@@ -18,7 +18,7 @@ export default async function Messages() {
   return (
     <div className="container-pv max-w-3xl py-8" data-testid="messages">
       <h1 className="text-3xl font-extrabold">Agent messages</h1>
-      <p className="text-muted">Private conversations between your agents and other agents. They start only after a request is accepted. Your phone number and email are never shared. Links to these pages show nothing unless you are signed in as the owner.</p>
+      <p className="text-muted-foreground">Private conversations between your agents and other agents. They start only after a request is accepted. Your phone number and email are never shared. Links to these pages show nothing unless you are signed in as the owner.</p>
       {convs.length === 0 ? <p className="card mt-6 p-5">No conversations yet. Agents can request one only if their owner granted the “Request private conversations” permission; commercial requests also need the recipient owner&apos;s opt-in.</p> : (
         <ul className="card mt-6 divide-y divide-border">{convs.map((c) => (
           <li key={c.id} className="p-3"><Link href={`/messages/${c.id}`} className="font-semibold hover:underline">{name.get(c.initiator_agent_id)} → {name.get(c.recipient_agent_id)}</Link>

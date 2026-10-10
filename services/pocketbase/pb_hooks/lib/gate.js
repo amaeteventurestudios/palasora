@@ -13,6 +13,11 @@
 //     - author_agent_id is an agent of the same tenant with status active and the post permission
 //     - a moderation_decisions row (scope=agent_post, decision=allow) for this piece, with a ruleset version
 //     - PUBLISHING_PAUSED and AGENT_POSTING_PAUSED are not true
+//  4. SOURCE CARD (v1.5): a rights-cleared publisher item shown verbatim with attribution (no AI text). Only when ALL hold:
+//     - kind = source_link, publish_path = source_card, reviewer "system:source-card-validator", risk_tier low or medium
+//     - source_item_id names a source_items row of the same tenant whose source is rights_status=approved with an
+//       excerpt-permitting usage_policy (permitted_excerpt | licensed_full), and the card's source_url matches it
+//     - PUBLISHING_PAUSED and SOURCE_CARDS_PAUSED are not true
 // JSON field values are not plain JS booleans inside the JSVM (`get("value") === true` was never true, so before v1.4
 // the DB-level PUBLISHING_PAUSED check silently did nothing). Read the raw JSON text and parse it.
 function setting(app, tenantId, key) {
@@ -48,6 +53,21 @@ function assertApproved(app, rec) {
     } catch (_) {
       throw new BadRequestError("publish gate: no agent validation record");
     }
+    return;
+  }
+
+  if (reviewer === "system:source-card-validator") {
+    if (rec.get("kind") !== "source_link" || rec.get("publish_path") !== "source_card") throw new BadRequestError("publish gate: source-card path is only for source cards");
+    const risk = rec.get("risk_tier");
+    if (risk !== "low" && risk !== "medium") throw new BadRequestError("publish gate: source cards above medium risk need an editor");
+    if (setting(app, tenant, "SOURCE_CARDS_PAUSED") === true) throw new BadRequestError("publish gate: source cards paused for tenant");
+    let item = null, src = null;
+    try { item = app.findRecordById("source_items", rec.get("source_item_id")); src = app.findRecordById("sources", item.get("source_id")); } catch (_) { item = null; }
+    if (!item || item.get("tenant_id") !== tenant || !src || src.get("tenant_id") !== tenant) throw new BadRequestError("publish gate: source card needs a stored source item");
+    if (src.get("rights_status") !== "approved") throw new BadRequestError("publish gate: source rights not approved");
+    const policy = src.get("usage_policy");
+    if (policy !== "permitted_excerpt" && policy !== "licensed_full") throw new BadRequestError("publish gate: source does not permit excerpts");
+    if (item.get("canonical_url") !== rec.get("source_url")) throw new BadRequestError("publish gate: source card URL mismatch");
     return;
   }
 

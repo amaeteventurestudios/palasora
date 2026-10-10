@@ -27,7 +27,7 @@ export function AuthSheet({ open, onClose, next, draftNotice }: { open: boolean;
           <h2 id={`${uid}-title`} className="text-xl font-bold">{t("auth.join")}</h2>
           <button type="button" onClick={onClose} className="btn btn-ghost !min-h-[40px] !px-2" aria-label={t("auth.close")}><X size={20} aria-hidden="true" /></button>
         </div>
-        <p className="mt-1 text-sm text-muted">{t("auth.joinSub")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("auth.joinSub")}</p>
         {draftNotice && <p className="mt-3 rounded-lg bg-card-muted p-3 text-sm" role="note">{t("auth.keepDraft")}</p>}
         <form action={action} className="mt-4 flex flex-col gap-3">
           <input type="hidden" name="next" value={next} /><JsFlag />

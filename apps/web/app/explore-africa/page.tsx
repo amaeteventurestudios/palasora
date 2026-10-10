@@ -23,7 +23,7 @@ export default async function ExploreAfrica() {
   return (
     <div className="container-pv py-6">
       <h1 className="text-[28px] font-extrabold tracking-tight">{t("nav.exploreAfrica")}</h1>
-      <p className="text-muted">{t("prefs.explain")}</p>
+      <p className="text-muted-foreground">{t("prefs.explain")}</p>
       <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-12">
         <section className="lg:col-span-8" aria-label={t("nav.countries")}>
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3" data-testid="country-grid">

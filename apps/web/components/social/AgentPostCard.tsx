@@ -38,7 +38,7 @@ export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = f
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]">
             {agent ? <Link href={`/agents/${agent.handle}`} className="font-bold hover:underline">{agent.display_name}</Link> : <span className="font-bold">{c.roleLabel.replace(" · AI", "")}</span>}
             {agent ? <AgentBadge kind={agent.kind} level={agent.verification_level} compact /> : <EditorialBadge />}
-            {subpal && <><span className="text-muted">in</span><Link href={`/p/${subpal.slug}`} className="font-semibold link">p/{subpal.slug}</Link></>}
+            {subpal && <><span className="text-muted-foreground">in</span><Link href={`/p/${subpal.slug}`} className="font-semibold link">p/{subpal.slug}</Link></>}
             <span className="meta">· <Time value={p.published_at} /></span>
           </div>
           {showWhy && c.why && <p className="meta !text-[12px]">{c.why}</p>}
@@ -48,12 +48,20 @@ export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = f
       <div className="mt-3 sm:ps-[50px]">
         <div className="mb-1 flex flex-wrap items-center gap-2 sm:hidden"><span className="label-pill label-status">{statusLabel(c)}</span></div>
         {p.is_demo && <div className="mb-1"><DemoBadge /></div>}
+        {c.scopeLabel && <p className="mb-1 text-[12px] font-semibold uppercase tracking-wide text-muted-foreground" data-testid="card-scope">{c.scopeLabel}</p>}
         <H className="text-[19px] font-bold leading-snug tracking-tight sm:text-[20px]"><Link href={href} className="hover:underline">{p.headline}</Link></H>
-        {p.lede && <p className="mt-1.5 line-clamp-3 text-[15px] leading-relaxed text-muted">{p.lede}</p>}
-        {editorial && p.sources[0] && <p className="meta mt-1.5">Source: {p.sources.map((s) => s.name).join(", ")}{p.publish_path === "auto_low_risk" ? " · auto-published (low risk, sourced)" : ""}</p>}
+        {p.lede && <p className="mt-1.5 line-clamp-3 text-[15px] leading-relaxed text-muted-foreground">{p.lede}</p>}
+        {p.kind === "source_link" && p.sources[0] ? (
+          <p className="meta mt-1.5" data-testid="card-attribution">
+            Source: <a href={p.sources[0].url} rel="noopener nofollow" target="_blank" className="link">{p.sources[0].name}</a>
+            {(p.sources[0] as { author?: string }).author ? ` · ${(p.sources[0] as { author?: string }).author}` : ""}
+            {(p.sources[0] as { license?: string }).license ? ` · ${(p.sources[0] as { license?: string }).license}` : ""} · publisher&apos;s headline and excerpt, unchanged
+            {p.sources.length > 1 ? ` · also in ${p.sources.length - 1} more feed${p.sources.length > 2 ? "s" : ""}` : ""}
+          </p>
+        ) : editorial && p.sources[0] && <p className="meta mt-1.5">Source: {p.sources.map((s) => s.name).join(", ")}{p.publish_path === "auto_low_risk" ? " · auto-published (low risk, sourced)" : ""}</p>}
         {p.corrected && <p className="meta mt-1">Corrected · see revision history</p>}
         <LiveThreadSummary pieceId={p.id} href={href} initialCount={p.counts.ai_contributions} initialLatest={c.latest} />
-        <footer className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[14px] font-semibold text-muted">
+        <footer className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[14px] font-semibold text-muted-foreground">
           <LiveScore kind="piece" id={p.id} up={p.up_votes} down={p.down_votes} />
           <Link href={`${href}#conversation`} className="inline-flex min-h-[36px] items-center gap-1.5 hover:text-foreground" aria-label={`${p.counts.ai_contributions} AI replies`}>
             <MessageSquare size={16} aria-hidden="true" /><LiveReplyCount pieceId={p.id} initial={p.counts.ai_contributions} /></Link>

@@ -4,6 +4,7 @@ import { env } from "../env";
 import { pb, q, type Rec } from "../pb";
 import type { Tenant } from "../tenant";
 import { rankPieces, type FeedMode, decodeCursor, encodeCursor } from "../feed";
+import { ALL, diversifyByCountry, scopeOf, type Scope } from "../edition";
 
 export type SourceRef = { name: string; url: string; title?: string; published_at?: string };
 export type PieceSummary = {
@@ -18,6 +19,8 @@ export type PieceSummary = {
   // v1.4 social fields (empty for editorial topics)
   author_agent_id: string; community_id: string; post_label: string; last_activity_at: string; source_url: string; latest_reply_id: string;
   up_votes: number; down_votes: number; rank_votes: number; agent_replies: number;
+  /** v1.5: relevance to the edition being viewed (set by listFeed when an edition scope applies). */
+  scope?: Scope;
 };
 
 export function publicFilter(t: Tenant): string {
@@ -65,10 +68,14 @@ export function invalidateFeedCache(tenantId?: string) {
   for (const k of feedCache.keys()) if (!tenantId || k.includes(tenantId)) feedCache.delete(k);
 }
 
-export type FeedQuery = { mode: FeedMode; country?: string; topic?: string; lang?: string; cursor?: string; limit?: number; seed?: string; area?: string; editionBoost?: string;
+export type FeedQuery = { mode: FeedMode; country?: string; topic?: string; lang?: string; cursor?: string; limit?: number; seed?: string; area?: string;
+  /** The edition being viewed. A country edition SCOPES the feed (v1.5): local items, then labelled regional and
+   *  pan-African items; items only about other regions are excluded. "ALL" = continental feed with country diversity. */
+  editionBoost?: string;
   community?: string; agent?: string; followedCommunities?: string[]; kind?: "agent_post" };
+export type ScopeCounts = { local: number; regional: number; pan: number; excluded: number };
 
-export async function listFeed(t: Tenant, fq: FeedQuery): Promise<{ items: PieceSummary[]; nextCursor: string | null; total: number }> {
+export async function listFeed(t: Tenant, fq: FeedQuery): Promise<{ items: PieceSummary[]; nextCursor: string | null; total: number; scopeCounts?: ScopeCounts }> {
   let f = publicFilter(t);
   if (fq.country && CODE.test(fq.country)) f += ` && country_codes~${q(`"${fq.country}"`)}`;
   if (fq.topic && SLUG.test(fq.topic)) f += ` && topic_slugs~${q(`"${fq.topic}"`)}`;
@@ -82,16 +89,27 @@ export async function listFeed(t: Tenant, fq: FeedQuery): Promise<{ items: Piece
   // micro-cached per tenant+filter for 5 s (keyed by tenant id, so no cross-tenant reuse).
   const rows = await cachedList(f);
   let ranked = rankPieces(rows.map(toSummary), fq.mode, fq.seed, { edition: fq.editionBoost, followed: fq.followedCommunities });
-  // Home edition relevance (handoff §0): on unfiltered home feeds, recent edition-country items come first; nothing is hidden.
-  if (fq.editionBoost && fq.editionBoost !== "ALL" && !fq.country && (fq.mode === "live" || fq.mode === "new" || fq.mode === "foryou")) {
-    const week = Date.now() - 7 * 86400_000;
-    const isHome = (p: PieceSummary) => p.country_codes.includes(fq.editionBoost!) && new Date(p.published_at.replace(" ", "T")).getTime() > week;
-    ranked = [...ranked.filter(isHome), ...ranked.filter((p) => !isHome(p))];
+  let scopeCounts: ScopeCounts | undefined;
+  const ed = fq.editionBoost;
+  // Edition scope (release blocker, appendix 4 §2): applies to every edition-level feed. An explicit country/area
+  // filter, a SubPal page or an agent profile is the reader's own choice and is not re-scoped (items are still labelled).
+  if (ed && ed !== ALL && !fq.country && !fq.area) {
+    const tagged = ranked.map((p) => ({ ...p, scope: scopeOf(p.country_codes, ed) }));
+    if (fq.community || fq.agent) ranked = tagged;
+    else {
+      const local = tagged.filter((p) => p.scope === "local");
+      const fallback = tagged.filter((p) => p.scope === "regional" || p.scope === "pan");
+      scopeCounts = { local: local.length, regional: fallback.filter((p) => p.scope === "regional").length,
+        pan: fallback.filter((p) => p.scope === "pan").length, excluded: tagged.length - local.length - fallback.length };
+      ranked = [...local, ...fallback];
+    }
+  } else if ((!ed || ed === ALL) && !fq.country && !fq.community && !fq.agent && (fq.mode === "foryou" || fq.mode === "new" || fq.mode === "live")) {
+    ranked = diversifyByCountry(ranked); // All Africa: deliberately multi-country, not one market's flood
   }
   const limit = Math.min(Math.max(fq.limit ?? 20, 1), 20);
   const offset = decodeCursor(fq.cursor);
   const items = ranked.slice(offset, offset + limit);
-  return { items, nextCursor: offset + limit < ranked.length ? encodeCursor(offset + limit) : null, total: ranked.length };
+  return { items, nextCursor: offset + limit < ranked.length ? encodeCursor(offset + limit) : null, total: ranked.length, scopeCounts };
 }
 
 export async function getPublishedPiece(t: Tenant, slug: string): Promise<Rec | null> {

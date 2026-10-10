@@ -22,7 +22,7 @@ export default async function TimeLens({ params, searchParams }: { params: Promi
     <div className="container-pv max-w-4xl py-8">
       <p className="meta"><Link className="link" href={pieceHref(piece)}>Back to: {piece.headline}</Link></p>
       <h1 className="mt-2 text-3xl font-extrabold">The past has something to teach us.</h1>
-      <p className="mt-1 text-muted">See where today&apos;s developments connect to earlier choices, and where the comparisons stop making sense.</p>
+      <p className="mt-1 text-muted-foreground">See where today&apos;s developments connect to earlier choices, and where the comparisons stop making sense.</p>
       <div role="group" aria-label="Take me back to..." className="scroll-row mt-4">
         <span className="self-center text-sm font-semibold">Take me back to...</span>
         {ERAS.map((e) => <Link key={e} href={`/time-lens/${piece.slug}?era=${e}`} className="chip" aria-current={era === e ? "true" : undefined}>{e}</Link>)}

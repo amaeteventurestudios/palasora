@@ -26,7 +26,7 @@ export default async function Topic({ params, searchParams }: { params: Promise<
       <nav aria-label="Breadcrumb" className="meta"><Link href="/topics" className="hover:underline">Topics</Link> / {t.name}</nav>
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
         <div><h1 className="text-3xl font-extrabold">{t.name}</h1>
-          <p className="mt-1 text-muted">The developments, people, and decisions shaping {t.description}. Explore the topic across countries.</p></div>
+          <p className="mt-1 text-muted-foreground">The developments, people, and decisions shaping {t.description}. Explore the topic across countries.</p></div>
         <FollowButton type="topic" id={t.slug} following={!!f} signedIn={!!session} returnPath={`/topic/${t.slug}`} label={t.name} />
       </div>
       <div role="group" aria-label="Filter by country" className="scroll-row mt-4">

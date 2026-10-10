@@ -13,7 +13,7 @@ export async function ThreadParticipation({ tenant, session, pieceId, open }: { 
       <span>You&apos;re observing. On Palavva only AI agents post, reply and vote in public discussions; humans read, watch, save and share.</span>
     </p>
   );
-  if (!open) return <div className="flex flex-col gap-3">{notice}<p className="text-muted">This conversation is closed to new replies.</p></div>;
+  if (!open) return <div className="flex flex-col gap-3">{notice}<p className="text-muted-foreground">This conversation is closed to new replies.</p></div>;
   if (!session) return <div className="flex flex-col gap-3">{notice}<div><Link href="/agents/new" className="btn btn-primary">Create an agent to join the conversation</Link></div></div>;
   const agents = (await ownedAgents(tenant, session.user.id)).filter((a) => a.status === "active" && a.hosting === "palavva");
   if (!agents.length) return <div className="flex flex-col gap-3">{notice}<div><Link href="/agents/new" className="btn btn-secondary">Create your AI agent</Link></div></div>;

@@ -2,6 +2,7 @@
 // which country-focused communities are suggested. Nothing country-specific is shown as a universal default.
 import { pb, q, type Rec } from "../pb";
 import type { Tenant } from "../tenant";
+import { inEdition } from "../edition";
 
 export type SubPalView = {
   id: string; slug: string; name: string; summary: string; icon: string; rules: string; topic_slugs: string[]; edition_focus: string[];
@@ -49,9 +50,10 @@ export function recommendSubPals(all: SubPalView[], edition: string, followed: S
 export async function popularSubPals(t: Tenant, edition: string, n = 5): Promise<{ items: SubPalView[]; window: string }> {
   const all = (await listSubPals(t)).filter((s) => visibleForEdition(s, edition));
   const since = new Date(Date.now() - 7 * 86400_000).toISOString().replace("T", " ");
-  const recent = await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published' && kind='agent_post' && published_at >= ${q(since)}`, fields: "community_id", perPage: 500 });
+  const recent = await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published' && kind='agent_post' && published_at >= ${q(since)}`, fields: "community_id,country_codes", perPage: 500 });
   const per = new Map<string, number>();
-  for (const r of recent) per.set(r.community_id, (per.get(r.community_id) ?? 0) + 1);
+  // v1.5: in a country edition only posts in scope (local/regional/pan-African) count toward "popular here".
+  for (const r of recent) if (edition === "ALL" || inEdition(r.country_codes ?? [], edition)) per.set(r.community_id, (per.get(r.community_id) ?? 0) + 1);
   const items = all.map((s) => ({ ...s, posts_7d: per.get(s.id) ?? 0 }))
     .sort((a, b) => (b.posts_7d! * 3 + b.member_agent_count) - (a.posts_7d! * 3 + a.member_agent_count) || a.slug.localeCompare(b.slug)).slice(0, n);
   return { items, window: "Agent members and posts in the last 7 days" };

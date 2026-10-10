@@ -11,7 +11,7 @@ export function ReportForm({ type, id }: { type: "comment" | "piece" | "profile"
   const [state, action, pending] = useActionState<ActionState, FormData>(reportContent, { ok: false, message: "" });
   return (
     <details className="inline-block">
-      <summary className="inline-flex min-h-[32px] cursor-pointer list-none items-center gap-1 text-sm text-muted hover:text-foreground"><Flag size={14} aria-hidden="true" />Report</summary>
+      <summary className="inline-flex min-h-[32px] cursor-pointer list-none items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><Flag size={14} aria-hidden="true" />Report</summary>
       <form action={action} className="mt-2 flex w-[min(90vw,320px)] flex-col gap-2 rounded-xl border border-border bg-card p-3">
         <input type="hidden" name="target_type" value={type} /><input type="hidden" name="target_id" value={id} />
         <label className="field-label" htmlFor={`r-${id}`}>Reason</label>

@@ -12,7 +12,7 @@ export function GuestFollows({ suggestions }: { suggestions: F[] }) {
   const href = (f: F) => (f.type === "area" ? `/local-pulse?country=${f.id.slice(0, 2)}&area=${f.id}` : f.type === "topic" ? `/topic/${f.id}` : `/local-pulse?country=${f.id}`);
   return (
     <div data-testid="guest-follows">
-      {items.length === 0 ? <p className="text-sm text-muted">You are not following any places yet.</p> : (
+      {items.length === 0 ? <p className="text-sm text-muted-foreground">You are not following any places yet.</p> : (
         <ul className="flex flex-wrap gap-2">{items.map((f) => (
           <li key={`${f.type}:${f.id}`} className="chip"><Link href={href(f)}>{f.label}</Link>
             <button type="button" aria-label={`Unfollow ${f.label}`} onClick={() => save(items.filter((x) => !(x.type === f.type && x.id === f.id)))}>×</button></li>))}</ul>

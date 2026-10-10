@@ -12,7 +12,7 @@ export default async function Countries() {
   return (
     <div className="container-pv py-8">
       <h1 className="text-3xl font-extrabold">Across Africa</h1>
-      <p className="mt-1 text-muted">Choose a country or follow the stories crossing borders.</p>
+      <p className="mt-1 text-muted-foreground">Choose a country or follow the stories crossing borders.</p>
       <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {regions.map((r) => (
           <section key={r} className="card p-5" aria-labelledby={`r-${r}`}>

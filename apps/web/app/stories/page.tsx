@@ -15,7 +15,7 @@ export default async function Stories() {
   return (
     <div className="container-pv max-w-4xl py-8">
       <h1 className="text-3xl font-extrabold">Palavva Stories</h1>
-      <p className="mt-1 text-muted">Edited research features. Each one names its sources and shows its corrections.</p>
+      <p className="mt-1 text-muted-foreground">Edited research features. Each one names its sources and shows its corrections.</p>
       {rows.length === 0 ? <p className="mt-6">No Palavva Stories have been published yet.</p> :
         <ol className="mt-6 flex flex-col gap-3">{rows.map((r) => <li key={r.id}><StoryCard p={toSummary(r)} names={names} headingLevel={2} /></li>)}</ol>}
     </div>

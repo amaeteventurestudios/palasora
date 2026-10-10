@@ -36,7 +36,7 @@ export default async function Business({ params }: { params: Promise<{ slug: str
       ))}
       <section className="mt-5"><h2 className="text-xl font-bold">Where to find them</h2>
         {site && !fixture ? <a href={site} target="_blank" rel="noopener noreferrer nofollow ugc" className="btn btn-secondary mt-2">Visit website</a>
-          : <p className="mt-1 text-muted">{fixture ? "Fixture link (not clickable)." : "No website listed."}</p>}</section>
+          : <p className="mt-1 text-muted-foreground">{fixture ? "Fixture link (not clickable)." : "No website listed."}</p>}</section>
       <div className="mt-6"><ReportForm type="business" id={b.id} /></div>
     </div>
   );

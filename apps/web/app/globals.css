@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 /* Palavva semantic tokens: Midnight + Tangerine (05-UI-DESIGN-SYSTEM.md §1.2).
    Components reference tokens, never literal brand hexes. Tenants may override
@@ -32,7 +33,33 @@
   --surface: var(--background);
   --surface-card: var(--card);
   --ink: var(--foreground);
-  --accent: var(--brand-gold);
+  /* shadcn/ui semantic tokens (v1.5): every shadcn component reads these; values come from the approved palette. */
+  --card-foreground: var(--foreground);
+  --popover: #FFFFFF;
+  --popover-foreground: var(--foreground);
+  --secondary: #F1ECE5;
+  --secondary-foreground: #252A38;
+  --muted: #F3EEE7;
+  --accent: #FFF1E8;
+  --accent-foreground: #252A38;
+  --destructive: var(--danger);
+  --input: #D9D1C7;
+  --ring: var(--focus-ring);
+  --radius: 0.75rem;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #FFF1E8;
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--focus-ring);
+  /* Data-viz (v1.5): categorical order validated with the dataviz six-checks (light on #FFFFFF card, dark on #262D3E):
+     tangerine, blue, aqua, violet, magenta, gold. Slots 3/5/6 are < 3:1 on light, so charts always ship labels or a table view. */
+  --chart-1: #E85E31; --chart-2: #2A78D6; --chart-3: #1BAF7A; --chart-4: #6250D6; --chart-5: #E87BA4; --chart-6: #EDA100;
+  --seq-100: #cde2fb; --seq-250: #86b6ef; --seq-400: #3987e5; --seq-550: #1c5cab; --seq-700: #0d366b;
+  --status-good: #0ca30c; --status-warning: #fab219; --status-serious: #ec835a; --status-critical: #d03b3b;
+  --chart-grid: #ECE6DE; --chart-axis: #8A8478;
   color-scheme: light;
 }
 
@@ -53,6 +80,19 @@
   --gold-ink: #F8C45C;
   --ai-surface: #2B3346;
   --sponsor-surface: #2E2C2A;
+  --popover: #262D3E;
+  --secondary: #2F3545;
+  --secondary-foreground: #F8F5F0;
+  --muted: #2A3141;
+  --accent: #343B4D;
+  --accent-foreground: #F8F5F0;
+  --input: #4A5163;
+  --sidebar: #1B2030;
+  --sidebar-primary: #E85E31;
+  --sidebar-primary-foreground: #1B2030;
+  --sidebar-accent: #2F3545;
+  --chart-1: #E86A3A; --chart-2: #3987E5; --chart-3: #199E70; --chart-4: #9085E9; --chart-5: #D55181; --chart-6: #C98500;
+  --chart-grid: #333A4B; --chart-axis: #9AA1AE;
   color-scheme: dark;
 }
 
@@ -61,7 +101,35 @@
   --color-card: var(--card);
   --color-card-muted: var(--card-muted);
   --color-foreground: var(--foreground);
-  --color-muted: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-tangerine: var(--brand-tangerine);
@@ -72,7 +140,8 @@
   --color-success: var(--success);
   --color-link: var(--link);
   --color-masthead: var(--masthead);
-  --color-accent: var(--brand-accent);
+  --color-accent: var(--accent);
+  --color-brand-accent: var(--brand-accent);
   --color-gold-surface: var(--gold-surface);
   --color-gold-ink: var(--gold-ink);
   --color-ai-surface: var(--ai-surface);
@@ -82,6 +151,7 @@
 }
 
 @layer base {
+* { border-color: var(--border); } /* shadcn/ui components draw borders with the semantic border token */
 html { -webkit-text-size-adjust: 100%; }
 body {
   background: var(--background);

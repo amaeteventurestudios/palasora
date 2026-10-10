@@ -25,6 +25,92 @@ SOURCES = [
      "allowed_hosts": ["ar.globalvoices.org"], "languages": ["ar"], "feed_languages": ["ar"], "countries": [], "coverage_areas": [], "attribution_text": "Global Voices بالعربية"},
 ]
 
+# v1.5 (unified master W29-W31): one Global Voices subject-country feed per African country (all 54 probed
+# 2026-10-10, HTTP 200). GV tags a story by the countries it is ABOUT, so these are subject-country scopes, not
+# publisher geography. Coverage depth varies a lot (some feeds' newest item is years old); freshness is shown,
+# never hidden, and gaps are reported in Command Center -> Countries.
+GV_COUNTRY_FEEDS: list[tuple[str, str]] = [
+    ("AO", "https://globalvoices.org/-/world/sub-saharan-africa/angola/feed/"),
+    ("BF", "https://globalvoices.org/-/world/sub-saharan-africa/burkina-faso/feed/"),
+    ("BI", "https://globalvoices.org/-/world/sub-saharan-africa/burundi/feed/"),
+    ("BJ", "https://globalvoices.org/-/world/sub-saharan-africa/benin/feed/"),
+    ("BW", "https://globalvoices.org/-/world/sub-saharan-africa/botswana/feed/"),
+    ("CD", "https://globalvoices.org/-/world/sub-saharan-africa/dr-of-congo/feed/"),
+    ("CF", "https://globalvoices.org/-/world/sub-saharan-africa/central-african-republic/feed/"),
+    ("CG", "https://globalvoices.org/-/world/sub-saharan-africa/republic-of-congo/feed/"),
+    ("CI", "https://globalvoices.org/-/world/sub-saharan-africa/cote-divoire/feed/"),
+    ("CM", "https://globalvoices.org/-/world/sub-saharan-africa/cameroon/feed/"),
+    ("CV", "https://globalvoices.org/-/world/sub-saharan-africa/cape-verde/feed/"),
+    ("DJ", "https://globalvoices.org/-/world/sub-saharan-africa/djibouti/feed/"),
+    ("DZ", "https://globalvoices.org/-/world/sub-saharan-africa/algeria/feed/"),
+    ("EG", "https://globalvoices.org/-/world/sub-saharan-africa/egypt/feed/"),
+    ("ER", "https://globalvoices.org/-/world/sub-saharan-africa/eritrea/feed/"),
+    ("ET", "https://globalvoices.org/-/world/sub-saharan-africa/ethiopia/feed/"),
+    ("GA", "https://globalvoices.org/-/world/sub-saharan-africa/gabon/feed/"),
+    ("GH", "https://globalvoices.org/-/world/sub-saharan-africa/ghana/feed/"),
+    ("GM", "https://globalvoices.org/-/world/sub-saharan-africa/gambia/feed/"),
+    ("GN", "https://globalvoices.org/-/world/sub-saharan-africa/guinea/feed/"),
+    ("GQ", "https://globalvoices.org/-/world/sub-saharan-africa/equatorial-guinea/feed/"),
+    ("GW", "https://globalvoices.org/-/world/sub-saharan-africa/guinea-bissau/feed/"),
+    ("KE", "https://globalvoices.org/-/world/sub-saharan-africa/kenya/feed/"),
+    ("KM", "https://globalvoices.org/-/world/sub-saharan-africa/comoros/feed/"),
+    ("LR", "https://globalvoices.org/-/world/sub-saharan-africa/liberia/feed/"),
+    ("LS", "https://globalvoices.org/-/world/sub-saharan-africa/lesotho/feed/"),
+    ("LY", "https://globalvoices.org/-/world/sub-saharan-africa/libya/feed/"),
+    ("MA", "https://globalvoices.org/-/world/sub-saharan-africa/morocco/feed/"),
+    ("MG", "https://globalvoices.org/-/world/sub-saharan-africa/madagascar/feed/"),
+    ("ML", "https://globalvoices.org/-/world/sub-saharan-africa/mali/feed/"),
+    ("MR", "https://globalvoices.org/-/world/sub-saharan-africa/mauritania/feed/"),
+    ("MU", "https://globalvoices.org/-/world/sub-saharan-africa/mauritius/feed/"),
+    ("MW", "https://globalvoices.org/-/world/sub-saharan-africa/malawi/feed/"),
+    ("MZ", "https://globalvoices.org/-/world/sub-saharan-africa/mozambique/feed/"),
+    ("NA", "https://globalvoices.org/-/world/sub-saharan-africa/namibia/feed/"),
+    ("NE", "https://globalvoices.org/-/world/sub-saharan-africa/niger/feed/"),
+    ("NG", "https://globalvoices.org/-/world/sub-saharan-africa/nigeria/feed/"),
+    ("RW", "https://globalvoices.org/-/world/sub-saharan-africa/rwanda/feed/"),
+    ("SC", "https://globalvoices.org/-/world/sub-saharan-africa/seychelles/feed/"),
+    ("SD", "https://globalvoices.org/-/world/sub-saharan-africa/sudan/feed/"),
+    ("SL", "https://globalvoices.org/-/world/sub-saharan-africa/sierra-leone/feed/"),
+    ("SN", "https://globalvoices.org/-/world/sub-saharan-africa/senegal/feed/"),
+    ("SO", "https://globalvoices.org/-/world/sub-saharan-africa/somalia/feed/"),
+    ("SS", "https://globalvoices.org/-/world/sub-saharan-africa/south-sudan/feed/"),
+    ("ST", "https://globalvoices.org/-/world/sub-saharan-africa/sao-tome-and-principe/feed/"),
+    ("SZ", "https://globalvoices.org/-/world/sub-saharan-africa/swaziland/feed/"),
+    ("TD", "https://globalvoices.org/-/world/sub-saharan-africa/chad/feed/"),
+    ("TG", "https://globalvoices.org/-/world/sub-saharan-africa/togo/feed/"),
+    ("TN", "https://globalvoices.org/-/world/sub-saharan-africa/tunisia/feed/"),
+    ("TZ", "https://globalvoices.org/-/world/sub-saharan-africa/tanzania/feed/"),
+    ("UG", "https://globalvoices.org/-/world/sub-saharan-africa/uganda/feed/"),
+    ("ZA", "https://globalvoices.org/-/world/sub-saharan-africa/south-africa/feed/"),
+    ("ZM", "https://globalvoices.org/-/world/sub-saharan-africa/zambia/feed/"),
+    ("ZW", "https://globalvoices.org/-/world/sub-saharan-africa/zimbabwe/feed/"),
+]
+COUNTRY_NAMES = {}  # filled lazily from the web registry for display names
+
+
+def _country_name(iso: str) -> str:
+    global COUNTRY_NAMES
+    if not COUNTRY_NAMES:
+        import json as _j
+        from pathlib import Path as _P
+        reg = _P(__file__).resolve().parents[3] / "apps" / "web" / "lib" / "i18n" / "registry.json"
+        COUNTRY_NAMES = {k: v["name"] for k, v in _j.loads(reg.read_text())["countries"].items()}
+    return COUNTRY_NAMES.get(iso, iso)
+
+
+for _i, (_iso, _url) in enumerate(GV_COUNTRY_FEEDS):
+    SOURCES.append({**GV, "publisher_name": f"Global Voices ({_country_name(_iso)})", "endpoint_url": _url, "allowed_hosts": ["globalvoices.org"],
+                    "languages": ["en"], "feed_languages": ["en"], "countries": [_iso], "coverage_areas": [_iso], "attribution_text": "Global Voices",
+                    "fetch_interval_minutes": 240})
+# Global Voices Lingua editions with current activity (probed 2026-10-10). Swahili (newest 2022) and Amharic
+# (newest 2020) editions are dormant and NOT registered: Kenya/Tanzania Swahili and Ethiopia Amharic coverage
+# are recorded as real gaps rather than filled with stale items.
+for _code, _name, _countries in [("yo", "Global Voices Yorùbá", ["NG"]), ("ig", "Global Voices Igbo", ["NG"]),
+                                 ("pt", "Global Voices em Português", []), ("mg", "Global Voices Malagasy", ["MG"])]:
+    SOURCES.append({**GV, "publisher_name": _name, "endpoint_url": f"https://{_code}.globalvoices.org/feed/", "homepage_url": f"https://{_code}.globalvoices.org/",
+                    "allowed_hosts": [f"{_code}.globalvoices.org"], "languages": [_code], "feed_languages": [_code], "countries": _countries,
+                    "coverage_areas": _countries, "attribution_text": _name, "fetch_interval_minutes": 240})
+
 
 def main() -> None:
     pb = PB(os.environ["PB_URL"], os.environ["PB_SERVICE_EMAIL"], os.environ["PB_SERVICE_PASSWORD"])

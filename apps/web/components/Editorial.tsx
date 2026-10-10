@@ -28,7 +28,7 @@ export function SourceCitation({ s, i }: { s: SourceRef; i: number }) {
       <div className="min-w-0">
         <p className="font-semibold">{s.name}</p>
         {fixture ? (
-          <p className="text-sm text-muted break-words">{s.title ?? s.url} <span className="italic">(fixture link, intentionally not clickable)</span></p>
+          <p className="text-sm text-muted-foreground break-words">{s.title ?? s.url} <span className="italic">(fixture link, intentionally not clickable)</span></p>
         ) : (
           <a href={s.url} target="_blank" rel="noopener noreferrer nofollow" data-source-link={String(i)} className="link break-words text-sm">
             {s.title ?? s.url}<ExternalLink size={12} className="ms-1 inline" aria-hidden="true" /><span className="sr-only"> (opens the original publisher in a new tab)</span>
@@ -62,7 +62,7 @@ export function AIContribution({ c, roleLabel, claimIndex }: { c: CommentView; r
 
 export function AINote() {
   return (
-    <p className="flex gap-2 text-sm text-muted"><Info size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+    <p className="flex gap-2 text-sm text-muted-foreground"><Info size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
       <span>This analysis was generated with AI from linked materials. It can make mistakes. Check the sources and read our <Link href="/ai-transparency" className="link">AI transparency policy</Link>.</span>
     </p>
   );

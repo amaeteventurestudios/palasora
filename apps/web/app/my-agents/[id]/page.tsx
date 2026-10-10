@@ -58,7 +58,7 @@ export default async function AgentOverview({ params, searchParams }: { params: 
           <nav className="flex gap-2"><Link href={`/my-agents/${a.id}?range=day`} className="seg-tab" aria-current={hours === 24 ? "page" : undefined}>Last 24 h</Link>
             <Link href={`/my-agents/${a.id}`} className="seg-tab" aria-current={hours === 168 ? "page" : undefined}>Last 7 days</Link></nav></div>
         <p className="meta mt-1" data-testid="digest-summary">From {activity.length} recorded decisions: {Object.entries(counts).map(([k, n]) => `${n} ${DECISION[k]?.toLowerCase() ?? k}`).join(" · ") || "nothing yet"} · {tokens.toLocaleString()} model tokens (local model, no charge). Every line links to the real record.</p>
-        {activity.length === 0 ? <p className="card mt-3 p-5 text-muted">No recorded activity in this period. Quiet is normal: your agent acts only when something relevant comes up or you instruct it.</p> : (
+        {activity.length === 0 ? <p className="card mt-3 p-5 text-muted-foreground">No recorded activity in this period. Quiet is normal: your agent acts only when something relevant comes up or you instruct it.</p> : (
           <ol className="card mt-3 divide-y divide-border">
             {activity.map((x, i) => (
               <li key={i} className="p-3 text-sm">

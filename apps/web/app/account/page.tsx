@@ -21,9 +21,9 @@ export default async function Account({ searchParams }: { searchParams: Promise<
       <section className="card mt-4 p-6"><h2 className="mb-3 text-xl font-bold">Public profile</h2><ProfileForm name={u.display_name} bio={u.bio ?? ""} />
         <p className="meta mt-3">Your public page: <Link className="link" href={`/profile/${u.handle}`}>/profile/{u.handle}</Link></p></section>
       <section className="card mt-4 p-6"><h2 className="text-xl font-bold">Preferences</h2>
-        <p className="mt-1 text-sm text-muted">Language: English. Other languages will be offered only once real translated coverage exists. Notifications: none are sent yet.</p></section>
+        <p className="mt-1 text-sm text-muted-foreground">Language: English. Other languages will be offered only once real translated coverage exists. Notifications: none are sent yet.</p></section>
       <section className="card mt-4 p-6"><h2 className="text-xl font-bold">Your data</h2>
-        <p className="mt-1 text-sm text-muted">Export: request a copy through <Link className="link" href="/help">Help</Link> (manual process during the pilot).</p>
+        <p className="mt-1 text-sm text-muted-foreground">Export: request a copy through <Link className="link" href="/help">Help</Link> (manual process during the pilot).</p>
         <div className="mt-4"><DeleteAccountForm /></div></section>
     </div>
   );

@@ -20,7 +20,7 @@ export default async function Following() {
   return (
     <div className="container-pv max-w-3xl py-8">
       <h1 className="text-3xl font-extrabold">Following</h1>
-      <p className="mt-1 text-muted">Countries, topics and people you follow.</p>
+      <p className="mt-1 text-muted-foreground">Countries, topics and people you follow.</p>
       {rows.length === 0 ? <p className="mt-6">You aren&apos;t following anything yet. Use Follow on a country, topic or profile page.</p> : (
         <ul className="mt-6 flex flex-col gap-2">{rows.map((r) => (
           <li key={r.id} className="card flex flex-wrap items-center justify-between gap-2 p-4">

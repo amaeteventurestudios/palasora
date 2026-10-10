@@ -47,7 +47,7 @@ export default async function Review({ params }: { params: Promise<{ id: string 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="card p-4" aria-labelledby="draft-h">
           <h2 id="draft-h" className="text-lg font-bold">Draft</h2>
-          <p className="mt-2 text-muted">{p.lede}</p>
+          <p className="mt-2 text-muted-foreground">{p.lede}</p>
           <h3 className="mt-3 font-semibold">What happened?</h3>{(body.what_happened ?? []).map((b, i) => <p key={i}>{b.text} <span className="meta">[{(b.claim_ids ?? []).join(", ") || "uncited"}]</span></p>)}
           <h3 className="mt-3 font-semibold">Why it matters</h3>{(body.why_it_matters ?? []).map((b, i) => <p key={i}>{b.text} <span className="meta">[{(b.claim_ids ?? []).join(", ") || "uncited"}]</span></p>)}
           {(body.unknowns ?? []).length > 0 && <><h3 className="mt-3 font-semibold">Unknowns</h3><ul className="list-disc ps-5">{body.unknowns!.map((u, i) => <li key={i}>{u}</li>)}</ul></>}
@@ -69,7 +69,7 @@ export default async function Review({ params }: { params: Promise<{ id: string 
 
       <section className="card mt-4 p-4" aria-labelledby="dec-h">
         <h2 id="dec-h" className="text-lg font-bold">Decision</h2>
-        {!canApprove && p.review_status !== "published" && <p className="text-sm text-muted">Approve is unavailable: {p.claim_check_status === "FAIL" ? "claim check failed." : p.risk_tier !== "low" && !isEditor ? "medium/high risk needs an editor." : `status is ${p.review_status}.`}</p>}
+        {!canApprove && p.review_status !== "published" && <p className="text-sm text-muted-foreground">Approve is unavailable: {p.claim_check_status === "FAIL" ? "claim check failed." : p.risk_tier !== "low" && !isEditor ? "medium/high risk needs an editor." : `status is ${p.review_status}.`}</p>}
         <div className="mt-2 grid gap-4 md:grid-cols-2">
           {canApprove && (
             <AdminForm action={decidePiece} submit="Approve and publish" variant="primary" confirm="Publish this piece to readers?">

@@ -31,7 +31,7 @@ export default async function MyAfrica() {
   return (
     <div className="container-pv max-w-3xl py-8">
       <h1 className="text-3xl font-extrabold">{t("nav.myAfrica")}</h1>
-      <p className="mt-1 text-muted">{t("prefs.explain")}</p>
+      <p className="mt-1 text-muted-foreground">{t("prefs.explain")}</p>
       <section className="card mt-5 p-5" aria-labelledby="mine-prefs">
         <h2 id="mine-prefs" className="text-lg font-bold">{t("prefs.title")}</h2>
         <p className="mt-1 text-sm">{t("prefs.edition")}: <strong>{ctx.edition === "ALL" ? t("prefs.allAfrica") : countryInfo(ctx.edition)?.name}</strong> ({ctx.sources.edition}) · {t("prefs.interface")}: <strong>{localeInfo(ctx.ui)?.native}</strong> ({ctx.sources.ui}) · {t("prefs.reading")}: <strong>{localeInfo(ctx.reading)?.native}</strong> ({ctx.sources.reading})</p>
@@ -39,7 +39,7 @@ export default async function MyAfrica() {
       </section>
       <section className="card mt-4 p-5" aria-labelledby="mine-places">
         <h2 id="mine-places" className="text-lg font-bold">Places and topics you follow</h2>
-        {session ? (follows.length === 0 ? <p className="mt-2 text-sm text-muted">You are not following anything yet. Use Follow on a country, state or topic page.</p> : (
+        {session ? (follows.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">You are not following anything yet. Use Follow on a country, state or topic page.</p> : (
           <ul className="mt-2 flex flex-col gap-2">{follows.map((f) => (
             <li key={f.id} className="flex flex-wrap items-center justify-between gap-2"><span><span className="meta capitalize">{f.target_type}</span> · <strong>{label(f)}</strong></span>
               <FollowButton type={f.target_type as "area"} id={f.target_id} following signedIn returnPath="/my-africa" label="" /></li>))}</ul>

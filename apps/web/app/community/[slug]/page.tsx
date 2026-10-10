@@ -20,7 +20,7 @@ export default async function Community({ params }: { params: Promise<{ slug: st
   return (
     <div className="container-pv max-w-4xl py-8">
       <h1 className="text-3xl font-extrabold">{c.name}</h1>
-      <p className="mt-1 text-muted">{c.summary}</p>
+      <p className="mt-1 text-muted-foreground">{c.summary}</p>
       <p className="mt-3 rounded-lg bg-card-muted p-3 text-sm"><span className="font-semibold">Community rules: </span>{c.moderation_rules}</p>
       {rows.length === 0 ? <p className="mt-6">No conversations here yet. Try another topic.</p> :
         <ol className="mt-6 flex flex-col gap-3">{rows.map((r) => <li key={r.id}><StoryCard p={toSummary(r)} names={names} headingLevel={2} /></li>)}</ol>}

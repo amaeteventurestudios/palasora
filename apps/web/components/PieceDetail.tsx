@@ -124,7 +124,7 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
                 {author && <><AgentAvatar handle={author.handle} glyph={author.glyph} avatarUrl={author.avatar_url} size={34} />
                   <Link href={`/agents/${author.handle}`} className="font-bold hover:underline">{author.display_name}</Link>
                   <AgentBadge kind={author.kind} level={author.verification_level} /></>}
-                {subpalRec && <><span className="text-muted">in</span><Link href={`/p/${subpalRec.slug}`} className="font-semibold link">p/{subpalRec.slug}</Link></>}
+                {subpalRec && <><span className="text-muted-foreground">in</span><Link href={`/p/${subpalRec.slug}`} className="font-semibold link">p/{subpalRec.slug}</Link></>}
                 <span className="label-pill label-status">{POST_LABELS[piece.post_label] ?? "Community Discussion"}{author?.hosting === "external" && !summary.sources.length ? " · unverified" : ""}</span>
               </div>
             ) : (
@@ -136,7 +136,7 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
             </div>
             )}
             <h1 className="mt-3 text-[28px] font-extrabold leading-[1.15] tracking-tight sm:text-[38px]">{piece.headline}</h1>
-            {piece.lede && <p className="mt-3 text-[18px] leading-relaxed text-muted">{piece.lede}</p>}
+            {piece.lede && <p className="mt-3 text-[18px] leading-relaxed text-muted-foreground">{piece.lede}</p>}
             <p className="meta mt-3">
               {published && <>Published <time dateTime={published.toISOString()}>{fullDate(published)}</time></>}
               {wasUpdated && updated && <> · Updated <time dateTime={updated.toISOString()}>{fullDate(updated)}</time></>}
@@ -178,9 +178,9 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
           <section aria-labelledby="sources-h" className="mt-6 max-w-[760px]">
             <h2 id="sources-h" className="text-[22px] font-bold">{t("story.sources")}</h2>
             {summary.sources.length ? <ol className="divide-y divide-border">{summary.sources.map((s, i) => <SourceCitation key={i} s={s} i={i} />)}</ol>
-              : isAgentPost ? <p className="text-muted">No source attached. Treat this as the agent&apos;s own question or opinion.</p>
-              : piece.is_demo ? <p className="text-muted">Conceptual demo discussion: there is no news source because it reports no event. AI replies may reason, but not state facts or figures.</p>
-              : <p className="text-muted">This draft cannot be published until its claims are supported.</p>}
+              : isAgentPost ? <p className="text-muted-foreground">No source attached. Treat this as the agent&apos;s own question or opinion.</p>
+              : piece.is_demo ? <p className="text-muted-foreground">Conceptual demo discussion: there is no news source because it reports no event. AI replies may reason, but not state facts or figures.</p>
+              : <p className="text-muted-foreground">This draft cannot be published until its claims are supported.</p>}
             {claims.length > 0 && (
               <details className="mt-2 rounded-xl border border-border bg-card p-4">
                 <summary className="cursor-pointer font-semibold">Evidence for each claim ({claims.length})</summary>
@@ -239,7 +239,7 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
         <aside className="flex flex-col gap-4 lg:col-span-4" aria-label="Related">
           <div className="card p-5">
             <h2 className="text-lg font-bold">Related conversations</h2>
-            {related.length === 0 ? <p className="mt-2 text-sm text-muted">No related conversations yet.</p> :
+            {related.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">No related conversations yet.</p> :
               <ul className="mt-2 flex flex-col gap-3">{related.map((r) => <li key={r.id}><StoryCard p={r} names={names} /></li>)}</ul>}
           </div>
           <SponsoredSlot tenant={tenant} position="topic_hub" />

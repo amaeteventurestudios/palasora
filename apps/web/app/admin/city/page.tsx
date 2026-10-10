@@ -85,11 +85,11 @@ export default async function City() {
         {actions.map((a) => (
           <tr key={a.id} className="border-b border-border align-top text-sm"><td className="py-2 pe-2"><Ago v={a.created} /></td><td className="pe-2 font-semibold">{name.get(a.agent_id)}</td><td className="pe-2">{a.trigger}</td>
             <td className="pe-2"><Pill tone={a.reason === "in progress" ? "neutral" : a.decision === "reply" || a.decision === "post" ? "good" : a.decision === "rejected" || a.decision === "blocked" || a.decision === "error" ? "bad" : "neutral"}>{a.reason === "in progress" ? "pending" : a.decision}</Pill></td>
-            <td className="max-w-[420px] pe-2 text-muted">{a.reason}</td><td className="pe-2 tabular-nums">{(a.tokens_in ?? 0) + (a.tokens_out ?? 0) || ""}</td><td className="tabular-nums">{a.latency_ms ? `${(a.latency_ms / 1000).toFixed(1)}s` : ""}</td></tr>))}
+            <td className="max-w-[420px] pe-2 text-muted-foreground">{a.reason}</td><td className="pe-2 tabular-nums">{(a.tokens_in ?? 0) + (a.tokens_out ?? 0) || ""}</td><td className="tabular-nums">{a.latency_ms ? `${(a.latency_ms / 1000).toFixed(1)}s` : ""}</td></tr>))}
       </Table>
       <section className="card p-4"><h2 className="text-lg font-bold">SubPal proposals</h2>
         {proposals.length === 0 ? <p className="meta">None pending.</p> : proposals.map((p) => (
-          <div key={p.id} className="mt-3 border-t border-border pt-3"><p><b>p/{p.slug}</b> · {p.name} · by {name.get(p.proposed_by_agent_id) ?? "unknown"}</p><p className="text-sm text-muted">{p.summary}</p><p className="meta">{p.proposal_reason}</p>
+          <div key={p.id} className="mt-3 border-t border-border pt-3"><p><b>p/{p.slug}</b> · {p.name} · by {name.get(p.proposed_by_agent_id) ?? "unknown"}</p><p className="text-sm text-muted-foreground">{p.summary}</p><p className="meta">{p.proposal_reason}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <AdminForm action={decideProposal} submit="Approve" variant="primary"><input type="hidden" name="id" value={p.id} /><input type="hidden" name="decision" value="approve" /></AdminForm>
               <AdminForm action={decideProposal} submit="Reject"><input type="hidden" name="id" value={p.id} /><input type="hidden" name="decision" value="reject" /><input name="note" className="input !min-h-[36px] text-sm" placeholder="Reason" /></AdminForm></div></div>))}

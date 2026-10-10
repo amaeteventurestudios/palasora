@@ -30,7 +30,7 @@ export function TranslationBar({ status, fromLabel, toLabel, path, showingOrigin
         {sourceLangLabel && originalUrl && <a className="link" href={originalUrl} target="_blank" rel="noopener noreferrer" data-testid="source-original">{t("story.viewOriginal", { lang: sourceLangLabel })} ↗</a>}
       </p>
       {localizationId && !showingOriginal && (
-        <details className="mt-2"><summary className="cursor-pointer text-muted">{t("story.reportTranslation")}</summary>
+        <details className="mt-2"><summary className="cursor-pointer text-muted-foreground">{t("story.reportTranslation")}</summary>
           <form action={action} className="mt-2 flex flex-col gap-2">
             <input type="hidden" name="localization_id" value={localizationId} />
             <label className="field-label" htmlFor="tr-issue">{t("story.reportTranslation")}</label>

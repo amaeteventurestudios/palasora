@@ -31,6 +31,7 @@ log = logging.getLogger("palavva.pipeline")
 PIPELINE_VERSION = "p1"
 MAX_ITEMS_PER_FETCH = 25
 MAX_AGE = timedelta(days=7)
+CARD_MAX_AGE = timedelta(days=30)  # v1.5: verbatim source cards keep sparse editions honest but non-empty
 
 
 def pbdate(d: datetime | None = None) -> str:
@@ -53,6 +54,20 @@ def tenant_switch(pb: PB, tenant_id: str, key: str) -> bool:
 
 # --------------------------------------------------------------------------- ingest
 
+_LAST_HOST_FETCH: dict[str, float] = {}
+HOST_DELAY_SEC = 10.0  # publisher robots.txt Crawl-delay (Global Voices: 10); one worker, so this holds globally
+
+
+def _polite_wait(url: str) -> None:
+    import time as _t
+    from urllib.parse import urlparse as _u
+    host = (_u(url).hostname or "").lower()
+    wait = HOST_DELAY_SEC - (_t.monotonic() - _LAST_HOST_FETCH.get(host, -1e9))
+    if wait > 0:
+        _t.sleep(wait)
+    _LAST_HOST_FETCH[host] = _t.monotonic()
+
+
 class IngestResult(dict):
     pass
 
@@ -67,6 +82,7 @@ def ingest_source(pb: PB, queue: Queue, settings: Settings, source: dict, fetche
     if settings.ingest_paused or tenant_switch(pb, tid, "INGEST_PAUSED"):
         res["error"] = "INGEST_PAUSED"
         return res
+    _polite_wait(source["endpoint_url"])
     now = datetime.now(timezone.utc)
     pb.update("sources", source["id"], {"last_attempt_at": pbdate(now)})
     try:
@@ -109,8 +125,11 @@ def _ingest_item(pb: PB, queue: Queue, settings: Settings, source: dict, it, res
     cls = classify(it.title, it.summary, source.get("countries") or [], source.get("topic_ids") or [], it.language)
     status, reason = "classified", "; ".join(cls.reasons)[:1900]
     published = it.published or now
-    if published < now - MAX_AGE:
+    card_only = False
+    if published < now - CARD_MAX_AGE:
         status, reason = "ignored", f"stale: published {published.isoformat()}"
+    elif published < now - MAX_AGE and cls.africa_relevant:
+        status, reason, card_only = "ignored", f"older than 7 days: source card only, no AI draft (published {published.isoformat()})", True
     elif not cls.africa_relevant:
         status, reason = "ignored", "no African country or Africa reference detected"
     try:
@@ -127,8 +146,11 @@ def _ingest_item(pb: PB, queue: Queue, settings: Settings, source: dict, it, res
             return
         raise
     res["new_items"] += 1
-    if status != "ignored":
+    if status != "ignored" or card_only:
         record_geo(pb, tid, si, it.title, it.summary, cls.countries, source.get("publisher_area") or "")
+        from .sourcecards import upsert_source_card
+        if upsert_source_card(pb, source, si, cls.countries, cls.topics, cls.risk, published):
+            res["cards"] = res.get("cards", 0) + 1
     if status == "ignored":
         res["ignored"] += 1
         return

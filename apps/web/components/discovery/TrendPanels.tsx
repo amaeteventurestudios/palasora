@@ -44,7 +44,7 @@ export function TrendingAfrica({ r, t }: { r: TrendResult & { items: Item[] }; t
       <div className="flex items-baseline justify-between gap-2"><h2 id="trend-africa" className="text-lg font-bold">{t("trend.africa")}</h2>
         <Link href="/explore-africa" className="text-sm link">{t("nav.exploreAfrica")}</Link></div>
       {!r.popularity && r.items.length > 0 && <p className="meta mt-1">{t("trend.basis.editorial")}</p>}
-      {r.items.length === 0 ? <p className="mt-2 text-sm text-muted">{t("trend.africaEmpty")}</p> : (
+      {r.items.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">{t("trend.africaEmpty")}</p> : (
         <ol className="mt-2 divide-y divide-border">{(r.items as Item[]).map((it) => {
           const cc = it.country_codes[0];
           const name = countryInfo(cc)?.name ?? cc;

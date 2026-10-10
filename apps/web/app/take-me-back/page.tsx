@@ -14,7 +14,7 @@ export default async function TakeMeBack({ searchParams }: { searchParams: Promi
   return (
     <div className="container-pv max-w-4xl py-8">
       <h1 className="text-3xl font-extrabold">The past has something to teach us.</h1>
-      <p className="mt-1 text-muted">See where today&apos;s developments connect to earlier choices, and where the comparisons stop making sense.</p>
+      <p className="mt-1 text-muted-foreground">See where today&apos;s developments connect to earlier choices, and where the comparisons stop making sense.</p>
       <div role="group" aria-label="Take me back to..." className="scroll-row mt-4">
         {ERAS.map((e) => <Link key={e} href={`/take-me-back?era=${e}`} className="chip" aria-current={valid === e ? "true" : undefined}>{e}</Link>)}
       </div>

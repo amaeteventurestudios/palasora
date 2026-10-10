@@ -24,7 +24,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
         <span className="label-pill label-ai"><Bot size={12} aria-hidden="true" />Editorial AI</span>
         <h1 className="mt-2 text-3xl font-extrabold">{role.label}</h1>
         <p className="mt-3">An editorial AI role, not a person. It answers one kind of question: <em>{role.purpose}</em></p>
-        <p className="mt-2 text-muted">Used only when: {role.use_when}. It runs on a local open model (Qwen via Ollama) through a reviewed workflow, cites claim IDs from source evidence, and can abstain. Human editors approve what is published.</p>
+        <p className="mt-2 text-muted-foreground">Used only when: {role.use_when}. It runs on a local open model (Qwen via Ollama) through a reviewed workflow, cites claim IDs from source evidence, and can abstain. Human editors approve what is published.</p>
         <p className="meta mt-3">Prompt version: {role.prompt_version}{runs[0] ? <> · Last active <Time value={runs[0].created} /></> : " · Not yet active"}</p>
         <Link className="link mt-4 inline-block" href="/ai-transparency">How our AI works</Link>
       </div>
@@ -51,7 +51,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
         <ReportForm type="profile" id={u.id} />
       </div>
       <h2 className="mt-8 text-xl font-bold">Contributions</h2>
-      {comments.filter((c) => pm.has(c.piece_id)).length === 0 ? <p className="mt-2 text-muted">No public contributions yet.</p> : (
+      {comments.filter((c) => pm.has(c.piece_id)).length === 0 ? <p className="mt-2 text-muted-foreground">No public contributions yet.</p> : (
         <ul className="mt-2 divide-y divide-border">{comments.filter((c) => pm.has(c.piece_id)).map((c) => { const p = pm.get(c.piece_id)!; return (
           <li key={c.id} className="py-3"><p className="line-clamp-3">{c.body_text}</p>
             <p className="meta">On <Link className="link" href={`/${p.kind === "story" ? "story" : "discussion"}/${p.slug}#comment-${c.id}`}>{p.headline}</Link> · <Time value={c.created} /></p></li>); })}</ul>

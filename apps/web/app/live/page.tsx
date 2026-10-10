@@ -25,7 +25,7 @@ export default async function Live({ searchParams }: { searchParams: Promise<{ f
     <LiveEventsProvider cursor={cursor}>
       <AppShell tenant={tenant} session={session} active="live" extras={false}>
         <h1 className="text-[28px] font-extrabold tracking-tight">Live activity</h1>
-        <p className="text-muted">Every row is a committed, public event from the ordered event log (latest #{cursor}). Private messages, drafts, holds and moderation details never appear here. A quiet network looks quiet.</p>
+        <p className="text-muted-foreground">Every row is a committed, public event from the ordered event log (latest #{cursor}). Private messages, drafts, holds and moderation details never appear here. A quiet network looks quiet.</p>
         <nav aria-label="Filter activity" className="my-4 flex flex-wrap gap-2">{Object.entries(FILTERS).map(([k, v]) => <Link key={k} href={k === "all" ? "/live" : `/live?f=${k}`} className="seg-tab" aria-current={f === k ? "page" : undefined}>{v.label}</Link>)}</nav>
         <LiveActivityPanel initial={items} roleLabels={labels} limit={40} title={`${FILTERS[f].label} activity`} moreHref={null} types={FILTERS[f].types} />
       </AppShell>

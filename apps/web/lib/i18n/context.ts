@@ -9,9 +9,13 @@ import type { Tenant } from "../tenant";
 import { getSession } from "../session";
 
 export const PREFS_COOKIE = "pv_prefs";
-type Source = "explicit" | "saved" | "browser" | "country" | "default";
+// v1.5 (unified master §1, appendix 4 §2.3): the edition being VIEWED is separate from the saved HOME edition.
+// pv_view is a session cookie set by "View this country"; the home edition is only changed by "Save as my home
+// edition" (cookie for guests, account field for signed-in owners). Guests default to All Africa.
+export const VIEW_COOKIE = "pv_view";
+type Source = "explicit" | "saved" | "browser" | "country" | "default" | "view";
 export type ReaderContext = {
-  ui: UiLocale; reading: string; edition: string; dir: "ltr" | "rtl"; detectedCountry: string | null;
+  ui: UiLocale; reading: string; edition: string; home: string; dir: "ltr" | "rtl"; detectedCountry: string | null;
   sources: { ui: Source; reading: Source; edition: Source };
 };
 type Prefs = { ui?: string; reading?: string; edition?: string };
@@ -58,7 +62,12 @@ export function detectedCountry(h: Headers): string | null {
   return COUNTRIES[v] ? v : null;
 }
 
-export function resolve(prefs: Prefs, saved: Prefs, acceptLanguage: string | null, country: string | null): ReaderContext {
+export function parseView(raw?: string): string | undefined {
+  const v = (raw ?? "").toUpperCase();
+  return v === "ALL" || COUNTRIES[v] ? v : undefined;
+}
+
+export function resolve(prefs: Prefs, saved: Prefs, acceptLanguage: string | null, country: string | null, view?: string): ReaderContext {
   const countryDefault = (codes: string[]) => {
     const pref = country ? COUNTRIES[country]?.preferred_locale : null;
     return pref && codes.includes(pref) ? pref : null;
@@ -73,9 +82,11 @@ export function resolve(prefs: Prefs, saved: Prefs, acceptLanguage: string | nul
   else if ((reading = countryDefault(READING_ENABLED) ?? undefined)) rdS = "country";
   if (edition) edS = "explicit"; else if (saved.edition) { edition = saved.edition; edS = "saved"; }
   else if (country) { edition = country; edS = "country"; }
+  const home = edition ?? "ALL";
+  if (view) { edition = view; edS = "view"; }
   const cand = (ui ?? "en") as UiLocale;
   const finalUi: UiLocale = UI_LOCALES.includes(cand) ? cand : "en";
-  return { ui: finalUi, reading: reading ?? finalUi, edition: edition ?? "ALL", dir: localeInfo(finalUi)?.dir === "rtl" ? "rtl" : "ltr", detectedCountry: country, sources: { ui: uiS, reading: rdS, edition: edS } };
+  return { ui: finalUi, reading: reading ?? finalUi, edition: edition ?? "ALL", home, dir: localeInfo(finalUi)?.dir === "rtl" ? "rtl" : "ltr", detectedCountry: country, sources: { ui: uiS, reading: rdS, edition: edS } };
 }
 
 export const getReaderContext = cache(async (tenant: Tenant | null): Promise<ReaderContext> => {
@@ -86,7 +97,7 @@ export const getReaderContext = cache(async (tenant: Tenant | null): Promise<Rea
     const s = await getSession(tenant);
     if (s) saved = parsePrefs(JSON.stringify({ ui: s.user.interface_locale, reading: s.user.reading_locale, edition: s.user.home_edition }));
   }
-  return resolve(prefs, saved, h.get("accept-language"), detectedCountry(h));
+  return resolve(prefs, saved, h.get("accept-language"), detectedCountry(h), parseView(jar.get(VIEW_COOKIE)?.value));
 });
 
 export async function getT(tenant: Tenant | null) {

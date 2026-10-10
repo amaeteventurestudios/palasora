@@ -43,7 +43,7 @@ export default async function Settings() {
               <label className="sr-only" htmlFor={`r-${k}`}>Reason</label><input id={`r-${k}`} name="reason" className="input" placeholder="Reason (required)" /></AdminForm> : <p className="meta">Tenant admins can change switches.</p>}
           </div>); })}</div></section>
       <section className="card p-5"><h2 className="text-lg font-bold">Local mail sink</h2><p className="meta">No email is sent from the local build; messages for this tenant are listed here.</p>
-        {mail.length === 0 ? <p className="mt-2 text-sm text-muted">No messages.</p> : <ul className="mt-2 flex flex-col gap-2">{mail.map((m) => <li key={m.f}><pre className="overflow-x-auto whitespace-pre-wrap rounded-lg bg-card-muted p-3 text-xs">{m.body}</pre></li>)}</ul>}</section>
+        {mail.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">No messages.</p> : <ul className="mt-2 flex flex-col gap-2">{mail.map((m) => <li key={m.f}><pre className="overflow-x-auto whitespace-pre-wrap rounded-lg bg-card-muted p-3 text-xs">{m.body}</pre></li>)}</ul>}</section>
       <Table caption="Audit log (append-only, latest 100)" head={["When", "Actor", "Action", "Object", "Details"]}>
         {auditRows.map((a) => <tr key={a.id}><td className="px-3 py-2"><Ago v={a.created} /></td><td className="px-3 py-2">{a.actor_type}:{String(a.actor_id).slice(0, 10)}</td><td className="px-3 py-2">{a.action}</td>
           <td className="px-3 py-2">{a.object_type}/{String(a.object_id).slice(0, 10)}</td><td className="px-3 py-2 text-xs">{JSON.stringify(a.metadata_safe ?? {}).slice(0, 160)}</td></tr>)}

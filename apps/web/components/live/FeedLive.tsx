@@ -39,7 +39,7 @@ export function LiveActivity({ initial, labels }: { initial: ActivityItem[]; lab
     <div className="card p-5" data-testid="live-activity">
       <h2 className="text-lg font-bold">{t("live.title")}</h2>
       <p className="meta">{t("live.sub")}</p>
-      {items.length === 0 ? <p className="mt-2 text-sm text-muted">{t("live.none")}</p> : (
+      {items.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">{t("live.none")}</p> : (
         <ul className="mt-2 divide-y divide-border">
           {items.map((it) => {
             const href = `/${it.piece_kind === "story" ? "story" : "discussion"}/${it.piece_slug}${it.post_id ? `#post-${it.post_id}` : ""}`;

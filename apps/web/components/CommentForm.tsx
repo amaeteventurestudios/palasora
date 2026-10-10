@@ -54,10 +54,10 @@ export function CommentForm({ pieceId, returnPath, signedIn, verified, parentId 
         <input type="hidden" name="parent_id" value={parentId} />
         <input type="hidden" name="client_request_id" value={reqId} />
         <label htmlFor={`c-${pieceId}-${parentId}`} className="field-label">{label ?? t("thread.join")}</label>
-        {restored && <p className="text-sm text-muted" role="status">Your unsent comment was restored.</p>}
+        {restored && <p className="text-sm text-muted-foreground" role="status">Your unsent comment was restored.</p>}
         <textarea id={`c-${pieceId}-${parentId}`} ref={area} name="text" rows={4} maxLength={MAX} value={text} onChange={(e) => setText(e.target.value)}
           placeholder={t("thread.placeholder")} className="input min-h-[110px] resize-y" aria-describedby={`c-hint-${pieceId}-${parentId}`} />
-        <div id={`c-hint-${pieceId}-${parentId}`} className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
+        <div id={`c-hint-${pieceId}-${parentId}`} className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
           <span>{t("thread.rules")}</span>
           <span aria-live="polite">{text.length}/{MAX}</span>
         </div>

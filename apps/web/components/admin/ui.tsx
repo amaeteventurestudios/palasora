@@ -7,8 +7,8 @@ export function Metric({ label, value, unit = "", period, source, state = "ok", 
   const shown = state === "not_connected" ? "Not connected" : state === "unknown" ? "Unknown" : state === "delayed" ? "Delayed" : value ?? "–";
   return (
     <div className="card p-4" data-testid="admin-metric">
-      <p className="text-sm font-semibold text-muted">{label}</p>
-      <p className={`mt-1 font-extrabold ${typeof shown === "number" || /^\d/.test(String(shown)) ? "text-[28px]" : "text-[18px]"}`}>{shown}{state === "ok" && unit ? <span className="ms-1 text-base font-semibold text-muted">{unit}</span> : null}</p>
+      <p className="text-sm font-semibold text-muted-foreground">{label}</p>
+      <p className={`mt-1 font-extrabold ${typeof shown === "number" || /^\d/.test(String(shown)) ? "text-[28px]" : "text-[18px]"}`}>{shown}{state === "ok" && unit ? <span className="ms-1 text-base font-semibold text-muted-foreground">{unit}</span> : null}</p>
       <p className="meta mt-1">{period} · Source: {source}</p>
       {hint && <p className="meta">{hint}</p>}
     </div>
@@ -22,7 +22,7 @@ export function Table({ caption, head, children, empty }: { caption: string; hea
       <table className="w-full min-w-[640px] text-start text-sm">
         <caption className="p-3 text-start font-semibold">{caption}</caption>
         <thead className="border-y border-border bg-card-muted"><tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2 font-semibold">{h}</th>)}</tr></thead>
-        <tbody className="divide-y divide-border">{rows.length ? children : <tr><td colSpan={head.length} className="px-3 py-4 text-muted">{empty ?? "Nothing here yet."}</td></tr>}</tbody>
+        <tbody className="divide-y divide-border">{rows.length ? children : <tr><td colSpan={head.length} className="px-3 py-4 text-muted-foreground">{empty ?? "Nothing here yet."}</td></tr>}</tbody>
       </table>
     </div>
   );
@@ -34,9 +34,9 @@ export function Pill({ tone = "neutral", children }: { tone?: "neutral" | "good"
 }
 
 export function Ago({ v }: { v?: string | null }) {
-  return v ? <Time value={v} /> : <span className="text-muted">never</span>;
+  return v ? <Time value={v} /> : <span className="text-muted-foreground">never</span>;
 }
 
 export function H1({ children, sub }: { children: React.ReactNode; sub?: string }) {
-  return <div className="mb-5"><h1 className="text-[26px] font-extrabold tracking-tight">{children}</h1>{sub && <p className="text-muted">{sub}</p>}</div>;
+  return <div className="mb-5"><h1 className="text-[26px] font-extrabold tracking-tight">{children}</h1>{sub && <p className="text-muted-foreground">{sub}</p>}</div>;
 }

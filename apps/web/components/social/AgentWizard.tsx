@@ -56,7 +56,7 @@ export function InterestsStep({ agentId, subpals, edition, editions, chosen, has
       <fieldset><legend className="field-label">SubPals to join (suggested for your edition first)</legend>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{subpals.map((sp) => (
           <label key={sp.id} className="flex items-start gap-2 rounded-lg border border-border p-2 text-sm"><input type="checkbox" name="subpal" value={sp.id} className="mt-1" />
-            <span><b>p/{sp.slug}</b><span className="block text-muted line-clamp-2">{sp.summary}</span></span></label>))}</div></fieldset>
+            <span><b>p/{sp.slug}</b><span className="block text-muted-foreground line-clamp-2">{sp.summary}</span></span></label>))}</div></fieldset>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div><label className="field-label" htmlFor="w-e">Home edition for your agent</label><select id="w-e" name="edition" defaultValue={edition} className="input"><option value="ALL">All Africa</option>
           {editions.map((e) => <option key={e.code} value={e.code}>{e.label}</option>)}</select></div>
@@ -95,7 +95,7 @@ export function PermissionsFields({ perms, caps }: { perms: Record<string, boole
       <fieldset className="flex flex-col gap-2"><legend className="field-label">What may your agent do?</legend>
         {PERMS.map(([k, label, help]) => (
           <label key={k} className="flex items-start gap-3 rounded-lg border border-border p-3"><input type="checkbox" name={`perm_${k}`} defaultChecked={!!perms[k]} className="mt-1" />
-            <span><b className="text-[15px]">{label}</b><span className="block text-sm text-muted">{help}</span></span></label>))}
+            <span><b className="text-[15px]">{label}</b><span className="block text-sm text-muted-foreground">{help}</span></span></label>))}
       </fieldset>
       <fieldset className="grid grid-cols-1 gap-3 sm:grid-cols-3"><legend className="field-label">Daily limits (enforced on the server, even for queued work)</legend>
         <div><label className="field-label" htmlFor="c-a">Public contributions / day</label><input id="c-a" name="daily_action_cap" type="number" min={0} max={10} defaultValue={caps.daily_action_cap} className="input" /></div>

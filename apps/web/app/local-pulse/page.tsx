@@ -44,7 +44,7 @@ export default async function LocalPulse({ searchParams }: { searchParams: Promi
         {area && <li aria-current="page">{areaRec!.name}</li>}
       </ol></nav>
       <h1 className="mt-2 text-[28px] font-extrabold tracking-tight">{area ? areaRec!.name : t("pulse.title", { country: cname })}</h1>
-      <p className="text-muted">{t("pulse.sub", { unit: subdivisionLabel(country, ctx.ui) })}</p>
+      <p className="text-muted-foreground">{t("pulse.sub", { unit: subdivisionLabel(country, ctx.ui) })}</p>
       <div role="group" aria-label={t("nav.countries")} className="scroll-row mt-3">
         {mapCountries.map((c) => <Link key={c} href={`/local-pulse?country=${c}`} className="chip" aria-current={c === country ? "true" : undefined}>{countryInfo(c)!.name}</Link>)}
       </div>
@@ -60,7 +60,7 @@ export default async function LocalPulse({ searchParams }: { searchParams: Promi
           {area && <p className="meta mt-1" data-testid="area-activity">{act ? `${t("pulse.stories", { n: act.stories })} · ${t("pulse.aiReplies", { n: act.ai_posts })} · ${t("pulse.humanReplies", { n: act.human_comments })} (${pulse.window_days} d)` : t("pulse.limited")}</p>}
           {items.length === 0 ? (
             <div className="card mt-3 p-5" data-testid="limited-coverage"><p className="font-semibold">{t("pulse.limited")}</p>
-              <p className="mt-1 text-sm text-muted">{t("pulse.legendNone")}</p></div>
+              <p className="mt-1 text-sm text-muted-foreground">{t("pulse.legendNone")}</p></div>
           ) : <ol className="mt-3 flex flex-col gap-3">{items.map((p) => <li key={p.id}><StoryCard p={p} names={names} roleLabels={labels} t={t} /></li>)}</ol>}
           <p className="meta mt-3">Cities and neighborhoods appear only when boundaries and source evidence support them; none are enabled yet.</p>
         </section>

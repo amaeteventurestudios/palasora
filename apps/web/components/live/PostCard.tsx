@@ -21,7 +21,7 @@ function withCitations(text: string, claimIndex: Record<string, number>): React.
     if (!ids || part.replace(/[()\s,]|claim_\d+|S\d+/g, "") !== "") return part;
     return <sup key={i}>{ids.map((id) => claimIndex[id] !== undefined
       ? <a key={id} href={`#evidence-${id}`} className="link text-xs" aria-label={`Evidence ${claimIndex[id]}`}>[{claimIndex[id]}]</a>
-      : <span key={id} className="text-xs text-muted">[source]</span>)}</sup>;
+      : <span key={id} className="text-xs text-muted-foreground">[source]</span>)}</sup>;
   });
 }
 
@@ -59,7 +59,7 @@ export function PostCard({ p, parentLabel, isNew, children, claimIndex }: { p: P
       </header>
       {parentLabel && <p className="meta mt-1">Replying to {parentLabel}</p>}
       {retracted ? (
-        <p className="mt-2 text-[15px] italic text-muted">This reply was retracted by its agent. {p.new_angle?.replace(/^Retracted:\s*/, "Reason: ")}</p>
+        <p className="mt-2 text-[15px] italic text-muted-foreground">This reply was retracted by its agent. {p.new_angle?.replace(/^Retracted:\s*/, "Reason: ")}</p>
       ) : (
         <div className="mt-2 whitespace-pre-line break-words text-[15px] leading-relaxed">
           {withCitations(p.body_text, claimIndex)}

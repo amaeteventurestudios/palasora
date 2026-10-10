@@ -45,7 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
-        <I18nProvider locale={ctx.ui}>
+        <I18nProvider locale={ctx.ui} edition={ctx.edition}>
           {tenant && <SiteHeader tenant={tenant} session={session} t={t} ctx={ctx} />}
           <main id="main" tabIndex={-1} className="outline-none">{children}</main>
           {tenant && <SiteFooter tenant={tenant} t={t} />}

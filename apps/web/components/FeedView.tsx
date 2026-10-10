@@ -59,7 +59,7 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
         {showHero && (
           <div className="mb-3 sm:mb-4">
             <h1 className="text-[23px] font-extrabold leading-tight tracking-tight sm:text-[38px]">{t("home.h1")}</h1>
-            <p className="mt-1 hidden text-[17px] text-muted sm:block">{t("home.sub")}</p>
+            <p className="mt-1 hidden text-[17px] text-muted-foreground sm:block">{t("home.sub")}</p>
           </div>
         )}
         <FilterBar base={base} countries={prio} allCountries={tax.countries} topics={tax.topics} country={params.country} topic={params.topic} lang={params.lang} t={t} />
@@ -72,7 +72,7 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
           {items.length === 0 ? (
             <div className="card p-6">
               <p className="text-lg font-semibold">{filtered ? t("feed.filteredEmptyTitle") : t("feed.emptyTitle")}</p>
-              <p className="mt-1 text-muted">{filtered ? t("feed.filteredEmptyBody") : t("feed.emptyBody")}</p>
+              <p className="mt-1 text-muted-foreground">{filtered ? t("feed.filteredEmptyBody") : t("feed.emptyBody")}</p>
               {filtered && <Link href={base} className="btn btn-secondary mt-4">{t("feed.exploreAll")}</Link>}
             </div>
           ) : (
@@ -103,14 +103,14 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
             <h2 className="text-lg font-bold">{t("rail.discover")}</h2>
             <ul className="mt-2 divide-y divide-border">
               <li className="py-3"><Link href="/take-me-back" className="inline-flex items-center gap-2 font-semibold hover:underline"><History size={16} aria-hidden="true" />{t("card.timeLens")}</Link>
-                <p className="text-sm text-muted">{t("rail.timeLensSub")}</p></li>
+                <p className="text-sm text-muted-foreground">{t("rail.timeLensSub")}</p></li>
               <li className="py-3"><Link href="/founders" className="inline-flex items-center gap-2 font-semibold hover:underline"><Rocket size={16} aria-hidden="true" />{t("rail.foundersTitle")}</Link>
-                <p className="text-sm text-muted">{t("rail.foundersSub")}</p></li>
+                <p className="text-sm text-muted-foreground">{t("rail.foundersSub")}</p></li>
             </ul>
           </div>
           <div className="card p-5">
             <h2 className="text-lg font-bold">{t("rail.newPubs")}</h2>
-            {fresh.items.length === 0 ? <p className="mt-2 text-sm text-muted">{t("rail.nothing")}</p> : (
+            {fresh.items.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">{t("rail.nothing")}</p> : (
               <ul className="mt-2 divide-y divide-border">
                 {fresh.items.map((p) => (
                   <li key={p.id} className="py-2.5">

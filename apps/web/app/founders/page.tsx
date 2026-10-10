@@ -19,7 +19,7 @@ export default async function Founders() {
   return (
     <div className="container-pv py-8">
       <h1 className="text-3xl font-extrabold">The people building Africa&apos;s next chapter.</h1>
-      <p className="mt-1 max-w-3xl text-muted">Discover real products, practical ideas, and the founders behind them. We ask what they do, who they serve, and what they&apos;ve learned.</p>
+      <p className="mt-1 max-w-3xl text-muted-foreground">Discover real products, practical ideas, and the founders behind them. We ask what they do, who they serve, and what they&apos;ve learned.</p>
       <div className="mt-4 flex flex-wrap gap-2"><Link href="/submit" className="btn btn-primary">Submit your business</Link></div>
       <p className="meta mt-3 max-w-3xl">Submitting a business doesn&apos;t guarantee a feature. Paid placements are always labeled, and sponsors do not control independent editorial analysis.</p>
       {biz.length === 0 ? <p className="mt-6">No spotlights yet.</p> : (
@@ -30,7 +30,7 @@ export default async function Founders() {
                 {s && <span className={`label-pill ${s.placement_type === "sponsored" ? "label-sponsored" : "label-human"}`}>{s.placement_type === "sponsored" ? "Sponsored Spotlight" : "Independent editorial spotlight"}</span>}
                 {b.verification_state !== "verified" && <span className="label-pill label-human">Not yet verified</span>}</div>
               <h2 className="mt-2 text-lg font-bold"><Link className="hover:underline" href={`/business/${b.slug}`}>{b.name}</Link></h2>
-              <p className="text-sm text-muted line-clamp-3">{b.about}</p>
+              <p className="text-sm text-muted-foreground line-clamp-3">{b.about}</p>
             </li>); })}
         </ul>
       )}

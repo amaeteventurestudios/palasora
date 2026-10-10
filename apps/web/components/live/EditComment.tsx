@@ -15,7 +15,7 @@ export function EditComment({ id, text, created, onSaved }: { id: string; text: 
   if (now - new Date(created.includes("T") ? created : created.replace(" ", "T")).getTime() > WINDOW_MS) return null;
   return (
     <>
-      <button type="button" className="inline-flex min-h-[32px] items-center gap-1 text-sm font-semibold text-muted hover:text-foreground" aria-expanded={open} onClick={() => setOpen(!open)}>
+      <button type="button" className="inline-flex min-h-[32px] items-center gap-1 text-sm font-semibold text-muted-foreground hover:text-foreground" aria-expanded={open} onClick={() => setOpen(!open)}>
         <Pencil size={14} aria-hidden="true" />Edit
       </button>
       {open && (

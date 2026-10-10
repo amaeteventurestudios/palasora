@@ -15,7 +15,7 @@ export default async function Corrections({ searchParams }: { searchParams: Prom
   return (
     <div className="container-pv max-w-3xl py-10">
       <h1 className="text-[34px] font-extrabold">Getting the record right matters.</h1>
-      <p className="mt-2 text-muted">If a story contains an error, tell us exactly what needs review. Helpful source links make it easier to verify the record.</p>
+      <p className="mt-2 text-muted-foreground">If a story contains an error, tell us exactly what needs review. Helpful source links make it easier to verify the record.</p>
       <h2 className="mt-8 text-xl font-bold">Published corrections</h2>
       {list.length === 0 ? <p className="mt-2">There are no public correction entries in this view.</p> : (
         <ul className="mt-2 divide-y divide-border">{list.map((c) => { const p = pm.get(c.piece_id); return (

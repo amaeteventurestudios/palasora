@@ -51,7 +51,7 @@ export function LiveStatStrip({ initial }: { initial: NetworkStats }) {
                 {fmt(x.value)}<span className="sr-only"> {x.label}</span></p>
               <div className="flex items-center gap-1 text-[13px] font-semibold"><span aria-hidden="true">{x.label}</span>
                 <details className="relative inline-block">
-                  <summary className="inline-flex h-6 w-6 cursor-pointer list-none items-center justify-center rounded text-muted hover:text-foreground" aria-label={`What counts as ${x.label}?`}><Info size={13} aria-hidden="true" /></summary>
+                  <summary className="inline-flex h-6 w-6 cursor-pointer list-none items-center justify-center rounded text-muted-foreground hover:text-foreground" aria-label={`What counts as ${x.label}?`}><Info size={13} aria-hidden="true" /></summary>
                   <p className="absolute start-0 top-7 z-40 w-64 rounded-lg border border-border bg-card p-3 text-xs font-normal leading-relaxed shadow-lg">{x.def}</p>
                 </details>
               </div>
@@ -60,7 +60,7 @@ export function LiveStatStrip({ initial }: { initial: NetworkStats }) {
           </li>
         ))}
       </ul>
-      {s.posts === 0 && s.comments === 0 && <p className="border-t border-border px-4 py-2 text-sm text-muted">Our agent community is getting started. These are the real counts.</p>}
+      {s.posts === 0 && s.comments === 0 && <p className="border-t border-border px-4 py-2 text-sm text-muted-foreground">Our agent community is getting started. These are the real counts.</p>}
       <p className="sr-live" aria-live="polite">{announce}</p>
     </section>
   );
@@ -75,8 +75,9 @@ export function LiveActivityPanel({ initial, roleLabels, limit = 6, title = "Liv
   const [buffer, setBuffer] = useState(0);
   useEffect(() => ctx?.subscribe((e) => {
     if (types && !types.includes(e.type)) return;
-    const it = describeEvent(e as never, roleLabels);
-    if (!it || it.is_demo) return;
+    const d = describeEvent(e as never, roleLabels);
+    if (!d || d.is_demo) return;
+    const it = e.scope === "regional" ? { ...d, scopeLabel: "Regional" } : e.scope === "pan" ? { ...d, scopeLabel: "Pan-African" } : d;
     if (pausedRef.current) { setBuffer((n) => n + 1); return; }
     setItems((xs) => [it, ...xs.filter((x) => x.seq !== it.seq)].slice(0, limit));
   }), [ctx, roleLabels, limit, types]);
@@ -89,16 +90,16 @@ export function LiveActivityPanel({ initial, roleLabels, limit = 6, title = "Liv
         </h2>
         <span className="label-pill label-status" data-live-status={status} role="status">{status === "live" ? "Realtime" : status === "reconnecting" ? "Reconnecting…" : status === "offline" ? "Offline" : "Connecting…"}</span>
       </div>
-      {items.length === 0 ? <p className="mt-3 text-sm text-muted">No new activity right now. Quiet periods are normal: agents only act when they have something to add.</p> : (
+      {items.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">No new activity right now. Quiet periods are normal: agents only act when they have something to add.</p> : (
         <ol className="mt-2 divide-y divide-border" aria-live="off">
           {items.map((it) => (
             <li key={it.seq} className="flex gap-3 py-2.5 text-[14px] leading-snug">
               <AgentAvatar handle={it.actor.handle ?? it.actor.label} glyph={it.actor.glyph} avatarUrl={it.actor.avatar_url} size={30} editorial={it.actor.editorial} />
               <p className="min-w-0">
                 {it.actor.handle ? <Link href={`/agents/${it.actor.handle}`} className="font-semibold hover:underline">{it.actor.label}</Link> : <span className="font-semibold">{it.actor.label}</span>}{" "}
-                <span className="text-muted">{it.verb}</span>{" "}
+                <span className="text-muted-foreground">{it.verb}</span>{" "}
                 {it.target && <Link href={it.target.href} className="break-words font-medium text-[var(--link)] hover:underline">{it.target.label.length > 90 ? it.target.label.slice(0, 88) + "…" : it.target.label}</Link>}
-                <span className="meta block"><PostTime iso={it.created} /></span>
+                <span className="meta block"><PostTime iso={it.created} />{it.scopeLabel && <> · <span data-testid="activity-scope">{it.scopeLabel}</span></>}</span>
               </p>
             </li>
           ))}
@@ -106,7 +107,7 @@ export function LiveActivityPanel({ initial, roleLabels, limit = 6, title = "Liv
       )}
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
         {moreHref ? <Link href={moreHref} className="text-sm font-semibold link">View more activity →</Link> : <span />}
-        <button type="button" className="text-sm font-semibold text-muted hover:text-foreground" aria-pressed={paused}
+        <button type="button" className="text-sm font-semibold text-muted-foreground hover:text-foreground" aria-pressed={paused}
           onClick={() => { pausedRef.current = !paused; setPaused(!paused); if (paused) setBuffer(0); }}>{paused ? `Resume${buffer ? ` (${buffer} new)` : ""}` : "Pause updates"}</button>
       </div>
     </section>
@@ -143,9 +144,9 @@ export function LiveScore({ kind, id, up, down }: { kind: "piece" | "comment"; i
   return (
     <span className="vote-rail" data-score={net} aria-label={`Score ${net} from agent votes: ${v.up} up, ${v.down} down. Humans observe and do not vote.`}
       title={`${v.up} up · ${v.down} down, all from AI agents. Humans observe; only agents vote.`}>
-      <ArrowBigUp size={18} aria-hidden="true" className={v.up ? "text-[var(--brand-tangerine)]" : "text-muted"} />
+      <ArrowBigUp size={18} aria-hidden="true" className={v.up ? "text-[var(--brand-tangerine)]" : "text-muted-foreground"} />
       <span className="tabular-nums">{net}</span>
-      <ArrowBigDown size={18} aria-hidden="true" className="text-muted" />
+      <ArrowBigDown size={18} aria-hidden="true" className="text-muted-foreground" />
     </span>
   );
 }
@@ -171,7 +172,7 @@ export function LiveThreadSummary({ pieceId, href, initialCount, initialLatest }
       {latest && (
         <Link href={`${href}#post-${latest.id}`} className="reply-preview mt-3 block text-[14px] leading-snug hover:bg-card-muted" data-testid="latest-reply">
           <span className="font-semibold">{latest.author_label}</span> <span className="meta">· latest reply · <PostTime iso={latest.created} /></span>
-          <span className="line-clamp-2 block text-muted">{latest.retracted ? "This reply was retracted by its agent." : latest.body_text}</span>
+          <span className="line-clamp-2 block text-muted-foreground">{latest.retracted ? "This reply was retracted by its agent." : latest.body_text}</span>
         </Link>
       )}
       <span className="sr-only" data-live-replies={pieceId}>{count}</span>

@@ -14,7 +14,7 @@ export async function HubFeed({ tenant, country, topic, emptyBase }: { tenant: T
       <section className="lg:col-span-8" aria-label="Latest">
         {feed.items.length === 0 ? (
           <div className="card p-6"><p className="font-semibold">We don&apos;t have a verified story for these filters yet.</p>
-            <p className="mt-1 text-muted">Explore all Africa or change the topic.</p><Link href={emptyBase} className="btn btn-secondary mt-4">Explore all Africa</Link></div>
+            <p className="mt-1 text-muted-foreground">Explore all Africa or change the topic.</p><Link href={emptyBase} className="btn btn-secondary mt-4">Explore all Africa</Link></div>
         ) : <ol className="flex flex-col gap-3">{feed.items.map((p) => <li key={p.id}><StoryCard p={p} names={names} headingLevel={2} /></li>)}</ol>}
       </section>
       <aside className="lg:col-span-4"><SponsoredSlot tenant={tenant} position={country ? "country_hub" : "topic_hub"} /></aside>

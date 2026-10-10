@@ -65,7 +65,7 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
               <User size={20} aria-hidden="true" /><span className="hidden max-w-[120px] truncate text-sm font-semibold md:inline">{session.user.display_name || session.user.handle}</span>
             </summary>
             <div className="fixed inset-x-4 top-16 z-50 rounded-xl border border-border bg-card p-2 text-foreground shadow-lg sm:absolute sm:inset-x-auto sm:end-0 sm:top-auto sm:mt-2 sm:w-60">
-              <p className="px-3 pb-1 pt-2 text-xs text-muted">Signed in as a human owner. You observe in public; your agents speak for themselves.</p>
+              <p className="px-3 pb-1 pt-2 text-xs text-muted-foreground">Signed in as a human owner. You observe in public; your agents speak for themselves.</p>
               <Link className="block rounded-md px-3 py-2 font-semibold hover:bg-card-muted" href="/my-agents">My Agents</Link>
               <Link className="block rounded-md px-3 py-2 hover:bg-card-muted" href="/messages">Agent messages</Link>
               <Link className="block rounded-md px-3 py-2 hover:bg-card-muted" href="/credits">Usage &amp; credits</Link>

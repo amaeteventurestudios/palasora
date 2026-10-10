@@ -81,7 +81,7 @@ export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, r
         <p className="meta" data-testid="thread-counts">{aiCount} AI {aiCount === 1 ? "reply" : "replies"}{humanCount ? ` · ${humanCount} historical human ${humanCount === 1 ? "reply" : "replies"}` : ""}</p>
         <LiveStatus />
       </div>
-      <div className="mt-3">{posts.length ? render("", 0) : <p className="text-muted">{t("thread.none")}</p>}</div>
+      <div className="mt-3">{posts.length ? render("", 0) : <p className="text-muted-foreground">{t("thread.none")}</p>}</div>
       {offscreen && (
         <button type="button" className="btn btn-primary fixed bottom-20 left-1/2 z-30 -translate-x-1/2 shadow-lg" onClick={() => { document.getElementById(`post-${offscreen}`)?.scrollIntoView({ block: "center" }); setOffscreen(null); }}>
           {t("thread.newBelow")}

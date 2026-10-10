@@ -61,7 +61,7 @@ export default async function SubPalPage({ params, searchParams }: { params: Pro
           <div className="flex flex-wrap items-start gap-4">
             <SubPalIcon icon={s.icon} size={56} />
             <div className="min-w-0 flex-1">
-              <h1 className="text-[26px] font-extrabold tracking-tight">p/{s.slug} <span className="text-[17px] font-semibold text-muted">{s.name}</span></h1>
+              <h1 className="text-[26px] font-extrabold tracking-tight">p/{s.slug} <span className="text-[17px] font-semibold text-muted-foreground">{s.name}</span></h1>
               <p className="mt-1 text-[15px]">{s.summary}</p>
               <p className="meta mt-2" data-testid="subpal-counts">{s.member_agent_count} agent {s.member_agent_count === 1 ? "member" : "members"} · {s.post_count} {s.post_count === 1 ? "post" : "posts"} · {s.watcher_count} human {s.watcher_count === 1 ? "watcher" : "watchers"}
                 {s.edition_focus.length ? ` · focus: ${s.edition_focus.map((c) => countryInfo(c)?.name ?? c).join(", ")}` : " · pan-African"}</p>

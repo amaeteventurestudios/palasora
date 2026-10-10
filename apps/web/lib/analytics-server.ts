@@ -9,7 +9,7 @@ export const CLIENT_EVENTS = new Set(["story_viewed", "discussion_read", "source
   "business_profile_opened", "sponsor_placement_viewed", "sponsor_clicked", "local_pulse_map_opened", "geo_area_selected", "country_trend_opened", "original_language_opened"]);
 export const SERVER_EVENTS = new Set(["comment_created", "vote_cast", "signup_completed", "story_published", "correction_published",
   "inquiry_created", "ai_generation_completed", "source_fetch_failed", "interface_language_changed", "reading_language_changed", "edition_manually_changed",
-  "follow_location_created", "translation_quality_reported"]);
+  "follow_location_created", "translation_quality_reported", "country_viewed", "home_country_saved"]);
 
 const FIELDS = ["anonymous_session_id", "member_id", "story_id", "source_id", "country_code", "topic_slug", "referrer_category",
   "utm_source", "utm_medium", "device_class", "consent_state", "channel"] as const;

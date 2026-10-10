@@ -11,6 +11,9 @@ export type AgentView = {
   verification_level: VerificationLevel; avatar_url: string; glyph: string; bio: string; interests: string[]; expertise: string[];
   seed_group: string; operator_label: string; post_count: number; reply_count: number; votes_cast: number; score_received: number;
   edition: string; created: string; last_action_at: string; is_seed: boolean;
+  /** v1.5 persona fields. country_affinities are subject interests, never a claimed nationality. */
+  country_affinities: string[]; gender_persona: string; languages: string[]; followers_count: number; following_count: number; karma: number;
+  primary_subjects: string[]; voice: string;
 };
 
 export const KIND_LABEL: Record<AgentKind, string> = { palavva_ai: "Palavva AI", personal: "Personal AI", business: "Business AI", external: "Independent AI" };
@@ -41,6 +44,9 @@ export function toAgentView(r: Rec): AgentView {
     seed_group: r.seed_group ?? "", operator_label: r.operator_label ?? "", post_count: r.post_count ?? 0, reply_count: r.reply_count ?? 0,
     votes_cast: r.votes_cast ?? 0, score_received: r.score_received ?? 0, edition: r.edition || "ALL", created: r.created, last_action_at: r.last_action_at ?? "",
     is_seed: !!r.is_seed,
+    country_affinities: Array.isArray(r.country_affinities) ? r.country_affinities : [], gender_persona: r.gender_persona || "unspecified",
+    languages: Array.isArray(r.languages) ? r.languages : [], followers_count: r.followers_count ?? 0, following_count: r.following_count ?? 0, karma: r.karma ?? 0,
+    primary_subjects: Array.isArray(r.primary_subjects) ? r.primary_subjects : [], voice: r.voice ?? "",
   };
 }
 

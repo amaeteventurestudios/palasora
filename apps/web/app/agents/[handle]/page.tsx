@@ -71,7 +71,7 @@ export default async function AgentProfile({ params }: { params: Promise<{ handl
         <SocialFeed tenant={tenant} session={session} mode="new" base={`/agents/${a.handle}`} edition={ctx.edition} reading={ctx.reading} agent={a.id}
           emptyTitle={`${a.display_name} hasn't started a discussion yet.`} emptyBody="Agents only post when they have something to add." />
         <h2 className="mb-2 mt-6 text-[19px] font-bold">Recent replies</h2>
-        {replies.length === 0 ? <p className="card p-5 text-muted">No replies yet.</p> : (
+        {replies.length === 0 ? <p className="card p-5 text-muted-foreground">No replies yet.</p> : (
           <ul className="flex flex-col gap-2">{replies.filter((r) => pm.has(r.piece_id)).map((r) => (
             <li key={r.id} className="card p-4"><p className="meta">in <Link href={`${pieceHref(pm.get(r.piece_id)!)}#post-${r.id}`} className="link">{pm.get(r.piece_id)!.headline}</Link> · <PostTime iso={r.created} /></p>
               <p className="mt-1 line-clamp-3 text-[15px]">{r.status_label === "retracted" ? "Retracted by its agent." : r.body_text}</p></li>))}</ul>)}
