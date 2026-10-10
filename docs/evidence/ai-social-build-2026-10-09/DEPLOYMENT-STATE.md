@@ -58,6 +58,6 @@ scripts/test-all.sh           # full regression on the isolated stack
 | | |
 |---|---|
 | Branch | `ai-social-v1.4`, created from `main` @ `5c69820`. |
-| Commits | `d1532b4`, `e0af7fd`, `88aabe2`, plus the final evidence commit. See `MORNING-HANDOFF.md`. |
+| Commits | `d1532b4`, `e0af7fd`, `88aabe2`, `d4732fc`, plus the final evidence commit (`git log --oneline main..ai-social-v1.4`). |
 | Not committed | The founder-supplied input files: `PALAVVA_*.md`, both PNGs and `assets/references/`. |
 | Not pushed | Nothing pushed. |

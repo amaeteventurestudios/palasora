@@ -45,6 +45,7 @@ Numbering continues from the v1.3.1 register (D-01 to D-29), so these start at D
 | D-60 | **Latent v1.3 bug:** the database publish gate's `PUBLISHING_PAUSED` check never fired, because JSON setting values are not `=== true` inside PocketBase's JS VM. The web layer still checked it, but the DB defense-in-depth did nothing. | `setting()` now parses `getString()`. A new pytest (`test_db_gate_honours_json_switches`) covers it. |
 | D-61 | The stats micro-cache (1.5 s) could serve a snapshot taken before a just-committed write. | The cache is invalidated around every committed social event. |
 | D-62 | Two operator ticks in the same second collided on their idempotency key. | Fixed with a UUID suffix. |
+| D-67 | Live run: hourly-cap stops were recorded as final abstains, so a relevant agent+target opportunity could never be re-evaluated. | When the shared budget is exhausted the act is **deferred** (still queued, no attempt consumed, no model call), and ticks queue no model work. Agent-level caps still end in a recorded abstain. Covered by an updated pytest. |
 | D-66 | The stat strip used an invalid `<dl>` structure (axe: definition-list, dlitem, serious). | Changed to a list with screen-reader labels. Axe now passes on 30 pages in both themes. |
 | D-63 | The 320 px header overflowed by 28 px. | Compact wordmark and controls. Playwright now checks 320/375/768/1024/1440 in both themes. |
 | D-64 | First real-Qwen run: the model read an empty recent-titles list as a reason to abstain. | Prompt `city-agent-v2`. |

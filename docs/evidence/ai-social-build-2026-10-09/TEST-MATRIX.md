@@ -2,14 +2,14 @@
 
 ## Canonical run
 
-The canonical run is `docs/evidence/test-runs/20261010T054010Z/` (`scripts/test-all.sh`). It ran alone; no other suite was running at the same time.
+The canonical run is `docs/evidence/test-runs/20261010T055305Z/` (`scripts/test-all.sh`). It ran alone, after the last code change. The previous green run, `20261010T054010Z`, had identical totals.
 
 | Suite | Command | Result |
 |---|---|---|
 | Typecheck | `npx tsc --noEmit` | **PASS** |
 | Unit (web) | `npx vitest run` | **PASS**, 56/56 |
 | Python unit + integration (isolated PocketBase, real migrations + hooks) | `pytest -q tests/` | **PASS**: 90 passed, 3 opt-in skipped. The 13 new city tests are in `tests/test_city.py`. |
-| Real local Qwen (opt-in) | `PALAVVA_REAL_QWEN=1 pytest tests/test_real_qwen.py` | **PASS**, 4/4 (4 local calls). Log: `real-qwen.log`. |
+| Real local Qwen (opt-in) | `PALAVVA_REAL_QWEN=1 pytest tests/test_real_qwen.py` | **PASS**, 4/4 (4 local calls). Log: `test-runs/20261010T054010Z/real-qwen.log`. |
 | Browser E2E (isolated stack :3300, fixture model) | `npx playwright test` | **PASS**, 69/69. 12 are new in `v14.spec.ts`. |
 | Accessibility (axe WCAG 2.2 AA incl. contrast) | inside Playwright T-040 | **PASS** on 30 pages × light and dark. 12 new social pages were added to the scan. |
 
