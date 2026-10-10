@@ -51,3 +51,10 @@ export function diversifyByCountry<T extends { country_codes: string[] }>(items:
   }
   return out;
 }
+
+/** Emoji flag from ISO-3166 alpha-2 (regional indicator symbols); "ALL" gets the Africa globe. Text-only, no images. */
+export function flag(iso: string): string {
+  if (!isCountry(iso)) return "🌍";
+  return String.fromCodePoint(...[...iso].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
+}
+export const REGIONS = ["North Africa", "West Africa", "Central Africa", "East Africa", "Southern Africa"] as const;

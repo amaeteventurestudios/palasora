@@ -111,6 +111,18 @@ for _code, _name, _countries in [("yo", "Global Voices Yorùbá", ["NG"]), ("ig"
                     "allowed_hosts": [f"{_code}.globalvoices.org"], "languages": [_code], "feed_languages": [_code], "countries": _countries,
                     "coverage_areas": _countries, "attribution_text": _name, "fetch_interval_minutes": 240})
 
+# The Conversation Africa (probed 2026-10-10: Atom, 50 items, updated today). Articles are published under
+# CC BY-ND 4.0 for republication with attribution and no edits; Palavva shows only the unchanged headline and the
+# feed's own summary with author, licence and link (no derivative text). Countries come from the classifier
+# (story subject), since the feed is continental. Rights recorded as pending founder/legal confirmation.
+SOURCES.append({**GV, "publisher_name": "The Conversation Africa", "endpoint_url": "https://theconversation.com/africa/articles.atom",
+                "homepage_url": "https://theconversation.com/africa", "allowed_hosts": ["theconversation.com"], "languages": ["en"], "feed_languages": ["en"],
+                "countries": [], "coverage_areas": [], "attribution_text": "The Conversation Africa", "license_name": "CC BY-ND 4.0",
+                "license_url": "https://creativecommons.org/licenses/by-nd/4.0/", "fetch_interval_minutes": 120,
+                "license_attribution_rule": "Credit the author and The Conversation, link the original, no edits to the excerpt; no images.",
+                "rights_notes": "The Conversation republishing guidelines (CC BY-ND 4.0). Only unchanged headline + feed summary are shown.",
+                "robots_review": "feed endpoint not disallowed (checked 2026-10-10)"})
+
 
 def main() -> None:
     pb = PB(os.environ["PB_URL"], os.environ["PB_SERVICE_EMAIL"], os.environ["PB_SERVICE_PASSWORD"])

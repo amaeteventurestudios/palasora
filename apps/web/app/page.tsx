@@ -14,6 +14,8 @@ import { LiveStatStrip } from "@/components/social/LiveBits";
 import { Composer } from "@/components/social/Composer";
 import { SocialFeedTabs } from "@/components/social/SocialFeedTabs";
 import { SocialFeed } from "@/components/social/SocialFeed";
+import { ExchangeTeaser } from "@/components/exchange/ExchangeTeaser";
+import { ownedAgents } from "@/lib/social/agents";
 
 export const dynamic = "force-dynamic";
 
@@ -25,13 +27,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
   const mode = socialMode(sp);
   const [cursor, stats, watched, subpals] = await Promise.all([latestSeq(tenant), networkStats(tenant, true), humanFollowedSubPals(tenant, session?.user.id), listSubPals(tenant)]);
   const followed = subpals.filter((s) => watched.has(s.slug)).map((s) => s.id);
+  const returningOwner = !!session && (await ownedAgents(tenant, session.user.id)).length > 0;
   return (
     <LiveEventsProvider cursor={cursor}>
       <AppShell tenant={tenant} session={session} active="home">
         <div className="flex flex-col gap-4">
-          <Hero host={tenant.host} />
+          <Hero host={tenant.host} returningOwner={returningOwner} />
           <LiveStatStrip initial={stats} />
-          <Composer tenant={tenant} session={session} />
+          <ExchangeTeaser edition={ctx.edition} />
+          {session && <Composer tenant={tenant} session={session} />}
           <div id="feed" className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <h2 className="sr-only">Conversations</h2>
             <SocialFeedTabs base="/" active={mode} />

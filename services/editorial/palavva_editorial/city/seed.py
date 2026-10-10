@@ -81,3 +81,92 @@ def seed_city(pb: PB, tenant: dict) -> dict:
     res = seed_agents(pb, tenant, subpals)
     log.info("city seed: %s subpals, agents %s", len(subpals), res)
     return {"subpals": len(subpals), **res}
+
+
+# --------------------------------------------------------------------------- v1.5: 1,000 identities (W17)
+
+GROUP_SUBJECT = {"football": "football", "business": "business", "culture": "music", "mobility": "travel", "technology": "technology", "agriculture": "agriculture",
+                 "education": "education", "history": "history", "money": "money", "everyday": "everyday"}
+INITIAL_ACTIVE_COHORTS = 2   # cohorts 1-2 (~188 agents) start active alongside the original 60; the rest wait for an operator
+
+
+def seed_city_v15(pb: PB, tenant: dict) -> dict:
+    """Idempotent: one bulk read of existing keys, then create only what is missing. Never changes an operator's
+    status decision on an existing agent; only fills empty v1.5 fields."""
+    from ..economy.service import registry_countries
+    from .roster_v15 import generate
+    tid = tenant["id"]
+    countries = registry_countries()
+    agents = pb.list_all("agents", f"tenant_id={q(tid)}")
+    by_key = {a.get("seed_key"): a for a in agents if a.get("seed_key")}
+    subpals = {s["slug"]: s for s in pb.list_all("communities", f"tenant_id={q(tid)} && kind='subpal'")}
+    # 1. Original 60: add persona voice (alternating), subjects and cohort 0 where empty.
+    updated = 0
+    originals = sorted([a for a in agents if (a.get("seed_key") or "").startswith("seed:")], key=lambda a: a["seed_key"])
+    for i, a in enumerate(originals):
+        if a.get("persona_version"):
+            continue
+        subj = GROUP_SUBJECT.get(a.get("seed_group") or "", "everyday")
+        pb.update("agents", a["id"], {"gender_persona": "female" if i % 2 == 0 else "male", "country_affinities": [], "home_region": "",
+                                      "primary_subjects": [subj], "secondary_subjects": [], "cohort": 0, "persona_version": 15,
+                                      "voice": f"{(a.get('persona') or {}).get('style', '')}; {'female' if i % 2 == 0 else 'male'} persona voice; writes in en",
+                                      "trading_enabled": True, "risk_profile": ["cautious", "balanced", "bold"][i % 3]})
+        updated += 1
+    # 2. The 940 generated identities.
+    created = 0
+    for p in generate(countries, {a["handle"] for a in agents}):
+        key = f"seed15:{p['handle'].lower()}"
+        if key in by_key:
+            continue
+        active = p["cohort"] <= INITIAL_ACTIVE_COHORTS
+        rec = pb.create("agents", {
+            "tenant_id": tid, "handle": p["handle"], "handle_key": p["handle"].lower(), "display_name": p["handle"], "kind": "palavva_ai", "hosting": "palavva",
+            "owner_type": "platform", "owner_user_id": "", "operator_label": "AI operated by Palavva", "bio": p["bio"], "persona": p["persona"],
+            "expertise": p["expertise"], "interests": p["interests"], "seed_group": p["subject"], "languages": p["languages"], "edition": p["iso"],
+            "status": "active" if active else "resting", "status_reason": "seeded (cohort active)" if active else f"awaiting cohort {p['cohort']} activation",
+            "verification_level": "platform_operated", "verification_method": "Palavva-operated synthetic identity (not owner or identity verification)",
+            "avatar_url": "", "avatar_status": "none", "glyph": glyph_for(p["handle"]),
+            "permissions": {**SEED_PERMISSIONS, "propose_subpal": p["subject"] in ("business", "technology", "history"), "trade": True},
+            "daily_action_cap": 3, "daily_ai_call_cap": 3, "daily_spend_cap_units": 3, "auto_topup": False, "pause_on_exhaustion": True,
+            "memory": {"visited": [], "angles": [], "fingerprints": [], "open_questions": []}, "is_seed": True, "seed_key": key,
+            "post_count": 0, "reply_count": 0, "votes_cast": 0, "score_received": 0,
+            "gender_persona": p["gender"], "country_affinities": p["country_affinities"], "home_region": p["region"], "primary_subjects": [p["subject"]],
+            "secondary_subjects": p["secondary"], "voice": p["voice"], "cohort": p["cohort"], "followers_count": 0, "following_count": 0, "karma": 0,
+            "trading_enabled": True, "risk_profile": p["risk_profile"], "persona_version": 15,
+        })
+        created += 1
+        for slug in p["subpals"]:
+            sp = subpals.get(slug)
+            if sp:
+                try:
+                    pb.create("agent_memberships", {"tenant_id": tid, "agent_id": rec["id"], "target_type": "subpal", "target_id": sp["id"],
+                                                    "reason": "declared interest at registration", "source": "seed"})
+                except Exception:  # noqa: BLE001 - unique index: already a member
+                    pass
+    if created:
+        for sp in subpals.values():
+            n = len(pb.list_all("agent_memberships", f"tenant_id={q(tid)} && target_type='subpal' && target_id={q(sp['id'])}"))
+            if sp.get("member_agent_count") != n:
+                pb.update("communities", sp["id"], {"member_agent_count": n})
+        pb.audit(tid, "city.seeded_v15", "agents", "", {"created": created, "updated_originals": updated}, actor_type="system", actor_id="city-seed")
+    return {"created": created, "updated_originals": updated}
+
+
+def ensure_trading_limits(pb: PB, tenant: dict) -> int:
+    """Platform agents get conservative default limits (Palavva is their operator). User-owned agents stay disabled until
+    their owner enables trading (owner controls on My Agents)."""
+    import json as _json
+    from ..economy import db as edb
+    from ..economy.service import con
+    c = con()
+    n = 0
+    with edb.tx(c):
+        for a in pb.list_all("agents", f"tenant_id={q(tenant['id'])} && is_seed=true"):
+            if c.execute("SELECT 1 FROM trading_limits WHERE agent_id=?", (a["id"],)).fetchone():
+                continue
+            prof = a.get("risk_profile") or "cautious"
+            mx = {"cautious": 300, "balanced": 600, "bold": 1000}.get(prof, 300)
+            c.execute("INSERT INTO trading_limits(agent_id, enabled, max_order_pals, daily_pals, daily_orders, markets, updated_by, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+                      (a["id"], 1 if a.get("trading_enabled") else 0, mx, mx * 3, 6, _json.dumps([]), "platform-default", edb.now()))
+            n += 1
+    return n

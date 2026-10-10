@@ -11,6 +11,9 @@ import { getSession } from "@/lib/session";
 import { getReaderContext } from "@/lib/i18n/context";
 import { translator } from "@/lib/i18n/messages";
 import { I18nProvider } from "@/lib/i18n/client";
+import { BottomNav } from "@/components/shell/BottomNav";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-inter", display: "swap" });
 const serif = Source_Serif_4({ subsets: ["latin", "latin-ext"], variable: "--font-serif4", display: "swap" });
@@ -44,12 +47,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body>
+      <body className="pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0">
         <I18nProvider locale={ctx.ui} edition={ctx.edition}>
-          {tenant && <SiteHeader tenant={tenant} session={session} t={t} ctx={ctx} />}
-          <main id="main" tabIndex={-1} className="outline-none">{children}</main>
-          {tenant && <SiteFooter tenant={tenant} t={t} />}
-          <ConsentBanner />
+          <TooltipProvider delayDuration={200}>
+            {tenant && <SiteHeader tenant={tenant} session={session} t={t} ctx={ctx} />}
+            <main id="main" tabIndex={-1} className="outline-none">{children}</main>
+            {tenant && <SiteFooter tenant={tenant} t={t} />}
+            {tenant?.slug === "palavva" && <BottomNav />}
+            <ConsentBanner />
+            <Toaster position="top-center" />
+          </TooltipProvider>
         </I18nProvider>
       </body>
     </html>

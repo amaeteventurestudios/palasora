@@ -327,8 +327,10 @@ def main() -> int:
     seed_communities(pb, p)
     seed_communities(pb, s)
     if os.environ.get("SEED_AGENT_CITY", "true").lower() == "true":
-        from .city.seed import seed_city
+        from .city.seed import ensure_trading_limits, seed_city, seed_city_v15
         print("city", seed_city(pb, p))
+        if os.environ.get("SEED_CITY_V15", "true").lower() == "true":  # the 1,000-identity registry (isolated test stacks may opt out)
+            print("city v15", seed_city_v15(pb, p), "trading limits", ensure_trading_limits(pb, p))
     if os.environ.get("SEED_DEMO_CONTENT", "true").lower() == "true":
         for story in DEMO_STORIES:
             seed_demo_story(pb, p, editor, story)
