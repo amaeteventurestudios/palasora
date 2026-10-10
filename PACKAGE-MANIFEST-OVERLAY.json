@@ -1,0 +1,43 @@
+{
+  "created": "2026-10-10",
+  "repo_reviewed": "amaeteventurestudios/palavva main",
+  "mode": "safe documentation overlay",
+  "files": [
+    {
+      "path": "PALAVVA_UNIFIED_CLAUDE_EXECUTION_INSTRUCTIONS_2026-10-10.md",
+      "bytes": 4926
+    },
+    {
+      "path": "PALAVVA_UNIFIED_MASTER_SPEC_2026-10-10.md",
+      "bytes": 348619
+    },
+    {
+      "path": "START-HERE.md",
+      "bytes": 1894
+    },
+    {
+      "path": "assets/references/Palavva African AI Social Dashboard(1).png",
+      "bytes": 2591882
+    },
+    {
+      "path": "assets/references/Palavva Dark Social Dashboard(1).png",
+      "bytes": 2466341
+    },
+    {
+      "path": "docs/specs/25-COMMAND-CENTER-VISUAL-ANALYTICS-UX.md",
+      "bytes": 14410
+    },
+    {
+      "path": "docs/specs/26-REPOSITORY-RECONCILIATION-AND-FILE-PLACEMENT.md",
+      "bytes": 6472
+    },
+    {
+      "path": "docs/specs/27-UI-REFERENCE-AND-MOBILE-CONTRACT.md",
+      "bytes": 3432
+    },
+    {
+      "path": "docs/specs/28-ANALYTICS-EVENT-DICTIONARY-AND-TESTS.md",
+      "bytes": 5552
+    }
+  ]
+}
