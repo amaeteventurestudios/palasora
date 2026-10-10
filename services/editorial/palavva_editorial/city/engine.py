@@ -148,17 +148,29 @@ def usage_today(pb: PB, tenant_id: str) -> dict:
     return out
 
 
+def global_budget_refusal(pb: PB, tenant_id: str, u: dict | None = None) -> tuple[str, int]:
+    """Shared seed-city budget. Returns (reason, seconds until capacity may free) or ('', 0)."""
+    c = cfg()
+    u = u or usage_today(pb, tenant_id)
+    now = datetime.now(timezone.utc)
+    to_midnight = int(86400 - (now.hour * 3600 + now.minute * 60 + now.second)) + 60
+    if u["city_calls"] >= c["daily_model_calls"]:
+        return f"city daily model-call cap {c['daily_model_calls']} reached", to_midnight
+    if u["tokens"] >= c["daily_tokens"]:
+        return f"daily token cap {c['daily_tokens']} reached", to_midnight
+    if u["model_calls_last_hour"] >= c["hourly_model_calls"]:
+        return f"hourly model-call cap {c['hourly_model_calls']} reached", 900
+    return "", 0
+
+
 def budget_refusal(pb: PB, tenant_id: str, agent: dict, *, owner_task: bool = False) -> str:
     c = cfg()
     u = usage_today(pb, tenant_id)
     mine = u["by_agent"].get(agent["id"], {"public": 0, "calls": 0})
     if not owner_task:
-        if u["city_calls"] >= c["daily_model_calls"]:
-            return f"city daily model-call cap {c['daily_model_calls']} reached"
-        if u["model_calls_last_hour"] >= c["hourly_model_calls"]:
-            return f"hourly model-call cap {c['hourly_model_calls']} reached"
-        if u["tokens"] >= c["daily_tokens"]:
-            return f"daily token cap {c['daily_tokens']} reached"
+        reason, _ = global_budget_refusal(pb, tenant_id, u)
+        if reason:
+            return reason
     if mine["calls"] >= int(agent.get("daily_ai_call_cap") or 4):
         return f"agent daily AI-call cap {agent.get('daily_ai_call_cap')} reached"
     if mine["public"] >= int(agent.get("daily_action_cap") or 3):
@@ -351,8 +363,13 @@ def tick(pb: PB, queue: Queue, s: Settings, job: dict) -> dict:
                 summary.append({"agent": a["handle"], "outcome": "original candidate", "subpal": sp["slug"]})
                 continue
         summary.append({"agent": a["handle"], "outcome": "no relevant candidate (abstain, no model call)"})
-    # Strict priorities: highest relevance first, one act per thread per window, bounded per tick.
+    # Strict priorities: highest relevance first, one act per thread per window, bounded per tick. While the shared budget
+    # is exhausted no model work is queued (follows above need no model).
     proposals.sort(key=lambda x: -x[0])
+    greason, _ = global_budget_refusal(pb, tid)
+    if greason:
+        summary.append({"agent": "*", "outcome": f"no model work queued: {greason}"})
+        proposals = []
     chosen, threads = [], set()
     by_handle = {a["id"]: a for a in pool}
     for sc, cnd, why, key in proposals:
@@ -559,6 +576,11 @@ def act(pb: PB, queue: Queue, s: Settings, provider: ModelProvider, job: dict) -
             _finish(pb, row, "blocked", f"web refused follow: {e.body.get('error', {}).get('message', e.status)}")
             return {"outcome": "refused", "status": e.status}
 
+    # Shared budget exhausted: DEFER (job stays queued, no attempt consumed, no model call) so a relevant opportunity is
+    # not thrown away; it is re-checked when capacity frees. Agent-level caps below end in a recorded abstain.
+    greason, gwait = global_budget_refusal(pb, tid)
+    if greason:
+        raise Deferred(f"CITY_BUDGET: {greason}", gwait)
     refusal = budget_refusal(pb, tid, agent)
     wallet = PLATFORM_WALLET if agent.get("owner_type") != "user" else agent["owner_user_id"]
     if not refusal and wallet != PLATFORM_WALLET and _owner_allowance_left(pb, tid, wallet) <= 0:

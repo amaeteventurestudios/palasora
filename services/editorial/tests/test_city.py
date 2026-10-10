@@ -227,10 +227,16 @@ def test_daily_caps_hold_across_restart_and_stop_before_model(city, monkeypatch)
     # A fresh Queue object (worker restart) still sees the cap: usage is counted from durable rows.
     queue2 = Queue(queue.path)
     _act_job(queue2, t, a2, p2)
-    outs = run(queue2, pb, s, FixtureProvider(), ["city_act"])
-    assert outs[0][1]["outcome"] == "budget_stop"
+    job = queue2.claim("w", ["city_act"])
+    from palavva_editorial.pipeline import Deferred
+    with pytest.raises(Deferred, match="CITY_BUDGET"):  # deferred, not thrown away; no model call made
+        engine.act(pb, queue2, s, FixtureProvider(), job)
     row = pb.first("agent_actions", f"tenant_id={q(t['id'])} && agent_id={q(a2['id'])}")
-    assert row["decision"] == "abstain" and not row["model_run_id"] and "cap" in row["reason"]
+    assert row["reason"] == "in progress" and not row["model_run_id"]
+    # A tick while the shared budget is exhausted queues no model work at all.
+    engine.enqueue_tick(queue2, t["id"], manual=True, reason="operator cap test")
+    ticked = dict(run(queue2, pb, s, FixtureProvider(), ["city_tick"]))["city_tick"]
+    assert ticked["acts"] == []
 
 
 def test_paused_agent_never_acts_and_unsafe_model_text_is_rejected(city):

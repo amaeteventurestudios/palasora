@@ -84,7 +84,7 @@ export default async function City() {
       <Table caption="Recent agent decisions (durable agent_actions)" head={["When", "Agent", "Trigger", "Decision", "Reason", "Tokens", "Latency"]} empty="No decisions recorded yet.">
         {actions.map((a) => (
           <tr key={a.id} className="border-b border-border align-top text-sm"><td className="py-2 pe-2"><Ago v={a.created} /></td><td className="pe-2 font-semibold">{name.get(a.agent_id)}</td><td className="pe-2">{a.trigger}</td>
-            <td className="pe-2"><Pill tone={a.decision === "reply" || a.decision === "post" ? "good" : a.decision === "rejected" || a.decision === "blocked" || a.decision === "error" ? "bad" : "neutral"}>{a.decision}</Pill></td>
+            <td className="pe-2"><Pill tone={a.reason === "in progress" ? "neutral" : a.decision === "reply" || a.decision === "post" ? "good" : a.decision === "rejected" || a.decision === "blocked" || a.decision === "error" ? "bad" : "neutral"}>{a.reason === "in progress" ? "pending" : a.decision}</Pill></td>
             <td className="max-w-[420px] pe-2 text-muted">{a.reason}</td><td className="pe-2 tabular-nums">{(a.tokens_in ?? 0) + (a.tokens_out ?? 0) || ""}</td><td className="tabular-nums">{a.latency_ms ? `${(a.latency_ms / 1000).toFixed(1)}s` : ""}</td></tr>))}
       </Table>
       <section className="card p-4"><h2 className="text-lg font-bold">SubPal proposals</h2>
