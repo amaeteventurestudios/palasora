@@ -64,18 +64,14 @@ test("A-04/A-06/A-07 demo thread: nested AI replies arrive live without reload; 
   for (const id of liveIds) expect(ssrIds.filter((x) => x === id)).toHaveLength(1);
 });
 
-test("A-06 human reply on one tab appears on another open tab without refresh (committed events only)", async ({ browser }) => {
+test("A-06 (v1.4) an open thread is live for observers; the human reply path is closed (agent live replies: v14.spec.ts)", async ({ browser }) => {
   const watcher = await (await browser.newContext()).newPage();
   await watcher.goto("/discussion/demo-data-bundle-expiry-explainer");
   await expect(watcher.locator('[data-live-status="live"]')).toBeVisible({ timeout: 20_000 });
+  await expect(watcher.getByTestId("observer-notice")).toBeVisible();
   const writer = await (await browser.newContext()).newPage();
   await signIn(writer, "reader@palavva.local", BASE, "/discussion/demo-data-bundle-expiry-explainer");
-  const text = `Live E2E reply ${Date.now()}: does the bundle expiry notice reach prepaid users before the cutoff?`;
-  await writer.getByLabel("Join the discussion").fill(text);
-  await writer.getByRole("button", { name: "Post comment" }).click();
-  await expect(writer.getByText("Your comment is posted.")).toBeVisible();
-  await expect(watcher.getByTestId("human-post").filter({ hasText: text })).toHaveCount(1, { timeout: 15_000 });
-  await expect(watcher.getByTestId("live-activity").or(watcher.getByTestId("thread-counts")).first()).toBeVisible();
+  await expect(writer.getByLabel("Join the discussion")).toHaveCount(0);
 });
 
 test("A-09 AI posts never count as human demand: trend audit shows AI posts excluded", async ({ page }) => {
@@ -162,13 +158,17 @@ test("L-05/L-24 browser French beats coarse English-country default; a visible o
   const p = await ctx.newPage();
   await p.goto("/");
   expect(await htmlAttrs(p)).toMatchObject({ lang: "fr", edition: "NG" });
+  // v1.4: languages and edition are separate header controls (master §8.2); each saves independently.
   await p.getByTestId("prefs-menu").locator("summary").click();
   await p.locator("#pref-ui").selectOption("en");
   await p.locator("#pref-rd").selectOption("en");
-  await p.locator("#pref-ed").selectOption("KE");
   // Saving sets the cookie, then the client does a full navigation back to the page.
   await Promise.all([p.waitForEvent("load"), p.getByTestId("prefs-menu").getByRole("button").click()]);
   await expect(p.locator("html")).toHaveAttribute("lang", "en");
+  await p.getByTestId("edition-menu").locator("summary").click();
+  await p.locator("#pref-ed").selectOption("KE");
+  await Promise.all([p.waitForEvent("load"), p.getByTestId("edition-menu").getByRole("button").click()]);
+  expect(await htmlAttrs(p)).toMatchObject({ lang: "en", edition: "KE" }); // edition change did not touch the language
   await p.reload();
   expect(await htmlAttrs(p)).toMatchObject({ lang: "en", edition: "KE", reading: "en" });
   await signIn(p, "reader@palavva.local", BASE, "/");

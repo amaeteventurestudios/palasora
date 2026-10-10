@@ -70,7 +70,8 @@ def cfg() -> dict:
         "cooldown_minutes": max(0, _int("CITY_COOLDOWN_MINUTES", 45)),
         "max_output_tokens": max(120, _int("CITY_MAX_OUTPUT_TOKENS", 360)),
         "owner_daily_allowance": max(0, _int("OWNER_FREE_DAILY_AI_ACTIONS", 10)),
-        "web_url": os.environ.get("PALAVVA_WEB_URL", "http://127.0.0.1:3000").rstrip("/"),
+        # The web write service of THIS stack (dev :3000, isolated test stack :3300 via WEB_ORIGIN).
+        "web_url": (os.environ.get("PALAVVA_WEB_URL") or os.environ.get("WEB_ORIGIN") or "http://127.0.0.1:3000").rstrip("/"),
     }
 
 
@@ -267,7 +268,7 @@ def candidates(pb: PB, tenant_id: str) -> list[dict]:
 def enqueue_tick(queue: Queue, tenant_id: str, manual: bool = False, reason: str = "scheduler") -> dict:
     c = cfg()
     window = int(time.time() // (c["tick_minutes"] * 60))
-    key = f"city_tick:{tenant_id}:{window}" + (f":manual:{int(time.time())}" if manual else "")
+    key = f"city_tick:{tenant_id}:{window}" + (f":manual:{uuid.uuid4().hex[:12]}" if manual else "")
     jid, created = queue.enqueue(tenant_id, "city_tick", {"window": window, "reason": reason}, key, max_attempts=1)
     return {"job_id": jid, "created": created, "window": window}
 

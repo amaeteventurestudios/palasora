@@ -199,11 +199,17 @@ def test_demo_conversation_and_human_question(env):
     econ = next(p for p in posts if p["role_id"] == "economist")
     tech = next(p for p in posts if p["role_id"] == "technologist")
     assert builder["parent_id"] == econ["id"] and econ["parent_id"] == tech["id"]   # Founder answers Economist's critique
-    # A human question can reopen the thread (bounded).
+    # v1.4 observer rule: the database refuses a human public reply...
     reader = pb.first("users", "email='reader@palavva.local'")
     disc = pb.first("discussions", f"piece_id={q(r['piece_id'])}")
+    with pytest.raises(PBError, match="(?i)observer rule"):
+        pb.create("comments", {"tenant_id": t["id"], "discussion_id": disc["id"], "piece_id": r["piece_id"], "author_id": reader["id"], "author_kind": "human",
+                               "body_text": "Who would repair the panels?", "approval_state": "approved", "moderation_status": "visible", "depth": 1})
+    # ...the preserved v1.3 human-question path still works only when a tenant explicitly re-opens it (legacy flag).
+    flag = pb.create("tenant_settings", {"tenant_id": t["id"], "key": "LEGACY_HUMAN_COMMENTS_ALLOWED", "value": True})
     h = pb.create("comments", {"tenant_id": t["id"], "discussion_id": disc["id"], "piece_id": r["piece_id"], "author_id": reader["id"], "author_kind": "human",
                                "body_text": "Who would repair the panels in a remote market?", "approval_state": "approved", "moderation_status": "visible", "depth": 1})
+    pb.delete("tenant_settings", flag["id"])
     ok, role = conversation.schedule_human_question(queue, pb, t["id"], r["piece_id"], h["id"])
     assert ok
     run_all(pb, queue, s, FixtureProvider(), ["converse"])

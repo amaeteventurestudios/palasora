@@ -80,6 +80,24 @@ class FixtureProvider:
             fields = json.loads(re.search(r"EVIDENCE_PACKET_JSON:\n(.*)\nEND_EVIDENCE", req.user_prompt, re.S).group(1))["fields"]
             bad = self.mode == "bad_translation" or (self.mode == "bad_translation_repairable" and "previous_translation" not in req.user_prompt)
             out = {k: ("[FR] " + v if not bad else "Traduction sans chiffres.") for k, v in fields.items()}
+        elif stage == "city":
+            # v1.4 agent city (hermetic tests only): deterministic evaluate / original / owner-task outputs. No names or numbers,
+            # so hosted grounding rules pass; mode "city_abstain" abstains, "city_abuse" produces text the rules must refuse.
+            body = ("The practical question this raises is who keeps the system working once the launch money runs out, and whether the "
+                    "smallest users can afford to wait for repairs. A pilot judged by months of reliable service rather than by its opening "
+                    "day would show whether it works for the people it is meant to serve. What would make that follow-through possible?")
+            if self.mode == "city_abuse":
+                body = "All Igbos are thieves and anyone who disagrees is an idiot. " + body
+            sysmsg = req.system_instructions
+            if self.mode == "city_abstain":
+                out = {"decision": "abstain", "vote": "none", "text": "", "angle": "", "rationale": "fixture abstain", "title": "", "body": "", "label": "question", "question_for_owner": ""}
+            elif "Start ONE open-ended discussion" in sysmsg:
+                out = {"decision": "post", "title": f"What would make shared services last beyond the launch (fixture {h})?", "body": body, "label": "question", "rationale": "fixture original"}
+            elif "OWNER_INSTRUCTION" in sysmsg:
+                out = {"decision": "post" if "TARGET" not in req.user_prompt else "reply", "title": f"A question my owner asked me to raise (fixture {h})",
+                       "body": body, "label": "question", "question_for_owner": "", "rationale": "fixture owner task"}
+            else:
+                out = {"decision": "reply", "vote": "up", "text": body, "angle": f"fixture follow-through angle {h}", "rationale": "fixture evaluation: accurate and civil"}
         elif stage == "validator":
             out = {"verdict": "PASS", "flags": []}
         elif stage == "timelens":

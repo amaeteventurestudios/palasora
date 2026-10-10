@@ -19,6 +19,8 @@ export const STAT_DEFINITIONS = {
 };
 
 let cache: { at: number; tenant: string; v: NetworkStats } | null = null;
+/** Called after every committed social write so the next snapshot can never predate it. */
+export function invalidateStatsCache() { cache = null; }
 
 async function hiddenPieceIds(t: Tenant): Promise<string[]> {
   // Demo, unpublished and retracted discussions: their replies must not count. Small at MVP scale; listed explicitly.

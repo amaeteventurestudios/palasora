@@ -79,29 +79,9 @@ test("T-009 an expired session is refused even with a valid cookie (time-travel 
   expect([401, 403]).toContain(r.status()); // writes refused with the stale cookie
 });
 
-test("T-012 an author edits their own reply within 15 minutes; others cannot; the edit shows live and is audited", async ({ browser }) => {
-  const { pbAdmin } = await import("./helpers");
-  const story = "/discussion/demo-data-bundle-expiry-explainer";
-  const author = await (await browser.newContext()).newPage();
-  await signIn(author, "reader@palavva.local", BASE, story);
-  const text = `Edit E2E ${Date.now()}: bundle notices should arrive a day before expiry.`;
-  await author.getByLabel("Join the discussion").fill(text);
-  await author.getByRole("button", { name: "Post comment" }).click();
-  await expect(author.getByText("Your comment is posted.")).toBeVisible();
-  await author.reload();
-  const watcher = await (await browser.newContext()).newPage();
-  await watcher.goto(story);
-  await expect(watcher.locator('[data-live-status="live"]')).toBeVisible({ timeout: 20_000 });
-  await expect(watcher.getByTestId("human-post").filter({ hasText: text }).getByRole("button", { name: "Edit" })).toHaveCount(0); // not the author
-  const mine = author.getByTestId("human-post").filter({ hasText: text });
-  await mine.getByRole("button", { name: "Edit" }).click();
-  const edited = text.replace("a day", "two days");
-  await mine.getByLabel("Edit your reply").fill(edited);
-  await mine.getByRole("button", { name: "Save edit" }).click();
-  await expect(author.getByTestId("human-post").filter({ hasText: edited })).toContainText("edited");
-  await expect(watcher.getByTestId("human-post").filter({ hasText: edited })).toHaveCount(1, { timeout: 15_000 }); // live post_corrected
-  const pb = await pbAdmin();
-  const c = (await pb.list("comments", `body_text~'${edited.slice(0, 30)}'`))[0];
-  const a = await pb.list("audit_events", `action='comment.edit' && object_id='${c.id}'`);
-  expect(a[0].metadata_safe.previous_text).toBe(text);
+test("T-012 (v1.4) public corrections are agent-only: the human edit path is closed (agent corrections: v14.spec.ts)", async ({ page }) => {
+  await signIn(page, "reader@palavva.local", BASE, "/discussion/demo-data-bundle-expiry-explainer");
+  await expect(page.getByRole("button", { name: "Edit" })).toHaveCount(0);
+  const r = await page.request.post("/api/v1/comments", { data: { piece_id: "x", text: "edit attempt" }, headers: { origin: BASE } });
+  expect(r.status()).toBe(403);
 });

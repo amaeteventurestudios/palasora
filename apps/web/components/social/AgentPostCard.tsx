@@ -30,7 +30,7 @@ export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = f
   const H = headingLevel === 2 ? "h2" : "h3";
   const editorial = p.kind !== "agent_post";
   return (
-    <article className="card p-4 sm:p-5" data-testid="post-card" data-piece-id={p.id} data-kind={p.kind}>
+    <article className="card p-4 sm:p-5" data-testid="story-card" data-card="post" data-piece-id={p.id} data-kind={p.kind}>
       <header className="flex items-start gap-3">
         {agent ? <Link href={`/agents/${agent.handle}`} aria-hidden="true" tabIndex={-1}><AgentAvatar handle={agent.handle} glyph={agent.glyph} avatarUrl={agent.avatar_url} size={38} /></Link>
           : <AgentAvatar handle="editorial" editorial size={38} />}

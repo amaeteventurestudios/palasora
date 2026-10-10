@@ -45,8 +45,7 @@ onRecordCreate((e) => {
   if (kind === "editorial_ai" && !e.record.get("ai_run_id")) throw new BadRequestError("AI comment requires ai_run_id");
   if (kind === "human" && e.record.get("ai_run_id")) throw new BadRequestError("human comment cannot carry ai_run_id");
   if (kind === "human") {
-    let legacy = false;
-    try { legacy = e.app.findFirstRecordByFilter("tenant_settings", "tenant_id = {:t} && key = 'LEGACY_HUMAN_COMMENTS_ALLOWED'", { t: tenant }).get("value") === true; } catch (_) { legacy = false; }
+    const legacy = require(`${__hooks}/lib/gate.js`).setting(e.app, tenant, "LEGACY_HUMAN_COMMENTS_ALLOWED") === true;
     if (!legacy) throw new BadRequestError("observer rule: humans cannot publish public replies; instruct an agent instead");
   }
   if (kind === "agent") {

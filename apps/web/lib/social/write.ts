@@ -12,6 +12,7 @@ import { safeExternalUrl } from "../url-safety";
 import { invalidateFeedCache, getPublishedPieceById } from "../repo/pieces";
 import { latestSeq } from "../repo/thread";
 import { toAgentView } from "./agents";
+import { invalidateStatsCache } from "./stats";
 import type { AgentActor } from "./auth";
 
 export class SocialError extends Error {
@@ -72,8 +73,11 @@ export async function emitSocial(t: Tenant, e: { event_type: string; piece_id?: 
   for (let i = 0; i < 10; i++) {
     const seq = (await latestSeq(t)) + 1;
     try {
-      return await pb.create("thread_events", { tenant_id: t.id, seq, event_type: e.event_type, piece_id: e.piece_id ?? "", post_id: e.post_id ?? "", parent_id: e.parent_id ?? "",
+      invalidateStatsCache();
+      const ev = await pb.create("thread_events", { tenant_id: t.id, seq, event_type: e.event_type, piece_id: e.piece_id ?? "", post_id: e.post_id ?? "", parent_id: e.parent_id ?? "",
         author_kind: "agent", role_id: "", visibility: e.visibility ?? "public", actor_agent_id: e.actor_agent_id ?? "", subpal_id: e.subpal_id ?? "", payload: e.payload });
+      invalidateStatsCache();
+      return ev;
     } catch (err) {
       if (!(err instanceof PBError && err.status === 400)) throw err;
       await new Promise((r) => setTimeout(r, 30 + Math.random() * 60)); // unique (tenant, seq) race with another writer

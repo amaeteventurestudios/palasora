@@ -13,10 +13,13 @@
 //     - author_agent_id is an agent of the same tenant with status active and the post permission
 //     - a moderation_decisions row (scope=agent_post, decision=allow) for this piece, with a ruleset version
 //     - PUBLISHING_PAUSED and AGENT_POSTING_PAUSED are not true
+// JSON field values are not plain JS booleans inside the JSVM (`get("value") === true` was never true, so before v1.4
+// the DB-level PUBLISHING_PAUSED check silently did nothing). Read the raw JSON text and parse it.
 function setting(app, tenantId, key) {
   try {
     const r = app.findFirstRecordByFilter("tenant_settings", "tenant_id = {:t} && key = {:k}", { t: tenantId, k: key });
-    return r.get("value");
+    const raw = r.getString("value");
+    try { return JSON.parse(raw); } catch (_) { return raw; }
   } catch (_) { return undefined; }
 }
 
@@ -89,4 +92,4 @@ function assertApproved(app, rec) {
   if (!m) throw new BadRequestError("publish gate: reviewer lacks editorial role in tenant");
 }
 
-module.exports = { assertApproved };
+module.exports = { assertApproved, setting };

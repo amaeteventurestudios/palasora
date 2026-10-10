@@ -4,7 +4,7 @@ import { pb, q } from "@/lib/pb";
 import { env } from "@/lib/env";
 import { DemoBadge } from "@/components/Labels";
 
-export const metadata = { title: "Founder Spotlight" };
+export const metadata = { title: "Founder Spotlight (archive)" };
 export const dynamic = "force-dynamic";
 
 export default async function Founders() {

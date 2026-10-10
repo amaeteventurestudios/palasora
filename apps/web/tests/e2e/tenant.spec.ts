@@ -53,7 +53,7 @@ test("T-033 sessions, roles and admin views are tenant-bound", async ({ browser 
   const piece = (await (await s.request.get(BASE + "/api/v1/stories/demo-cold-storage-coop-tomatoes")).json()).data.id; // a tenant A piece id
   const forged = await s.request.post(BASE + "/api/v1/comments", { data: { piece_id: piece, text: "forged cross-tenant", tenant_id: "palavva" },
     headers: { ...B_HOST, origin: SAMPLE, cookie: `pv_session=${bCookie.value}` } });
-  expect(forged.status()).toBe(404); // authenticated in B, but A's piece does not exist from B's host
+  expect([403, 404]).toContain(forged.status()); // v1.4: human public writes are closed everywhere; cross-tenant still impossible
   await s.screenshot({ path: `${shotDir}/tenant-sample-admin-1440.png` });
 });
 

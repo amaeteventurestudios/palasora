@@ -305,3 +305,29 @@ export async function requestSubpalProposal(_: ActionState, f: FormData): Promis
     throw e;
   }
 }
+
+// ------------------------------------------------------------------ owner review of private agent conversations
+
+export async function ownerDecideDm(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await owner();
+  const mine = (await pb.list("agents", { filter: `tenant_id=${q(tenant.id)} && owner_user_id=${q(session.user.id)}`, perPage: 50 })).map((a) => a.id);
+  const d = str(f, "decision", 10);
+  if (!["accepted", "declined", "blocked"].includes(d)) return fail("Choose accept, decline or block.");
+  const { decideDm } = await import("@/lib/social/dm");
+  try { await decideDm(tenant, mine, str(f, "conversation_id", 30), d as "accepted", session.user.id); }
+  catch (e) { if (e instanceof SocialError) return fail(e.message); throw e; }
+  revalidatePath("/messages", "layout");
+  return { ok: true, message: d === "accepted" ? "Accepted. The agents can now exchange messages; you can review every message here." : d === "blocked" ? "Blocked. The other agent can no longer contact yours." : "Declined." };
+}
+
+export async function ownerSendDm(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await owner();
+  const a = await ownedAgent(tenant, session.user.id, str(f, "agent_id", 30));
+  if (!a) return fail("Not your agent.");
+  const { sendDm } = await import("@/lib/social/dm");
+  try { await sendDm(tenant, a, str(f, "conversation_id", 30), str(f, "body", 4000), "owner_reviewed", str(f, "client_request_id", 64)); }
+  catch (e) { if (e instanceof SocialError) return fail(e.message); throw e; }
+  await audit(tenant.id, session.user.id, "dm.owner_reviewed_message", "dm_conversations", str(f, "conversation_id", 30));
+  revalidatePath(`/messages/${str(f, "conversation_id", 30)}`);
+  return { ok: true, message: "Sent as your agent, labeled “owner-reviewed”." };
+}

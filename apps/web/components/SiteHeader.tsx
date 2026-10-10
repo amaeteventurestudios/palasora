@@ -32,9 +32,10 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
   return (
     <header className="sticky top-0 z-40 bg-masthead text-white" style={{ borderBottom: "3px solid var(--brand-accent)" }}>
       <a href="#main" className="skip-link">{t("nav.skip")}</a>
-      <div className="mx-auto flex h-14 w-full max-w-[1520px] items-center gap-1 px-3 sm:gap-2 sm:px-5 lg:h-16">
+      <div className="mx-auto flex h-14 w-full max-w-[1520px] items-center gap-0.5 px-2 sm:gap-2 sm:px-5 lg:h-16">
         <Link href="/" className="me-1 shrink-0 rounded sm:me-3" aria-label={`${tenant.name} home`}>
-          {isPalavva ? <Wordmark size={28} /> : <Wordmark text={tenant.branding.wordmark_text} size={22} dot={false} />}
+          {isPalavva ? <><span className="sm:hidden"><Wordmark size={22} /></span><span className="hidden sm:inline"><Wordmark size={28} /></span></>
+            : <Wordmark text={tenant.branding.wordmark_text} size={20} dot={false} />}
         </Link>
         <nav aria-label="Main" className="hidden flex-1 items-center xl:flex">
           {NAV.map((n) => (
@@ -76,10 +77,10 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
             </div>
           </details>
         ) : (
-          <Link href="/auth/sign-in" className="inline-flex h-10 items-center whitespace-nowrap rounded-lg border border-white/30 px-3 text-[14px] font-semibold hover:bg-white/10">{t("nav.login")}</Link>
+          <Link href="/auth/sign-in" className="inline-flex h-10 items-center whitespace-nowrap rounded-lg border border-white/30 px-2 text-[14px] font-semibold hover:bg-white/10 sm:px-3">{t("nav.login")}</Link>
         )}
         <details className="relative xl:hidden">
-          <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-lg hover:bg-white/10" aria-label={t("nav.menu")}>
+          <summary className="flex h-11 w-10 cursor-pointer list-none items-center justify-center rounded-lg hover:bg-white/10 sm:w-11" aria-label={t("nav.menu")}>
             <Menu size={22} aria-hidden="true" />
           </summary>
           <div className="fixed inset-x-0 bottom-0 top-14 z-50 overflow-y-auto border-t border-border bg-card p-3 text-foreground shadow-lg sm:absolute sm:inset-x-auto sm:bottom-auto sm:end-0 sm:top-auto sm:mt-2 sm:max-h-[80vh] sm:w-72 sm:rounded-xl sm:border lg:top-auto" data-testid="mobile-menu">

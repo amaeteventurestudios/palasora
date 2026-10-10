@@ -21,13 +21,13 @@ export function EditionMenu({ edition, editionLabel, editions, auto }: { edition
   useNavigateOnSuccess(s);
   return (
     <details className="relative" data-testid="edition-menu">
-      <summary className="flex h-11 cursor-pointer list-none items-center gap-1 rounded-lg border border-white/25 px-2 text-[13px] font-semibold hover:bg-white/10" aria-label={`${t("prefs.edition")}: ${editionLabel}`}>
+      <summary className="flex h-10 cursor-pointer list-none items-center gap-1 rounded-lg border border-white/25 px-2 text-[13px] font-semibold hover:bg-white/10 sm:h-11" aria-label={`${t("prefs.edition")}: ${editionLabel}`}>
         <Globe size={16} aria-hidden="true" /><span className="hidden max-w-[110px] truncate md:inline">{editionLabel}</span><ChevronDown size={14} aria-hidden="true" className="hidden md:inline" />
       </summary>
       <form action={action} className={panel}>
         <input type="hidden" name="next" value={next} /><JsFlag />
-        <label className="field-label" htmlFor="ed-sel">{t("prefs.edition")}{auto ? ` (${t("prefs.auto")})` : ""}</label>
-        <select id="ed-sel" name="edition" defaultValue={edition} className="input">{editions.map((o) => <option key={o.code} value={o.code}>{o.label}</option>)}</select>
+        <label className="field-label" htmlFor="pref-ed">{t("prefs.edition")}{auto ? ` (${t("prefs.auto")})` : ""}</label>
+        <select id="pref-ed" name="edition" defaultValue={edition} className="input">{editions.map((o) => <option key={o.code} value={o.code}>{o.label}</option>)}</select>
         <p className="meta">Your edition ranks local discussions and SubPals first. It never changes your languages, and browsing another country never changes it.</p>
         {s.message && !s.ok && <p role="alert" className="text-sm text-danger">{s.message}</p>}
         <button className="btn btn-primary" disabled={pending}>{t("prefs.save")}</button>
@@ -43,15 +43,15 @@ export function LanguageMenu({ ui, reading, uiLocales, readingLocales }: { ui: s
   useNavigateOnSuccess(s);
   return (
     <details className="relative" data-testid="prefs-menu">
-      <summary className="flex h-11 cursor-pointer list-none items-center gap-1 rounded-lg px-2 text-[13px] font-semibold hover:bg-white/10" aria-label={`${t("prefs.interface")}: ${ui.toUpperCase()}, ${t("prefs.reading")}: ${reading.toUpperCase()}`}>
-        <Languages size={16} aria-hidden="true" /><span>{ui.toUpperCase()}</span><ChevronDown size={14} aria-hidden="true" className="hidden md:inline" />
+      <summary className="flex h-11 min-w-[40px] cursor-pointer list-none items-center justify-center gap-1 rounded-lg px-1.5 text-[13px] font-semibold hover:bg-white/10 sm:px-2" aria-label={`${t("prefs.interface")}: ${ui.toUpperCase()}, ${t("prefs.reading")}: ${reading.toUpperCase()}`}>
+        <Languages size={16} aria-hidden="true" className="hidden sm:inline" /><span>{ui.toUpperCase()}</span><ChevronDown size={14} aria-hidden="true" className="hidden md:inline" />
       </summary>
       <form action={action} className={panel}>
         <input type="hidden" name="next" value={next} /><JsFlag />
-        <div><label className="field-label" htmlFor="ui-sel">{t("prefs.interface")}</label>
-          <select id="ui-sel" name="ui" defaultValue={ui} className="input">{uiLocales.map((o) => <option key={o.code} value={o.code}>{o.label}</option>)}</select></div>
-        <div><label className="field-label" htmlFor="rd-sel">{t("prefs.reading")}</label>
-          <select id="rd-sel" name="reading" defaultValue={reading} className="input">{readingLocales.map((o) => <option key={o.code} value={o.code}>{o.label}</option>)}</select></div>
+        <div><label className="field-label" htmlFor="pref-ui">{t("prefs.interface")}</label>
+          <select id="pref-ui" name="ui" defaultValue={ui} className="input">{uiLocales.map((o) => <option key={o.code} value={o.code}>{o.label}</option>)}</select></div>
+        <div><label className="field-label" htmlFor="pref-rd">{t("prefs.reading")}</label>
+          <select id="pref-rd" name="reading" defaultValue={reading} className="input">{readingLocales.map((o) => <option key={o.code} value={o.code}>{o.label}</option>)}</select></div>
         <p className="meta">{t("prefs.explain")}</p>
         {s.message && !s.ok && <p role="alert" className="text-sm text-danger">{s.message}</p>}
         <button className="btn btn-primary" disabled={pending}>{t("prefs.save")}</button>

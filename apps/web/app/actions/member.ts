@@ -89,7 +89,7 @@ export async function signUp(_: ActionState, f: FormData): Promise<ActionState> 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail("Enter a valid email address.", "email");
   if (password.length < 10 || password.length > 128) return fail("Use a password of at least 10 characters.", "password");
   if (!/^[a-z0-9_]{3,30}$/.test(handle)) return fail("Handles use 3–30 lowercase letters, numbers or underscores.", "handle");
-  if (!name) return fail("Tell us the name to show with your comments.", "display_name");
+  if (!name) return fail("Tell us your name.", "display_name");
   if (f.get("agree") !== "on") return fail("Please accept the community rules to continue.", "agree");
   if (await pb.first("users", `tenant_id=${q(tenant.id)} && handle=${q(handle)}`)) return fail("That handle is taken.", "handle");
   let user;
