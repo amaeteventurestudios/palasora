@@ -57,12 +57,12 @@ export default async function Geography({ searchParams }: { searchParams: Promis
           <AfricaMap values={covWin} names={names} label="Published items per country in the selected window" selected={sel ?? undefined} />
         </ChartCard>
         <ChartCard title={sel ? `${flag(sel)} ${countryName(sel)}` : "Release-blocker countries"} description={sel ? "Edition detail" : "Liberia, Cameroon, Senegal, Kenya, Ghana, Egypt, Nigeria, Rwanda, South Africa and Côte d'Ivoire"}>
-          <Table><TableHeader><TableRow><TableHead>Country</TableHead><TableHead className="text-right">Items (win)</TableHead><TableHead className="text-right">All time</TableHead><TableHead>Newest</TableHead><TableHead className="text-right">Sources ok</TableHead></TableRow></TableHeader>
+          <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Country</TableHead><TableHead className="text-right">Items (win)</TableHead><TableHead className="text-right">All time</TableHead><TableHead>Newest</TableHead><TableHead className="text-right">Sources ok</TableHead></TableRow></TableHeader>
             <TableBody>{(sel ? [sel] : BLOCKERS).map((c) => (
               <TableRow key={c}><TableCell><Link className="link" href={`/?edition=${c}`} target="_blank">{flag(c)} {countryName(c)}</Link> <Link className="ms-1 text-xs text-muted-foreground underline" href={`/api/v1/feed?mode=new&edition=${c}`} target="_blank">API</Link></TableCell>
                 <TableCell className="text-right tabular-nums">{covWin[c]}</TableCell><TableCell className="text-right tabular-nums">{covAll[c]}</TableCell>
                 <TableCell className="text-xs">{newest[c] ? <Time value={newest[c]} /> : <Badge variant="outline">none</Badge>}</TableCell>
-                <TableCell className="text-right tabular-nums">{srcBy[c] ? `${srcBy[c].ok}/${srcBy[c].n}` : "0/0"}</TableCell></TableRow>))}</TableBody></Table>
+                <TableCell className="text-right tabular-nums">{srcBy[c] ? `${srcBy[c].ok}/${srcBy[c].n}` : "0/0"}</TableCell></TableRow>))}</TableBody></Table></div>
           <p className="mt-2 text-xs text-muted-foreground">Each edition shows its local items first, then labelled {sel ? regionOf(sel) : "regional"} and pan-African items; items only about other regions are excluded. Verified by tests/e2e/v15-country.spec.ts.</p>
         </ChartCard>
       </div>

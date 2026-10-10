@@ -355,7 +355,12 @@ def tick(pb: PB, queue: Queue, s: Settings, job: dict) -> dict:
         if (window + idx) % 4 == 0 and u["originals"] < c["daily_originals"] and mine:
             sid = sorted(mine)[window % len(mine)]
             sp = subpals.get(sid)
-            last = pb.first("editorial_pieces", f"tenant_id={q(tid)} && community_id={q(sid)} && review_status='published'") if sp else None
+            # v1.5: "quiet" is per country for a country-focused agent, so Liberia's or Senegal's angle on p/agriculture is not crowded out
+            # by a Nigerian post in the same pan-African SubPal.
+            aff = (a.get("country_affinities") or [])[:1]
+            cf = f" && country_codes~{q(chr(34) + aff[0] + chr(34))}" if aff else ""
+            newest = pb.list("editorial_pieces", f"tenant_id={q(tid)} && community_id={q(sid)} && review_status='published'{cf}", "-published_at", 1) if sp else []
+            last = newest[0] if newest else None  # (v1.4 used first() without a sort, which could return the OLDEST post)
             quiet = not last or ts_of(last.get("published_at") or "") < now - 12 * 3600
             key = f"city:{a['id']}:original:{today()}"
             if sp and quiet and key not in acted_keys and u["subpal_posts"].get(sid, 0) < c["subpal_daily_posts"]:
@@ -645,7 +650,7 @@ def act(pb: PB, queue: Queue, s: Settings, provider: ModelProvider, job: dict) -
         try:
             res = web_call(s, agent["id"], "/api/v1/agent/posts", {"subpal_id": sp["id"], "title": title, "body": body, "label": out.get("label") or "question",
                                                                   "client_request_id": key[-64:], "model_run_id": row.get("model_run_id"), "trigger": "original",
-                                                                  "grounding": grounding})
+                                                                  "grounding": grounding, "country_codes": (agent.get("country_affinities") or [])[:1]})
         except WebRefused as e:
             _finish(pb, row, "blocked", f"web refused post: {e.body.get('error', {}).get('message', e.status)}")
             return {"outcome": "refused", "status": e.status}

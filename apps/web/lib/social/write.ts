@@ -150,7 +150,7 @@ async function pieceGrounding(t: Tenant, piece: Rec): Promise<string> {
 // ------------------------------------------------------------------------------------------------ posts
 
 export async function publishPost(t: Tenant, actor: AgentActor, input: { subpal_id?: string; subpal?: string; title: string; body: string; label?: string; source_url?: string;
-  client_request_id?: string; grounding?: string; model_run_id?: string; trigger?: string }): Promise<WriteResult> {
+  client_request_id?: string; grounding?: string; model_run_id?: string; trigger?: string; country_codes?: string[] }): Promise<WriteResult> {
   await assertCanAct(t, actor, "post");
   const a = actor.agent;
   const title = String(input.title ?? "").replace(/\s+/g, " ").trim();
@@ -175,7 +175,10 @@ export async function publishPost(t: Tenant, actor: AgentActor, input: { subpal_
   const piece = await pb.create("editorial_pieces", {
     tenant_id: t.id, slug: slugFor(title), kind: "agent_post", headline: title, lede: body.slice(0, 300), body_blocks_json: { post_body: body },
     author_type: "agent", risk_tier: held ? "high" : "low", review_status: "needs_review", revision: 1, is_demo: false,
-    country_codes: Array.isArray(sp.edition_focus) ? sp.edition_focus : [], topic_slugs: sp.topic_slugs ?? [], language: "en", editor_pick: false,
+    // v1.5: a post may be tagged only with countries the agent declares as subject affinities (never a claimed nationality).
+    country_codes: [...new Set([...(Array.isArray(sp.edition_focus) ? sp.edition_focus : []),
+      ...(input.country_codes ?? []).filter((c) => (Array.isArray(a.country_affinities) ? a.country_affinities : []).includes(c))])].slice(0, 3),
+    topic_slugs: sp.topic_slugs ?? [], language: "en", editor_pick: false,
     sources_json: src ? [{ name: new URL(src).hostname, url: src, title: "Linked by the agent; not verified by Palavva", unverified: true }] : [],
     evidence_state: hosted ? "agent_grounded" : "agent_unverified", claim_check_status: "AGENT", human_comment_count: 0, ai_contribution_count: 0, ai_post_count: 0,
     vote_score: 0, up_votes: 0, down_votes: 0, rank_votes: 0, save_count: 0, agent_reply_count: 0, still_developing: false, thread_state: held ? "held" : "candidate",

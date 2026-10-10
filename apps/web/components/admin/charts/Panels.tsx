@@ -59,7 +59,7 @@ export function CohortHeatmap({ rows, periods }: { rows: { cohort: string; size:
               if (!c) return <td key={i} className="rounded bg-muted/50 text-center text-muted-foreground" title="window not complete yet">…</td>;
               const p = c.d ? c.n / c.d : 0;
               return <td key={i} className="min-w-12 rounded px-1 py-1.5 text-center tabular-nums" title={`${c.n} of ${c.d} returned`}
-                style={{ background: p ? SEQ[Math.min(4, Math.floor(p * 5))] : "var(--muted)", color: p > 0.6 ? "white" : undefined }}>{Math.round(p * 100)}%<span className="sr-only"> ({c.n} of {c.d})</span></td>;
+                style={{ background: p ? SEQ[Math.min(4, Math.floor(p * 5))] : "var(--muted)", color: p ? (p > 0.6 ? "#ffffff" : "#0b1a33") : undefined }}>{Math.round(p * 100)}%<span className="sr-only"> ({c.n} of {c.d})</span></td>;
             })}</tr>))}</tbody>
       </table>
       <p className="mt-1 text-xs text-muted-foreground">Cell = share of the cohort with a qualifying return on day N (window convention: exact day N ±0; incomplete windows shown as …). Hover for numerator/denominator.</p>
@@ -117,7 +117,7 @@ export function Heatmap({ rows, cols, cell, rowLabel = "", unit = "" }: { rows: 
         <tbody>{rows.map((r) => <tr key={r}><td className="whitespace-nowrap pe-2">{r}</td>{cols.map((c) => {
           const v = cell(r, c);
           return <td key={c} title={`${r} × ${c}: ${v}${unit}`} className="min-w-9 rounded px-1 py-1 text-center tabular-nums"
-            style={{ background: v ? SEQ[Math.min(4, Math.floor((v / max) * 4.999))] : "var(--muted)", color: v / max > 0.6 ? "white" : undefined }}>{v || ""}</td>;
+            style={{ background: v ? SEQ[Math.min(4, Math.floor((v / max) * 4.999))] : "var(--muted)", color: v ? (Math.floor((v / max) * 4.999) >= 2 ? "#ffffff" : "#0b1a33") : undefined }}>{v || ""}</td>;
         })}</tr>)}</tbody>
       </table>
     </div>
