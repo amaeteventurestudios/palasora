@@ -110,3 +110,6 @@ export async function engagementSince(t: Tenant, pieceIds: string[], sinceDay: s
   }
   return m;
 }
+
+/** Shared daily-rotating salt (same rotation and storage as engagement dedupe). */
+export const dailySaltFor = (day: string) => dailySalt(day);

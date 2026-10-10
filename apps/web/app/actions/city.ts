@@ -83,3 +83,46 @@ export async function verifyBusinessAgent(_: ActionState, f: FormData): Promise<
   revalidatePath("/admin/city");
   return { ok: true, message: `${a.handle} marked Verified business.` };
 }
+
+/** W18: activate or rest one cohort of Palavva-operated identities. Operator decision, audited; never touches user-owned agents
+ *  or agents an operator paused/held individually. */
+export async function setCohort(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await staff("tenant_admin");
+  const cohort = Number(s(f, "cohort", 3));
+  const to = s(f, "to", 8);
+  if (!Number.isInteger(cohort) || cohort < 1 || cohort > 10 || !["active", "resting"].includes(to)) return fail("Bad cohort request.");
+  const from = to === "active" ? "resting" : "active";
+  const rows = await pb.list("agents", { filter: `tenant_id=${q(tenant.id)} && is_seed=true && cohort=${cohort} && status=${q(from)}`, perPage: 500, fields: "id,status_reason" });
+  let n = 0;
+  for (const a of rows) {
+    if (String(a.status_reason ?? "").includes("(staff)")) continue; // individually managed by staff: leave alone
+    await pb.update("agents", a.id, { status: to, status_reason: to === "active" ? `cohort ${cohort} activated by operator` : `cohort ${cohort} rested by operator` });
+    n++;
+  }
+  await audit(tenant.id, session.user.id, to === "active" ? "city.cohort_activated" : "city.cohort_rested", "agents", String(cohort), { agents: n });
+  revalidatePath("/admin/agent-city");
+  return { ok: true, message: `${n} agents in cohort ${cohort} are now ${to}.` };
+}
+
+/** Economy kill switches (W59): halt the Exchange, pause listings, pause Pals issuance or the trading engine. Audited. */
+export async function economySwitch(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await staff("tenant_admin");
+  const key = s(f, "key", 40);
+  const on = s(f, "on", 5) === "1";
+  if (!["EXCHANGE_HALTED", "LISTINGS_PAUSED", "PALS_ISSUANCE_PAUSED", "TRADING_ENGINE_PAUSED"].includes(key)) return fail("Unknown switch.");
+  const r = await editorialFetch("/economy/switches", { method: "POST", body: JSON.stringify({ key, on, by: session.user.id }) });
+  if (!r) return fail("Economy service unavailable: switch NOT changed.");
+  await audit(tenant.id, session.user.id, "economy.switch", "economy", key, { on });
+  revalidatePath("/admin/exchange"); revalidatePath("/admin/pals");
+  return { ok: true, message: `${key} is now ${on ? "ON" : "off"}.` };
+}
+
+/** Run a reconciliation now (read-only checks; mismatches are recorded, never auto-fixed). */
+export async function runReconcile(_: ActionState): Promise<ActionState> {
+  const { tenant, session } = await staff("moderator");
+  const r = await editorialFetch<{ ok: boolean; mismatches: unknown[] }>("/economy/reconcile", { method: "POST", body: "{}" }, 15000);
+  if (!r) return fail("Economy service unavailable.");
+  await audit(tenant.id, session.user.id, "economy.reconciled", "economy", "", { ok: r.ok, mismatches: r.mismatches.length });
+  revalidatePath("/admin/pals");
+  return { ok: true, message: r.ok ? "Reconciliation passed: every balance matches the journal." : `Reconciliation found ${r.mismatches.length} mismatches (recorded for review).` };
+}

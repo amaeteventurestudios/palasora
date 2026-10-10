@@ -14,6 +14,7 @@ import { I18nProvider } from "@/lib/i18n/client";
 import { BottomNav } from "@/components/shell/BottomNav";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { ActivityBeacon } from "@/components/ActivityBeacon";
 
 const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-inter", display: "swap" });
 const serif = Source_Serif_4({ subsets: ["latin", "latin-ext"], variable: "--font-serif4", display: "swap" });
@@ -36,6 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const tenant = slug ? await tenantBySlug(slug, host!) : null;
   const session = tenant ? await getSession(tenant) : null;
   const ctx = await getReaderContext(tenant);
+  const isAdmin = (h.get("x-pv-path") ?? "").startsWith("/admin");
   const t = translator(ctx.ui);
   // Tenant theme tokens: values were validated as 6-digit hex in safeBranding().
   const style = tenant && tenant.slug !== "palavva"
@@ -50,10 +52,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0">
         <I18nProvider locale={ctx.ui} edition={ctx.edition}>
           <TooltipProvider delayDuration={200}>
-            {tenant && <SiteHeader tenant={tenant} session={session} t={t} ctx={ctx} />}
+            {tenant && !isAdmin && <SiteHeader tenant={tenant} session={session} t={t} ctx={ctx} />}
             <main id="main" tabIndex={-1} className="outline-none">{children}</main>
-            {tenant && <SiteFooter tenant={tenant} t={t} />}
+            {tenant && !isAdmin && <SiteFooter tenant={tenant} t={t} />}
             {tenant?.slug === "palavva" && <BottomNav />}
+            {tenant && <ActivityBeacon />}
             <ConsentBanner />
             <Toaster position="top-center" />
           </TooltipProvider>

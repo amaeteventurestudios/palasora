@@ -1,0 +1,21 @@
+# Open-source candidate evaluations (v1.5, 2026-10-10)
+
+All facts below were measured on this Mac (x86_64, 8 CPUs, 32 GB, Colima VM 2 CPU / 4 GB) or read from the projects' GitHub
+API on 2026-10-10. Nothing here is deployed to Oracle or any public host. Evaluation stacks live outside the repo in
+`~/.palavva-eval/` and are stopped after measurement.
+
+| Candidate | License (GitHub API) | Last push | Runtime | Measured result | Decision |
+|---|---|---|---|---|---|
+| **Exchange-Core** (exchange-core/exchange-core) | Apache-2.0 | 2023-10-08 | Java library (LMAX Disruptor), needs a JVM service wrapper | Not runnable here (no Java runtime installed); unmaintained for 3 years; a Java service + persistence + settlement bridge would be more custom code than the matcher itself | **Not adopted.** In-process matcher (below) |
+| **Blnk** (blnkfinance/blnk) | Apache-2.0 | 2026-10-05 | Go server + worker + PostgreSQL + Redis (Docker; manifest has amd64 and arm64) | Ran unmodified (37 migrations). 200 inflight reserve+commit pairs (`skip_queue: true`): **6.7 pairs/s, p50 87.5 ms, p95 538 ms**, final balances exactly correct. Default mode is **asynchronous** (transactions are queued for a worker; committing immediately returns 404). RAM ≈ 126 MB across 4 containers. | **Evaluated, not adopted for MVP.** A trade needs two legs (Pals and shares) settled atomically with the order book; with Blnk that becomes a cross-service saga. Reconsider if an external, separately audited ledger is required for diligence. |
+| **Palavva economy engine** (services/editorial/palavva_editorial/economy) | proprietary (this repo) | — | Python + one SQLite file (WAL, `synchronous=FULL`) | **787 complete matches/s, p50 0.98 ms, p95 2.22 ms** (each = reserve + price-time match + two-leg settlement + position + trade row, one ACID transaction); reconciliation OK; 12 pytest incl. crash rollback, restart recovery, concurrent writers, DB-level negative-balance CHECK | **Adopted** (D-V15-03) |
+| **Rybbit** (rybbit-io/rybbit) | AGPL-3.0 | 2026-10-09 | Caddy + ClickHouse 26.3 + PostgreSQL 17 + Redis 8 + backend + client (Docker) | Ran **unmodified** (no Caddy, loopback ports): backend `/api/health` OK, client HTTP 200. **Idle RAM ≈ 2.3 GB** (backend 1.56 GB after spawning one worker per CPU, ClickHouse 639 MB, client 59 MB, PostgreSQL 35 MB, Redis 8 MB). **Images ≈ 4.4 GB** (backend 2.03 GB, ClickHouse 1.18 GB). ClickHouse cold start > 4 min (first health check failed). **Telemetry is ON by default** ("Telemetry sent successfully" in the backend log; disable with `DISABLE_TELEMETRY=true`). | **Viable as an isolated sidecar, not integrated yet.** Blockers: Oracle resource budget (2 OCPU / 12 GB shared), telemetry must be disabled, consent design for its browser script, AGPL notice for the separate service, public deployment not authorised. First-party `human_activity` stays the source of truth for human DAU/WAU/MAU and retention either way. |
+| **Umami** (umami-software/umami) | MIT | 2026-10-10 | Next.js + PostgreSQL | not run (fallback only) | Fallback if Rybbit's footprint is rejected |
+| **GAME** (fvergaracl/GAME) | Apache-2.0 | 2026-10-01 | Python/FastAPI + PostgreSQL | 8 GitHub stars; not run | **Not adopted** (maturity) |
+| **ActiDoo gamification-engine** | MIT | 2023-02-15 | Python + PostgreSQL | unmaintained since 2023; not run | **Not adopted.** Rewards are the economy rules (`economy/rewards.py`) + computed achievements; one engine, no overlap |
+| **TradingView Lightweight Charts** 5.0.8 | Apache-2.0 | 2026-10-09 | browser library | used for the Exchange price candles and PMI sparkline; attribution logo kept on | **Adopted** |
+| **Recharts** 3.8 via shadcn/ui chart | MIT | — | browser library | Command Center charts | **Adopted** |
+| **QuantStats / ffn** | Apache-2.0 / MIT | 2026-09 / 2026-10 | Python (pandas) | not installed: portfolio maths needed so far (P&L, valuation) is a few lines over stored trades | Deferred until return/drawdown reports are needed |
+
+Reproduce: `~/.palavva-eval/blnk/` and `~/.palavva-eval/rybbit/` (compose files + generated local secrets in `.env`, mode 600),
+benchmark script `blnk_bench.py` (session scratchpad), engine benchmark in this file's commit message.

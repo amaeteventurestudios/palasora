@@ -18,15 +18,16 @@ export function middleware(req: NextRequest) {
     return new NextResponse("Not found", { status: 404, headers: { "content-type": "text/plain", "cache-control": "no-store" } });
   }
   const ed = req.nextUrl.searchParams.get("edition")?.toUpperCase();
+  const h = new Headers(req.headers);
+  h.set("x-pv-path", req.nextUrl.pathname); // lets the root layout give /admin its own full-screen shell
   if (ed && EDITIONS.has(ed) && req.cookies.get("pv_view")?.value !== ed) {
-    const h = new Headers(req.headers);
     const others = (req.headers.get("cookie") ?? "").split(/;\s*/).filter((c) => c && !c.startsWith("pv_view="));
     h.set("cookie", [...others, `pv_view=${ed}`].join("; "));
     const res = NextResponse.next({ request: { headers: h } });
     res.cookies.set("pv_view", ed, { httpOnly: true, sameSite: "lax", path: "/", secure: req.nextUrl.protocol === "https:" });
     return res;
   }
-  return NextResponse.next();
+  return NextResponse.next({ request: { headers: h } });
 }
 
 export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"] };

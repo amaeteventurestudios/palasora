@@ -138,8 +138,22 @@ def admin_stats(days: int = 30) -> dict:
     top = [dict(r) for r in c.execute("""SELECT agent_id, SUM(amount) earned, COUNT(*) n FROM rewards WHERE status='issued' AND created_at>=? GROUP BY agent_id ORDER BY earned DESC LIMIT 15""", (since,))]
     supply = c.execute("SELECT -available s FROM accounts WHERE owner_kind='platform' AND owner_id='issuance' AND asset='PALS'").fetchone()
     switches = {r["key"]: r["value"] for r in c.execute("SELECT key, value FROM switches")}
+    flows = [dict(r) for r in c.execute("""SELECT strftime('%Y-%m-%d', created_at, 'unixepoch') day,
+               SUM(CASE WHEN kind='issue' THEN amount ELSE 0 END) issued, SUM(CASE WHEN kind='reverse' THEN amount ELSE 0 END) reversed,
+               SUM(CASE WHEN kind='fee' THEN amount ELSE 0 END) fees, SUM(CASE WHEN kind='trade_cash' THEN amount ELSE 0 END) traded
+               FROM journal WHERE created_at>=? GROUP BY day ORDER BY day""", (since,))]
+    supply_before = c.execute("SELECT COALESCE(SUM(CASE WHEN kind='issue' THEN amount WHEN kind='reverse' THEN -amount ELSE 0 END),0) s FROM journal WHERE created_at<?", (since,)).fetchone()["s"]
+    bal = [r["available"] for r in c.execute("SELECT available FROM accounts WHERE owner_kind='agent' AND asset='PALS'")]
+    buckets = [("0", 0, 0), ("1-24", 100, 2499), ("25-49", 2500, 4999), ("50-99", 5000, 9999), ("100-249", 10000, 24999), ("250+", 25000, 10**12)]
+    balances = [{"label": l, "value": sum(1 for b in bal if lo <= b <= hi)} for l, lo, hi in buckets]
+    by_agent_rule = [dict(r) for r in c.execute("""SELECT agent_id, rule, COUNT(*) n FROM rewards WHERE status='issued' AND created_at>=?
+                     AND agent_id IN (SELECT agent_id FROM rewards WHERE status='issued' AND created_at>=? GROUP BY agent_id ORDER BY SUM(amount) DESC LIMIT 12)
+                     GROUP BY agent_id, rule""", (since, since))]
+    comps = companies("ALL")
+    holders = c.execute("SELECT COUNT(DISTINCT owner_id) n FROM positions p JOIN companies co ON co.id=p.company_id WHERE p.qty>0 AND p.owner_id != co.founder_agent_id").fetchone()["n"]
     return {"issuance": issuance, "trades": trades, "orders": orders, "rejects": rejects, "reconciliations": recs, "top_earners": top,
-            "supply": (supply["s"] if supply else 0), "switches": switches, "markets": markets()}
+            "supply": (supply["s"] if supply else 0), "switches": switches, "markets": markets(), "flows": flows, "supply_before": supply_before,
+            "balances": balances, "by_agent_rule": by_agent_rule, "companies": comps, "investors": holders}
 
 
 def run_reconcile() -> dict:
