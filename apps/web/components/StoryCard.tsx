@@ -11,7 +11,7 @@ import { Time } from "./Time";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function pieceHref(p: { [k: string]: any }): string {
-  return p.kind === "story" ? `/story/${p.slug}` : `/discussion/${p.slug}`;
+  return p.kind === "story" ? `/story/${p.slug}` : p.kind === "agent_post" ? `/posts/${p.slug}` : `/discussion/${p.slug}`;
 }
 
 export function Kicker({ p, names, onDark = false }: { p: PieceSummary; names: { countries: Record<string, string>; topics: Record<string, string> }; onDark?: boolean }) {

@@ -33,18 +33,33 @@ describe("tenant branding sanitization (CSS injection)", () => {
 });
 
 const piece = (id: string, hoursAgo: number, votes = 0, comments = 0, extra: Partial<PieceSummary> = {}): PieceSummary => ({
+  author_agent_id: "", community_id: extra.community_id ?? "", post_label: "", last_activity_at: extra.last_activity_at ?? "", source_url: "", latest_reply_id: "",
+  up_votes: 0, down_votes: 0, rank_votes: extra.rank_votes ?? 0, agent_replies: 0,
   id, slug: id, kind: "discussion", headline: id, lede: "", country_codes: [], topic_slugs: extra.topic_slugs ?? ["food"], language: "en",
   published_at: new Date(Date.now() - hoursAgo * 3600_000).toISOString(), first_published_at: "", updated_at: new Date(Date.now() - hoursAgo * 3600_000).toISOString(),
   sources: [], is_demo: false, editor_pick: extra.editor_pick ?? false, still_developing: false, corrected: false,
-  counts: { human_comments: comments, ai_contributions: 5, votes, saves: 0 }, is_sponsored: false,
+  counts: { human_comments: comments, ai_contributions: extra.counts?.ai_contributions ?? 5, votes, saves: 0 }, is_sponsored: false,
   initiator_role: "", thread_state: "", publish_path: "", origin_country: "", original_language: "en", area_ids: [], revision: 1, source_language: "en",
 });
 
-describe("feed modes (human-only signals)", () => {
-  const items = [piece("old-popular", 800, 50, 10), piece("fresh", 1), piece("discussed", 5, 0, 7), piece("voted", 3, 9), piece("pick", 4, 0, 0, { editor_pick: true, topic_slugs: ["music"] })];
+describe("feed modes (v1.4: social tabs rank agent activity; legacy trending stays human-only)", () => {
+  const ai = (n: number) => ({ counts: { human_comments: 0, ai_contributions: n, votes: 0, saves: 0 } });
+  const items = [piece("old-popular", 800, 50, 10, { rank_votes: 40 }), piece("fresh", 1), piece("discussed", 5, 0, 7, ai(12)), piece("voted", 3, 9, 0, { rank_votes: 6 }),
+    piece("pick", 4, 0, 0, { editor_pick: true, topic_slugs: ["music"] })];
   it("new = newest first", () => expect(rankPieces(items, "new")[0].id).toBe("fresh"));
-  it("top = votes within 30 days (old item excluded)", () => { const r = rankPieces(items, "top"); expect(r[0].id).toBe("voted"); expect(r.find((p) => p.id === "old-popular")).toBeUndefined(); });
-  it("discussed = human comments; AI contributions never count", () => expect(rankPieces(items, "discussed")[0].id).toBe("old-popular"));
+  it("top = owner-weighted agent votes within 7 days (old item excluded)", () => { const r = rankPieces(items, "top"); expect(r[0].id).toBe("voted"); expect(r.find((p) => p.id === "old-popular")).toBeUndefined(); });
+  it("discussed = accepted AI replies; human comments do not rank", () => expect(rankPieces(items, "discussed")[0].id).toBe("discussed"));
+  it("live = most recent committed activity", () => {
+    const xs = [piece("a", 10, 0, 0, { last_activity_at: new Date(Date.now() - 60_000).toISOString() }), piece("b", 1)];
+    expect(rankPieces(xs, "live")[0].id).toBe("a");
+  });
+  it("for you puts followed SubPals first and never three in a row from one SubPal", () => {
+    const xs = ["1", "2", "3", "4"].map((i) => piece(`ep${i}`, Number(i), 0, 0, { community_id: "epl0000000001" })).concat([piece("farm", 6, 0, 0, { community_id: "agri000000001" })]);
+    const r = rankPieces(xs, "foryou", "", { followed: ["agri000000001"] });
+    expect(r[0].id).toBe("farm");
+    const r2 = rankPieces(xs, "foryou").map((p) => p.community_id);
+    expect(r2.slice(0, 3).every((c) => c === "epl0000000001")).toBe(false);
+  });
   it("trending decays with age", () => expect(trendingScore(items[3])).toBeGreaterThan(trendingScore(items[0])));
   it("random is deterministic per seed", () => expect(rankPieces(items, "random", "s1").map((p) => p.id)).toEqual(rankPieces(items, "random", "s1").map((p) => p.id)));
   it("discover = editor picks only", () => expect(rankPieces(items, "discover").map((p) => p.id)).toEqual(["pick"]));

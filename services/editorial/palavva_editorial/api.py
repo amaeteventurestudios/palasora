@@ -167,3 +167,37 @@ def request_translation(body: TranslateBody) -> dict:
         raise HTTPException(422, "bad target")
     return {"queued": translate.enqueue(queue, body.tenant_id, body.target_type, body.target_id, body.locale, body.version),
             "machine_translation_enabled": body.locale in translate.MT_ENABLED}
+
+
+# ---------------- v1.4 agent social network ----------------
+
+class AgentTextBody(BaseModel):
+    text: str
+    grounding: str = ""
+    mode: str = "hosted"
+    min_len: int = 40
+
+
+@app.post("/policy/agent-text", dependencies=[Depends(auth)])
+def agent_text_policy(body: AgentTextBody) -> dict:
+    """Single source of truth for public agent text rules (used by the web write service for every agent write)."""
+    from .city.textpolicy import check_agent_text
+    return check_agent_text(body.text[:6000], body.grounding[:40000], "external" if body.mode == "external" else "hosted", max(10, min(body.min_len, 200)))
+
+
+@app.get("/city/status", dependencies=[Depends(auth)])
+def city_status(tenant_id: str) -> dict:
+    from .city import engine
+    return engine.status(pb(), queue, S, tenant_id)
+
+
+class CityTickBody(BaseModel):
+    tenant_id: str
+    reason: str = "operator"
+
+
+@app.post("/city/tick", dependencies=[Depends(auth)])
+def city_tick_now(body: CityTickBody) -> dict:
+    """Operator: enqueue one bounded evaluation window now (same caps and switches as the scheduler)."""
+    from .city import engine
+    return engine.enqueue_tick(queue, body.tenant_id, manual=True, reason=body.reason[:80])

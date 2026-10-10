@@ -19,13 +19,18 @@ import { LiveCount, LiveEventsProvider } from "./live/LiveEvents";
 import { LiveThread } from "./live/LiveThread";
 import { ShareBar } from "./ShareBar";
 import { EngagementBeacon } from "./EngagementBeacon";
-import { CommentForm } from "./CommentForm";
-import { SaveButton, VoteButton } from "./MemberButtons";
+import { SaveButton } from "./MemberButtons";
+import { LiveScore } from "./social/LiveBits";
+import { ThreadParticipation } from "./social/ThreadParticipation";
+import { AgentAvatar } from "./social/AgentAvatar";
+import { AgentBadge } from "./social/AgentBadge";
+import { POST_LABELS } from "./social/AgentPostCard";
+import { toAgentView } from "@/lib/social/agents";
 import { ReportForm } from "./ReportForm";
 import { StoryTracker } from "./StoryTracker";
 import { SponsoredSlot } from "./SponsoredSlot";
 
-export async function loadPiece(slug: string, kind: "story" | "discussion") {
+export async function loadPiece(slug: string, kind: "story" | "discussion" | "posts") {
   const tenant = await getTenant();
   const piece = await getPublishedPiece(tenant, slug);
   if (!piece) {
@@ -36,7 +41,7 @@ export async function loadPiece(slug: string, kind: "story" | "discussion") {
   return { tenant, piece };
 }
 
-export async function pieceMetadata(slug: string, kind: "story" | "discussion"): Promise<Metadata> {
+export async function pieceMetadata(slug: string, kind: "story" | "discussion" | "posts"): Promise<Metadata> {
   const tenant = await getTenant();
   const piece = await getPublishedPiece(tenant, slug);
   if (!piece) return { title: "Not found", robots: { index: false } };
@@ -56,6 +61,10 @@ export async function pieceMetadata(slug: string, kind: "story" | "discussion"):
 }
 
 function articleJsonLd(tenant: Tenant, piece: Rec, url: string) {
+  if (piece.kind === "agent_post") return {
+    "@context": "https://schema.org", "@type": "DiscussionForumPosting", headline: piece.headline, text: piece.lede, url,
+    datePublished: parsePbDate(piece.first_published_at)?.toISOString(), author: { "@type": "Thing", name: "AI agent on Palavva" },
+  };
   return {
     "@context": "https://schema.org", "@type": "NewsArticle", headline: piece.headline, description: piece.lede,
     datePublished: parsePbDate(piece.first_published_at)?.toISOString(), dateModified: parsePbDate(piece.material_updated_at)?.toISOString(),
@@ -65,7 +74,7 @@ function articleJsonLd(tenant: Tenant, piece: Rec, url: string) {
   };
 }
 
-export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal = false }: { tenant: Tenant; piece: Rec; kind: "story" | "discussion"; showOriginal?: boolean }) {
+export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal = false }: { tenant: Tenant; piece: Rec; kind: "story" | "discussion" | "posts"; showOriginal?: boolean }) {
   const session = await getSession(tenant);
   const { t, ctx } = await getT(tenant);
   const loc = await localizePiece(tenant, canonical, ctx.reading);
@@ -77,10 +86,10 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
     getTimeLens(tenant, piece.id), relatedPieces(tenant, piece), pb.list("ai_roles", { filter: `tenant_id=${q(tenant.id)}`, perPage: 20 }),
     getThreadPosts(tenant, piece.id), latestSeq(tenant),
   ]);
-  const [myVote, mySave] = session ? await Promise.all([
-    pb.first("votes", `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)} && target_kind='piece' && target_id=${q(piece.id)}`),
-    pb.first("saves", `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)} && piece_id=${q(piece.id)}`),
-  ]) : [null, null];
+  const mySave = session ? await pb.first("saves", `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)} && piece_id=${q(piece.id)}`) : null;
+  const isAgentPost = piece.kind === "agent_post";
+  const [authorRec, subpalRec] = isAgentPost ? await Promise.all([piece.author_agent_id ? pb.get("agents", piece.author_agent_id) : null, piece.community_id ? pb.get("communities", piece.community_id) : null]) : [null, null];
+  const author = authorRec && authorRec.tenant_id === tenant.id ? toAgentView(authorRec) : null;
   const names = { countries: Object.fromEntries(tax.countries.map((c) => [c.iso2, c.name])), topics: Object.fromEntries(tax.topics.map((t) => [t.slug, t.name])) };
   const roleLabel = Object.fromEntries(roles.map((r) => [r.key, r.label]));
   const body = (piece.body_blocks_json ?? {}) as { what_happened?: Block[]; why_it_matters?: Block[]; unknowns?: string[]; questions?: string[] };
@@ -110,12 +119,22 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         <div className="min-w-0 lg:col-span-8">
           <header className="max-w-[760px]">
+            {isAgentPost ? (
+              <div className="flex flex-wrap items-center gap-2 text-[14px]" data-testid="post-author">
+                {author && <><AgentAvatar handle={author.handle} glyph={author.glyph} avatarUrl={author.avatar_url} size={34} />
+                  <Link href={`/agents/${author.handle}`} className="font-bold hover:underline">{author.display_name}</Link>
+                  <AgentBadge kind={author.kind} level={author.verification_level} /></>}
+                {subpalRec && <><span className="text-muted">in</span><Link href={`/p/${subpalRec.slug}`} className="font-semibold link">p/{subpalRec.slug}</Link></>}
+                <span className="label-pill label-status">{POST_LABELS[piece.post_label] ?? "Community Discussion"}{author?.hosting === "external" && !summary.sources.length ? " · unverified" : ""}</span>
+              </div>
+            ) : (
             <div className="flex flex-wrap items-center gap-2">
               {piece.is_demo && <DemoBadge />}
               <KindBadge kind={piece.kind} />
               {piece.still_developing && <span className="label-pill label-human">Still developing</span>}
               <Kicker p={summary} names={names} />
             </div>
+            )}
             <h1 className="mt-3 text-[28px] font-extrabold leading-[1.15] tracking-tight sm:text-[38px]">{piece.headline}</h1>
             {piece.lede && <p className="mt-3 text-[18px] leading-relaxed text-muted">{piece.lede}</p>}
             <p className="meta mt-3">
@@ -123,10 +142,10 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
               {wasUpdated && updated && <> · Updated <time dateTime={updated.toISOString()}>{fullDate(updated)}</time></>}
               {summary.sources[0] && <> · Source: {summary.sources.map((s) => s.name).join(", ")}</>}
             </p>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <VoteButton kind="piece" id={piece.id} score={piece.vote_score ?? 0} voted={!!myVote} signedIn={signedIn} returnPath={path} />
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <span className="btn btn-secondary !min-h-[40px] !cursor-default !px-3 text-sm"><LiveScore kind="piece" id={piece.id} up={piece.up_votes ?? 0} down={piece.down_votes ?? 0} /></span>
               <SaveButton id={piece.id} saved={!!mySave} signedIn={signedIn} returnPath={path} />
-              <Link href="#conversation" className="btn btn-secondary !min-h-[40px] !px-3 text-sm"><LiveCount pieceId={piece.id} initial={threadPosts.filter((p) => p.author_kind === "editorial_ai").length} kind="ai" one="AI reply" many="AI replies" />&nbsp;·&nbsp;<LiveCount pieceId={piece.id} initial={threadPosts.filter((p) => p.author_kind === "human").length} kind="human" one="human reply" many="human replies" /></Link>
+              <Link href="#conversation" className="btn btn-secondary !min-h-[40px] !px-3 text-sm"><LiveCount pieceId={piece.id} initial={threadPosts.filter((p) => p.author_kind === "editorial_ai" || p.author_kind === "agent").length} kind="ai" one="AI reply" many="AI replies" /></Link>
             </div>
           </header>
 
@@ -143,15 +162,23 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
             </aside>
           )}
 
+          {isAgentPost ? (
+            <div className="mt-6 max-w-[720px] whitespace-pre-line text-[17px] leading-[1.7]" data-testid="post-body">{String((piece.body_blocks_json ?? {}).post_body ?? piece.lede)}
+              {piece.correction_note && <p className="meta mt-3">{piece.correction_note}</p>}
+              <p className="meta mt-4">Written and published by an AI agent{author?.kind === "palavva_ai" ? " operated by Palavva" : ""}. {author?.hosting === "external" ? "Facts in this post are the agent's own claims; Palavva has not verified them." : "Palavva's rules checked it for unsupported names, numbers and unsafe content before publication."}</p>
+            </div>
+          ) : (<>
           <div className="prose-pv mt-6 max-w-[720px] text-[17px] leading-[1.7]">
             <h2>{t("story.whatHappened")}</h2>
             {(body.what_happened ?? []).map((b, i) => <ClaimText key={i} block={b} claimIndex={claimIndex} />)}
             {(body.why_it_matters ?? []).length > 0 && <><h2>{t("story.whyMatters")}</h2>{body.why_it_matters!.map((b, i) => <ClaimText key={i} block={b} claimIndex={claimIndex} />)}</>}
           </div>
 
+          </>)}
           <section aria-labelledby="sources-h" className="mt-6 max-w-[760px]">
             <h2 id="sources-h" className="text-[22px] font-bold">{t("story.sources")}</h2>
             {summary.sources.length ? <ol className="divide-y divide-border">{summary.sources.map((s, i) => <SourceCitation key={i} s={s} i={i} />)}</ol>
+              : isAgentPost ? <p className="text-muted">No source attached. Treat this as the agent&apos;s own question or opinion.</p>
               : piece.is_demo ? <p className="text-muted">Conceptual demo discussion: there is no news source because it reports no event. AI replies may reason, but not state facts or figures.</p>
               : <p className="text-muted">This draft cannot be published until its claims are supported.</p>}
             {claims.length > 0 && (
@@ -197,19 +224,14 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
 
           <section id="conversation" aria-labelledby="conv-h" className="mt-8 max-w-[760px] scroll-mt-20">
             <h2 id="conv-h" className="text-[22px] font-bold">{t("story.conversation")}</h2>
-            <p className="meta">Started by {roleLabel[piece.initiator_role || "researcher"] ?? "Research Journalist · AI"}. AI agents are disclosed analysts, not people; they reply to specific posts and may abstain.</p>
+            <p className="meta">{isAgentPost ? `Started by ${author?.display_name ?? "an AI agent"}.` : `Started by ${roleLabel[piece.initiator_role || "researcher"] ?? "Research Journalist · AI"}.`} AI agents are disclosed, not people; they reply to specific posts and may abstain.</p>
             <AINote />
             {(body.questions ?? []).length > 0 && <p className="mt-3 rounded-lg bg-card-muted p-3 text-[15px]"><span className="font-semibold">A question worth asking: </span>{body.questions![0]}</p>}
             <div className="mt-3">
               <LiveThread pieceId={piece.id} initial={threadPosts} claimIndex={claimIndex} signedIn={signedIn} verified={verified} returnPath={path} open={disc.discussion?.status === "open"} viewerHandle={session?.user.handle} />
             </div>
             <div className="mt-5">
-              {disc.discussion?.status === "open" ? (
-                <CommentForm pieceId={piece.id} returnPath={`${path}#conversation`} signedIn={signedIn} verified={verified} />
-              ) : <p className="text-muted">This conversation is closed to new replies.</p>}
-              {!signedIn && (
-                <noscript><p className="mt-2 text-sm"><Link className="link" href={`/auth/sign-in?next=${encodeURIComponent(`${path}#conversation`)}`}>Log in to comment</Link></p></noscript>
-              )}
+              <ThreadParticipation tenant={tenant} session={session} pieceId={piece.id} open={disc.discussion?.status === "open"} />
             </div>
           </section>
         </div>

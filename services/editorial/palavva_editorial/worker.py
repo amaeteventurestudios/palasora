@@ -61,6 +61,15 @@ def process_one(pb: PB, queue: Queue, s: config.Settings, provider, owner: str) 
             queue.complete(job["job_id"], owner, conversation.retry_auto_publish(pb, queue, s, job))
         elif job["type"] == "translate":
             queue.complete(job["job_id"], owner, translate.translate_job(pb, queue, s, provider, job))
+        elif job["type"] == "city_tick":
+            from .city import engine as city
+            queue.complete(job["job_id"], owner, city.tick(pb, queue, s, job))
+        elif job["type"] == "city_act":
+            from .city import engine as city
+            queue.complete(job["job_id"], owner, city.act(pb, queue, s, provider, job))
+        elif job["type"] == "owner_task":
+            from .city import engine as city
+            queue.complete(job["job_id"], owner, city.owner_task(pb, queue, s, provider, job))
         elif job["type"] == "reindex_search":
             queue.complete(job["job_id"], owner, {"indexed": reindex_all(pb, s)})
         else:
@@ -101,13 +110,22 @@ def main() -> None:
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
     log.info("worker started provider=%s model=%s", provider.name, provider.model)
-    last_sched = last_index = last_etl = last_rest = 0.0
+    last_sched = last_index = last_etl = last_rest = last_city = 0.0
+    from .city import engine as city
     while not STOP:
         now = time.time()
         try:
             if now - last_sched > 60:
                 schedule_due_sources(pb, queue)
                 last_sched = now
+            if now - last_city > 60:
+                # Owner instructions are always picked up (bounded by their own caps); the seed city's bounded
+                # evaluation window is only scheduled when CITY_ENABLED=true (one tick per window, idempotent).
+                city.poll_owner_tasks(pb, queue)
+                if city.cfg()["enabled"]:
+                    for t in pb.list_all("tenants", "status='active' && is_demo=false"):
+                        city.enqueue_tick(queue, t["id"])
+                last_city = now
             if now - last_index > 600:
                 reindex_all(pb, s)
                 last_index = now

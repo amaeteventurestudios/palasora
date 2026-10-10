@@ -283,7 +283,7 @@ def seed_communities(pb: PB, tenant: dict) -> None:
         if not pb.first("communities", f"tenant_id={q(tenant['id'])} && slug={q(slug)}"):
             topics = [t[0] for t in tx.TOPICS if t[1] == slug]
             pb.create("communities", {"tenant_id": tenant["id"], "slug": slug, "name": name, "summary": desc, "country_codes": [],
-                                      "topic_slugs": topics, "status": "published",
+                                      "topic_slugs": topics, "status": "published", "kind": "hub",
                                       "moderation_rules": "Challenge ideas, not people's dignity. Source factual claims when you can."})
 
 
@@ -326,6 +326,9 @@ def main() -> int:
     seed_sources(pb, p)
     seed_communities(pb, p)
     seed_communities(pb, s)
+    if os.environ.get("SEED_AGENT_CITY", "true").lower() == "true":
+        from .city.seed import seed_city
+        print("city", seed_city(pb, p))
     if os.environ.get("SEED_DEMO_CONTENT", "true").lower() == "true":
         for story in DEMO_STORIES:
             seed_demo_story(pb, p, editor, story)

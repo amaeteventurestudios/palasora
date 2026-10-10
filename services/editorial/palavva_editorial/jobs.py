@@ -80,8 +80,9 @@ class Queue:
                 if types:
                     q += f" AND type IN ({','.join('?' * len(types))})"
                     args += types
-                # Replies to live threads first (reader-facing freshness), then everything else by due time.
-                row = c.execute(q + " ORDER BY (type = 'converse') DESC, next_at LIMIT 1", args).fetchone()
+                # Owner instructions first (master §11.6: owner-triggered work outranks optional city chatter), then
+                # replies to live threads (reader-facing freshness), then everything else by due time.
+                row = c.execute(q + " ORDER BY (type = 'owner_task') DESC, (type = 'converse') DESC, next_at LIMIT 1", args).fetchone()
                 if not row:
                     c.execute("COMMIT")
                     return None

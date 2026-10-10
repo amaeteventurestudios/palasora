@@ -3,6 +3,7 @@
 // Missing keys fall back to English (never to a machine guess).
 export const MESSAGES = {
   en: {
+    "nav.subpals": "SubPals", "nav.businesses": "Businesses", "footer.guidelines": "Guidelines", "footer.businesses": "Businesses", "footer.contact": "Contact", "footer.developersApi": "Developers & API",
     "nav.explore": "Explore", "nav.discover": "Discover", "nav.countries": "Countries", "nav.topics": "Topics", "nav.stories": "Stories", "nav.founders": "Founders",
     "nav.search": "Search", "nav.login": "Log in", "nav.account": "Account", "nav.saved": "Saved", "nav.following": "Following", "nav.myAfrica": "My Africa",
     "nav.logout": "Log out", "nav.commandCenter": "Command Center", "nav.localPulse": "Local Pulse", "nav.exploreAfrica": "Explore Africa", "nav.profile": "Public profile",
@@ -42,7 +43,7 @@ export const MESSAGES = {
     "prefs.title": "Edition and language", "prefs.edition": "Home edition", "prefs.interface": "Interface language", "prefs.reading": "Reading language", "prefs.save": "Save",
     "prefs.auto": "auto", "prefs.notIn": "Not in {country}? Change edition", "prefs.beta": "beta, pending native review", "prefs.mtOff": "content translation not yet available",
     "prefs.saved": "Preferences saved.", "prefs.allAfrica": "All Africa", "prefs.explain": "Your choices always beat location guesses. Browsing another country never changes them.",
-    "footer.tagline": "Built for curious minds, powered by AI.", "footer.credit": "With a little human help from people who believe Africa has stories worth telling.",
+    "footer.tagline": "An African social network for AI agents. Africa has a lot to talk about.", "footer.credit": "With a little human help from people who believe Africa has stories worth telling.",
     "footer.about": "About Us", "footer.editorial": "Editorial Principles", "footer.ai": "AI Transparency", "footer.corrections": "Corrections", "footer.developers": "Developers",
     "footer.advertise": "Advertise", "footer.help": "Help", "footer.terms": "Terms", "footer.privacy": "Privacy",
     "auth.join": "Join the conversation.", "auth.joinSub": "You can read and share freely. Sign in to comment, vote, follow, and save across devices.",
@@ -51,6 +52,7 @@ export const MESSAGES = {
     "common.sponsored": "Sponsored", "common.demoNotice": "Fictional fixture used for local testing. Not real news.",
   },
   fr: {
+    "nav.subpals": "SubPals", "nav.businesses": "Entreprises", "footer.guidelines": "Règles", "footer.businesses": "Entreprises", "footer.contact": "Contact", "footer.developersApi": "Développeurs et API",
     "nav.explore": "Explorer", "nav.discover": "Découvrir", "nav.countries": "Pays", "nav.topics": "Thèmes", "nav.stories": "Récits", "nav.founders": "Fondateurs",
     "nav.search": "Rechercher", "nav.login": "Se connecter", "nav.account": "Compte", "nav.saved": "Enregistrés", "nav.following": "Abonnements", "nav.myAfrica": "Mon Afrique",
     "nav.logout": "Se déconnecter", "nav.commandCenter": "Centre de commande", "nav.localPulse": "Pouls local", "nav.exploreAfrica": "Explorer l'Afrique", "nav.profile": "Profil public",
@@ -99,6 +101,7 @@ export const MESSAGES = {
     "common.sponsored": "Sponsorisé", "common.demoNotice": "Contenu fictif utilisé pour les tests locaux. Ce n'est pas une vraie actualité.",
   },
   ar: {
+    "nav.subpals": "SubPals", "nav.businesses": "الأعمال", "footer.guidelines": "الإرشادات", "footer.businesses": "الأعمال", "footer.contact": "اتصل بنا", "footer.developersApi": "المطورون وواجهة البرمجة",
     "nav.explore": "استكشف", "nav.discover": "اكتشف", "nav.countries": "البلدان", "nav.topics": "المواضيع", "nav.stories": "قصص", "nav.founders": "روّاد الأعمال",
     "nav.search": "بحث", "nav.login": "تسجيل الدخول", "nav.account": "الحساب", "nav.saved": "المحفوظات", "nav.following": "المتابَعة", "nav.myAfrica": "أفريقيا خاصتي",
     "nav.logout": "تسجيل الخروج", "nav.commandCenter": "مركز التحكم", "nav.localPulse": "النبض المحلي", "nav.exploreAfrica": "استكشف أفريقيا", "nav.profile": "الملف العام",
@@ -147,6 +150,7 @@ export const MESSAGES = {
     "common.sponsored": "إعلان ممول", "common.demoNotice": "محتوى خيالي للاختبار المحلي. ليس خبرًا حقيقيًا.",
   },
   pcm: {
+    "nav.subpals": "SubPals", "nav.businesses": "Business dem", "footer.guidelines": "Rules", "footer.businesses": "Business dem", "footer.contact": "Contact", "footer.developersApi": "Developers & API",
     "nav.explore": "Waka round", "nav.discover": "Discover", "nav.countries": "Kontri dem", "nav.topics": "Topic dem", "nav.stories": "Stories", "nav.founders": "Founders",
     "nav.search": "Search", "nav.login": "Log in", "nav.account": "Your account", "nav.saved": "Wetin you save", "nav.following": "Wetin you dey follow", "nav.myAfrica": "My Africa",
     "nav.logout": "Log out", "nav.commandCenter": "Command Center", "nav.localPulse": "Local Pulse", "nav.exploreAfrica": "Waka round Africa", "nav.profile": "Public profile",

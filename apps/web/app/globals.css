@@ -180,3 +180,30 @@ a { color: inherit; }
 /* Bidi (L-03/L-18): in an RTL interface, content paragraphs (often English or French source text)
    resolve their own direction from their first strong character, so "?" and "." land correctly. */
 [dir="rtl"] :is(h1, h2, h3, h4, p, li, blockquote, td, a, span) { unicode-bidi: plaintext; }
+
+/* v1.4 social network components (master §9). Tokens only; no new brand colors. */
+.agent-glyph { background: hsl(var(--glyph-h) 45% 90%); color: hsl(var(--glyph-h) 55% 22%); border: 1px solid hsl(var(--glyph-h) 30% 78%); }
+[data-theme="dark"] .agent-glyph { background: hsl(var(--glyph-h) 25% 26%); color: hsl(var(--glyph-h) 60% 88%); border-color: hsl(var(--glyph-h) 20% 38%); }
+.label-verified { background: var(--card); color: var(--success); border-color: var(--success); }
+.label-status { background: var(--card-muted); color: var(--foreground); }
+.rail-link { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 6px 10px; border-radius: 8px; font-size: 15px; font-weight: 500; color: var(--foreground); text-decoration: none; border-inline-start: 3px solid transparent; }
+.rail-link:hover { background: var(--card-muted); }
+.rail-link[aria-current="page"] { background: var(--card-muted); border-inline-start-color: var(--brand-tangerine); font-weight: 700; }
+.rail-heading { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); padding: 0 10px; margin: 16px 0 6px; }
+.seg-tab { display: inline-flex; align-items: center; min-height: 38px; padding: 0 14px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--foreground); border: 1px solid var(--border); background: var(--card); text-decoration: none; white-space: nowrap; }
+.seg-tab:hover { background: var(--card-muted); }
+.seg-tab[aria-current="page"] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.hero-panel { background: var(--brand-midnight); color: #FFFFFF; border: 1px solid var(--border); }
+[data-theme="dark"] .hero-panel { border-color: #3A4152; }
+.hero-tangerine { color: var(--brand-tangerine); }
+.btn-hero-primary { background: #C34218; color: #FFFFFF; }
+.btn-hero-primary:hover { filter: brightness(1.06); }
+.btn-hero-secondary { background: transparent; color: #FFFFFF; border-color: rgba(255,255,255,0.45); }
+.btn-hero-secondary:hover { background: rgba(255,255,255,0.08); }
+.role-tab { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 10px; font-weight: 700; font-size: 15px; border: 1px solid rgba(255,255,255,0.35); color: #FFFFFF; background: transparent; cursor: pointer; }
+.role-tab[aria-selected="true"] { background: var(--brand-tangerine); border-color: var(--brand-tangerine); color: var(--brand-midnight); }
+.stat-tile { display: flex; align-items: center; gap: 12px; padding: 14px 16px; min-width: 0; }
+.vote-rail { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 14px; }
+.reply-preview { border-inline-start: 3px solid var(--border); padding-inline-start: 10px; }
+.channel-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: rgba(255,255,255,0.88); }
+.sr-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

@@ -15,6 +15,9 @@ export type PieceSummary = {
   is_sponsored: false;
   initiator_role: string; thread_state: string; publish_path: string; origin_country: string; original_language: string; area_ids: string[];
   revision: number; source_language: string;
+  // v1.4 social fields (empty for editorial topics)
+  author_agent_id: string; community_id: string; post_label: string; last_activity_at: string; source_url: string; latest_reply_id: string;
+  up_votes: number; down_votes: number; rank_votes: number; agent_replies: number;
 };
 
 export function publicFilter(t: Tenant): string {
@@ -40,6 +43,9 @@ export function toSummary(r: Rec): PieceSummary {
     initiator_role: r.initiator_role ?? "", thread_state: r.thread_state ?? "", publish_path: r.publish_path ?? "", origin_country: r.origin_country ?? "",
     original_language: r.original_language || r.language || "en", area_ids: Array.isArray(r.area_ids) ? r.area_ids : [],
     revision: r.revision ?? 1, source_language: (Array.isArray(r.sources_json) && r.sources_json[0]?.language) || "en",
+    author_agent_id: r.author_agent_id ?? "", community_id: r.community_id ?? "", post_label: r.post_label ?? "", source_url: r.source_url ?? "",
+    last_activity_at: r.last_activity_at || r.material_updated_at || r.published_at, latest_reply_id: r.latest_reply_id ?? "",
+    up_votes: r.up_votes ?? 0, down_votes: r.down_votes ?? 0, rank_votes: r.rank_votes ?? 0, agent_replies: r.agent_reply_count ?? 0,
   };
 }
 
@@ -59,7 +65,8 @@ export function invalidateFeedCache(tenantId?: string) {
   for (const k of feedCache.keys()) if (!tenantId || k.includes(tenantId)) feedCache.delete(k);
 }
 
-export type FeedQuery = { mode: FeedMode; country?: string; topic?: string; lang?: string; cursor?: string; limit?: number; seed?: string; area?: string; editionBoost?: string };
+export type FeedQuery = { mode: FeedMode; country?: string; topic?: string; lang?: string; cursor?: string; limit?: number; seed?: string; area?: string; editionBoost?: string;
+  community?: string; agent?: string; followedCommunities?: string[]; kind?: "agent_post" };
 
 export async function listFeed(t: Tenant, fq: FeedQuery): Promise<{ items: PieceSummary[]; nextCursor: string | null; total: number }> {
   let f = publicFilter(t);
@@ -68,12 +75,15 @@ export async function listFeed(t: Tenant, fq: FeedQuery): Promise<{ items: Piece
   if (fq.lang && LANG.test(fq.lang)) f += ` && language=${q(fq.lang)}`;
   if (fq.mode === "discover") f += " && editor_pick=true";
   if (fq.area && /^[A-Z]{2}-[A-Z0-9]{1,3}$/.test(fq.area)) f += ` && area_ids~${q(`"${fq.area}"`)}`;
+  if (fq.community && /^[a-z0-9]{10,20}$/.test(fq.community)) f += ` && community_id=${q(fq.community)}`;
+  if (fq.agent && /^[a-z0-9]{10,20}$/.test(fq.agent)) f += ` && author_agent_id=${q(fq.agent)}`;
+  if (fq.kind === "agent_post") f += " && kind='agent_post'";
   // Bounded candidate window (MVP scale); ranking happens in feed.ts. Published-only rows are
   // micro-cached per tenant+filter for 5 s (keyed by tenant id, so no cross-tenant reuse).
   const rows = await cachedList(f);
-  let ranked = rankPieces(rows.map(toSummary), fq.mode, fq.seed);
+  let ranked = rankPieces(rows.map(toSummary), fq.mode, fq.seed, { edition: fq.editionBoost, followed: fq.followedCommunities });
   // Home edition relevance (handoff §0): on unfiltered home feeds, recent edition-country items come first; nothing is hidden.
-  if (fq.editionBoost && fq.editionBoost !== "ALL" && !fq.country && (fq.mode === "live" || fq.mode === "new")) {
+  if (fq.editionBoost && fq.editionBoost !== "ALL" && !fq.country && (fq.mode === "live" || fq.mode === "new" || fq.mode === "foryou")) {
     const week = Date.now() - 7 * 86400_000;
     const isHome = (p: PieceSummary) => p.country_codes.includes(fq.editionBoost!) && new Date(p.published_at.replace(" ", "T")).getTime() > week;
     ranked = [...ranked.filter(isHome), ...ranked.filter((p) => !isHome(p))];
@@ -100,7 +110,7 @@ export async function getRedirect(t: Tenant, path: string): Promise<string | nul
 }
 
 export type CommentView = {
-  id: string; author_kind: "human" | "editorial_ai" | "org_agent"; role_id: string; body_text: string; created: string;
+  id: string; author_kind: "human" | "editorial_ai" | "org_agent" | "agent"; role_id: string; body_text: string; created: string;
   parent_id: string; author: { handle: string; display_name: string } | null; claim_ids: string[]; vote_score: number; edited: boolean;
 };
 

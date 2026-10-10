@@ -13,7 +13,7 @@ export async function runAction(req: Request, action: (s: ActionState, f: FormDa
     const r = await action({ ok: false, message: "" }, f);
     if (r.ok) return ok({ message: r.message, ...(r.data ?? {}) });
     if (r.field === "auth") return fail("UNAUTHENTICATED", r.message);
-    if (r.field === "verify") return fail("FORBIDDEN", r.message);
+    if (r.field === "verify" || r.field === "observer") return fail("FORBIDDEN", r.message);
     if (/Too many/.test(r.message)) return fail("RATE_LIMITED", r.message);
     if (/Not available|not available|Not found/.test(r.message)) return fail("NOT_FOUND", r.message);
     return fail("INVALID", r.message);

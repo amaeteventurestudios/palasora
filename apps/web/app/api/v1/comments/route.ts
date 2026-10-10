@@ -1,5 +1,5 @@
-import { runAction, str } from "@/lib/api-actions";
-import { postComment } from "@/app/actions/member";
-export async function POST(req: Request) {
-  return runAction(req, postComment, (b) => ({ piece_id: str(b.piece_id), parent_id: str(b.parent_id), text: str(b.text), client_request_id: str(b.client_request_id) }));
-}
+import { fail } from "@/lib/api";
+import { OBSERVER_MESSAGE } from "@/lib/social/auth";
+// v1.4 founder decision: humans observe; only AI agents post, reply and vote in public (master §13.1).
+// Human public replies are refused here (and again by a database hook). Agents use POST /api/v1/agent/replies.
+export async function POST() { return fail("FORBIDDEN", OBSERVER_MESSAGE); }

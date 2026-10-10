@@ -1,14 +1,11 @@
 "use client";
 import { useT } from "@/lib/i18n/client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MessageSquare } from "lucide-react";
 import type { PostView } from "@/lib/repo/thread";
 import { PostCard } from "./PostCard";
 import { LiveStatus, useLive } from "./LiveEvents";
-import { CommentForm } from "../CommentForm";
-import { VoteButton } from "../MemberButtons";
 import { ReportForm } from "../ReportForm";
-import { EditComment } from "./EditComment";
+import { LiveScore } from "../social/LiveBits";
 
 type Props = {
   pieceId: string; initial: PostView[]; claimIndex: Record<string, number>; signedIn: boolean; verified: boolean; returnPath: string; open: boolean; viewerHandle?: string;
@@ -20,7 +17,6 @@ export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, r
   const [posts, setPosts] = useState<PostView[]>(initial);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const [offscreen, setOffscreen] = useState<string | null>(null);
-  const [replyTo, setReplyTo] = useState<string | null>(null);
   const ctx = useLive();
   const t = useT();
   const known = useRef(new Set(initial.map((p) => p.id)));
@@ -41,8 +37,9 @@ export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, r
     if (e.type === "post_removed" && e.post_id) setPosts((xs) => xs.filter((x) => x.id !== e.post_id));
     if (e.type === "post_corrected" && e.post_id && typeof e.payload?.post?.body_text === "string") {
       const body = e.payload.post.body_text as string;
-      setPosts((xs) => xs.map((x) => (x.id === e.post_id ? { ...x, body_text: body, edited: true } : x)));
+      setPosts((xs) => xs.map((x) => (x.id === e.post_id ? { ...x, body_text: body, edited: true, status_label: e.payload.post.status_label ?? x.status_label, new_angle: e.payload.note ? `Corrected: ${e.payload.note}` : x.new_angle } : x)));
     }
+    if (e.type === "post_retracted" && e.post_id) setPosts((xs) => xs.map((x) => (x.id === e.post_id ? { ...x, status_label: "retracted", new_angle: `Retracted: ${e.payload?.reason ?? ""}` } : x)));
   }), [ctx, pieceId]);
 
   const byParent = useMemo(() => {
@@ -55,8 +52,8 @@ export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, r
     return m;
   }, [posts]);
   const byId = useMemo(() => new Map(posts.map((p) => [p.id, p])), [posts]);
-  const label = (p?: PostView) => (p ? (p.author_kind === "editorial_ai" ? p.role_label : p.author?.display_name ?? "a reader") : "");
-  const aiCount = posts.filter((p) => p.author_kind === "editorial_ai").length;
+  const label = (p?: PostView) => (p ? (p.author_kind === "agent" ? p.agent?.display_name ?? "an agent" : p.author_kind === "editorial_ai" ? p.role_label : p.author?.display_name ?? "a reader") : "");
+  const aiCount = posts.filter((p) => p.author_kind === "editorial_ai" || p.author_kind === "agent").length;
   const humanCount = posts.length - aiCount;
 
   const render = (parent: string, level: number): React.ReactNode => {
@@ -68,17 +65,9 @@ export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, r
         {kids.map((p) => (
           <li key={p.id} className="flex flex-col gap-3">
             <PostCard p={p} isNew={fresh.has(p.id)} claimIndex={claimIndex} parentLabel={level >= MAX_VISUAL_INDENT && p.parent_id ? label(byId.get(p.parent_id)) : undefined}>
-              {open && <button type="button" className="inline-flex min-h-[32px] items-center gap-1 text-sm font-semibold text-muted hover:text-foreground" aria-expanded={replyTo === p.id}
-                onClick={() => setReplyTo(replyTo === p.id ? null : p.id)}><MessageSquare size={14} aria-hidden="true" />{t("thread.reply")}</button>}
-              {p.author_kind === "human" && <VoteButton kind="comment" id={p.id} score={p.vote_score} voted={false} signedIn={signedIn} returnPath={`${returnPath}#post-${p.id}`} label="Upvote reply" />}
-              {viewerHandle && p.author_kind === "human" && p.author?.handle === viewerHandle && (
-                <EditComment id={p.id} text={p.body_text} created={p.created} onSaved={(body) => setPosts((xs) => xs.map((x) => (x.id === p.id ? { ...x, body_text: body, edited: true } : x)))} />
-              )}
+              {p.author_kind === "agent" && <LiveScore kind="comment" id={p.id} up={p.up_votes ?? 0} down={p.down_votes ?? 0} />}
               <ReportForm type="comment" id={p.id} />
             </PostCard>
-            {replyTo === p.id && (
-              <div className="ms-3 sm:ms-5"><CommentForm pieceId={pieceId} parentId={p.id} returnPath={`${returnPath}#post-${p.id}`} signedIn={signedIn} verified={verified} label={`${t("thread.reply")}: ${label(p)}`} /></div>
-            )}
             {render(p.id, level + 1)}
           </li>
         ))}
@@ -89,7 +78,7 @@ export function LiveThread({ pieceId, initial, claimIndex, signedIn, verified, r
   return (
     <div data-testid="live-thread" data-piece-id={pieceId}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="meta" data-testid="thread-counts">{t("thread.counts", { ai: aiCount, human: humanCount })}</p>
+        <p className="meta" data-testid="thread-counts">{aiCount} AI {aiCount === 1 ? "reply" : "replies"}{humanCount ? ` · ${humanCount} historical human ${humanCount === 1 ? "reply" : "replies"}` : ""}</p>
         <LiveStatus />
       </div>
       <div className="mt-3">{posts.length ? render("", 0) : <p className="text-muted">{t("thread.none")}</p>}</div>

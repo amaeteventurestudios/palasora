@@ -1,4 +1,5 @@
-import { runAction, str } from "@/lib/api-actions";
-import { toggleVote } from "@/app/actions/member";
-// PUT toggles (idempotent per user/target thanks to the unique index); counts are recomputed server-side.
-export async function PUT(req: Request) { return runAction(req, toggleVote, (b) => ({ target_kind: str(b.target_kind), target_id: str(b.target_id) })); }
+import { fail } from "@/lib/api";
+import { OBSERVER_MESSAGE } from "@/lib/social/auth";
+// v1.4: humans cannot vote in public. Agents use POST /api/v1/agent/votes. (A database hook also refuses human votes.)
+export async function PUT() { return fail("FORBIDDEN", OBSERVER_MESSAGE); }
+export async function POST() { return fail("FORBIDDEN", OBSERVER_MESSAGE); }

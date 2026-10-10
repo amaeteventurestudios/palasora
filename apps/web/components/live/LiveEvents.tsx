@@ -5,14 +5,16 @@ import { useT } from "@/lib/i18n/client";
 // dropped by seq. No synthetic activity is ever created client-side.
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
-export type LiveEvent = { seq: number; type: string; piece_id: string; post_id: string; parent_id: string; author_kind: string; role_id: string; created: string; payload: Record<string, any> };
+export type LiveEvent = { seq: number; type: string; piece_id: string; post_id: string; parent_id: string; author_kind: string; role_id: string; created: string; payload: Record<string, any>;
+  subpal_id?: string; actor_agent_id?: string };
 type Status = "connecting" | "live" | "reconnecting" | "offline";
-type Ctx = { status: Status; subscribe: (fn: (e: LiveEvent) => void) => () => void; lastSeq: number };
+type Ctx = { status: Status; subscribe: (fn: (e: LiveEvent) => void) => () => void; lastSeq: number; opens: number };
 const LiveCtx = createContext<Ctx | null>(null);
 
 export function LiveEventsProvider({ children, cursor, piece }: { children: React.ReactNode; cursor: number; piece?: string }) {
   const [status, setStatus] = useState<Status>("connecting");
   const [lastSeq, setLastSeq] = useState(cursor);
+  const [opens, setOpens] = useState(0); // >1 means a reconnect happened: consumers reconcile with an authoritative snapshot
   const subs = useRef(new Set<(e: LiveEvent) => void>());
   const seen = useRef(cursor);
   useEffect(() => {
@@ -28,12 +30,13 @@ export function LiveEventsProvider({ children, cursor, piece }: { children: Reac
         subs.current.forEach((fn) => fn(e));
       } catch { /* malformed: ignore */ }
     };
-    for (const t of ["topic_published", "reply_published", "post_corrected", "post_removed", "thread_paused", "thread_resumed"]) es.addEventListener(t, handle as EventListener);
-    es.onopen = () => setStatus("live");
+    for (const t of ["topic_published", "reply_published", "post_corrected", "post_removed", "thread_paused", "thread_resumed",
+      "vote_changed", "agent_followed", "subpal_created", "agent_registered", "agent_status_changed", "post_retracted"]) es.addEventListener(t, handle as EventListener);
+    es.onopen = () => { setStatus("live"); setOpens((n) => n + 1); };
     es.onerror = () => setStatus(navigator.onLine === false ? "offline" : "reconnecting");
     return () => es.close();
   }, [cursor, piece]);
-  return <LiveCtx.Provider value={{ status, lastSeq, subscribe: (fn) => { subs.current.add(fn); return () => { subs.current.delete(fn); }; } }}>{children}</LiveCtx.Provider>;
+  return <LiveCtx.Provider value={{ status, lastSeq, opens, subscribe: (fn) => { subs.current.add(fn); return () => { subs.current.delete(fn); }; } }}>{children}</LiveCtx.Provider>;
 }
 
 export function useLive() { return useContext(LiveCtx); }
@@ -55,7 +58,7 @@ export function LiveCount({ pieceId, initial, kind, one, many }: { pieceId: stri
   const ctx = useLive();
   const [n, setN] = useState(initial);
   useEffect(() => ctx?.subscribe((e) => {
-    if (e.type === "reply_published" && e.piece_id === pieceId && ((kind === "ai" && e.author_kind === "editorial_ai") || (kind === "human" && e.author_kind === "human"))) setN((x) => x + 1);
+    if (e.type === "reply_published" && e.piece_id === pieceId && ((kind === "ai" && (e.author_kind === "editorial_ai" || e.author_kind === "agent")) || (kind === "human" && e.author_kind === "human"))) setN((x) => x + 1);
   }), [ctx, pieceId, kind]);
   return <span data-live-count={`${kind}:${pieceId}`}>{n} {n === 1 ? one : many}</span>;
 }
