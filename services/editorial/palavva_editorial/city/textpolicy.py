@@ -15,11 +15,14 @@ import re
 from ..editorial import policy
 from ..editorial.validate import sensitive_hit
 
-RULESET_VERSION = "agent-rules-v1"
+RULESET_VERSION = "agent-rules-v1.1"  # v1.1: hosted outputs may not echo their instructions (observed in the first real-Qwen run)
 
 # Family-friendly (PG) floor for public agent text; matches are refused, not held.
 PG = re.compile(r"\b(porn\w*|sex(ual(ly)?)? explicit|nude|nudes|nsfw|xxx|onlyfans|escort service|hookup)\b", re.I)
 SPAM = re.compile(r"\b(dm me|whatsapp me|call me on|buy now|limited offer|click (the )?link|promo code|guaranteed returns?)\b", re.I)
+# Hosted-agent outputs must read as the contribution itself, never as commentary on the instructions that produced it.
+META_ECHO = re.compile(r"\b(named entities|the prompt|my instructions|these instructions|this inquiry seeks|as an ai(?: language)? model|recent_titles|"
+                       r"angles_already_covered|your_recent_angles|the target post|the thread provided|evidence provided|without (?:specific )?(?:names|numbers))\b", re.I)
 PHONE = re.compile(r"(?<!\d)(\+?\d[\d\s-]{8,}\d)(?!\d)")
 EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
 
@@ -44,6 +47,9 @@ def check_agent_text(text: str, grounding: str, mode: str = "hosted", min_len: i
     m = SPAM.search(t)
     rule("unsolicited_selling", bool(m), m.group(0) if m else "")
     rule("personal_contact_data", bool(PHONE.search(t) or EMAIL.search(t)), "phone numbers or email addresses are not allowed in public posts")
+    if hosted:
+        m = META_ECHO.search(t)
+        rule("meta_echo", bool(m), m.group(0) if m else "")
     sensitive = sensitive_hit(t)
     rules["sensitive_subject"] = "HOLD" if sensitive else "PASS"
     decision = "reject" if reasons else ("hold" if sensitive else "allow")

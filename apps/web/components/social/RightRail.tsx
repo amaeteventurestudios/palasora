@@ -77,15 +77,15 @@ export async function RightRail({ tenant, session, extras = true }: { tenant: Te
       {extras && (
         <>
           {pulse && (
-            <details className="card p-4" data-testid="local-pulse-card">
+            <details open className="card p-4" data-testid="local-pulse-card">
               <summary className="cursor-pointer text-[16px] font-bold">{t("pulse.title", { country: countryInfo(pulse.country)?.name ?? pulse.country })}</summary>
               <p className="meta mb-2 mt-1">{t("pulse.sub", { unit: subdivisionLabel(pulse.country, ctx.ui) })}</p>
               <PulseMap pulse={pulse} t={t} ui={ctx.ui} compact hrefFor={(code) => `/local-pulse?country=${pulse.country}&area=${code}`} />
               <Link href={`/local-pulse?country=${pulse.country}`} className="text-sm link">{t("pulse.open")}</Link>
             </details>
           )}
-          {trendHome && <details className="rounded-xl" data-testid="trend-now-wrap"><summary className="card cursor-pointer p-4 text-[16px] font-bold">Trending with readers (human demand)</summary><div className="mt-2"><TrendingNow r={trendHome} t={t} edition={edition} /></div></details>}
-          {trendAfrica && <details className="rounded-xl"><summary className="card cursor-pointer p-4 text-[16px] font-bold">Trending across Africa (readers)</summary><div className="mt-2">
+          {trendHome && <details open className="rounded-xl" data-testid="trend-now-wrap"><summary className="card cursor-pointer p-4 text-[16px] font-bold">Trending with readers (human demand)</summary><div className="mt-2"><TrendingNow r={trendHome} t={t} edition={edition} /></div></details>}
+          {trendAfrica && <details open className="rounded-xl"><summary className="card cursor-pointer p-4 text-[16px] font-bold">Trending across Africa (readers)</summary><div className="mt-2">
             <TrendingAfrica r={{ ...trendAfrica, items: trendAfrica.items.map((it, i) => ({ ...it, translation: africaItems[i].translation, headline: africaItems[i].headline })) }} t={t} /></div></details>}
           <Link href="/take-me-back" className="card flex items-center gap-2 p-4 text-[15px] font-semibold hover:bg-card-muted"><History size={16} aria-hidden="true" />Time Lens: today&apos;s questions with a longer history</Link>
         </>

@@ -7,23 +7,27 @@ test("T-004 JS-disabled SSR shows headline, date, source and links without login
   const ctx = await browser.newContext({ javaScriptEnabled: false });
   const page = await ctx.newPage();
   await page.goto(BASE + "/");
-  const first = page.getByTestId("story-card").first();
-  await expect(first.getByRole("heading")).toBeVisible();
+  await expect(page.getByTestId("story-card").first().getByRole("heading")).toBeVisible();
+  // v1.4 cards are social cards; a sourced editorial topic still shows its source, time and a plain link.
+  const first = page.locator('[data-testid="story-card"][data-kind="discussion"]').filter({ hasText: "Source:" }).first();
   await expect(first.locator("time")).toHaveAttribute("datetime", /\d{4}-\d{2}-\d{2}T/);
-  await expect(first).toContainText("Source:");
-  await first.getByRole("link", { name: "Read" }).click();
+  await first.getByRole("heading").getByRole("link").click();
   await expect(page.getByRole("heading", { level: 2, name: "What happened?" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Read the sources" })).toBeVisible();
   await ctx.close();
 });
 
-test("S01 first story is above the fold at 1440x900 and 390x844", async ({ page }) => {
-  for (const [w, h, limit] of [[1440, 900, 900], [390, 844, 300]] as const) {
-    await page.setViewportSize({ width: w, height: h });
-    await page.goto("/");
-    const box = await page.getByTestId("story-card").first().boundingBox();
-    expect(box!.y, `first story top at ${w}px`).toBeLessThan(limit);
-  }
+// v1.4 (D-58): the founder-approved homepage (master §8) puts the compact hero, live counters and composer above the feed.
+// Desktop: the first conversation card is still above the 900 px fold. Phones: real network content (the live counters)
+// is in the first viewport and the first card within two viewports.
+test("S01 first conversation above the fold at 1440x900; live network content in the first phone viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  expect((await page.getByTestId("story-card").first().boundingBox())!.y, "first card top at 1440px").toBeLessThan(900);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  expect((await page.getByTestId("stat-strip").boundingBox())!.y, "counters top at 390px").toBeLessThan(844);
+  expect((await page.getByTestId("story-card").first().boundingBox())!.y, "first card top at 390px").toBeLessThan(844 * 2);
 });
 
 test("T-005 no horizontal overflow at 320/375/390/768 on key pages", async ({ page }) => {
@@ -38,7 +42,7 @@ test("T-005 no horizontal overflow at 320/375/390/768 on key pages", async ({ pa
 });
 
 test("T-006 every feed tab is a working route with real records", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/feed/live"); // v1.4: the legacy editorial feed tabs live on /feed/*; the homepage uses the social tabs (v14.spec.ts)
   for (const name of ["Trending", "Random", "New", "Top", "Discussed", "Discover", "Live"]) {
     await page.getByRole("navigation", { name: "Feed" }).getByRole("link", { name, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/feed/${name.toLowerCase()}`));

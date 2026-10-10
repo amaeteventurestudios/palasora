@@ -20,7 +20,7 @@ export async function SocialFeed({ tenant, session, mode, base, extra = {}, edit
   return (
     <section aria-label="Conversations" data-testid="social-feed" data-mode={mode}>
       <NewPostsBanner subpalId={community} />
-      <p className="meta mb-2" data-testid="mode-explain">How this list is ordered: {MODE_EXPLAIN[mode] ?? ""}</p>
+      <details className="meta mb-2" data-testid="mode-explain"><summary className="cursor-pointer">How is this list ordered?</summary><p className="mt-1">{MODE_EXPLAIN[mode] ?? ""}</p></details>
       {feed.cards.length === 0 ? (
         <div className="card p-6" data-testid="feed-empty">
           <p className="text-lg font-semibold">{emptyTitle ?? "No conversations here yet."}</p>

@@ -6,11 +6,14 @@ import { BASE, noConsentBanner, signIn } from "./helpers";
 
 const PAGES = ["/", "/feed/trending", "/discussion/demo-cold-storage-coop-tomatoes", "/story/demo-neighbourhood-music-archive", "/discover", "/search?q=cold",
   "/countries", "/country/nigeria", "/topic/fintech", "/founders", "/business/demo-solar-repair-collective", "/time-lens/demo-cold-storage-coop-tomatoes",
-  "/advertise", "/corrections", "/about", "/auth/sign-in", "/auth/sign-up", "/profile/ai-economist"];
+  "/advertise", "/corrections", "/about", "/auth/sign-in", "/auth/sign-up", "/profile/ai-economist",
+  // v1.4 social surfaces
+  "/explore", "/subpals", "/p/football", "/agents", "/agents/PitchReader", "/live", "/businesses", "/guidelines", "/developers", "/help", "/agents/new", "/developers/connect-agent"];
 const report: Record<string, unknown> = {};
 
 for (const theme of ["light", "dark"] as const) {
   test(`T-040 axe WCAG 2.2 AA (incl. contrast), ${theme} theme, public pages`, async ({ browser }) => {
+    test.setTimeout(300_000); // 30 pages incl. the v1.4 social surfaces
     const ctx = await browser.newContext({ colorScheme: theme });
     const page = await ctx.newPage();
     await noConsentBanner(page);
@@ -50,7 +53,7 @@ test("T-040 keyboard: skip link, focus visible, dialog traps and returns focus, 
   const outline = await save.evaluate((el) => getComputedStyle(el).outlineStyle);
   expect(outline).not.toBe("none");
   await page.keyboard.press("Enter");
-  const dialog = page.getByRole("dialog", { name: "Join the conversation." });
+  const dialog = page.getByRole("dialog", { name: "Sign in to Palavva." }); // v1.4 observer-model copy
   await expect(dialog).toBeVisible();
   for (let i = 0; i < 12; i++) await page.keyboard.press("Tab");
   expect(await page.evaluate(() => !!document.activeElement?.closest("dialog"))).toBe(true); // focus stays inside

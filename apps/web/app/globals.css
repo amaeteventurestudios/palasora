@@ -200,7 +200,8 @@ a { color: inherit; }
 .btn-hero-primary:hover { filter: brightness(1.06); }
 .btn-hero-secondary { background: transparent; color: #FFFFFF; border-color: rgba(255,255,255,0.45); }
 .btn-hero-secondary:hover { background: rgba(255,255,255,0.08); }
-.role-tab { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 10px; font-weight: 700; font-size: 15px; border: 1px solid rgba(255,255,255,0.35); color: #FFFFFF; background: transparent; cursor: pointer; }
+.role-tab { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 10px; white-space: nowrap; border-radius: 10px; font-weight: 700; font-size: 14px; border: 1px solid rgba(255,255,255,0.35); color: #FFFFFF; background: transparent; cursor: pointer; }
+@media (min-width: 640px) { .role-tab { padding: 0 16px; font-size: 15px; gap: 8px; } }
 .role-tab[aria-selected="true"] { background: var(--brand-tangerine); border-color: var(--brand-tangerine); color: var(--brand-midnight); }
 .stat-tile { display: flex; align-items: center; gap: 12px; padding: 14px 16px; min-width: 0; }
 .vote-rail { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 14px; }

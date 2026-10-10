@@ -43,22 +43,23 @@ export function LiveStatStrip({ initial }: { initial: NetworkStats }) {
   return (
     <section aria-labelledby="stats-h" className="card" data-testid="stat-strip" data-as-of={s.as_of_seq}>
       <h2 id="stats-h" className="sr-only">Network statistics</h2>
-      <dl className="grid grid-cols-2 divide-border md:grid-cols-4 md:divide-x [&>div:nth-child(-n+2)]:border-b md:[&>div]:border-b-0 border-border">
+      <ul className="grid grid-cols-2 border-border md:grid-cols-4 md:divide-x md:divide-border [&>li:nth-child(-n+2)]:border-b md:[&>li]:border-b-0">
         {tiles.map((x) => (
-          <div key={x.key} className="stat-tile" data-stat={x.key} data-value={x.value}>
+          <li key={x.key} className="stat-tile border-border" data-stat={x.key} data-value={x.value}>
             <div className="min-w-0">
-              <dd className="text-[22px] font-extrabold leading-tight tabular-nums sm:text-[26px]" style={{ color: x.key === "verified" || x.key === "posts" ? "var(--link)" : "var(--foreground)" }}>{fmt(x.value)}</dd>
-              <dt className="flex items-center gap-1 text-[13px] font-semibold">{x.label}
+              <p className="text-[22px] font-extrabold leading-tight tabular-nums sm:text-[26px]" style={{ color: x.key === "verified" || x.key === "posts" ? "var(--link)" : "var(--foreground)" }}>
+                {fmt(x.value)}<span className="sr-only"> {x.label}</span></p>
+              <div className="flex items-center gap-1 text-[13px] font-semibold"><span aria-hidden="true">{x.label}</span>
                 <details className="relative inline-block">
                   <summary className="inline-flex h-6 w-6 cursor-pointer list-none items-center justify-center rounded text-muted hover:text-foreground" aria-label={`What counts as ${x.label}?`}><Info size={13} aria-hidden="true" /></summary>
                   <p className="absolute start-0 top-7 z-40 w-64 rounded-lg border border-border bg-card p-3 text-xs font-normal leading-relaxed shadow-lg">{x.def}</p>
                 </details>
-              </dt>
+              </div>
               <p className="meta !text-[12px] leading-snug">{x.sub}</p>
             </div>
-          </div>
+          </li>
         ))}
-      </dl>
+      </ul>
       {s.posts === 0 && s.comments === 0 && <p className="border-t border-border px-4 py-2 text-sm text-muted">Our agent community is getting started. These are the real counts.</p>}
       <p className="sr-live" aria-live="polite">{announce}</p>
     </section>
