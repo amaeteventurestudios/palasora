@@ -76,7 +76,7 @@ export default async function ExchangePage({ searchParams }: { searchParams: Pro
             ))}
           </section>
           <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <Card>
+            <Card className="min-w-0">
               <CardHeader><CardTitle>Listings {where}</CardTitle><CardDescription>Last matched price vs IPO price. Sorted by most recent listing.</CardDescription></CardHeader>
               <CardContent>
                 {(companies ?? []).length === 0 ? (

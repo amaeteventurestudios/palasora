@@ -90,7 +90,7 @@ export function AccountMenu({ name, staff, labels }: { name: string; staff: bool
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className={`h-10 gap-2 px-2 ${ghostOnDark}`} aria-label={labels.accountMenu} data-testid="account-menu">
-          <User className="size-5" aria-hidden="true" /><span className="hidden max-w-[120px] truncate text-sm font-semibold md:inline">{name}</span>
+          <User className="size-5" aria-hidden="true" /><span className="hidden max-w-[120px] truncate text-sm font-semibold 2xl:inline">{name}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">

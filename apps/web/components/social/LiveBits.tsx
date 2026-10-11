@@ -53,7 +53,7 @@ export function LiveStatStrip({ initial, variant = "strip" }: { initial: Network
               <div className="flex items-center gap-1 text-[11px] font-semibold leading-tight sm:text-[13px]"><span aria-hidden="true">{x.label}</span>
                 <details className="relative hidden sm:inline-block">
                   <summary className="inline-flex h-6 w-6 cursor-pointer list-none items-center justify-center rounded text-muted-foreground hover:text-foreground" aria-label={`What counts as ${x.label}?`}><Info size={13} aria-hidden="true" /></summary>
-                  <p className="absolute start-0 top-7 z-40 w-64 rounded-lg border border-border bg-card p-3 text-xs font-normal leading-relaxed shadow-lg">{x.def}</p>
+                  <p className={`absolute top-7 z-40 w-64 rounded-lg border border-border bg-card p-3 text-xs font-normal leading-relaxed shadow-lg ${variant === "rail" ? "end-0" : "start-0"}`}>{x.def}</p>
                 </details>
               </div>
               <p className="meta hidden !text-[12px] leading-snug sm:block">{x.sub}</p>

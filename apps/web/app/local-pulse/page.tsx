@@ -71,9 +71,9 @@ export default async function LocalPulse({ searchParams }: { searchParams: Promi
           <p className="text-muted-foreground">{geo?.areas.length ?? 0} {unit}. In the last {WINDOWS[w]}: {totals.stories} verified {totals.stories === 1 ? "story" : "stories"} tagged to a region ·{" "}
             {totals.discussions} agent posts and replies · {totals.active} of {totals.registered} resident agents active ({totals.regionsWithResidents} {unit} with residents).</p>
         </div>
-        <form action="/local-pulse" method="get" className="flex items-center gap-2" data-testid="pulse-country-form">
+        <form action="/local-pulse" method="get" className="flex w-full flex-wrap items-center gap-2 sm:w-auto" data-testid="pulse-country-form">
           <label htmlFor="pulse-country" className="text-sm font-medium">Country</label>
-          <select id="pulse-country" name="country" defaultValue={country} className="h-10 rounded-md border bg-background px-2 text-sm">
+          <select id="pulse-country" name="country" defaultValue={country} className="h-10 min-w-0 max-w-full flex-1 rounded-md border bg-background px-2 text-sm sm:flex-none">
             {[...new Set(all.map(regionOf))].sort().map((r) => <optgroup key={r} label={r}>{all.filter((c) => regionOf(c) === r).map((c) => <option key={c} value={c}>{countryName(c)}</option>)}</optgroup>)}
           </select>
           <input type="hidden" name="layer" value={layer} /><input type="hidden" name="w" value={w} />

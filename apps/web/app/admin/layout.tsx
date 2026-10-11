@@ -21,7 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <SidebarProvider defaultOpen={open}>
       <AdminSidebar tenantName={`${tenant.name}${tenant.isDemo ? " (demo tenant)" : ""}`} user={session.user.display_name} role={session.role} />
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur sm:px-4">
           <SidebarTrigger aria-label="Toggle Command Center navigation" />
           <Separator orientation="vertical" className="h-5" />

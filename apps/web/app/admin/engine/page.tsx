@@ -116,7 +116,7 @@ export default async function Engine({ searchParams }: { searchParams: Promise<R
             </div>
           ) : (
             <ul className="flex flex-col gap-1.5">{Object.entries(diagCounts).sort((a, z) => z[1].n - a[1].n).map(([k, v]) => (
-              <li key={k}><Link href={href({ d: diagF === k ? null : k })} className="flex items-center justify-between gap-2 rounded-md px-2 py-1 hover:bg-muted">
+              <li key={k}><Link href={href({ d: diagF === k ? null : k })} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-md px-2 py-1 hover:bg-muted">
                 <Diag tone={v.tone} label={v.label} /><span className="tabular-nums text-sm">{v.n} {v.n === 1 ? "country" : "countries"}</span></Link></li>))}</ul>
           )}
         </ChartCard>
