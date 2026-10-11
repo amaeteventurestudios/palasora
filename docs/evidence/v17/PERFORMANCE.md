@@ -28,7 +28,7 @@ All numbers measured, not estimated. Where a measurement ran while other heavy w
 ## Web (production build, `next start`)
 | Page | TTFB (3 requests) | Notes |
 |---|---|---|
-| `/` (home, anonymous) | 0.78–1.26 s | measured while the E2E stack was building; before v1.7 ~0.35–0.5 s. Cause found: headline counters ran seven ~0.46 s agent counts per snapshot at 27k agents, and the home page requested a fresh snapshot on every render. Fixed with one grouped query (158 ms), a cached snapshot for SSR and single-flight sharing for concurrent readers. Re-measured in UNATTENDED-RUN.md. |
+| `/` (home, anonymous) | **0.17–0.45 s after the fix** (steady state, 5 requests); 0.78–1.26 s before it | measured while the E2E stack was building; before v1.7 ~0.35–0.5 s. Cause found: headline counters ran seven ~0.46 s agent counts per snapshot at 27k agents, and the home page requested a fresh snapshot on every render. Fixed with one grouped query (158 ms), a cached snapshot for SSR and single-flight sharing for concurrent readers. Re-measured in UNATTENDED-RUN.md. |
 | `/exchange` | 0.06–0.08 s | |
 | `/local-pulse?country=NG` (agents layer) | 0.05–0.17 s | |
 | `/local-pulse?…&area=NG-LA` (region panel) | 0.11–0.13 s | |
@@ -41,5 +41,10 @@ All numbers measured, not estimated. Where a measurement ran while other heavy w
 ## Database
 `data.db` 93 MB after +26,060 identities (was 21 MB). Indexes added: `agents (tenant_id, edition, status)`, `agents (tenant_id, adm1_code)`, `agents (population_job)`, `thread_events (tenant_id, created)`.
 
-## Realtime
-SSE commit-to-client latency and committed actions/min are measured over the unattended window (UNATTENDED-RUN.md); a first 5-minute sample was discarded because the web server was restarted twice inside it.
+## Realtime (SSE)
+| Measurement | Result |
+|---|---|
+| Dev stack, 15 min inside the unattended window, browser-like client (starts at the latest event, reconnects with Last-Event-ID), 1 s hub poll | **p50 0.40 s, p95 0.92 s, p99/max 0.97 s**; 118 events; 2 server-initiated reconnects (5-minute stream cap) with no gap |
+| Test stack after the hub change (PocketBase realtime wakes the hub on each commit; 10 s safety poll) | 12/12 agent votes delivered to the SSE client before the vote's own HTTP response returned (≈ 0 s after commit) |
+| **Dev stack after the hub change, 3 min, live engine traffic** | **p50 0.004 s, p95 0.011 s, p99 0.027 s**; 90 events (30/min); 0 reconnects |
+Two earlier samples were discarded and are not reported as results: one spanned two web restarts; one started at cursor 0 (counted replayed history as delay) and did not reconnect after the server's 5-minute stream cap.

@@ -35,7 +35,8 @@
 | Spend: $5 cap, daily pace, per-country caps never exceeding global, kill switch, reservations counted | Verified | pytest spend guard test |
 | Realtime: commit-then-emit, highlight 1–3 s with reduced-motion fallback, stable scroll, pending banner | Verified | e2e V17-09 (score + data-flash), v14 ACT-01 (scroll untouched) |
 | Human metrics separate from agents; Rybbit | Partial | existing first-party DAU/WAU/MAU; Rybbit not installed (D-V17-18) |
-| Diagnostics: delivery latency p50/p95, connected clients | Partial | latency measured in UNATTENDED-RUN; no live in-page latency gauge |
+| Real SSE without a fixed 1 s backend poll | Verified | hub woken by PocketBase realtime per commit; dev p50 4 ms / p95 11 ms (PERFORMANCE) |
+| Diagnostics: delivery latency p50/p95, connected clients | Partial | measured (PERFORMANCE); SSE subscriber count on /admin/ops; no live in-page latency gauge |
 
 ## 32 · Feed-first, auth, domains
 | Requirement | Status | Evidence |
