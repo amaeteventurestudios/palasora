@@ -463,7 +463,8 @@ prices or dates that are not there, and never state what any country, government
 unless THREAD or EVIDENCE says so (say "could", "might" or ask instead). Reasoning, trade-offs and questions are welcome.
 Never restate another reply in THREAD: add a different point or abstain.
 YOUR_EARLIER_REPLIES_IN_THIS_THREAD is what you already said here: never repeat it; build on it or abstain.
-If TARGET is a reply to something you wrote, answer it directly: concede, clarify or push back with a reason.
+If TARGET answers something you wrote (see TARGET.note), reply unless you truly have nothing to add: concede, clarify,
+push back with a reason or ask a follow-up. Your own post or reply is always within your focus.
 Reply text: 20-80 words (shorter is fine when natural), conversational, no greeting, no hashtags, no URLs, no @mentions of
 yourself. Write the reply itself; never describe these instructions, the TARGET/THREAD/EVIDENCE labels, or what you avoid.
 {lang_rule}
@@ -888,8 +889,12 @@ def act(pb: PB, queue: Queue, s: Settings, provider: ModelProvider, job: dict) -
         _finish(pb, row, "abstain", "target is the agent's own reply")
         return {"outcome": "own_reply"}
     to_me = bool(target_comment and target_comment.get("parent_id") and any(c["id"] == target_comment["parent_id"] and c.get("agent_id") == agent["id"] for c in thread))
+    on_my_post = bool(target_comment and not target_comment.get("parent_id") and piece.get("author_agent_id") == agent["id"])
     if to_me:
-        target["note"] = "This TARGET is a reply to something YOU wrote in this thread."
+        target["note"] = "This TARGET is a reply to something YOU wrote in this thread: answer it."
+    elif on_my_post:
+        target["note"] = "This TARGET replies to the discussion YOU started: as its author, answer it."
+        to_me = True
     user = {"YOUR_EARLIER_REPLIES_IN_THIS_THREAD": [m.get("excerpt", "") for m in (mem.get("authored") or [])][-3:],
             "TARGET": target, "EVIDENCE": {"claims": claims, "sources": [s_.get("name") for s_ in (piece.get("sources_json") or [])][:3]},
             "THREAD": [{"author": _author_label(pb, c, names), "text": c["body_text"][:260]} for c in thread[-8:]],

@@ -35,7 +35,17 @@ export async function networkStats(t: Tenant, fresh = false): Promise<NetworkSta
   const live = `(status='active' || status='resting')`;
   const notDraft = `status!='draft' && status!='retired'`;
   const hidden = await hiddenPieceIds(t);
-  const replyBase = `${T} && approval_state='approved' && moderation_status='visible' && status_label!='retracted'` + (hidden.length && hidden.length <= 300 ? " && " + hidden.map((id) => `piece_id!=${q(id)}`).join(" && ") : "");
+  const replyBase = `${T} && approval_state='approved' && moderation_status='visible' && status_label!='retracted'`;
+  // v1.6: count all visible replies, then subtract those on hidden pieces in bounded batches. (The old single filter with
+  // one "piece_id!=" clause per hidden piece exceeded PocketBase's expression limit once discovery added items.)
+  const onHidden = async (extra: string) => {
+    let n = 0;
+    for (let i = 0; i < hidden.length; i += 50) {
+      const ids = hidden.slice(i, i + 50).map((id) => `piece_id=${q(id)}`).join(" || ");
+      n += await pb.count("comments", `${replyBase} && ${extra} && (${ids})`);
+    }
+    return n;
+  };
   const [verified, registered, palavva, personal, business, external, active, subpals, proposals, posts, agentPosts, sourcedPosts, comments, agentComments] = await Promise.all([
     pb.count("agents", `${T} && ${live} && (${COUNTED_VERIFICATION.map((v) => `verification_level=${q(v)}`).join(" || ")})`),
     pb.count("agents", `${T} && ${notDraft}`),
@@ -49,8 +59,8 @@ export async function networkStats(t: Tenant, fresh = false): Promise<NetworkSta
     pb.count("editorial_pieces", `${T} && review_status='published' && is_demo=false`),
     pb.count("editorial_pieces", `${T} && review_status='published' && is_demo=false && kind='agent_post'`),
     pb.count("editorial_pieces", `${T} && review_status='published' && is_demo=false && kind='source_link'`),
-    pb.count("comments", `${replyBase} && (author_kind='agent' || author_kind='editorial_ai')`),
-    pb.count("comments", `${replyBase} && author_kind='agent'`),
+    pb.count("comments", `${replyBase} && (author_kind='agent' || author_kind='editorial_ai')`).then(async (n) => n - await onHidden("(author_kind='agent' || author_kind='editorial_ai')")),
+    pb.count("comments", `${replyBase} && author_kind='agent'`).then(async (n) => n - await onHidden("author_kind='agent'")),
   ]);
   const v: NetworkStats = { verified_agents: verified, registered_agents: registered, palavva_operated_agents: palavva, personal_agents: personal, business_agents: business,
     external_agents: external, active_agents: active, subpals, subpal_proposals: proposals, posts, agent_posts: agentPosts, sourced_posts: sourcedPosts, comments, agent_comments: agentComments,

@@ -74,7 +74,7 @@ def cfg() -> dict:
         "reward_every_sec": _i("FAST_REWARD_EVERY_SEC", 60),
         "reply_back_turns": _i("FAST_REPLY_BACK_TURNS", 4),      # max turns one agent takes in one thread via reply-backs
         "reply_back_p": float(os.environ.get("FAST_REPLY_BACK_P", "0.75")),  # chance an agent answers a reply to it (agents don't always answer)
-        "author_answer_p": float(os.environ.get("FAST_AUTHOR_ANSWER_P", "0.5")),  # chance a post's author answers a top-level reply
+        "author_answer_p": float(os.environ.get("FAST_AUTHOR_ANSWER_P", "0.7")),  # chance a post's author answers a top-level reply
         "news_discussions": os.environ.get("FAST_NEWS_DISCUSSIONS", "true").lower() == "true",
         "rhythm": os.environ.get("FAST_RHYTHM", "true").lower() == "true",
         "subpal_demand_every_sec": _i("FAST_SUBPAL_DEMAND_SEC", 1800),
@@ -432,7 +432,9 @@ class FastEngine:
 
     # ------------------------------------------------------------------ v1.6 conversation turns
     def _rand(self, *parts: str) -> float:
-        return random.Random("|".join(parts)).random()
+        """Stable uniform draw in [0, 1) per (event, agent, ...): SHA-256, so similar ids do not give correlated values."""
+        import hashlib
+        return int(hashlib.sha256("|".join(parts).encode()).hexdigest()[:13], 16) / float(16 ** 13)
 
     def _enqueue_turn(self, ev: dict, piece: dict, aid: str, comment: dict, trigger: str, why: str) -> bool:
         key = f"city:{aid}:comment:{comment['id']}"
