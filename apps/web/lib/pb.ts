@@ -79,6 +79,8 @@ export const pb = {
   create: (coll: string, data: Record<string, unknown>) => req<Rec>("POST", `/api/collections/${coll}/records`, data),
   update: (coll: string, id: string, data: Record<string, unknown>) => req<Rec>("PATCH", `/api/collections/${coll}/records/${encodeURIComponent(id)}`, data),
   remove: (coll: string, id: string) => req<void>("DELETE", `/api/collections/${coll}/records/${encodeURIComponent(id)}`),
+  /** v1.7: the service token, for PocketBase's realtime API (server side only; never sent to a browser). */
+  token: (force = false) => auth(force),
   /** v1.7: superuser-only custom routes under /api/palavva/ (services/pocketbase/pb_hooks/population.pb.js). */
   route: <T>(path: string) => req<T>("GET", path),
   async health(): Promise<boolean> {

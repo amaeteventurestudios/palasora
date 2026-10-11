@@ -7,6 +7,7 @@
 // when the agent declares an affinity for the country. A stream is bound to one edition for its lifetime; switching
 // country opens a new stream, so nothing from the previous country can arrive afterwards.
 import { pb, q } from "./pb";
+import { env } from "./env";
 import type { Tenant } from "./tenant";
 import { eventsSince, type ThreadEvent } from "./repo/thread";
 import { ALL, inEdition, scopeOf, type Scope } from "./edition";
@@ -15,7 +16,52 @@ export type HubEvent = ThreadEvent & { country_codes: string[]; agent_affinities
 type Sub = { piece?: string; edition: string; push: (e: HubEvent & { scope: Scope }) => void };
 type Hub = { cursor: number; subs: Set<Sub>; timer: ReturnType<typeof setInterval> | null; busy: boolean; tenant: Tenant; failures: number };
 
+// v1.7 (spec 32 "real SSE, no fixed one-second backend polling"): the hub is WOKEN by PocketBase's realtime API the moment a
+// thread_events row commits; the timer is only a safety net (10 s), and drops back to 1 s while realtime is unavailable.
 const POLL_MS = 1000;
+const SAFETY_MS = 10_000;
+const rt = { up: false, starting: false, wakes: 0, lastWake: 0 };
+
+async function startRealtime() {
+  if (rt.starting || rt.up) return;
+  rt.starting = true;
+  try {
+    const r = await fetch(`${env.pbUrl}/api/realtime`, { headers: { accept: "text/event-stream" }, cache: "no-store" });
+    if (!r.ok || !r.body) throw new Error(`realtime ${r.status}`);
+    const reader = r.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "", event = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i: number;
+      while ((i = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, i).replace(/\r$/, ""); buf = buf.slice(i + 1);
+        if (line.startsWith("event:")) event = line.slice(6).trim();
+        else if (line.startsWith("data:") && event === "PB_CONNECT") {
+          const clientId = JSON.parse(line.slice(5)).clientId as string;
+          const s = await fetch(`${env.pbUrl}/api/realtime`, { method: "POST", cache: "no-store",
+            headers: { "content-type": "application/json", Authorization: await pb.token() }, body: JSON.stringify({ clientId, subscriptions: ["thread_events"] }) });
+          if (!s.ok) throw new Error(`realtime subscribe ${s.status}`);
+          rt.up = true; rt.starting = false;
+          for (const h of hubs.values()) retime(h);
+        } else if (line.startsWith("data:") && event === "thread_events") {
+          rt.wakes++; rt.lastWake = Date.now();
+          for (const h of hubs.values()) void poll(h);
+        }
+      }
+    }
+  } catch { /* fall through: degrade to fast polling and retry */ }
+  rt.up = false; rt.starting = false;
+  for (const h of hubs.values()) retime(h);
+  if (hubs.size) setTimeout(() => void startRealtime(), 5000);
+}
+
+function retime(h: Hub) {
+  if (h.timer) clearInterval(h.timer);
+  h.timer = h.subs.size ? setInterval(() => void poll(h), rt.up ? SAFETY_MS : POLL_MS) : null;
+}
 const hubs = new Map<string, Hub>();
 const pieceCountries = new Map<string, string[]>(); // bounded cache: piece -> subject countries
 const agentAffinity = new Map<string, string[]>();
@@ -85,7 +131,8 @@ export async function subscribe(t: Tenant, cursor: number, piece: string | undef
   }
   const sub: Sub = { piece, edition, push };
   hub.subs.add(sub);
-  if (!hub.timer) { const h = hub; h.timer = setInterval(() => void poll(h), POLL_MS); }
+  if (!hub.timer) retime(hub);
+  void startRealtime();
   return {
     unsubscribe: () => {
       hub!.subs.delete(sub);
@@ -97,5 +144,5 @@ export async function subscribe(t: Tenant, cursor: number, piece: string | undef
 
 /** Test/ops visibility: how many pollers and subscribers exist (one poller per tenant, never per client). */
 export function hubStats() {
-  return [...hubs.values()].map((h) => ({ tenant: h.tenant.id, subscribers: h.subs.size, cursor: h.cursor, polling: !!h.timer }));
+  return [...hubs.values()].map((h) => ({ tenant: h.tenant.id, subscribers: h.subs.size, cursor: h.cursor, polling: !!h.timer, realtime: rt.up, wakes: rt.wakes }));
 }
