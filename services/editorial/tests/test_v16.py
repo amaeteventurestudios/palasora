@@ -256,3 +256,15 @@ def test_arabic_source_names_ground_their_transliteration_only():
     from palavva_editorial.editorial.policy import unsupported_entities as u
     g = "بالفيديو.. بن رحمة ينقذ نيوم من الهزيمة أمام الحزم"
     assert u("Ben Rahma rescued the team while Zidane watched.", g) == ["Zidane"]
+
+
+def test_gkg_language_from_gdelt_and_vanity_cctld_flagged():
+    from palavva_editorial.intel import gkg
+    row = [""] * 27
+    row[1], row[3], row[4] = "20261011073000", "felvidek.ma", "https://felvidek.ma/x"
+    row[25], row[26] = "srclc:hun;eng:GT-HUN 1.0", "<PAGE_TITLE>A rendőrség újfent figyelmeztet</PAGE_TITLE>"
+    a = gkg.african_articles([row], {}, "translation")[0]
+    assert a["language"] == "x-hun" and a["cctld_only"] is True and a["publisher_country"] == "MA"
+    row[3], row[4], row[25] = "myjoyonline.com", "https://myjoyonline.com/y", ""
+    b = gkg.african_articles([row], {"myjoyonline.com": ["GH"]}, "english")[0]
+    assert b["language"] == "en" and b["cctld_only"] is False and b["publisher_country"] == "GH"

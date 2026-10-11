@@ -16,6 +16,7 @@ import { buttonVariants } from "./ui/button";
 import { cn } from "@/lib/utils";
 
 // Masthead (unified master §1, docs/specs/27; v1.5 on shadcn/ui):
+// desktop  (1280-1535 px: the search box collapses to its icon so the full nav fits; v1.6 fix for a 56 px overflow at 1280)
 // desktop  palavva. | Explore | Discover | Local Pulse | Explore Africa | SubPals | Topics | Businesses | Exchange | search | edition | language | appearance | account
 // mobile   [≡ drawer] palavva. ........ [search] [flag] [EN] [account]   (+ fixed five-item bottom nav, components/shell/BottomNav)
 export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; session: Session | null; t: T; ctx: ReaderContext }) {
@@ -46,7 +47,7 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
             <Link key={n.href} href={n.href} className="whitespace-nowrap rounded-md px-2 py-2 text-[14px] font-semibold text-white/90 hover:bg-white/10 hover:text-white 2xl:px-2.5 2xl:text-[15px]">{n.label}</Link>
           ))}
         </nav>
-        <form action="/search" method="get" role="search" className="ms-auto hidden lg:block">
+        <form action="/search" method="get" role="search" className="ms-auto hidden lg:block xl:hidden 2xl:block">
           <label htmlFor="hdr-q" className="sr-only">{t("search.placeholder")}</label>
           <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 focus-within:ring-2 focus-within:ring-[var(--brand-gold)]">
             <Search size={17} aria-hidden="true" className="text-white/80" />
@@ -55,7 +56,7 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
           </div>
         </form>
         <span className="ms-auto lg:hidden" aria-hidden="true" />
-        <Link href="/search" className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-10 shrink-0 text-white hover:bg-white/10 hover:text-white lg:hidden")} aria-label={t("nav.search")}>
+        <Link href="/search" className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-10 shrink-0 text-white hover:bg-white/10 hover:text-white lg:hidden xl:inline-flex 2xl:hidden")} aria-label={t("nav.search")}>
           <Search className="size-5" aria-hidden="true" />
         </Link>
         <EditionPicker edition={ctx.edition} home={ctx.home} options={editions} signedIn={!!session} compact />

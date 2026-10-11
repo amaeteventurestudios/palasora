@@ -364,7 +364,10 @@ class Intel:
                 if (now_dt - pub).total_seconds() > 48 * 3600 or not it.link or len(it.title.split()) < 4 or JUNK_TITLE.search(it.title):
                     continue
                 res["found"] += 1
-                lang = (it.language or "").split("-")[0][:3] or L.detect(it.title)[0] or "en"
+                lang = (it.language or "").split("-")[0][:3]
+                if not lang:
+                    det, conf = L.detect(it.title)
+                    lang = det if conf >= 0.6 else ((src.get("languages") or ["en"])[0] or "en")
                 if lang not in self.readable:
                     res["unreadable_language"] += 1
                     continue
@@ -425,10 +428,17 @@ class Intel:
             self._record({"country": "", "method": "gdelt", "status": "error", "error": f"gkg: {type(e).__name__}: {e}"[:400], "detail": {"stage": "gkg"}}, t0)
             return {"error": type(e).__name__}
         by: dict[str, list[dict]] = {}
+        skipped = 0
         for a in arts:
-            a["language"] = L.detect(a["title"])[0] or ""
+            if not a.get("language"):
+                det, conf = L.detect(a["title"])
+                a["language"] = det if conf >= 0.6 else ""
+            # a country-code domain alone is weak evidence (vanity domains): require a language that country uses
+            if a.get("cctld_only") and a["language"] not in set(L.country_langs(a["publisher_country"])) | {"en"}:
+                skipped += 1
+                continue
             by.setdefault(a["publisher_country"], []).append(a)
-        out = {"articles": len(arts), "countries": len(by), **stats, "published": 0}
+        out = {"articles": len(arts), "countries": len(by), **stats, "published": 0, "skipped_cctld_language": skipped}
         for iso, xs in by.items():
             if STOP["v"] or iso not in gdelt.FIPS:
                 continue

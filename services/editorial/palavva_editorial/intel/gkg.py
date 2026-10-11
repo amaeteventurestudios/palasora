@@ -25,6 +25,9 @@ ISO_TLD = {"dz", "ao", "bj", "bw", "bf", "bi", "cm", "cv", "cf", "td", "km", "cg
            "gw", "ci", "ke", "ls", "lr", "ly", "mg", "mw", "ml", "mr", "mu", "ma", "mz", "na", "ne", "ng", "rw", "st", "sn", "sc", "sl", "so", "za", "ss",
            "sd", "tz", "tg", "tn", "ug", "zm", "zw"}
 TITLE = re.compile(r"<PAGE_TITLE>(.*?)</PAGE_TITLE>", re.S)
+SRCLC = re.compile(r"srclc:([a-z]{3})")
+ISO3 = {"eng": "en", "fra": "fr", "ara": "ar", "por": "pt", "swa": "sw", "amh": "am", "hau": "ha", "som": "so", "afr": "af", "spa": "es", "yor": "yo",
+        "zul": "zu", "mlg": "mg", "kin": "rw", "tir": "ti"}
 MAX_BYTES = 40 * 1024 * 1024
 csv.field_size_limit(50 * 1024 * 1024)
 
@@ -54,17 +57,21 @@ def read(stamp: str, stream: str, client: httpx.Client) -> list[list[str]] | Non
         return [row for row in csv.reader(io.TextIOWrapper(f, encoding="utf-8", errors="replace"), delimiter="\t") if len(row) >= 27]
 
 
-def african_articles(rows: list[list[str]], registry: dict[str, list[str]]) -> list[dict]:
-    """registry: domain (no www.) -> publisher countries."""
+def african_articles(rows: list[list[str]], registry: dict[str, list[str]], stream: str = "english") -> list[dict]:
+    """registry: domain (no www.) -> publisher countries. Language comes from GDELT's own source-language field
+    (translation stream) or is English (English stream); a match by country-code domain ALONE is marked cctld_only,
+    because vanity uses exist (felvidek.ma is a Hungarian site)."""
     out = []
     for r in rows:
         dom = (r[3] or "").lower().removeprefix("www.")
         if not dom:
             continue
         countries = registry.get(dom)
+        cctld_only = False
         if not countries:
             tld = dom.rsplit(".", 1)[-1]
             countries = [tld.upper()] if tld in ISO_TLD else None
+            cctld_only = True
         if not countries:
             continue
         m = TITLE.search(r[26] or "")
@@ -72,7 +79,13 @@ def african_articles(rows: list[list[str]], registry: dict[str, list[str]]) -> l
         if not title or not r[4].startswith("http"):
             continue
         d = r[1]
-        out.append({"url": r[4], "title": title[:300], "domain": dom, "language": "", "seendate": f"{d[:8]}T{d[8:14]}Z", "publisher_country": countries[0]})
+        if stream == "translation":
+            m2 = SRCLC.search(r[25] if len(r) > 25 else "")
+            lang = ISO3.get(m2.group(1), f"x-{m2.group(1)}") if m2 else ""
+        else:
+            lang = "en"
+        out.append({"url": r[4], "title": title[:300], "domain": dom, "language": lang, "seendate": f"{d[:8]}T{d[8:14]}Z", "publisher_country": countries[0],
+                    "cctld_only": cctld_only})
     return out
 
 
@@ -98,7 +111,7 @@ def cycle(state_path: Path, registry: dict[str, list[str]], client: httpx.Client
                     continue
                 stats["files"] += 1
                 stats["rows"] += len(rows)
-                arts += african_articles(rows, registry)
+                arts += african_articles(rows, registry, stream)
                 done.add(key)
     finally:
         if own:

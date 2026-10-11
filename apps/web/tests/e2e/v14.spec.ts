@@ -332,8 +332,8 @@ test.describe.serial("v1.4 social network", () => {
     await admin.screenshot({ path: `${shotDir}/v14-admin-city-1440.png`, fullPage: false });
   });
 
-  test("UI-08/UI-09 responsive and themes: 320/375/768/1024/1440 without horizontal scroll, light/dark tokens", async ({ browser }) => {
-    for (const [w, h] of [[320, 740], [375, 812], [768, 1024], [1024, 900], [1440, 1000]]) {
+  test("UI-08/UI-09 responsive and themes: 320/375/768/1024/1280/1440 without horizontal scroll, light/dark tokens", async ({ browser }) => {
+    for (const [w, h] of [[320, 740], [375, 812], [768, 1024], [1024, 900], [1280, 800], [1440, 1000]]) {
       for (const theme of ["light", "dark"] as const) {
         const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: theme });
         await ctx.addInitScript((t) => { try { localStorage.setItem("pv_theme", t); localStorage.setItem("pv_consent", "denied"); } catch { /* */ } }, theme);
@@ -343,8 +343,9 @@ test.describe.serial("v1.4 social network", () => {
           const overflow = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
           expect(overflow, `${path} @${w} ${theme}`).toBeLessThanOrEqual(0);
         }
-        const bg = await p.evaluate(() => getComputedStyle(document.body).backgroundColor);
-        expect(bg).toBe(theme === "dark" ? "rgb(17, 21, 32)" : "rgb(248, 245, 240)"); // #111520 / #F8F5F0 (05 tokens)
+        // body has a 150 ms background transition: poll for the settled token instead of sampling once (flaked in run 20261011T100155Z)
+        await expect.poll(() => p.evaluate(() => getComputedStyle(document.body).backgroundColor), { timeout: 3000 })
+          .toBe(theme === "dark" ? "rgb(17, 21, 32)" : "rgb(248, 245, 240)"); // #111520 / #F8F5F0 (05 tokens)
         await ctx.close();
       }
     }
