@@ -98,7 +98,8 @@ test("V17-05 Population Manager: pick two countries, Add 3, preview exact delta,
   await expect(page.getByTestId("pv-to-create")).toHaveText("6");
   await expect(page.getByTestId("preview-examples")).toContainText("@");
   await page.screenshot({ path: path.join(shots, "v17-e2e-population-preview.png") });
-  const prevJob = await page.locator('[data-testid="job-row"]').first().getAttribute("data-job").catch(() => null);
+  const rows = page.locator('[data-testid="job-row"]');
+  const prevJob = (await rows.count()) ? await rows.first().getAttribute("data-job") : null; // a fresh stack has no jobs yet
   await page.getByTestId("btn-launch").click();
   const row = page.locator('[data-testid="job-row"]').first();
   await expect(row).not.toHaveAttribute("data-job", prevJob ?? "__none__", { timeout: 15_000 });

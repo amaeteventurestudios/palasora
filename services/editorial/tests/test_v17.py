@@ -329,3 +329,29 @@ def test_sentence_openers_are_not_entities_but_names_still_are():
     from palavva_editorial.editorial.validate import unsupported_names
     assert unsupported_names("Shared storage", ["Who pays? — Let's weigh it. \"Imagine a co-op.\" - Consider the fee."], "shared storage") == []
     assert unsupported_names("x", ["A plan by Kwesi Mensah fails."], "x") == ["Kwesi", "Mensah"]
+
+
+def test_spend_guard_blocks_total_daily_and_country_caps(tmp_path, monkeypatch):
+    """Spec 36 #4: the global cap blocks overrun; a country cap can never exceed the global ones; the kill switch stops calls."""
+    import time as _t
+    from palavva_editorial.providers import openrouter
+    monkeypatch.setattr(openrouter, "data_dir", lambda: tmp_path)
+    (tmp_path / "run").mkdir()
+    led = openrouter.SpendLedger(tmp_path / "spend.db")
+    import sqlite3
+    c = sqlite3.connect(tmp_path / "spend.db")
+    c.execute("INSERT INTO calls(id, provider, model, agent_id, purpose, worst_usd, actual_usd, status, created_at) VALUES ('a','openrouter','m','ng1','write',0.01,0.9,'settled',?)", (_t.time(),))
+    c.commit()
+    tid = "t-spend"
+    control._CACHE[tid] = (_t.time() + 999, {"revision": 1, "global": {"daily_spend_usd": 1.0, "spend_cap_usd": 5}, "countries": {"NG": {"country_daily_spend_usd": 0.5}}})
+    m = {"ng1": "NG"}
+    assert control.spend_refusal(tid, "NG", m).startswith("NG daily spend cap")
+    assert control.spend_refusal(tid, "GH", m) == ""
+    c.execute("INSERT INTO calls(id, provider, model, agent_id, purpose, worst_usd, actual_usd, status, created_at) VALUES ('b','openrouter','m','gh1','write',0.2,0,'reserved',?)", (_t.time(),))
+    c.commit()
+    assert "daily spend pace" in control.spend_refusal(tid, "GH", m)  # in-flight reservations count at worst case
+    control._CACHE[tid] = (_t.time() + 999, {"revision": 2, "global": {"spend_cap_usd": 1.0, "daily_spend_usd": 5}, "countries": {"GH": {"country_daily_spend_usd": 5}}})
+    assert "experiment spend cap" in control.spend_refusal(tid, "GH", m)  # a generous country cap cannot bypass the total cap
+    control._CACHE[tid] = (_t.time() + 999, {"revision": 3, "global": {"paid_writing_enabled": False}, "countries": {}})
+    assert "switched off" in control.spend_refusal(tid, "GH", m)
+    _ = led

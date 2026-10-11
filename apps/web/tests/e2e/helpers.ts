@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 const envText = readFileSync(path.resolve(__dirname, "../../../../.env.test"), "utf8");
 export const PASSWORD = /^LOCAL_DEMO_PASSWORD=(.*)$/m.exec(envText)![1].trim();
@@ -43,7 +43,11 @@ export async function chooseEdition(page: Page, code: string, opts: { save?: boo
 }
 export async function setLanguages(page: Page, ui: string, reading: string) {
   const names: Record<string, RegExp> = { en: /^English/, fr: /^Français/, ar: /^العربية/, pcm: /^Naij|Pidgin/ };
-  await page.getByTestId("prefs-menu").click();
+  // The popover only opens once the masthead has hydrated; under full-suite load the first click can land earlier.
+  await expect(async () => {
+    if (!(await page.locator("#pref-ui").isVisible())) await page.getByTestId("prefs-menu").click();
+    await expect(page.locator("#pref-ui")).toBeVisible({ timeout: 2000 });
+  }).toPass({ timeout: 20000 });
   await page.locator("#pref-ui").click();
   await page.getByRole("option", { name: names[ui] }).click();
   await page.locator("#pref-rd").click();
