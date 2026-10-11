@@ -379,7 +379,11 @@ test("L-03 header menus stay inside the viewport in RTL and LTR at 320/390", asy
       const ctx = await guest(browser, cc, loc, { viewport: { width: w, height: 800 } });
       const p = await ctx.newPage();
       await p.goto("/");
-      await p.getByTestId("prefs-menu").click();
+      // The menu is a client component: retry the click until hydration has attached the handler.
+      await expect(async () => {
+        if (!(await p.getByTestId("prefs-panel").isVisible())) await p.getByTestId("prefs-menu").click();
+        await expect(p.getByTestId("prefs-panel")).toBeVisible({ timeout: 2000 });
+      }).toPass({ timeout: 20000 });
       const box = (await p.getByTestId("prefs-panel").boundingBox())!;
       expect(box.x, `${loc} @${w}`).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width, `${loc} @${w}`).toBeLessThanOrEqual(w);
