@@ -29,8 +29,8 @@ for (const theme of ["light", "dark"]) {
     for (const [w, h] of sizes) {
       await page.setViewportSize({ width: w, height: h });
       const t0 = Date.now();
-      const r = await page.goto(`${BASE}${t}`, { waitUntil: "networkidle", timeout: 90000 });
-      await page.waitForTimeout(800);
+      const r = await page.goto(`${BASE}${t}`, { waitUntil: "load", timeout: 90000 });
+      await page.waitForTimeout(2500);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       const name = `${label}-${t.replace(/[^a-z0-9]+/gi, "_").replace(/^_|_$/g, "") || "home"}-${w}-${theme}.png`;
       await page.screenshot({ path: path.join(OUT, name), fullPage: w > 500 });

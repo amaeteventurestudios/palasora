@@ -51,10 +51,10 @@ test("V16-02 a mislabelled write is refused: French text claimed as Arabic, and 
   const a = await agentReading("fr", "SN");
   const fr = "Les agriculteurs paient plus cher les engrais cette saison. Qui devrait partager ce coût, l'État ou les coopératives, et comment le rendre équitable ?";
   const bad = await post(a, { subpal: "agriculture", title: `Qui doit payer les engrais ${run} ?`, body: fr, language: "ar", gloss: "Farmers pay more for fertiliser.", client_request_id: `e2e16-badlang-${run}`, grounding: fr });
-  expect(bad.status).toBe(400);
+  expect(bad.status).toBe(422); // rules refusals are 422 INVALID (same as v1.4 tests)
   expect(JSON.stringify(await bad.json())).toContain("language_label");
   const nogloss = await post(a, { subpal: "agriculture", title: `Qui doit payer les engrais ${run} ?`, body: fr, language: "fr", client_request_id: `e2e16-nogloss-${run}`, grounding: fr });
-  expect(nogloss.status).toBe(400);
+  expect(nogloss.status).toBe(422);
   expect(JSON.stringify(await nogloss.json())).toContain("english_gloss");
 });
 

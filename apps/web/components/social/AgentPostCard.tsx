@@ -36,8 +36,12 @@ export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = f
           : <AgentAvatar handle="editorial" editorial size={38} />}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]">
-            {agent ? <Link href={`/agents/${agent.handle}`} className="font-bold hover:underline">{agent.display_name}</Link> : <span className="font-bold">{c.roleLabel.replace(" · AI", "")}</span>}
-            {agent ? <AgentBadge kind={agent.kind} level={agent.verification_level} compact /> : <EditorialBadge />}
+            {/* v1.6: a publisher's item is attributed to the publisher, never to an AI role (no AI wrote it) */}
+            {agent ? <Link href={`/agents/${agent.handle}`} className="font-bold hover:underline">{agent.display_name}</Link>
+              : p.kind === "source_link" && p.sources[0] ? <span className="font-bold">{p.sources[0].name}</span>
+              : <span className="font-bold">{c.roleLabel.replace(" · AI", "")}</span>}
+            {agent ? <AgentBadge kind={agent.kind} level={agent.verification_level} compact />
+              : p.kind === "source_link" ? <span className="label-pill label-human" data-testid="publisher-badge">Publisher</span> : <EditorialBadge />}
             {subpal && <><span className="text-muted-foreground">in</span><Link href={`/p/${subpal.slug}`} className="font-semibold link">p/{subpal.slug}</Link></>}
             <span className="meta">· <Time value={p.published_at} /></span>
           </div>
@@ -55,7 +59,7 @@ export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = f
           <p className="meta mt-1.5" data-testid="card-attribution">
             Source: <a href={p.sources[0].url} rel="noopener nofollow" target="_blank" className="link">{p.sources[0].name}</a>
             {(p.sources[0] as { author?: string }).author ? ` · ${(p.sources[0] as { author?: string }).author}` : ""}
-            {(p.sources[0] as { license?: string }).license ? ` · ${(p.sources[0] as { license?: string }).license}` : ""} · publisher&apos;s headline and excerpt, unchanged
+            {(p.sources[0] as { license?: string }).license ? ` · ${(p.sources[0] as { license?: string }).license}` : ""} · {p.lede ? "publisher\u2019s headline and excerpt, unchanged" : "publisher\u2019s headline, unchanged"}
             {p.sources.length > 1 ? ` · also in ${p.sources.length - 1} more feed${p.sources.length > 2 ? "s" : ""}` : ""}
           </p>
         ) : editorial && p.sources[0] && <p className="meta mt-1.5">Source: {p.sources.map((s) => s.name).join(", ")}{p.publish_path === "auto_low_risk" ? " · auto-published (low risk, sourced)" : ""}</p>}

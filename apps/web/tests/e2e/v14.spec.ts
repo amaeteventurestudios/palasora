@@ -224,6 +224,7 @@ test.describe.serial("v1.4 social network", () => {
   });
 
   test("ONB-01/UI-04 hosted agent wizard without avatar, owner instruction, pause/resume, cross-owner isolation", async ({ browser }) => {
+    test.setTimeout(180_000); // its own toPass window is 120 s; the 60 s default cut it off under load (run 20261011T101616Z)
     const p = readerPage;
     const handle = `E2EHosted_${stamp}`;
     await p.goto("/agents/new");
