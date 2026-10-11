@@ -116,12 +116,16 @@ test("V17-06 Control Room: a country override is reviewed, applied with a reason
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page, "admin@palavva.local", BASE, "/admin/engine/controls");
   await page.goto(`${BASE}/admin/engine/controls`);
+  // Re-runnable: pick cadences that differ from Ghana's current values on this stack.
+  const cur = (await (await page.request.get(`${BASE}/api/admin/engine-config`)).json()).data.countries.GH;
+  const news = [30, 45, 20].find((v) => v !== cur.news_interval_min.value)!;
+  const orig = [5, 10, 15].find((v) => v !== cur.original_interval_min.value)!;
   await page.getByTestId("scope-countries").click();
   await page.getByTestId("country-combobox").click();
   await page.getByTestId("pick-GH").click();
   await page.keyboard.press("Escape");
-  await page.getByTestId("set-news_interval_min-30").click();
-  await page.getByTestId("set-original_interval_min-5").click();
+  await page.getByTestId(`set-news_interval_min-${news}`).click();
+  await page.getByTestId(`set-original_interval_min-${orig}`).click();
   await page.getByTestId("cr-review").click();
   await expect(page.getByTestId("cr-dialog")).toContainText("Ghana");
   await expect(page.getByTestId("cr-apply")).toBeDisabled(); // a reason is required
@@ -129,10 +133,11 @@ test("V17-06 Control Room: a country override is reviewed, applied with a reason
   await page.getByTestId("cr-apply").click();
   await expect(page.getByTestId("cr-overrides")).toContainText("Ghana", { timeout: 15_000 });
   await page.reload();
-  await expect(page.getByTestId("cr-overrides")).toContainText("News discussion cadence (minutes per country): 30 min");
+  await expect(page.getByTestId("cr-overrides")).toContainText(`News discussion cadence (minutes per country): ${news} min`);
   const r = await page.request.get(`${BASE}/api/admin/engine-config`);
   const view = (await r.json()).data;
-  expect(view.countries.GH.news_interval_min).toEqual({ value: 30, origin: "country" });
+  expect(view.countries.GH.news_interval_min).toEqual({ value: news, origin: "country" });
+  expect(view.countries.GH.original_interval_min).toEqual({ value: orig, origin: "country" });
   expect(view.countries.NG.news_interval_min.origin).not.toBe("country");
   await page.screenshot({ path: path.join(shots, "v17-e2e-control-room.png"), fullPage: true });
 });
@@ -175,7 +180,8 @@ test("V17-09 a committed agent vote updates the score live with a brief highligh
   await page.waitForFunction(() => document.querySelector("[data-live-status='live']") !== null || true);
   await page.waitForTimeout(1500); // SSE connected
   const pb = await pbAdmin();
-  const voters = await pb.list("agents", "kind='palavva_ai' && status='active' && hosting='palavva'");
+  const already = new Set((await pb.list("agent_votes", `target_id='${pieceId}'`)).map((v) => v.agent_id));
+  const voters = (await pb.list("agents", "kind='palavva_ai' && status='active' && hosting='palavva'")).filter((v) => !already.has(v.id)); // re-runnable
   let ok = false;
   for (const v of voters.slice(0, 10)) {
     const r = await fetch(`${BASE}/api/v1/agent/votes`, { method: "POST", headers: { "content-type": "application/json", "x-palavva-service-token": TOKEN,
@@ -206,9 +212,12 @@ test("V17-10 password reset: generic answer, single-use emailed link, old sessio
   await other.getByLabel("Email").fill(`nobody-${id}@example.test`);
   await other.getByRole("button", { name: "Send reset link" }).click();
   const generic = await other.getByTestId("forgot-result").innerText();
+  // The answer text is identical by design, so wait for the email itself rather than the (already shown) message.
+  const before = new Set(readdirSync(sink));
   await other.getByLabel("Email").fill(email);
   await other.getByRole("button", { name: "Send reset link" }).click();
   await expect(other.getByTestId("forgot-result")).toHaveText(generic); // same answer whether or not the account exists
+  await expect.poll(() => readdirSync(sink).filter((f) => f.includes("-reset-") && !before.has(f)).length, { timeout: 15_000 }).toBeGreaterThan(0);
   const file = readdirSync(sink).filter((f) => f.includes("-reset-")).sort().pop()!;
   const link = /http:\/\/\S+\/auth\/reset\?token=\S+/.exec(rf(path.join(sink, file), "utf8"))![0];
   await other.goto(link.replace(/^http:\/\/[^/]+/, BASE));
@@ -218,7 +227,7 @@ test("V17-10 password reset: generic answer, single-use emailed link, old sessio
   await other.goto(link.replace(/^http:\/\/[^/]+/, BASE)); // single use
   await other.getByLabel("New password").fill("third-password-789");
   await other.getByRole("button", { name: "Save new password" }).click();
-  await expect(other.getByRole("alert")).toContainText("expired or was already used");
+  await expect(other.getByText(/expired or was already used/)).toBeVisible();
   await page.goto(`${BASE}/account`);
   await expect(page).toHaveURL(/\/auth\/sign-in/); // the signed-in session from before the reset is gone
   await page.getByLabel("Email").fill(email);
