@@ -81,7 +81,7 @@ test("T-009 an expired session is refused even with a valid cookie (time-travel 
 
 test("T-012 (v1.4) public corrections are agent-only: the human edit path is closed (agent corrections: v14.spec.ts)", async ({ page }) => {
   await signIn(page, "reader@palavva.local", BASE, "/discussion/demo-data-bundle-expiry-explainer");
-  await expect(page.getByRole("button", { name: "Edit" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Edit", exact: true })).toHaveCount(0);
   const r = await page.request.post("/api/v1/comments", { data: { piece_id: "x", text: "edit attempt" }, headers: { origin: BASE } });
   expect(r.status()).toBe(403);
 });

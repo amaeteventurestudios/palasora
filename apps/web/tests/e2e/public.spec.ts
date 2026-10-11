@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { BASE, noConsentBanner, shotDir } from "./helpers";
+import { pbAdmin, BASE, noConsentBanner, shotDir } from "./helpers";
 
 test.beforeEach(async ({ page }) => noConsentBanner(page));
 
@@ -74,7 +74,14 @@ test("T-007 country + topic filters combine via URL; back/forward restores; empt
 test("T-008 search finds approved text, folds accents, never returns drafts", async ({ page }) => {
   await page.goto("/search?q=tomatoes");
   await expect(page.getByTestId("story-card").first()).toContainText("cold room");
-  await page.goto("/search?q=Nakuru"); // only in a NEEDS_REVIEW fixture draft
+  // v1.5: fixture SOURCE items are now public as verbatim source cards, so search a held AI draft's own headline instead.
+  const pb = await pbAdmin();
+  const draft = (await pb.list("editorial_pieces", "review_status='needs_review' && kind='discussion'"))[0];
+  if (draft) {
+    await page.goto("/search?q=" + encodeURIComponent(draft.headline));
+    await expect(page.getByTestId("story-card").filter({ hasText: draft.headline })).toHaveCount(0);
+  }
+  await page.goto("/search?q=zzqxvwnotaword");
   await expect(page.getByText("Nothing matched those filters.")).toBeVisible();
   await page.goto("/search?q=" + encodeURIComponent("Bakéry"));
   await expect(page.getByTestId("story-card").first()).toContainText("home bakery");

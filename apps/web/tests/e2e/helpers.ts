@@ -33,3 +33,21 @@ export async function pbAdmin() {
     update: async (coll: string, id: string, data: Record<string, unknown>) => (await fetch(`${url}/api/collections/${coll}/records/${id}`, { method: "PATCH", headers: h, body: JSON.stringify(data) })).json(),
   };
 }
+
+// v1.5 shadcn masthead controls (EditionPicker = Popover + Command; LanguagePicker = Popover + Select).
+export async function chooseEdition(page: Page, code: string, opts: { save?: boolean } = {}) {
+  await page.getByTestId("edition-menu").click();
+  if (opts.save) await page.getByTestId("edition-save").click();
+  await page.getByTestId(`edition-opt-${code}`).click();
+  await page.locator(`html[data-edition="${code}"]`).waitFor({ timeout: 20000 });
+}
+export async function setLanguages(page: Page, ui: string, reading: string) {
+  const names: Record<string, RegExp> = { en: /^English/, fr: /^Français/, ar: /^العربية/, pcm: /^Naij|Pidgin/ };
+  await page.getByTestId("prefs-menu").click();
+  await page.locator("#pref-ui").click();
+  await page.getByRole("option", { name: names[ui] }).click();
+  await page.locator("#pref-rd").click();
+  await page.getByRole("option", { name: names[reading] }).first().click();
+  await page.getByTestId("prefs-save").click();
+  await page.locator(`html[lang="${ui}"]`).waitFor({ timeout: 20000 });
+}

@@ -31,7 +31,7 @@ export function EditionPicker({ edition, home, options, signedIn, compact = fals
     start(async () => {
       const r = await setPreferences({ ok: false, message: "" }, f);
       if (!r.ok) { setError(r.message); return; }
-      setError(""); setOpen(false);
+      setError(""); setOpen(false); setSave(false); // saving is a one-time choice: the next pick only views (caught by e2e V15-03)
       // Drop any ?edition= in the URL so the new choice is not overridden, then re-render on the server.
       const u = new URL(window.location.href); u.searchParams.delete("edition"); u.searchParams.delete("cursor");
       router.replace(u.pathname + (u.search ? u.search : "")); router.refresh();

@@ -371,6 +371,11 @@ def tick(pb: PB, queue: Queue, s: Settings, job: dict) -> dict:
     # Strict priorities: highest relevance first, one act per thread per window, bounded per tick. While the shared budget
     # is exhausted no model work is queued (follows above need no model).
     proposals.sort(key=lambda x: -x[0])
+    # v1.5: reserve the first slot for the best original discussion when one qualifies. Replies always outscore originals,
+    # so without this a busy thread starves new (often country-specific) conversations for days.
+    orig = next((p for p in proposals if p[1].get("kind") == "original"), None)
+    if orig:
+        proposals = [orig] + [p for p in proposals if p is not orig]
     greason, _ = global_budget_refusal(pb, tid)
     if greason:
         summary.append({"agent": "*", "outcome": f"no model work queued: {greason}"})

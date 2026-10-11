@@ -24,10 +24,13 @@ test("T-029 RBAC: member → forbidden; anonymous → sign-in; moderator cannot 
 test("T-029 Overview shows real, labeled metrics and integration states; screenshots", async ({ page }) => {
   await signIn(page, "editor@palavva.local", BASE, "/admin");
   await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
-  await expect(page.getByTestId("admin-metric").filter({ hasText: "EspoCRM bridge" })).toContainText("Not connected");
-  await expect(page.getByTestId("admin-metric").filter({ hasText: "Revive ad server" })).toContainText("Not connected");
-  await expect(page.getByTestId("admin-metric").filter({ hasText: "Revenue" })).toContainText("Not connected");
-  await expect(page.getByTestId("admin-metric").filter({ hasText: "Pending review" })).toContainText(/\d/);
+  // v1.5 visual Command Center (docs/specs/25): the same honest states, now on the workspace that owns them.
+  await expect(page.locator('[data-metric="Real revenue"]')).toContainText("no processor connected");
+  await expect(page.locator('[data-metric="Paid model spend"]')).toContainText("$0.00");
+  await page.goto("/admin/revenue");
+  await expect(page.getByText("EspoCRM: NOT_CONFIGURED")).toBeVisible();
+  await expect(page.getByText("Revive Adserver: NOT_CONFIGURED")).toBeVisible();
+  await page.goto("/admin");
   for (const [p, name] of [["/admin", "overview"], ["/admin/editorial", "editorial"], ["/admin/sources", "sources"], ["/admin/ai", "ai"], ["/admin/analytics", "analytics"], ["/admin/health", "health"], ["/admin/settings", "settings"], ["/admin/sponsors", "sponsors"]]) {
     await page.goto(p);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

@@ -2,7 +2,7 @@
 // Runs on the isolated test stack (fixture model provider). Real-Qwen evidence (A-03, A-12) is
 // captured separately on the dev stack and documented in docs/evidence/V1_3-AI-CONVERSATION-DEMO.md.
 import { expect, test, type Browser, type BrowserContextOptions } from "@playwright/test";
-import { BASE, noConsentBanner, shotDir, signIn } from "./helpers";
+import { BASE, chooseEdition, noConsentBanner, setLanguages, shotDir, signIn } from "./helpers";
 
 test.beforeEach(async ({ page }) => noConsentBanner(page));
 
@@ -131,7 +131,7 @@ test("L-03/L-18 Arabic market: RTL UI, usable menus and map, numerals and source
   await expect(p.getByTestId("story-card").first()).toBeVisible();
   const overflow = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
-  await p.getByTestId("prefs-menu").locator("summary").click();
+  await p.getByTestId("prefs-menu").click();
   await expect(p.locator("#pref-ui")).toBeVisible();
   await p.screenshot({ path: `${shotDir}/v13-ar-rtl-home-390.png` });
   await p.keyboard.press("Escape");
@@ -159,15 +159,9 @@ test("L-05/L-24 browser French beats coarse English-country default; a visible o
   await p.goto("/");
   expect(await htmlAttrs(p)).toMatchObject({ lang: "fr", edition: "NG" });
   // v1.4: languages and edition are separate header controls (master §8.2); each saves independently.
-  await p.getByTestId("prefs-menu").locator("summary").click();
-  await p.locator("#pref-ui").selectOption("en");
-  await p.locator("#pref-rd").selectOption("en");
-  // Saving sets the cookie, then the client does a full navigation back to the page.
-  await Promise.all([p.waitForEvent("load"), p.getByTestId("prefs-menu").getByRole("button").click()]);
+  await setLanguages(p, "en", "en"); // v1.5 shadcn LanguagePicker (cookie set by server action, then refresh)
   await expect(p.locator("html")).toHaveAttribute("lang", "en");
-  await p.getByTestId("edition-menu").locator("summary").click();
-  await p.locator("#pref-ed").selectOption("KE");
-  await Promise.all([p.waitForEvent("load"), p.getByTestId("edition-menu").getByRole("button").click()]);
+  await chooseEdition(p, "KE");
   expect(await htmlAttrs(p)).toMatchObject({ lang: "en", edition: "KE" }); // edition change did not touch the language
   await p.reload();
   expect(await htmlAttrs(p)).toMatchObject({ lang: "en", edition: "KE", reading: "en" });
@@ -385,8 +379,8 @@ test("L-03 header menus stay inside the viewport in RTL and LTR at 320/390", asy
       const ctx = await guest(browser, cc, loc, { viewport: { width: w, height: 800 } });
       const p = await ctx.newPage();
       await p.goto("/");
-      await p.getByTestId("prefs-menu").locator("summary").click();
-      const box = (await p.getByTestId("prefs-menu").locator("form").boundingBox())!;
+      await p.getByTestId("prefs-menu").click();
+      const box = (await p.getByTestId("prefs-panel").boundingBox())!;
       expect(box.x, `${loc} @${w}`).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width, `${loc} @${w}`).toBeLessThanOrEqual(w);
       await ctx.close();

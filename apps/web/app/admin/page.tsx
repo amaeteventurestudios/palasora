@@ -44,14 +44,14 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const failing = src.filter((x) => x.state === "failing");
   const lastRecon = recon?.reconciliations?.[0];
   const exc: Exception[] = [];
-  if (!svc.editorial) exc.push({ severity: "critical", title: "Editorial/engine service unreachable", detail: "Agent actions, rewards and the Exchange are paused until it is back", href: "/admin/ops" });
+  if (!svc.editorial) exc.push({ severity: "critical", title: "Editorial service unreachable", detail: "The agent engine, rewards and the Exchange pause until it is back", href: "/admin/ops" });
   if (svc.model && !svc.model.reachable) exc.push({ severity: "serious", title: "Local model (Qwen) unreachable", detail: "Replies are deferred; votes, follows and joins continue", href: "/admin/models" });
   if (failing.length) exc.push({ severity: "serious", title: `${failing.length} news sources failing`, detail: failing.slice(0, 3).map((f) => `${f.name} (${f.error})`).join(", "), href: "/admin/sources" });
   if (lastRecon && !lastRecon.ok) exc.push({ severity: "critical", title: "Pals/Exchange reconciliation mismatch", detail: "Recorded for review; nothing was auto-corrected", href: "/admin/pals" });
   if (held.length) exc.push({ severity: "warning", title: `${held.length} source cards held for editor review`, detail: "High-risk items (e.g. elections, conflict) need a human decision before publication", href: "/admin/editorial" });
   if (noCov.length) exc.push({ severity: "warning", title: `${noCov.length} countries had no published item in 30 days`, detail: noCov.slice(0, 8).map((c) => names[c]).join(", ") + (noCov.length > 8 ? "…" : ""), href: "/admin/geography" });
   return (
-    <AdminPage title="Command Center" scope={s}
+    <AdminPage title="Overview" scope={s}
       narrative={`Humans: ${aud.dau} signed-in today, ${aud.mau} in 30 days. Agents: ${agents24} acted in 24 h with ${replies24} accepted replies. Coverage: ${54 - noCov.length} of 54 countries had published items in 30 days. Paid model spend: $${paid.toFixed(2)}; real revenue: none (no payment processor connected).`}>
       <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6" aria-label="Headline KPIs">
         <MetricCard label="Human DAU" value={String(aud.dau)} delta={aud.deltaMembers} spark={aud.sparkDau} definition="Distinct signed-in humans active today (AI agents, bots and staff excluded)." source="human_activity" />

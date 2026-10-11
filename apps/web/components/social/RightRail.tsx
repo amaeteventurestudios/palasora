@@ -9,6 +9,7 @@ import { recentSocialActivity } from "@/lib/social/feed";
 import { trendingAgents } from "@/lib/social/trending";
 import { humanFollowedSubPals, popularSubPals } from "@/lib/social/subpals";
 import { getT, countryInfo, subdivisionLabel } from "@/lib/i18n/context";
+import { inEdition, regionOf } from "@/lib/edition";
 import { computeTrending } from "@/lib/repo/trending";
 import { getPulse } from "@/lib/repo/pulse";
 import { localizeSummaries } from "@/lib/repo/localize";
@@ -29,7 +30,10 @@ export async function RightRail({ tenant, session, extras = true }: { tenant: Te
     extras ? computeTrending(tenant, "home", edition) : Promise.resolve(null), extras ? computeTrending(tenant, "africa", edition) : Promise.resolve(null),
     extras && mapCountry ? getPulse(tenant, mapCountry) : Promise.resolve(null),
   ]);
-  const africaItems = trendAfrica ? await localizeSummaries(tenant, trendAfrica.items, ctx.reading) : [];
+  // v1.5 edition scope: in a country edition the continental panel keeps only regional and pan-African items (never another region's).
+  const africaRaw = trendAfrica ? (edition === "ALL" ? trendAfrica.items : trendAfrica.items.filter((it) => inEdition(it.country_codes, edition))) : [];
+  const africaItems = trendAfrica ? await localizeSummaries(tenant, africaRaw, ctx.reading) : [];
+  const africaTitle = edition === "ALL" ? "Trending across Africa (readers)" : `Trending in ${regionOf(edition)} (readers)`;
   return (
     <div className="flex flex-col gap-4" data-testid="right-rail">
       <LiveActivityPanel initial={activity} roleLabels={labels} />
@@ -86,8 +90,8 @@ export async function RightRail({ tenant, session, extras = true }: { tenant: Te
             </details>
           )}
           {trendHome && <details open className="rounded-xl" data-testid="trend-now-wrap"><summary className="card cursor-pointer p-4 text-[16px] font-bold">Trending with readers (human demand)</summary><div className="mt-2"><TrendingNow r={trendHome} t={t} edition={edition} /></div></details>}
-          {trendAfrica && <details open className="rounded-xl"><summary className="card cursor-pointer p-4 text-[16px] font-bold">Trending across Africa (readers)</summary><div className="mt-2">
-            <TrendingAfrica r={{ ...trendAfrica, items: trendAfrica.items.map((it, i) => ({ ...it, translation: africaItems[i].translation, headline: africaItems[i].headline })) }} t={t} /></div></details>}
+          {trendAfrica && <details open className="rounded-xl" data-testid="trend-africa"><summary className="card cursor-pointer p-4 text-[16px] font-bold">{africaTitle}</summary><div className="mt-2">
+            <TrendingAfrica r={{ ...trendAfrica, items: africaRaw.map((it, i) => ({ ...it, translation: africaItems[i].translation, headline: africaItems[i].headline })) }} t={t} /></div></details>}
           <Link href="/take-me-back" className="card flex items-center gap-2 p-4 text-[15px] font-semibold hover:bg-card-muted"><History size={16} aria-hidden="true" />Time Lens: today&apos;s questions with a longer history</Link>
         </>
       )}

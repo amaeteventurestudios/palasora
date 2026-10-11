@@ -23,5 +23,5 @@ export function IndexSparkline({ points, label }: { points: { t: number; v: numb
     return () => chart.remove();
   }, [points]);
   if (points.length < 2) return <p className="text-xs text-muted-foreground">The index line appears after matched trades on two different days.</p>;
-  return <div ref={ref} className="h-[64px] w-full" role="img" aria-label={label} />;
+  return <div ref={ref} className="h-[36px] w-full" role="img" aria-label={label} />;
 }

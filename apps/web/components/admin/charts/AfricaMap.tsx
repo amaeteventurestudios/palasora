@@ -22,8 +22,9 @@ export function AfricaMap({ values, names, label, unit = "", selected }: { value
   return (
     <figure className="relative" data-testid="africa-map">
       <svg viewBox={geo.viewBox} className="h-auto w-full max-h-[420px]" role="group" aria-label={label}>
-        {Object.entries(geo.paths).map(([iso, d]) => (
-          <a key={iso} href={iso === "EH" ? undefined : `${path}?country=${iso}`} onClick={(e) => { e.preventDefault(); go(iso); }} aria-label={iso === "EH" ? "Western Sahara (no data)" : `${names[iso] ?? iso}: ${(values[iso] ?? 0).toLocaleString("en")}${unit}`}>
+        {"EH" in geo.paths && <path d={(geo.paths as Record<string, string>).EH} fill="var(--muted)" stroke="var(--card)" strokeWidth={0.8} aria-hidden="true" />}
+        {Object.entries(geo.paths).filter(([iso]) => iso !== "EH").map(([iso, d]) => (
+          <a key={iso} href={`${path}?country=${iso}`} onClick={(e) => { e.preventDefault(); go(iso); }} aria-label={`${names[iso] ?? iso}: ${(values[iso] ?? 0).toLocaleString("en")}${unit}`}>
             <path d={d} fill={fill(iso)} stroke={selected === iso ? "var(--brand-tangerine)" : "var(--card)"} strokeWidth={selected === iso ? 2.5 : 0.8}
               onMouseEnter={() => setHover(iso)} onMouseLeave={() => setHover(null)} onFocus={() => setHover(iso)} className="cursor-pointer outline-none transition-opacity hover:opacity-80 focus-visible:opacity-80" />
           </a>

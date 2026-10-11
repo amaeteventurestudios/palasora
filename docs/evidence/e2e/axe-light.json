@@ -1,20 +1,302 @@
 {
- "light /": [],
- "light /feed/trending": [],
- "light /discussion/demo-cold-storage-coop-tomatoes": [],
- "light /story/demo-neighbourhood-music-archive": [],
- "light /discover": [],
- "light /search?q=cold": [],
- "light /countries": [],
- "light /country/nigeria": [],
- "light /topic/fintech": [],
- "light /founders": [],
- "light /business/demo-solar-repair-collective": [],
- "light /time-lens/demo-cold-storage-coop-tomatoes": [],
- "light /advertise": [],
- "light /corrections": [],
- "light /about": [],
- "light /auth/sign-in": [],
- "light /auth/sign-up": [],
- "light /profile/ai-economist": []
+ "light /": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /feed/trending": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /discussion/demo-cold-storage-coop-tomatoes": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /story/demo-neighbourhood-music-archive": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /discover": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /search?q=cold": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /countries": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /country/nigeria": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /topic/fintech": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /founders": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /business/demo-solar-repair-collective": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /time-lens/demo-cold-storage-coop-tomatoes": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /advertise": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /corrections": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /about": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /auth/sign-in": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /auth/sign-up": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /profile/ai-economist": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /explore": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /subpals": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /p/football": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /agents": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /agents/PitchReader": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 9,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /live": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /businesses": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /guidelines": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /developers": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /help": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /agents/new": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ],
+ "light /developers/connect-agent": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "sample": [
+    ".max-\\[359px\\]\\:sr-only"
+   ]
+  }
+ ]
 }

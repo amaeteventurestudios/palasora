@@ -15,6 +15,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import pkg from "../../../package.json";
+import { AfricaMap } from "@/components/admin/charts/AfricaMap";
+import { TimeSeries } from "@/components/admin/charts/Charts";
+import { countryName } from "@/lib/edition";
 
 export const metadata = { title: "Reports & evidence" };
 const EVALS = [
@@ -55,14 +58,18 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
         </ChartCard>
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
-        <ChartCard title="Country coverage report" description="Items published in the window per country (all 54 listed)">
-          <div className="max-h-72 overflow-auto"><Table><TableBody>{Object.entries(cov).sort((a, b) => b[1] - a[1]).map(([c, n]) => <TableRow key={c}><TableCell>{c}</TableCell><TableCell className="text-right tabular-nums">{n}</TableCell></TableRow>)}</TableBody></Table></div>
+        <ChartCard title="Country coverage report" description="Items published in the window per country; the full table of all 54 is under the map">
+          <AfricaMap values={cov} names={Object.fromEntries(Object.keys(cov).map((c) => [c, countryName(c)]))} label="Published items per country in the report window" />
         </ChartCard>
         <ChartCard title="Open-source evaluations" description="docs/evidence/v15/OSS-EVALUATIONS.md">
           <Table><TableHeader><TableRow><TableHead>Component</TableHead><TableHead>Licence</TableHead><TableHead>Result</TableHead></TableRow></TableHeader>
             <TableBody>{EVALS.map(([n, l, r]) => <TableRow key={n}><TableCell className="font-medium">{n}</TableCell><TableCell><Badge variant="outline">{l}</Badge></TableCell><TableCell className="text-xs">{r}</TableCell></TableRow>)}</TableBody></Table>
         </ChartCard>
       </div>
+      <ChartCard title="Verified human activity (evidence series)" description="Signed-in humans and anonymous visits per day, from server-side records; the same series the CSV export contains"
+        table={{ head: ["Day", "Signed-in", "Anonymous"], rows: aud.series.map((x) => [x.day, x.members, x.guests]) }}>
+        <TimeSeries data={aud.series} kind="line" height={200} series={[{ key: "members", label: "Signed-in humans", slot: 1 }, { key: "guests", label: "Anonymous visits", slot: 3 }]} />
+      </ChartCard>
       <ChartCard title="Software bill of materials (web runtime dependencies)" description={`${deps.length} direct runtime packages; full SBOM in docs/OSS-SBOM.md, notices in public/oss-attribution.txt`}>
         <div className="flex flex-wrap gap-1.5">{deps.map(([n, v]) => <Badge key={n} variant="secondary" className="font-mono text-[11px]">{n}@{v}</Badge>)}</div>
       </ChartCard>

@@ -202,7 +202,24 @@ export async function sourceAction(_: ActionState, f: FormData): Promise<ActionS
         unpublished++;
       } else { await pb.update("editorial_pieces", p.id, { review_status: "held" }); held++; }
     }
-    await audit(tenant.id, session.user.id, "source.rights_revoked", "sources", src.id, { items: items.length, drafts_held: held, unpublished });
+    // v1.5 source cards (verbatim excerpts): withdraw a card whose only source is this one; otherwise drop this attribution.
+    let cardsWithdrawn = 0;
+    const cards = await pb.list("editorial_pieces", { filter: `tenant_id=${q(tenant.id)} && kind='source_link' && review_status!='retracted'`, perPage: 500 });
+    for (const c of cards) {
+      const srcs = (Array.isArray(c.sources_json) ? c.sources_json : []) as { source_id?: string }[];
+      if (!srcs.some((x) => x.source_id === src.id)) continue;
+      const rest = srcs.filter((x) => x.source_id !== src.id);
+      if (rest.length) { await pb.update("editorial_pieces", c.id, { sources_json: rest }); continue; }
+      const wasPublic = c.review_status === "published";
+      await pb.update("editorial_pieces", c.id, { review_status: "held", thread_state: "closed", lede: "", risk_basis: `source rights revoked (${src.publisher_name})` });
+      if (wasPublic) {
+        await pb.create("corrections", { tenant_id: tenant.id, piece_id: c.id, summary: `Withdrawn: the source's usage rights were revoked (${src.publisher_name}).`, public_at: pbDate(), status: "published" });
+        await emitEvent(tenant, { event_type: "thread_paused", piece_id: c.id, author_kind: "system", payload: { reason: "source rights revoked" } });
+        cardsWithdrawn++;
+      }
+    }
+    unpublished += cardsWithdrawn;
+    await audit(tenant.id, session.user.id, "source.rights_revoked", "sources", src.id, { items: items.length, drafts_held: held, unpublished, cards_withdrawn: cardsWithdrawn });
     invalidateFeedCache(tenant.id);
     revalidatePath("/", "layout");
     return { ok: true, message: `Rights revoked. Fetching disabled, ${items.length} stored excerpts cleared, ${held} drafts held, ${unpublished} published topics withdrawn.` };

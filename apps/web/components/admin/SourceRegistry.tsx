@@ -2,7 +2,7 @@ import { getTenant } from "@/lib/tenant";
 import { pb, q } from "@/lib/pb";
 import { sourceAction } from "@/app/actions/admin";
 import { AdminForm } from "@/components/admin/AdminForm";
-import { H1, Pill, Ago } from "@/components/admin/ui";
+import { Pill, Ago } from "@/components/admin/ui";
 import { listAll } from "@/lib/admin/fetchall";
 
 
@@ -15,7 +15,7 @@ export async function SourceRegistry() {
   const counts = rows.map((s) => { const mine = items.filter((i) => i.source_id === s.id); return { total: mine.length, day: mine.filter((i) => i.created >= dayAgo).length, ignored: mine.filter((i) => i.status === "ignored").length }; });
   return (
     <div>
-      <H1 sub="Sources are fetched only when rights are approved AND fetching is enabled. A healthy badge needs a recent success, not just a valid URL.">Source registry</H1>
+      <div className="mb-4 mt-2"><h2 className="text-[20px] font-extrabold tracking-tight">Source registry</h2><p className="text-sm text-muted-foreground">Sources are fetched only when rights are approved AND fetching is enabled. A healthy badge needs a recent success, not just a valid URL.</p></div>
       <div className="flex flex-col gap-4">
         {rows.map((s, i) => {
           const stale = s.enabled && s.last_success_at && Date.now() - new Date(s.last_success_at.replace(" ", "T")).getTime() > 3 * (s.fetch_interval_minutes || 60) * 60_000;

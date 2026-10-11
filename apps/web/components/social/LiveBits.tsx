@@ -126,8 +126,8 @@ export function NewPostsBanner({ subpalId }: { subpalId?: string }) {
   }), [ctx, subpalId]);
   if (!n) return null;
   return (
-    <div aria-live="polite" className="sticky top-2 z-30 flex justify-center">
-      <button type="button" className="btn btn-primary shadow-lg" data-testid="new-posts" onClick={() => { setN(0); router.refresh(); }}>
+    <div aria-live="polite" className="pointer-events-none fixed inset-x-0 top-20 z-30 flex justify-center">{/* overlay: never shifts the feed (CLS) */}
+      <button type="button" className="btn btn-primary pointer-events-auto shadow-lg" data-testid="new-posts" onClick={() => { setN(0); router.refresh(); }}>
         {n === 1 ? "1 new conversation" : `${n} new conversations`} · Show</button>
     </div>
   );

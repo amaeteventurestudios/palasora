@@ -72,11 +72,11 @@
       "specs": [
         {
           "title": "T-040 axe WCAG 2.2 AA (incl. contrast), light theme, public pages",
-          "ok": true,
+          "ok": false,
           "tags": [],
           "tests": [
             {
-              "timeout": 60000,
+              "timeout": 300000,
               "annotations": [],
               "expectedStatus": "passed",
               "projectId": "",
@@ -85,23 +85,58 @@
                 {
                   "workerIndex": 0,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 24761,
-                  "errors": [],
+                  "status": "failed",
+                  "duration": 27130,
+                  "error": {
+                    "message": "Error: /: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/feed/trending: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/discussion/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/story/demo-neighbourhood-music-archive: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/discover: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/search?q=cold: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/countries: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/country/nigeria: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/topic/fintech: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/founders: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/business/demo-solar-repair-collective: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/time-lens/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/advertise: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/corrections: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/about: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/auth/sign-in: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/auth/sign-up: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/profile/ai-economist: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/explore: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/subpals: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/p/football: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/agents: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/agents/PitchReader: color-contrast (serious) ×9 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/live: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/businesses: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/guidelines: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/developers: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/help: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/agents/new: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/developers/connect-agent: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 32\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"/: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/feed/trending: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/discussion/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/story/demo-neighbourhood-music-archive: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/discover: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/search?q=cold: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/countries: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/country/nigeria: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/topic/fintech: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/founders: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/business/demo-solar-repair-collective: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/time-lens/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/advertise: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/corrections: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/about: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/auth/sign-in: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/auth/sign-up: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/profile/ai-economist: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/explore: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/subpals: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/p/football: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/agents: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/agents/PitchReader: color-contrast (serious) ×9 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/live: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/businesses: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/guidelines: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/developers: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/help: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/agents/new: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/developers/connect-agent: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                    "stack": "Error: /: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/feed/trending: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/discussion/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/story/demo-neighbourhood-music-archive: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/discover: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/search?q=cold: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/countries: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/country/nigeria: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/topic/fintech: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/founders: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/business/demo-solar-repair-collective: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/time-lens/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/advertise: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/corrections: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/about: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/auth/sign-in: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/auth/sign-up: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/profile/ai-economist: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/explore: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/subpals: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/p/football: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/agents: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/agents/PitchReader: color-contrast (serious) ×9 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/live: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/businesses: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/guidelines: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/developers: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/help: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/agents/new: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/developers/connect-agent: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 32\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"/: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/feed/trending: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/discussion/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/story/demo-neighbourhood-music-archive: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/discover: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/search?q=cold: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/countries: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/country/nigeria: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/topic/fintech: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/founders: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/business/demo-solar-repair-collective: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/time-lens/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/advertise: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/corrections: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/about: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/auth/sign-in: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/auth/sign-up: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/profile/ai-economist: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/explore: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/subpals: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/p/football: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/agents: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/agents/PitchReader: color-contrast (serious) ×9 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/live: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/businesses: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/guidelines: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/developers: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/help: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/agents/new: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/developers/connect-agent: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/a11y.spec.ts:28:43",
+                    "location": {
+                      "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/a11y.spec.ts",
+                      "column": 43,
+                      "line": 28
+                    },
+                    "snippet": "  26 |     }\n  27 |     writeFileSync(path.resolve(__dirname, `../../../../docs/evidence/e2e/axe-${theme}.json`), JSON.stringify(report, null, 1));\n> 28 |     expect(failures, failures.join(\"\\n\")).toEqual([]);\n     |                                           ^\n  29 |   });\n  30 | }\n  31 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/a11y.spec.ts",
+                        "column": 43,
+                        "line": 28
+                      },
+                      "message": "Error: /: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/feed/trending: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/discussion/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/story/demo-neighbourhood-music-archive: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/discover: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/search?q=cold: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/countries: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/country/nigeria: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/topic/fintech: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/founders: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/business/demo-solar-repair-collective: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/time-lens/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/advertise: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/corrections: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/about: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/auth/sign-in: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/auth/sign-up: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/profile/ai-economist: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/explore: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/subpals: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/p/football: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/agents: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/agents/PitchReader: color-contrast (serious) ×9 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/live: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/businesses: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/guidelines: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/developers: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/help: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/agents/new: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n/developers/connect-agent: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 32\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"/: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/feed/trending: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/discussion/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/story/demo-neighbourhood-music-archive: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/discover: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/search?q=cold: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/countries: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/country/nigeria: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/topic/fintech: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/founders: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/business/demo-solar-repair-collective: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/time-lens/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/advertise: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/corrections: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/about: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/auth/sign-in: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/auth/sign-up: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/profile/ai-economist: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/explore: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/subpals: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/p/football: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/agents: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/agents/PitchReader: color-contrast (serious) ×9 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/live: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/businesses: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/guidelines: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/developers: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/help: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/agents/new: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+   \"/developers/connect-agent: color-contrast (serious) ×1 e.g. [\\\".max-\\\\\\\\[359px\\\\\\\\]\\\\\\\\:sr-only\\\"]\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n  26 |     }\n  27 |     writeFileSync(path.resolve(__dirname, `../../../../docs/evidence/e2e/axe-${theme}.json`), JSON.stringify(report, null, 1));\n> 28 |     expect(failures, failures.join(\"\\n\")).toEqual([]);\n     |                                           ^\n  29 |   });\n  30 | }\n  31 |\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/a11y.spec.ts:28:43"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:16:20.999Z",
+                  "startTime": "2026-10-11T01:43:28.411Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/a11y-T-040-axe-WCAG-2-2-AA-1593f-st-light-theme-public-pages/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/a11y-T-040-axe-WCAG-2-2-AA-1593f-st-light-theme-public-pages/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/a11y.spec.ts",
+                    "column": 43,
+                    "line": 28
+                  }
                 }
               ],
-              "status": "expected"
+              "status": "unexpected"
             }
           ],
           "id": "aa3ad05f8c0e05077efb-bcb0cde5753a579533f2",
           "file": "a11y.spec.ts",
-          "line": 13,
+          "line": 15,
           "column": 7
         },
         {
@@ -110,22 +145,22 @@
           "tags": [],
           "tests": [
             {
-              "timeout": 60000,
+              "timeout": 300000,
               "annotations": [],
               "expectedStatus": "passed",
               "projectId": "",
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 20935,
+                  "duration": 36704,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:16:46.370Z",
+                  "startTime": "2026-10-11T01:43:56.519Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -135,7 +170,7 @@
           ],
           "id": "aa3ad05f8c0e05077efb-d8e3342b5fcba7288401",
           "file": "a11y.spec.ts",
-          "line": 13,
+          "line": 15,
           "column": 7
         },
         {
@@ -151,15 +186,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 10785,
+                  "duration": 8888,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:17:07.317Z",
+                  "startTime": "2026-10-11T01:44:33.373Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -169,7 +204,7 @@
           ],
           "id": "aa3ad05f8c0e05077efb-7d2a6ab7b2a6750fc7a4",
           "file": "a11y.spec.ts",
-          "line": 29,
+          "line": 32,
           "column": 5
         },
         {
@@ -185,15 +220,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1160,
+                  "duration": 674,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:17:18.131Z",
+                  "startTime": "2026-10-11T01:44:42.274Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -203,7 +238,7 @@
           ],
           "id": "aa3ad05f8c0e05077efb-df732b9d93429922490a",
           "file": "a11y.spec.ts",
-          "line": 41,
+          "line": 44,
           "column": 5
         },
         {
@@ -219,15 +254,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 674,
+                  "duration": 597,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:17:19.307Z",
+                  "startTime": "2026-10-11T01:44:42.959Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -237,7 +272,7 @@
           ],
           "id": "aa3ad05f8c0e05077efb-fd8d19ca596e4ec6b090",
           "file": "a11y.spec.ts",
-          "line": 62,
+          "line": 65,
           "column": 5
         }
       ]
@@ -261,15 +296,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1696,
+                  "duration": 922,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:17:20.010Z",
+                  "startTime": "2026-10-11T01:44:43.587Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -284,7 +319,7 @@
         },
         {
           "title": "T-029 Overview shows real, labeled metrics and integration states; screenshots",
-          "ok": true,
+          "ok": false,
           "tags": [],
           "tests": [
             {
@@ -295,20 +330,65 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 4848,
-                  "errors": [],
+                  "status": "failed",
+                  "duration": 2951,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { level: 1 })\nExpected: visible\nError: strict mode violation: getByRole('heading', { level: 1 }) resolved to 2 elements:\n    1) <h1 class=\"text-[24px] font-extrabold tracking-tight sm:text-[28px]\">News & sources</h1> aka getByRole('heading', { name: 'News & sources' })\n    2) <h1 class=\"text-[26px] font-extrabold tracking-tight\">Source registry</h1> aka getByRole('heading', { name: 'Source registry' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { level: 1 })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { level: 1 })\nExpected: visible\nError: strict mode violation: getByRole('heading', { level: 1 }) resolved to 2 elements:\n    1) <h1 class=\"text-[24px] font-extrabold tracking-tight sm:text-[28px]\">News & sources</h1> aka getByRole('heading', { name: 'News & sources' })\n    2) <h1 class=\"text-[26px] font-extrabold tracking-tight\">Source registry</h1> aka getByRole('heading', { name: 'Source registry' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { level: 1 })\u001b[22m\n\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/admin.spec.ts:36:59",
+                    "location": {
+                      "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/admin.spec.ts",
+                      "column": 59,
+                      "line": 36
+                    },
+                    "snippet": "  34 |   for (const [p, name] of [[\"/admin\", \"overview\"], [\"/admin/editorial\", \"editorial\"], [\"/admin/sources\", \"sources\"], [\"/admin/ai\", \"ai\"], [\"/admin/analytics\", \"analytics\"], [\"/admin/health\", \"health\"], [\"/admin/settings\", \"settings\"], [\"/admin/sponsors\", \"sponsors\"]]) {\n  35 |     await page.goto(p);\n> 36 |     await expect(page.getByRole(\"heading\", { level: 1 })).toBeVisible();\n     |                                                           ^\n  37 |     await page.screenshot({ path: `${shotDir}/admin-${name}-1440.png`, fullPage: false });\n  38 |   }\n  39 | });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/admin.spec.ts",
+                        "column": 59,
+                        "line": 36
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { level: 1 })\nExpected: visible\nError: strict mode violation: getByRole('heading', { level: 1 }) resolved to 2 elements:\n    1) <h1 class=\"text-[24px] font-extrabold tracking-tight sm:text-[28px]\">News & sources</h1> aka getByRole('heading', { name: 'News & sources' })\n    2) <h1 class=\"text-[26px] font-extrabold tracking-tight\">Source registry</h1> aka getByRole('heading', { name: 'Source registry' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { level: 1 })\u001b[22m\n\n\n  34 |   for (const [p, name] of [[\"/admin\", \"overview\"], [\"/admin/editorial\", \"editorial\"], [\"/admin/sources\", \"sources\"], [\"/admin/ai\", \"ai\"], [\"/admin/analytics\", \"analytics\"], [\"/admin/health\", \"health\"], [\"/admin/settings\", \"settings\"], [\"/admin/sponsors\", \"sponsors\"]]) {\n  35 |     await page.goto(p);\n> 36 |     await expect(page.getByRole(\"heading\", { level: 1 })).toBeVisible();\n     |                                                           ^\n  37 |     await page.screenshot({ path: `${shotDir}/admin-${name}-1440.png`, fullPage: false });\n  38 |   }\n  39 | });\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/admin.spec.ts:36:59"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:17:21.729Z",
+                  "startTime": "2026-10-11T01:44:44.524Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/admin-T-029-Overview-shows-7e880-egration-states-screenshots/test-failed-2.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/admin-T-029-Overview-shows-7e880-egration-states-screenshots/test-failed-1.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/admin-T-029-Overview-shows-7e880-egration-states-screenshots/test-failed-3.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/admin-T-029-Overview-shows-7e880-egration-states-screenshots/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/admin.spec.ts",
+                    "column": 59,
+                    "line": 36
+                  }
                 }
               ],
-              "status": "expected"
+              "status": "unexpected"
             }
           ],
           "id": "d4043a9dd1ab94463227-1f8df03845fcff4fad5a",
@@ -329,15 +409,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 12164,
+                  "duration": 3666,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:17:26.593Z",
+                  "startTime": "2026-10-11T01:44:48.254Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -347,7 +427,7 @@
           ],
           "id": "d4043a9dd1ab94463227-1bcd6df1750d6d972614",
           "file": "admin.spec.ts",
-          "line": 38,
+          "line": 41,
           "column": 5
         },
         {
@@ -363,15 +443,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3016,
+                  "duration": 1634,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:17:38.784Z",
+                  "startTime": "2026-10-11T01:44:52.094Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -381,7 +461,7 @@
           ],
           "id": "d4043a9dd1ab94463227-29f15a9c2d8220f31afe",
           "file": "admin.spec.ts",
-          "line": 70,
+          "line": 73,
           "column": 5
         },
         {
@@ -397,15 +477,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3124,
+                  "duration": 2885,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:17:41.828Z",
+                  "startTime": "2026-10-11T01:44:53.747Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -415,7 +495,7 @@
           ],
           "id": "d4043a9dd1ab94463227-f6184e5163aa893d374b",
           "file": "admin.spec.ts",
-          "line": 98,
+          "line": 101,
           "column": 5
         },
         {
@@ -431,15 +511,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1565,
+                  "duration": 1018,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:17:44.967Z",
+                  "startTime": "2026-10-11T01:44:56.650Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -449,7 +529,7 @@
           ],
           "id": "d4043a9dd1ab94463227-0f894723b6cf90de1036",
           "file": "admin.spec.ts",
-          "line": 115,
+          "line": 118,
           "column": 5
         },
         {
@@ -465,15 +545,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1747,
+                  "duration": 1425,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:17:46.546Z",
+                  "startTime": "2026-10-11T01:44:57.682Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -483,7 +563,7 @@
           ],
           "id": "d4043a9dd1ab94463227-500d90c0c5662d35724d",
           "file": "admin.spec.ts",
-          "line": 123,
+          "line": 126,
           "column": 5
         },
         {
@@ -499,15 +579,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 9471,
+                  "duration": 8794,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:17:48.308Z",
+                  "startTime": "2026-10-11T01:44:59.119Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -517,7 +597,7 @@
           ],
           "id": "d4043a9dd1ab94463227-58c316c198c6783ea66a",
           "file": "admin.spec.ts",
-          "line": 142,
+          "line": 145,
           "column": 5
         }
       ]
@@ -529,7 +609,7 @@
       "line": 0,
       "specs": [
         {
-          "title": "T-010/T-011 draft survives sign-in, posts once, human count updates (AI separate)",
+          "title": "T-010 (v1.4) humans observe: no human reply box, and the API refuses a signed-in human reply",
           "ok": true,
           "tags": [],
           "tests": [
@@ -541,15 +621,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2520,
+                  "duration": 1473,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:17:57.820Z",
+                  "startTime": "2026-10-11T01:45:07.966Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -557,13 +637,13 @@
               "status": "expected"
             }
           ],
-          "id": "1ea34e5b635e4790e803-ea1370492e58d97c07d3",
+          "id": "1ea34e5b635e4790e803-8f6af19c4b64219da12f",
           "file": "member.spec.ts",
-          "line": 9,
+          "line": 11,
           "column": 5
         },
         {
-          "title": "T-011 vote is one per member; concurrent toggles never exceed one",
+          "title": "T-011 (v1.4) humans cannot vote: vote API refused for members, scores are read-only agent scores",
           "ok": true,
           "tags": [],
           "tests": [
@@ -575,15 +655,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2149,
+                  "duration": 964,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:00.358Z",
+                  "startTime": "2026-10-11T01:45:09.458Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -591,9 +671,9 @@
               "status": "expected"
             }
           ],
-          "id": "1ea34e5b635e4790e803-a153f25ad07016e113dd",
+          "id": "1ea34e5b635e4790e803-7c61e57346ec11518480",
           "file": "member.spec.ts",
-          "line": 38,
+          "line": 27,
           "column": 5
         },
         {
@@ -609,15 +689,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4080,
+                  "duration": 3068,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:02.522Z",
+                  "startTime": "2026-10-11T01:45:10.443Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -627,11 +707,11 @@
           ],
           "id": "1ea34e5b635e4790e803-e92167d1f3a7abc21af7",
           "file": "member.spec.ts",
-          "line": 57,
+          "line": 36,
           "column": 5
         },
         {
-          "title": "T-009 sign-up → mail-sink verification link → can post; unverified cannot",
+          "title": "T-009 sign-up → mail-sink verification link → owner can activate an owner-verified agent; unverified cannot be verified",
           "ok": true,
           "tags": [],
           "tests": [
@@ -643,15 +723,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3630,
+                  "duration": 1272,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:06.620Z",
+                  "startTime": "2026-10-11T01:45:13.530Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -659,43 +739,43 @@
               "status": "expected"
             }
           ],
-          "id": "1ea34e5b635e4790e803-fe6f2c52d1de36b425b9",
+          "id": "1ea34e5b635e4790e803-56a78d73c747170c3217",
+          "file": "member.spec.ts",
+          "line": 63,
+          "column": 5
+        },
+        {
+          "title": "T-012 report an AI reply → moderator quarantines → reply hidden; audit recorded; restore works",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7587,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:45:14.822Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1ea34e5b635e4790e803-b06aaf00397a260ac150",
           "file": "member.spec.ts",
           "line": 83,
-          "column": 5
-        },
-        {
-          "title": "T-012 report → moderator quarantines → comment hidden and count drops; audit recorded",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 60000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 7020,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-09T23:18:10.269Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "1ea34e5b635e4790e803-db1e5e454ef712be471d",
-          "file": "member.spec.ts",
-          "line": 107,
           "column": 5
         }
       ]
@@ -719,10 +799,10 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4479,
+                  "duration": 5153,
                   "errors": [],
                   "stdout": [],
                   "stderr": [
@@ -734,7 +814,7 @@
                     }
                   ],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:17.318Z",
+                  "startTime": "2026-10-11T01:45:22.445Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -768,15 +848,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 747,
+                  "duration": 1329,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:21.826Z",
+                  "startTime": "2026-10-11T01:45:27.632Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -790,8 +870,8 @@
           "column": 5
         },
         {
-          "title": "S01 first story is above the fold at 1440x900 and 390x844",
-          "ok": true,
+          "title": "S01 first conversation above the fold at 1440x900; live network content in the first phone viewport",
+          "ok": false,
           "tags": [],
           "tests": [
             {
@@ -802,25 +882,95 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1136,
-                  "errors": [],
+                  "status": "failed",
+                  "duration": 1591,
+                  "error": {
+                    "message": "Error: first card top at 1440px\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m900\u001b[39m\nReceived:   \u001b[31m918.078125\u001b[39m",
+                    "stack": "Error: first card top at 1440px\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m900\u001b[39m\nReceived:   \u001b[31m918.078125\u001b[39m\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/public.spec.ts:26:103",
+                    "location": {
+                      "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/public.spec.ts",
+                      "column": 103,
+                      "line": 26
+                    },
+                    "snippet": "  24 |   await page.setViewportSize({ width: 1440, height: 900 });\n  25 |   await page.goto(\"/\");\n> 26 |   expect((await page.getByTestId(\"story-card\").first().boundingBox())!.y, \"first card top at 1440px\").toBeLessThan(900);\n     |                                                                                                       ^\n  27 |   await page.setViewportSize({ width: 390, height: 844 });\n  28 |   await page.goto(\"/\");\n  29 |   expect((await page.getByTestId(\"stat-strip\").boundingBox())!.y, \"counters top at 390px\").toBeLessThan(844);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/public.spec.ts",
+                        "column": 103,
+                        "line": 26
+                      },
+                      "message": "Error: first card top at 1440px\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m900\u001b[39m\nReceived:   \u001b[31m918.078125\u001b[39m\n\n  24 |   await page.setViewportSize({ width: 1440, height: 900 });\n  25 |   await page.goto(\"/\");\n> 26 |   expect((await page.getByTestId(\"story-card\").first().boundingBox())!.y, \"first card top at 1440px\").toBeLessThan(900);\n     |                                                                                                       ^\n  27 |   await page.setViewportSize({ width: 390, height: 844 });\n  28 |   await page.goto(\"/\");\n  29 |   expect((await page.getByTestId(\"stat-strip\").boundingBox())!.y, \"counters top at 390px\").toBeLessThan(844);\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/public.spec.ts:26:103"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:22.596Z",
+                  "startTime": "2026-10-11T01:45:28.978Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/public-S01-first-conversat-200aa-in-the-first-phone-viewport/test-failed-2.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/public-S01-first-conversat-200aa-in-the-first-phone-viewport/test-failed-3.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/public-S01-first-conversat-200aa-in-the-first-phone-viewport/test-failed-6.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/public-S01-first-conversat-200aa-in-the-first-phone-viewport/test-failed-5.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/public-S01-first-conversat-200aa-in-the-first-phone-viewport/test-failed-7.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/public-S01-first-conversat-200aa-in-the-first-phone-viewport/test-failed-1.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/public-S01-first-conversat-200aa-in-the-first-phone-viewport/test-failed-4.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/public-S01-first-conversat-200aa-in-the-first-phone-viewport/test-failed-8.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/public-S01-first-conversat-200aa-in-the-first-phone-viewport/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/public.spec.ts",
+                    "column": 103,
+                    "line": 26
+                  }
                 }
               ],
-              "status": "expected"
+              "status": "unexpected"
             }
           ],
-          "id": "349fc90c6061c792a808-aa44b2914feaedfa143d",
+          "id": "349fc90c6061c792a808-c35ffcc1029c1ffee78a",
           "file": "public.spec.ts",
-          "line": 20,
+          "line": 23,
           "column": 5
         },
         {
@@ -836,15 +986,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6925,
+                  "duration": 6168,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:23.752Z",
+                  "startTime": "2026-10-11T01:45:32.145Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -854,7 +1004,7 @@
           ],
           "id": "349fc90c6061c792a808-4ab8a19043b9e2aeb5fb",
           "file": "public.spec.ts",
-          "line": 29,
+          "line": 33,
           "column": 5
         },
         {
@@ -870,15 +1020,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2803,
+                  "duration": 2999,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:30.696Z",
+                  "startTime": "2026-10-11T01:45:38.694Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -888,7 +1038,7 @@
           ],
           "id": "349fc90c6061c792a808-7866def22d7c2ab5b499",
           "file": "public.spec.ts",
-          "line": 40,
+          "line": 44,
           "column": 5
         },
         {
@@ -904,15 +1054,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1285,
+                  "duration": 1922,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:33.587Z",
+                  "startTime": "2026-10-11T01:45:41.714Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -922,7 +1072,7 @@
           ],
           "id": "349fc90c6061c792a808-1221f0aa6466e45c5ecf",
           "file": "public.spec.ts",
-          "line": 55,
+          "line": 59,
           "column": 5
         },
         {
@@ -938,15 +1088,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 737,
+                  "duration": 1279,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:34.893Z",
+                  "startTime": "2026-10-11T01:45:43.657Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -956,7 +1106,7 @@
           ],
           "id": "349fc90c6061c792a808-e8ade27255336bbb9510",
           "file": "public.spec.ts",
-          "line": 70,
+          "line": 74,
           "column": 5
         },
         {
@@ -972,15 +1122,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 520,
+                  "duration": 628,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:35.651Z",
+                  "startTime": "2026-10-11T01:45:44.953Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -990,7 +1140,7 @@
           ],
           "id": "349fc90c6061c792a808-6a78c944ab1c473a0c7c",
           "file": "public.spec.ts",
-          "line": 81,
+          "line": 92,
           "column": 5
         },
         {
@@ -1006,15 +1156,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 804,
+                  "duration": 1055,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:36.189Z",
+                  "startTime": "2026-10-11T01:45:45.596Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1024,7 +1174,7 @@
           ],
           "id": "349fc90c6061c792a808-dd1199b54c8b4cb3d70e",
           "file": "public.spec.ts",
-          "line": 96,
+          "line": 107,
           "column": 5
         },
         {
@@ -1040,15 +1190,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 12411,
+                  "duration": 12406,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:37.013Z",
+                  "startTime": "2026-10-11T01:45:46.665Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1058,7 +1208,7 @@
           ],
           "id": "349fc90c6061c792a808-c169e176e141b516ef81",
           "file": "public.spec.ts",
-          "line": 116,
+          "line": 127,
           "column": 5
         },
         {
@@ -1074,15 +1224,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 303,
+                  "duration": 164,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:49.446Z",
+                  "startTime": "2026-10-11T01:45:59.090Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1092,7 +1242,7 @@
           ],
           "id": "349fc90c6061c792a808-b36afb2bd3320fc31151",
           "file": "public.spec.ts",
-          "line": 131,
+          "line": 142,
           "column": 5
         }
       ]
@@ -1116,15 +1266,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1545,
+                  "duration": 1011,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:49.780Z",
+                  "startTime": "2026-10-11T01:45:59.288Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1150,15 +1300,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4301,
+                  "duration": 3224,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:51.346Z",
+                  "startTime": "2026-10-11T01:46:00.311Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1184,15 +1334,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1039,
+                  "duration": 3100,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:55.673Z",
+                  "startTime": "2026-10-11T01:46:03.554Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1226,15 +1376,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 11297,
+                  "duration": 11420,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:18:56.758Z",
+                  "startTime": "2026-10-11T01:46:06.700Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1248,7 +1398,7 @@
           "column": 5
         },
         {
-          "title": "A-06 human reply on one tab appears on another open tab without refresh (committed events only)",
+          "title": "A-06 (v1.4) an open thread is live for observers; the human reply path is closed (agent live replies: v14.spec.ts)",
           "ok": true,
           "tags": [],
           "tests": [
@@ -1260,15 +1410,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3977,
+                  "duration": 1207,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:08.083Z",
+                  "startTime": "2026-10-11T01:46:18.154Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1276,7 +1426,7 @@
               "status": "expected"
             }
           ],
-          "id": "9c01516a488a74e58f17-64f0bddc7c79b9709fc3",
+          "id": "9c01516a488a74e58f17-7d4870b4cd7734fdbce4",
           "file": "v13.spec.ts",
           "line": 67,
           "column": 5
@@ -1294,15 +1444,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2121,
+                  "duration": 1243,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:12.089Z",
+                  "startTime": "2026-10-11T01:46:19.388Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1312,7 +1462,7 @@
           ],
           "id": "9c01516a488a74e58f17-f83826bedb3da7189698",
           "file": "v13.spec.ts",
-          "line": 81,
+          "line": 77,
           "column": 5
         },
         {
@@ -1328,15 +1478,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1943,
+                  "duration": 899,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:14.243Z",
+                  "startTime": "2026-10-11T01:46:20.656Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1346,7 +1496,7 @@
           ],
           "id": "9c01516a488a74e58f17-235c280cce48f742c2a6",
           "file": "v13.spec.ts",
-          "line": 90,
+          "line": 86,
           "column": 5
         },
         {
@@ -1362,15 +1512,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2536,
+                  "duration": 1259,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:16.214Z",
+                  "startTime": "2026-10-11T01:46:21.579Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1380,7 +1530,7 @@
           ],
           "id": "9c01516a488a74e58f17-002b3a22bf0c8620b15c",
           "file": "v13.spec.ts",
-          "line": 107,
+          "line": 103,
           "column": 5
         },
         {
@@ -1396,15 +1546,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 724,
+                  "duration": 676,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:18.847Z",
+                  "startTime": "2026-10-11T01:46:22.854Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1414,7 +1564,7 @@
           ],
           "id": "9c01516a488a74e58f17-5c9162a072c2c8cf02fb",
           "file": "v13.spec.ts",
-          "line": 119,
+          "line": 115,
           "column": 5
         },
         {
@@ -1430,15 +1580,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1426,
+                  "duration": 1404,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:19.636Z",
+                  "startTime": "2026-10-11T01:46:23.559Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1448,7 +1598,7 @@
           ],
           "id": "9c01516a488a74e58f17-5fe8eba646453fbf1bcd",
           "file": "v13.spec.ts",
-          "line": 128,
+          "line": 124,
           "column": 5
         },
         {
@@ -1464,15 +1614,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1860,
+                  "duration": 1083,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:21.112Z",
+                  "startTime": "2026-10-11T01:46:24.989Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1482,7 +1632,7 @@
           ],
           "id": "9c01516a488a74e58f17-d0648b3b5f64fbde929e",
           "file": "v13.spec.ts",
-          "line": 149,
+          "line": 145,
           "column": 5
         },
         {
@@ -1498,15 +1648,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3374,
+                  "duration": 4296,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:23.050Z",
+                  "startTime": "2026-10-11T01:46:26.093Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1516,7 +1666,7 @@
           ],
           "id": "9c01516a488a74e58f17-c1f34232c4c9d1d7501f",
           "file": "v13.spec.ts",
-          "line": 160,
+          "line": 156,
           "column": 5
         },
         {
@@ -1532,15 +1682,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2895,
+                  "duration": 1260,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:26.456Z",
+                  "startTime": "2026-10-11T01:46:30.411Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1550,7 +1700,7 @@
           ],
           "id": "9c01516a488a74e58f17-657c7db8ef29728c1c23",
           "file": "v13.spec.ts",
-          "line": 181,
+          "line": 175,
           "column": 5
         },
         {
@@ -1566,15 +1716,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3526,
+                  "duration": 1895,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:29.381Z",
+                  "startTime": "2026-10-11T01:46:31.703Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1584,7 +1734,7 @@
           ],
           "id": "9c01516a488a74e58f17-ff7876e92214dae2ace1",
           "file": "v13.spec.ts",
-          "line": 208,
+          "line": 202,
           "column": 5
         },
         {
@@ -1600,15 +1750,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7332,
+                  "duration": 1823,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:32.935Z",
+                  "startTime": "2026-10-11T01:46:33.654Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1618,7 +1768,7 @@
           ],
           "id": "9c01516a488a74e58f17-8c1211e62e48eac1766d",
           "file": "v13.spec.ts",
-          "line": 228,
+          "line": 222,
           "column": 5
         },
         {
@@ -1634,15 +1784,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1265,
+                  "duration": 865,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:40.638Z",
+                  "startTime": "2026-10-11T01:46:35.508Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1652,7 +1802,7 @@
           ],
           "id": "9c01516a488a74e58f17-bc534acbbefa36973b18",
           "file": "v13.spec.ts",
-          "line": 246,
+          "line": 240,
           "column": 5
         },
         {
@@ -1668,15 +1818,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 965,
+                  "duration": 1215,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:41.971Z",
+                  "startTime": "2026-10-11T01:46:36.396Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1686,7 +1836,7 @@
           ],
           "id": "9c01516a488a74e58f17-85f88639d38ccf7b0661",
           "file": "v13.spec.ts",
-          "line": 258,
+          "line": 252,
           "column": 5
         },
         {
@@ -1702,15 +1852,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3087,
+                  "duration": 3077,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:42.968Z",
+                  "startTime": "2026-10-11T01:46:37.637Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1720,7 +1870,7 @@
           ],
           "id": "9c01516a488a74e58f17-88b9a1477794f2c9fa23",
           "file": "v13.spec.ts",
-          "line": 278,
+          "line": 272,
           "column": 5
         },
         {
@@ -1736,15 +1886,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 802,
+                  "duration": 1092,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:46.090Z",
+                  "startTime": "2026-10-11T01:46:40.739Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1754,7 +1904,7 @@
           ],
           "id": "9c01516a488a74e58f17-8068ae0105f1a5f9aece",
           "file": "v13.spec.ts",
-          "line": 294,
+          "line": 288,
           "column": 5
         },
         {
@@ -1770,19 +1920,19 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 5651,
+                  "duration": 5489,
                   "errors": [],
                   "stdout": [
                     {
-                      "text": "L-22 {\"/ visible_ms\":1162,\"/ fcp_ms\":-1,\"/ cls\":0.011205179022043184,\"/local-pulse?country=NG visible_ms\":646,\"/local-pulse?country=NG fcp_ms\":280,\"/local-pulse?country=NG cls\":0}\n"
+                      "text": "L-22 {\"/ visible_ms\":1389,\"/ fcp_ms\":1324,\"/ cls\":0.017453286661142046,\"/local-pulse?country=NG visible_ms\":669,\"/local-pulse?country=NG fcp_ms\":-1,\"/local-pulse?country=NG cls\":0}\n"
                     }
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:46.925Z",
+                  "startTime": "2026-10-11T01:46:41.851Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1792,7 +1942,7 @@
           ],
           "id": "9c01516a488a74e58f17-325d21602b799e3a80af",
           "file": "v13.spec.ts",
-          "line": 305,
+          "line": 299,
           "column": 5
         },
         {
@@ -1808,15 +1958,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1133,
+                  "duration": 1036,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:52.615Z",
+                  "startTime": "2026-10-11T01:46:47.364Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1826,7 +1976,7 @@
           ],
           "id": "9c01516a488a74e58f17-192ede6a63f499d4890c",
           "file": "v13.spec.ts",
-          "line": 334,
+          "line": 328,
           "column": 5
         },
         {
@@ -1842,15 +1992,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 18161,
+                  "duration": 15888,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:19:53.779Z",
+                  "startTime": "2026-10-11T01:46:48.440Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1860,7 +2010,7 @@
           ],
           "id": "9c01516a488a74e58f17-85d13e359e9aa04c14f4",
           "file": "v13.spec.ts",
-          "line": 342,
+          "line": 336,
           "column": 5
         },
         {
@@ -1876,15 +2026,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3363,
+                  "duration": 1915,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:20:11.969Z",
+                  "startTime": "2026-10-11T01:47:04.421Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1894,7 +2044,7 @@
           ],
           "id": "9c01516a488a74e58f17-5fea454b60a008e17628",
           "file": "v13.spec.ts",
-          "line": 360,
+          "line": 354,
           "column": 5
         },
         {
@@ -1910,15 +2060,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4802,
+                  "duration": 3108,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:20:15.364Z",
+                  "startTime": "2026-10-11T01:47:06.356Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1928,7 +2078,7 @@
           ],
           "id": "9c01516a488a74e58f17-029ce0b5aaefcb26ced5",
           "file": "v13.spec.ts",
-          "line": 382,
+          "line": 376,
           "column": 5
         }
       ]
@@ -1952,15 +2102,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 19400,
+                  "duration": 17216,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:20:20.235Z",
+                  "startTime": "2026-10-11T01:47:09.488Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1986,15 +2136,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 145,
+                  "duration": 80,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:20:39.679Z",
+                  "startTime": "2026-10-11T01:47:26.721Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2020,15 +2170,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1464,
+                  "duration": 1480,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:20:39.855Z",
+                  "startTime": "2026-10-11T01:47:26.821Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2042,7 +2192,7 @@
           "column": 5
         },
         {
-          "title": "T-012 an author edits their own reply within 15 minutes; others cannot; the edit shows live and is audited",
+          "title": "T-012 (v1.4) public corrections are agent-only: the human edit path is closed (agent corrections: v14.spec.ts)",
           "ok": true,
           "tags": [],
           "tests": [
@@ -2054,15 +2204,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 5809,
+                  "duration": 895,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-09T23:20:41.372Z",
+                  "startTime": "2026-10-11T01:47:28.327Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2070,9 +2220,918 @@
               "status": "expected"
             }
           ],
-          "id": "7776b5756edfc5ac873e-6f31bd4a47101cdec017",
+          "id": "7776b5756edfc5ac873e-949dfbe7892c24cba9c6",
           "file": "v131.spec.ts",
           "line": 82,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "v14.spec.ts",
+      "file": "v14.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "v1.4 social network",
+          "file": "v14.spec.ts",
+          "line": 35,
+          "column": 15,
+          "specs": [
+            {
+              "title": "UI-01/UI-05/UI-07 homepage: locked copy, observer rule, real counters, nav, no chip wall",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 897,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T01:47:29.255Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6cf49b50ce6efb29797b-0de7051e78fe011c2f71",
+              "file": "v14.spec.ts",
+              "line": 38,
+              "column": 7
+            },
+            {
+              "title": "AG-01 60 distinct Palavva-operated seed agents, labeled, never counted as verified",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 91,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T01:47:30.168Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6cf49b50ce6efb29797b-6cbd6f32da5fe36d163e",
+              "file": "v14.spec.ts",
+              "line": 69,
+              "column": 7
+            },
+            {
+              "title": "UI-03 human public writes fail at the API for guests and signed-in humans",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 621,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T01:47:30.272Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6cf49b50ce6efb29797b-b5e7f198807d01872235",
+              "file": "v14.spec.ts",
+              "line": 82,
+              "column": 7
+            },
+            {
+              "title": "ONB-03 external agent: register, unclaimed cannot write, claim -> owner_control, Verified Agents +1",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 508,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T01:47:30.911Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6cf49b50ce6efb29797b-82a05c248d377de21eb1",
+              "file": "v14.spec.ts",
+              "line": 93,
+              "column": 7
+            },
+            {
+              "title": "ACT-01/ACT-02 a real post appears live for an open guest page, counters reconcile to DB",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3882,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T01:47:31.435Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6cf49b50ce6efb29797b-15a594b521ec7a18a021",
+              "file": "v14.spec.ts",
+              "line": 112,
+              "column": 7
+            },
+            {
+              "title": "AG-04 nested replies, one-vote semantics, self and same-owner votes refused, retraction and correction",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2947,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T01:47:35.338Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6cf49b50ce6efb29797b-8913d4f366d5978f1200",
+              "file": "v14.spec.ts",
+              "line": 141,
+              "column": 7
+            },
+            {
+              "title": "ONB-03 revoked key and cross-tenant key are refused",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 409,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T01:47:38.305Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6cf49b50ce6efb29797b-2ebfe25228a4809820c6",
+              "file": "v14.spec.ts",
+              "line": 189,
+              "column": 7
+            },
+            {
+              "title": "MSG-01/MSG-03 consented DMs: commercial refused without opt-in, approval by recipient owner, forwarded link reveals nothing",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2441,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T01:47:38.731Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6cf49b50ce6efb29797b-f92a78a26e029ed4218f",
+              "file": "v14.spec.ts",
+              "line": 199,
+              "column": 7
+            },
+            {
+              "title": "ONB-01/UI-04 hosted agent wizard without avatar, owner instruction, pause/resume, cross-owner isolation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 36006,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T01:47:41.194Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6cf49b50ce6efb29797b-2414977581219a333635",
+              "file": "v14.spec.ts",
+              "line": 226,
+              "column": 7
+            },
+            {
+              "title": "UI-06 SubPals: directory, search, watch count from rows, Nigeria vs Ghana suggestions with language unchanged",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6068,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T01:48:17.253Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6cf49b50ce6efb29797b-2511c4921a846346d17d",
+              "file": "v14.spec.ts",
+              "line": 275,
+              "column": 7
+            },
+            {
+              "title": "AG-02/AG-06 operator runs one bounded city window; decisions are recorded; CITY_PAUSED stops new work",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 25055,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T01:48:23.383Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6cf49b50ce6efb29797b-daa64a927262e6e6e46a",
+              "file": "v14.spec.ts",
+              "line": 300,
+              "column": 7
+            },
+            {
+              "title": "UI-08/UI-09 responsive and themes: 320/375/768/1024/1440 without horizontal scroll, light/dark tokens",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 11786,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T01:48:48.459Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6cf49b50ce6efb29797b-6aef8836b8b64def17b0",
+              "file": "v14.spec.ts",
+              "line": 335,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "v15.spec.ts",
+      "file": "v15.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "V15-01 country edition scopes feed, banner and API (Liberia never shows South African items)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1305,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:00.274Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-91e5b4443b15a8e5739f",
+          "file": "v15.spec.ts",
+          "line": 39,
+          "column": 5
+        },
+        {
+          "title": "V15-02 Senegal → Liberia → Cameroon switching through the UI; rails follow the edition",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2466,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:01.600Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-8bfb82531f36ef963243",
+          "file": "v15.spec.ts",
+          "line": 59,
+          "column": 5
+        },
+        {
+          "title": "V15-03 'Save as my home edition' persists to the account; viewing never overwrites it",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2873,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:04.090Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-3ced4a78967eb17a3aba",
+          "file": "v15.spec.ts",
+          "line": 75,
+          "column": 5
+        },
+        {
+          "title": "V15-04 SSE stream bound to an edition never delivers another region's events",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12048,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:06.983Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-077c200531ef01e6056e",
+          "file": "v15.spec.ts",
+          "line": 93,
+          "column": 5
+        },
+        {
+          "title": "V15-05 mobile shell at 320px: no sideways scroll, five-item bottom nav, drawer",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1548,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:19.050Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-509c875552ae57136b36",
+          "file": "v15.spec.ts",
+          "line": 113,
+          "column": 7
+        },
+        {
+          "title": "V15-05 mobile shell at 375px: no sideways scroll, five-item bottom nav, drawer",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1533,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:20.618Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-5e40559ff027731af286",
+          "file": "v15.spec.ts",
+          "line": 113,
+          "column": 7
+        },
+        {
+          "title": "V15-05 mobile shell at 390px: no sideways scroll, five-item bottom nav, drawer",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1440,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:22.169Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-5b448a4c136f71e101ab",
+          "file": "v15.spec.ts",
+          "line": 113,
+          "column": 7
+        },
+        {
+          "title": "V15-05 mobile shell at 428px: no sideways scroll, five-item bottom nav, drawer",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 979,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:23.627Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-1cb54be40fdb86c7dc33",
+          "file": "v15.spec.ts",
+          "line": 113,
+          "column": 7
+        },
+        {
+          "title": "V15-05 mobile shell at 768px: no sideways scroll, five-item bottom nav, drawer",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1504,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:24.624Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-16c2c1de5ec52a346580",
+          "file": "v15.spec.ts",
+          "line": 113,
+          "column": 7
+        },
+        {
+          "title": "V15-06 Exchange: earned eligibility → listing → matched trade → portfolio → reconciliation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1085,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:26.146Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-c9dca49223d3af12e564",
+          "file": "v15.spec.ts",
+          "line": 132,
+          "column": 5
+        },
+        {
+          "title": "V15-07 Command Center: all 12 workspaces render a chart or map and a scope narrative",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4774,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:27.260Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-e63ce402c79a5c0a4ae9",
+          "file": "v15.spec.ts",
+          "line": 163,
+          "column": 5
+        },
+        {
+          "title": "V15-08 human DAU is not moved by agents, bots, headless QA or staff",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5795,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:32.062Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-21f71f449255c9a8e479",
+          "file": "v15.spec.ts",
+          "line": 180,
+          "column": 5
+        },
+        {
+          "title": "V15-09 developer surfaces: OpenAPI, MCP (auth required, observer rule), A2A card",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 826,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:37.887Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-a26bab29a616148c7ba3",
+          "file": "v15.spec.ts",
+          "line": 194,
+          "column": 5
+        },
+        {
+          "title": "V15-10 agent directory shows registered vs active honestly and filters by country",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 777,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T01:49:38.732Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4db04dad432b4eeb16ed-80d37771539b29e136ec",
+          "file": "v15.spec.ts",
+          "line": 209,
           "column": 5
         }
       ]
@@ -2080,11 +3139,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-09T23:16:19.220Z",
-    "duration": 268393.873,
-    "expected": 57,
+    "startTime": "2026-10-11T01:43:27.651Z",
+    "duration": 372115.711,
+    "expected": 80,
     "skipped": 0,
-    "unexpected": 0,
+    "unexpected": 3,
     "flaky": 0
   }
 }

@@ -31,7 +31,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
   return (
     <LiveEventsProvider cursor={cursor}>
       <AppShell tenant={tenant} session={session} active="home">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           <Hero host={tenant.host} returningOwner={returningOwner} />
           <LiveStatStrip initial={stats} />
           <ExchangeTeaser edition={ctx.edition} />

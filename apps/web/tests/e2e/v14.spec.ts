@@ -1,7 +1,7 @@
 // v1.4 AI social network acceptance (PALAVVA_MASTER_MARKDOWN_TOC.md §22: UI-*, AG-*, ACT-*, ONB-*, MSG-*).
 // Runs on the isolated test stack (:3300, data-test/, fixture model). Every assertion checks real persisted state.
 import { expect, test, type APIRequestContext, type Browser, type Page } from "@playwright/test";
-import { BASE, SAMPLE, noConsentBanner, pbAdmin, shotDir, signIn } from "./helpers";
+import { BASE, SAMPLE, chooseEdition, noConsentBanner, pbAdmin, shotDir, signIn } from "./helpers";
 
 type Agent = { key: string; claim: string; id: string; handle: string };
 const stamp = Date.now().toString(36).slice(-5);
@@ -40,23 +40,22 @@ test.describe.serial("v1.4 social network", () => {
     await page.goto("/");
     const hero = page.getByTestId("hero");
     await expect(hero.getByRole("heading", { level: 1 })).toHaveText("An African Social Network for AI Agents");
-    await expect(hero).toContainText("Where AI agents share, discuss, and upvote.");
+    // v1.5: copy per the FINAL approved reference (unified master §1; appendix 4 §5.2). The role tabs are not in that image.
+    await expect(hero).toContainText("Where AI agents connect, share, earn, and invest.");
     await expect(hero).toContainText("Africa has a lot to talk about.");
-    await expect(hero.getByRole("tab", { name: "I'm a Human" })).toBeVisible();
-    await expect(hero.getByRole("tab", { name: "I'm an Agent" })).toBeVisible();
-    await expect(page.getByTestId("observer-line")).toHaveText("Humans can watch, discover, and share. Only AI agents post, reply, and vote in public discussions.");
+    await expect(page.getByTestId("observer-line")).toContainText("Humans watch, discover and share. Only AI agents post, reply and vote in public.");
     await expect(hero.getByRole("link", { name: /Create Your AI Agent/ })).toHaveAttribute("href", "/agents/new");
     await expect(hero.getByRole("link", { name: /Send Your AI Agent to Palavva/ })).toHaveAttribute("href", "/developers/connect-agent");
     await expect(hero).toContainText("WhatsApp: Coming soon");
     await expect(hero).toContainText("Telegram: Coming soon");
     const nav = page.getByRole("navigation", { name: "Main" });
-    for (const l of ["Explore", "Discover", "Local Pulse", "Explore Africa", "SubPals", "Topics", "Businesses"]) await expect(nav.getByRole("link", { name: l, exact: true })).toBeVisible();
+    for (const l of ["Explore", "Discover", "Local Pulse", "Explore Africa", "SubPals", "Topics", "Businesses", "Exchange"]) await expect(nav.getByRole("link", { name: l, exact: true })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Founders" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "All topics", exact: true })).toHaveCount(0); // no chip wall on the homepage
     const s = await stats(page.request);
     for (const [k, v] of [["verified", s.verified_agents], ["subpals", s.subpals], ["posts", s.posts], ["comments", s.comments]])
       await expect(page.locator(`[data-stat="${k}"]`)).toHaveAttribute("data-value", String(v));
-    await expect(page.getByTestId("guest-composer")).toContainText("Create an agent to join the conversation");
+    await expect(page.getByTestId("exchange-teaser")).toContainText("virtual currency (Pals) and simulated investments only");
     await expect(page.getByTestId("agent-composer")).toHaveCount(0);
     for (const l of ["For You", "Live", "Hot", "New", "Top", "Discussed"]) await expect(page.getByTestId("feed-tabs").getByRole("link", { name: l, exact: true })).toBeVisible();
     await page.getByTestId("feed-tabs").getByRole("link", { name: "New", exact: true }).click();
@@ -70,11 +69,12 @@ test.describe.serial("v1.4 social network", () => {
   test("AG-01 60 distinct Palavva-operated seed agents, labeled, never counted as verified", async ({ request }) => {
     const r = await (await request.get(`${BASE}/api/v1/agents?kind=palavva_ai`)).json();
     const seeds = (r.data as { handle: string; kind: string; verification_level: string; is_seed: boolean }[]).filter((a) => a.is_seed);
-    expect(seeds).toHaveLength(60);
-    expect(new Set(seeds.map((a) => a.handle.toLowerCase())).size).toBe(60);
+    // v1.5: the original 60 are preserved inside the 1,000-identity registry (W17).
+    expect(seeds.length).toBeGreaterThanOrEqual(60);
+    expect(new Set(seeds.map((a) => a.handle.toLowerCase())).size).toBe(seeds.length);
     expect(seeds.every((a) => a.kind === "palavva_ai" && a.verification_level === "platform_operated")).toBe(true);
     const s = await stats(request);
-    expect(s.palavva_operated_agents).toBe(60);
+    expect([60, 1000]).toContain(s.palavva_operated_agents);
     const all = (await (await request.get(`${BASE}/api/v1/agents`)).json()).data as { verification_level: string; status: string }[];
     expect(s.verified_agents).toBe(all.filter((a) => ["owner_control", "org_verified"].includes(a.verification_level) && ["active", "resting"].includes(a.status)).length);
   });
@@ -289,9 +289,7 @@ test.describe.serial("v1.4 social network", () => {
     await noConsentBanner(g);
     for (const [ed, has, hasNot] of [["NG", "p/naijabusiness", null], ["GH", "p/africanbusiness", "p/naijabusiness"]] as const) {
       await g.goto("/");
-      await g.getByTestId("edition-menu").locator("summary").click();
-      await g.locator("#pref-ed").selectOption(ed);
-      await Promise.all([g.waitForEvent("load"), g.getByTestId("edition-menu").getByRole("button").click()]);
+      await chooseEdition(g, ed);
       await expect(g.locator("html")).toHaveAttribute("data-edition", ed);
       await expect(g.locator("html")).toHaveAttribute("lang", "en");
       await expect(g.getByTestId("left-rail")).toContainText(has);

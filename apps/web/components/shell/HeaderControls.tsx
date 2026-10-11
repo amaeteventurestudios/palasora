@@ -34,7 +34,7 @@ export function LanguagePicker({ ui, reading, uiLocales, readingLocales, labels 
           <Languages className="hidden size-4 sm:block" aria-hidden="true" />{ui.toUpperCase()}<ChevronDown className="hidden size-3.5 opacity-70 md:block" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="flex w-[min(300px,calc(100vw-24px))] flex-col gap-3">
+      <PopoverContent align="end" className="flex w-[min(300px,calc(100vw-24px))] flex-col gap-3" data-testid="prefs-panel">
         <div className="grid gap-1.5"><Label htmlFor="pref-ui">{labels.interface}</Label>
           <Select value={u} onValueChange={setU}><SelectTrigger id="pref-ui" className="w-full"><SelectValue /></SelectTrigger>
             <SelectContent>{uiLocales.map((o) => <SelectItem key={o.code} value={o.code}>{o.label}</SelectItem>)}</SelectContent></Select></div>
@@ -43,7 +43,7 @@ export function LanguagePicker({ ui, reading, uiLocales, readingLocales, labels 
             <SelectContent>{readingLocales.map((o) => <SelectItem key={o.code} value={o.code}>{o.label}</SelectItem>)}</SelectContent></Select></div>
         <p className="text-xs text-muted-foreground">{labels.explain}</p>
         {err && <p role="alert" className="text-xs text-destructive">{err}</p>}
-        <Button onClick={save} disabled={pending}>{labels.save}</Button>
+        <Button onClick={save} disabled={pending} data-testid="prefs-save">{labels.save}</Button>
       </PopoverContent>
     </Popover>
   );
