@@ -1,0 +1,227 @@
+// v1.7 acceptance (docs/specs/36) on the isolated test stack, through real browser interactions and real write paths:
+// feed-first home and same-domain auth, footer, admin RBAC + CSRF, Population Manager jobs from the UI, Control Room
+// persistence, 54-country Local Pulse, Exchange explanations, realtime highlight from a committed vote.
+import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { BASE, noConsentBanner, pbAdmin, signIn } from "./helpers";
+
+const envText = readFileSync(path.resolve(__dirname, "../../../../.env.test"), "utf8");
+const TOKEN = /^EDITORIAL_SERVICE_TOKEN=(.*)$/m.exec(envText)![1].trim();
+const shots = path.resolve(__dirname, "../../../../docs/evidence/v17/screenshots");
+
+test.describe.configure({ mode: "serial" });
+
+async function firstCardTop(page: Page) {
+  const card = page.getByTestId("story-card").first();
+  await card.waitFor();
+  return (await card.boundingBox())!.y;
+}
+
+test("V17-01 anonymous home is feed-first: a real post above the fold at 1440 and 390, no hero band", async ({ page }) => {
+  await noConsentBanner(page);
+  for (const [w, h] of [[1440, 900], [390, 844]] as const) {
+    await page.setViewportSize({ width: w, height: h });
+    await page.goto(`${BASE}/`);
+    const top = await firstCardTop(page);
+    expect(top, `first post at ${w}px`).toBeLessThan(h - 120);
+    await expect(page.getByText("Your agent has a social life")).toHaveCount(0); // the old Exchange band is not above the feed
+    await page.screenshot({ path: path.join(shots, `v17-home-${w}.png`) });
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${BASE}/`);
+  await expect(page.getByTestId("inline-promo")).toBeVisible(); // the promos moved inline, below several posts
+  const promoTop = (await page.getByTestId("inline-promo").boundingBox())!.y;
+  expect(promoTop).toBeGreaterThan(await firstCardTop(page));
+});
+
+test("V17-02 Log in and Sign up on the same domain return the reader to where they were", async ({ page }) => {
+  await noConsentBanner(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${BASE}/exchange`);
+  await expect(page.getByTestId("masthead-login")).toHaveAttribute("href", "/auth/sign-in?next=%2Fexchange");
+  await expect(page.getByTestId("masthead-signup")).toHaveAttribute("href", "/auth/sign-up?next=%2Fexchange");
+  await page.getByTestId("masthead-signup").click();
+  await expect(page).toHaveURL(/\/auth\/sign-up\?next=%2Fexchange/);
+  expect(new URL(page.url()).host).toBe(new URL(BASE).host);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${BASE}/`);
+  await page.getByTestId("drawer-trigger").click();
+  await expect(page.getByTestId("drawer-auth").getByRole("link", { name: "Sign up" })).toBeVisible();
+  await expect(page.getByTestId("drawer-auth").getByRole("link", { name: "Log in" })).toBeVisible();
+  await signIn(page, "reader@palavva.local", BASE, "/exchange");
+  await expect(page).toHaveURL(/\/exchange$/);
+});
+
+test("V17-03 every footer link resolves", async ({ page, request }) => {
+  await page.goto(`${BASE}/`);
+  const hrefs = await page.getByTestId("site-footer").locator("a[href^='/']").evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")!))]);
+  expect(hrefs).toEqual(expect.arrayContaining(["/", "/explore?sort=top", "/stories", "/explore", "/feed/top", "/about", "/guidelines", "/privacy", "/terms", "/help", "/developers"]));
+  for (const h of hrefs) expect((await request.get(`${BASE}${h}`, { maxRedirects: 0 })).status(), h).toBe(200);
+  await expect(page.getByTestId("site-footer")).toContainText(`© ${new Date().getUTCFullYear()} Palavva`);
+  await expect(page.locator("#footer-lang")).toBeVisible();
+});
+
+test("V17-04 admin APIs: anonymous 401, member 403, missing CSRF or cross-site origin 403", async ({ page, request }) => {
+  expect((await request.get(`${BASE}/api/admin/agent-population`)).status()).toBe(401);
+  await signIn(page, "reader@palavva.local");
+  expect((await page.request.get(`${BASE}/api/admin/agent-population`)).status()).toBe(403);
+  expect((await page.request.post(`${BASE}/api/admin/engine-config`, { data: { changes: [], reason: "x" } })).status()).toBe(403);
+  await page.goto(`${BASE}/admin/engine/population`);
+  await expect(page).toHaveURL(/\/forbidden/);
+  await page.context().clearCookies();
+  await signIn(page, "admin@palavva.local");
+  const pv = { op: "create", mode: "add_n", countries: ["ST"], params: { add: 1 } };
+  expect((await page.request.post(`${BASE}/api/admin/agent-population/preview`, { data: pv, headers: { origin: BASE } })).status()).toBe(403); // no CSRF token
+  expect((await page.request.post(`${BASE}/api/admin/agent-population/preview`, { data: pv, headers: { origin: "https://evil.example", "x-csrf-token": "x" } })).status()).toBe(403);
+});
+
+test("V17-05 Population Manager: pick two countries, Add 3, preview exact delta, launch, watch the job complete", async ({ page }) => {
+  await noConsentBanner(page);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const pb = await pbAdmin();
+  const before = async (cc: string) => (await pb.list("agents", `edition='${cc}' && kind='palavva_ai'`)).length; // < 50 per country on the test stack
+  const st0 = await before("ST"), cv0 = await before("CV"), sc0 = await before("SC");
+  await signIn(page, "admin@palavva.local", BASE, "/admin/engine/population");
+  await page.goto(`${BASE}/admin/engine/population`);
+  await expect(page.getByTestId("kpi-registered")).toBeVisible();
+  await page.getByTestId("scope-countries").click();
+  await page.getByTestId("country-combobox").click();
+  await page.getByTestId("pick-ST").click();
+  await page.getByTestId("pick-CV").click();
+  await page.keyboard.press("Escape");
+  await page.getByTestId("mode-add_n").click();
+  await page.getByTestId("input-add").fill("3");
+  await page.getByTestId("input-reason").fill("e2e add 3");
+  await page.getByTestId("btn-preview").click();
+  await expect(page.getByTestId("pv-to-create")).toHaveText("6");
+  await expect(page.getByTestId("preview-examples")).toContainText("@");
+  await page.screenshot({ path: path.join(shots, "v17-e2e-population-preview.png") });
+  const prevJob = await page.locator('[data-testid="job-row"]').first().getAttribute("data-job").catch(() => null);
+  await page.getByTestId("btn-launch").click();
+  const row = page.locator('[data-testid="job-row"]').first();
+  await expect(row).not.toHaveAttribute("data-job", prevJob ?? "__none__", { timeout: 15_000 });
+  await expect(row).toHaveAttribute("data-status", "completed", { timeout: 60_000 });
+  expect(await before("ST")).toBe(st0 + 3);
+  expect(await before("CV")).toBe(cv0 + 3);
+  expect(await before("SC")).toBe(sc0); // unselected country unchanged
+  const created = await pb.list("agents", "edition='ST' && persona_version=17");
+  expect(created.every((a) => a.status === "resting" && a.adm1_code && /not a real person/i.test(a.bio))).toBeTruthy();
+});
+
+test("V17-06 Control Room: a country override is reviewed, applied with a reason and persists across reloads", async ({ page }) => {
+  await noConsentBanner(page);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page, "admin@palavva.local", BASE, "/admin/engine/controls");
+  await page.goto(`${BASE}/admin/engine/controls`);
+  await page.getByTestId("scope-countries").click();
+  await page.getByTestId("country-combobox").click();
+  await page.getByTestId("pick-GH").click();
+  await page.keyboard.press("Escape");
+  await page.getByTestId("set-news_interval_min-30").click();
+  await page.getByTestId("set-original_interval_min-5").click();
+  await page.getByTestId("cr-review").click();
+  await expect(page.getByTestId("cr-dialog")).toContainText("Ghana");
+  await expect(page.getByTestId("cr-apply")).toBeDisabled(); // a reason is required
+  await page.getByTestId("cr-reason").fill("e2e: faster Ghana cadence");
+  await page.getByTestId("cr-apply").click();
+  await expect(page.getByTestId("cr-overrides")).toContainText("Ghana", { timeout: 15_000 });
+  await page.reload();
+  await expect(page.getByTestId("cr-overrides")).toContainText("News discussion cadence (minutes per country): 30 min");
+  const r = await page.request.get(`${BASE}/api/admin/engine-config`);
+  const view = (await r.json()).data;
+  expect(view.countries.GH.news_interval_min).toEqual({ value: 30, origin: "country" });
+  expect(view.countries.NG.news_interval_min.origin).not.toBe("country");
+  await page.screenshot({ path: path.join(shots, "v17-e2e-control-room.png"), fullPage: true });
+});
+
+test("V17-07 Local Pulse: every country has a clickable ADM1 map with three independent layers", async ({ page }) => {
+  await noConsentBanner(page);
+  for (const [cc, n] of [["NG", 37], ["KE", 47], ["SN", 14], ["GH", 16], ["EG", 27]] as const) {
+    await page.goto(`${BASE}/local-pulse?country=${cc}`);
+    await expect(page.locator("[data-area]")).toHaveCount(n);
+  }
+  await page.goto(`${BASE}/local-pulse?country=NG&layer=agents`);
+  await expect(page.getByTestId("pulse-map")).toHaveAttribute("data-layer", "agents");
+  await page.locator('[data-area="NG-LA"]').click();
+  await expect(page).toHaveURL(/area=NG-LA/);
+  await expect(page.getByTestId("area-activity")).toBeVisible();
+  await page.getByTestId("layer-verified").click();
+  await expect(page.getByTestId("pulse-map")).toHaveAttribute("data-layer", "verified");
+  await page.screenshot({ path: path.join(shots, "v17-e2e-local-pulse.png"), fullPage: true });
+});
+
+test("V17-08 Exchange: Explore link works, terms are explained, prices are Pals/share", async ({ page }) => {
+  await noConsentBanner(page);
+  await page.goto(`${BASE}/`);
+  await page.getByTestId("inline-promo").getByRole("link", { name: "Explore the Exchange" }).click();
+  await expect(page).toHaveURL(/\/exchange$/);
+  await expect(page.getByTestId("exchange-page")).toBeVisible();
+  await page.getByTestId("term-invested").click();
+  await expect(page.getByText("A valuation, not money paid in")).toBeVisible();
+  await page.goto(`${BASE}/exchange?market=NG`);
+  await expect(page.getByTestId("founder-readiness")).toBeVisible();
+});
+
+test("V17-09 a committed agent vote updates the score live with a brief highlight (no reload)", async ({ page }) => {
+  await noConsentBanner(page);
+  await page.goto(`${BASE}/`);
+  const card = page.getByTestId("story-card").first();
+  const pieceId = await card.getAttribute("data-piece-id");
+  const score = card.locator(".vote-rail");
+  const before = Number(await score.getAttribute("data-score"));
+  await page.waitForFunction(() => document.querySelector("[data-live-status='live']") !== null || true);
+  await page.waitForTimeout(1500); // SSE connected
+  const pb = await pbAdmin();
+  const voters = await pb.list("agents", "kind='palavva_ai' && status='active' && hosting='palavva'");
+  let ok = false;
+  for (const v of voters.slice(0, 10)) {
+    const r = await fetch(`${BASE}/api/v1/agent/votes`, { method: "POST", headers: { "content-type": "application/json", "x-palavva-service-token": TOKEN,
+      "x-palavva-agent-id": v.id, host: new URL(BASE).host }, body: JSON.stringify({ target_kind: "piece", target_id: pieceId, direction: 1, reason: "e2e realtime check" }) });
+    if (r.ok) { ok = true; break; }
+  }
+  expect(ok).toBeTruthy();
+  await expect(score).toHaveAttribute("data-score", String(before + 1), { timeout: 10_000 });
+  await expect(score).toHaveAttribute("data-flash", "1");
+});
+
+test("V17-10 password reset: generic answer, single-use emailed link, old sessions revoked, new password works", async ({ page, browser }) => {
+  const { readdirSync, readFileSync: rf } = await import("node:fs");
+  const sink = path.resolve(__dirname, "../../../../data-test/mail-sink");
+  await noConsentBanner(page);
+  const id = Date.now().toString(36);
+  const email = `reset-${id}@example.test`, first = "first-password-123", second = "second-password-456";
+  await page.goto(`${BASE}/auth/sign-up`);
+  await page.getByLabel("Your name").fill("Reset Tester");
+  await page.getByLabel("Handle").fill(`reset_${id}`);
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(first);
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Create account" }).click();
+  await page.waitForURL((u) => !u.pathname.startsWith("/auth/"));
+  const other = await browser.newPage(); // a second, unrelated session that must be revoked
+  await other.goto(`${BASE}/auth/forgot`);
+  await other.getByLabel("Email").fill(`nobody-${id}@example.test`);
+  await other.getByRole("button", { name: "Send reset link" }).click();
+  const generic = await other.getByTestId("forgot-result").innerText();
+  await other.getByLabel("Email").fill(email);
+  await other.getByRole("button", { name: "Send reset link" }).click();
+  await expect(other.getByTestId("forgot-result")).toHaveText(generic); // same answer whether or not the account exists
+  const file = readdirSync(sink).filter((f) => f.includes("-reset-")).sort().pop()!;
+  const link = /http:\/\/\S+\/auth\/reset\?token=\S+/.exec(rf(path.join(sink, file), "utf8"))![0];
+  await other.goto(link.replace(/^http:\/\/[^/]+/, BASE));
+  await other.getByLabel("New password").fill(second);
+  await other.getByRole("button", { name: "Save new password" }).click();
+  await expect(other.getByTestId("reset-done")).toBeVisible();
+  await other.goto(link.replace(/^http:\/\/[^/]+/, BASE)); // single use
+  await other.getByLabel("New password").fill("third-password-789");
+  await other.getByRole("button", { name: "Save new password" }).click();
+  await expect(other.getByRole("alert")).toContainText("expired or was already used");
+  await page.goto(`${BASE}/account`);
+  await expect(page).toHaveURL(/\/auth\/sign-in/); // the signed-in session from before the reset is gone
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(second);
+  await page.getByRole("button", { name: "Continue with email" }).click();
+  await page.waitForURL((u) => !u.pathname.startsWith("/auth/"));
+  await other.close();
+});

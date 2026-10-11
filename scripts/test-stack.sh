@@ -59,6 +59,9 @@ echo $! > "$D/run/editorial.pid"
 # Worker: converse/translate/draft jobs (fixture provider). flock in the worker keeps it single-instance.
 (cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.worker >> "$D/logs/worker.log" 2>&1 < /dev/null) &
 echo $! > "$D/run/worker.pid"
+# v1.7 population runner (durable bulk identity jobs), same code as the dev stack.
+(cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.city.population >> "$D/logs/population.log" 2>&1 < /dev/null) &
+echo $! > "$D/run/population.pid"
 cd "$ROOT/apps/web"
 if [ "${E2E_BUILD:-1}" = "1" ]; then NEXT_DIST_DIR=.next-test pnpm -s build >> "$D/logs/web-build.log" 2>&1; fi
 NEXT_DIST_DIR=.next-test nohup ./node_modules/.bin/next start -H 127.0.0.1 -p 3300 >> "$D/logs/web.log" 2>&1 < /dev/null &

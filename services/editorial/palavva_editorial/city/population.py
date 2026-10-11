@@ -510,6 +510,9 @@ class Runner:
                 self.run_rollback(job)
             else:
                 self.run_status(job)
+        except (OSError, __import__("httpx").HTTPError) as e:  # dependency down mid-job: leave it 'running'; it resumes later
+            log.warning("job %s interrupted by %s; it will resume", job["id"], type(e).__name__)
+            raise
         except Exception as e:  # noqa: BLE001 - the job records why; the runner keeps serving
             log.exception("job %s failed", job["id"])
             self.err(job, f"{type(e).__name__}: {e}")
@@ -716,14 +719,20 @@ class Runner:
                       actor_type="system", actor_id=self.name)
 
     def loop(self) -> None:
+        """Never dies on a dependency restart (PocketBase / economy unavailable): wait and retry. A job interrupted that way is
+        still 'running' with a stale heartbeat and is resumed from its saved per-country position."""
+        backoff = 2.0
         while not self.stop.is_set():
             try:
                 job = self.claim()
-            except (PBError, OSError) as e:
-                log.warning("claim failed: %s", e)
-                job = None
-            if job:
-                self.run_job(job)
+                if job:
+                    self.run_job(job)
+                    backoff = 2.0
+                    continue
+            except Exception as e:  # noqa: BLE001 - httpx.ConnectError, PBError, sqlite busy...
+                log.warning("runner turn failed (%s: %s); retrying in %.0fs", type(e).__name__, e, backoff)
+                self.stop.wait(backoff)
+                backoff = min(60.0, backoff * 2)
                 continue
             self.stop.wait(2.0)
 
@@ -733,9 +742,15 @@ def main() -> None:
     logging.getLogger("httpx").setLevel(logging.WARNING)
     s = load()
     pb = PB(s.pb_url, s.pb_email, s.pb_password)
-    t = pb.first("tenants", "slug='palavva'")
-    ensure_groups(pb, t["id"])
-    log.info("geo areas registered: %s", ensure_geo_areas(pb))
+    while True:  # PocketBase may still be starting (dev-up order) or restarting
+        try:
+            t = pb.first("tenants", "slug='palavva'")
+            ensure_groups(pb, t["id"])
+            log.info("geo areas registered: %s", ensure_geo_areas(pb))
+            break
+        except Exception as e:  # noqa: BLE001
+            log.warning("startup waiting for PocketBase: %s", e)
+            time.sleep(5)
     r = Runner(pb, t["id"])
     signal.signal(signal.SIGTERM, lambda *_: r.stop.set())
     signal.signal(signal.SIGINT, lambda *_: r.stop.set())

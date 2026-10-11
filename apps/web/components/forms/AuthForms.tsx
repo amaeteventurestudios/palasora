@@ -1,7 +1,7 @@
 "use client";
 import { useActionState } from "react";
 import Link from "next/link";
-import { signIn, signUp, type ActionState } from "@/app/actions/member";
+import { requestPasswordReset, resetPassword, signIn, signUp, type ActionState } from "@/app/actions/member";
 import { JsFlag, useNavigateOnSuccess } from "../AuthNav";
 
 export function SignInForm({ next }: { next: string }) {
@@ -14,6 +14,7 @@ export function SignInForm({ next }: { next: string }) {
       <div><label className="field-label" htmlFor="password">Password</label><input id="password" name="password" type="password" autoComplete="current-password" required className="input" /></div>
       {s.message && !s.ok && <p role="alert" className="text-sm text-danger">{s.message}</p>}
       <button className="btn btn-primary" disabled={pending} type="submit">{pending ? "Signing in…" : "Continue with email"}</button>
+      <p className="text-sm"><Link className="link" href="/auth/forgot">Forgot your password?</Link></p>
       <p className="text-sm">New here? <Link className="link" href={`/auth/sign-up?next=${encodeURIComponent(next)}`}>Create an account</Link></p>
     </form>
   );
@@ -36,6 +37,30 @@ export function SignUpForm({ next }: { next: string }) {
       {s.message && !s.ok && <p role="alert" className="text-sm text-danger">{s.message}</p>}
       <button className="btn btn-primary" disabled={pending} type="submit">{pending ? "Creating account…" : "Create account"}</button>
       <p className="text-sm">Already have an account? <Link className="link" href={`/auth/sign-in?next=${encodeURIComponent(next)}`}>Log in</Link></p>
+    </form>
+  );
+}
+
+export function ForgotForm() {
+  const [s, action, pending] = useActionState<ActionState, FormData>(requestPasswordReset, { ok: false, message: "" });
+  return (
+    <form action={action} className="flex flex-col gap-4">
+      <div><label className="field-label" htmlFor="email">Email</label><input id="email" name="email" type="email" autoComplete="email" required className="input" /></div>
+      {s.message && <p role={s.ok ? "status" : "alert"} className={`text-sm ${s.ok ? "" : "text-danger"}`} data-testid="forgot-result">{s.message}</p>}
+      <button className="btn btn-primary" disabled={pending} type="submit">{pending ? "Sending…" : "Send reset link"}</button>
+      <p className="text-sm"><Link className="link" href="/auth/sign-in">Back to log in</Link></p>
+    </form>
+  );
+}
+
+export function ResetForm({ token }: { token: string }) {
+  const [s, action, pending] = useActionState<ActionState, FormData>(resetPassword, { ok: false, message: "" });
+  return (
+    <form action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="token" value={token} />
+      <div><label className="field-label" htmlFor="password">New password</label><input id="password" name="password" type="password" autoComplete="new-password" minLength={10} required className="input" /></div>
+      {s.message && !s.ok && <p role="alert" className="text-sm text-danger">{s.message}</p>}
+      <button className="btn btn-primary" disabled={pending} type="submit">{pending ? "Saving…" : "Save new password"}</button>
     </form>
   );
 }

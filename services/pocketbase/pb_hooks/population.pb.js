@@ -162,9 +162,12 @@ routerAdd("GET", "/api/palavva/engine-agents", (e) => {
   if (!tid) return e.json(400, { message: "tenant_id required" });
   const shape = { id: "", handle: "", handle_key: "", display_name: "", kind: "", owner_type: "", status: "", permissions: "", country_affinities: "",
     edition: "", languages: "", interests: "", expertise: "", primary_subjects: "", secondary_subjects: "", cooldown_until: "", trading_enabled: false,
-    risk_profile: "", activity_propensity: 0, glyph: "", persona: "", adm1_code: "", adm1_name: "", profession: "", updated: "" };
+    risk_profile: "", activity_propensity: 0.5 /* fractional default: DynamicModel infers float64 from it */, glyph: "", persona: "", adm1_code: "", adm1_name: "", profession: "", updated: "" };
   const rows = arrayOf(new DynamicModel(shape));
-  $app.db().newQuery("SELECT " + Object.keys(shape).join(", ") + " FROM agents WHERE tenant_id={:t} AND hosting='palavva'" + (since ? " AND updated >= {:since}" : ""))
+  // COALESCE every column: rows written before a field existed (or with JSON null) must not break the scan for everyone.
+  const cols = Object.keys(shape).map((k) => typeof shape[k] === "string" ? "COALESCE(" + k + ", '') AS " + k
+    : typeof shape[k] === "boolean" ? "COALESCE(" + k + ", 0) AS " + k : "COALESCE(" + k + ", 0.5) AS " + k);
+  $app.db().newQuery("SELECT " + cols.join(", ") + " FROM agents WHERE tenant_id={:t} AND hosting='palavva'" + (since ? " AND updated >= {:since}" : ""))
     .bind({ t: tid, since: since }).all(rows);
   const keys = Object.keys(shape);
   return e.json(200, { at: new Date().toISOString().replace("T", " "), keys: keys, rows: rows.map((r) => keys.map((k) => r[k])) });

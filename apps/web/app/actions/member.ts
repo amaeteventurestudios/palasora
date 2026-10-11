@@ -112,6 +112,41 @@ export async function signUp(_: ActionState, f: FormData): Promise<ActionState> 
   return navigate(f, `${path}${path.includes("?") ? "&" : "?"}welcome=1${hash ? `#${hash}` : ""}`);
 }
 
+// v1.7 password reset (spec 32). Generic answers (no account enumeration), hashed single-use token valid for one hour,
+// local mail sink instead of real email on this Mac, every session of the account revoked after a successful reset.
+export async function requestPasswordReset(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, ip } = await ctx();
+  const email = str(f, "email", 200).toLowerCase();
+  const generic: ActionState = { ok: true, message: "If an account uses that email, a reset link is on its way. It expires in one hour." };
+  if (!rateLimit(`reset:${ip}`, 5, 600_000).ok || !rateLimit(`reset:${email}`, 3, 3600_000).ok) return fail("Too many requests for now. Please try again later.");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail("Enter a valid email address.", "email");
+  const user = await pb.first("users", `tenant_id=${q(tenant.id)} && email=${q(email)} && account_status='active'`);
+  if (!user) return generic;
+  const token = randomBytes(24).toString("base64url");
+  await pb.update("users", user.id, { reset_token_hash: createHash("sha256").update(token).digest("hex"), reset_expires_at: pbDate(new Date(Date.now() + 3600_000)) });
+  const dir = path.join(dataRoot(), "mail-sink");
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, `${Date.now()}-reset-${user.id}.eml`),
+    `To: ${email}\nSubject: Reset your ${tenant.name} password\nX-Palavva-Tenant: ${tenant.slug}\n\nChoose a new password:\nhttp://${tenant.host}/auth/reset?token=${token}\n\nThis link expires in one hour. If you did not ask for it, ignore this email.\n`, { mode: 0o600 });
+  await audit(tenant.id, user.id, "auth.password_reset_requested", "users", user.id);
+  return generic;
+}
+
+export async function resetPassword(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, ip } = await ctx();
+  if (!rateLimit(`resetdo:${ip}`, 10, 600_000).ok) return fail("Too many requests for now. Please try again later.");
+  const token = str(f, "token", 100), password = String(f.get("password") ?? "");
+  if (!/^[A-Za-z0-9_-]{20,80}$/.test(token)) return fail("This reset link is not valid. Request a new one.");
+  if (password.length < 10 || password.length > 128) return fail("Use a password of at least 10 characters.", "password");
+  const user = await pb.first("users", `tenant_id=${q(tenant.id)} && reset_token_hash=${q(createHash("sha256").update(token).digest("hex"))}`);
+  const exp = user?.reset_expires_at ? new Date(String(user.reset_expires_at).replace(" ", "T")) : null;
+  if (!user || !exp || exp < new Date()) return fail("This reset link has expired or was already used. Request a new one.");
+  await pb.update("users", user.id, { password, passwordConfirm: password, reset_token_hash: "", reset_expires_at: "" });
+  for (const s of await pb.list("sessions", { filter: `user_id=${q(user.id)}`, perPage: 200 })) await pb.remove("sessions", s.id);
+  await audit(tenant.id, user.id, "auth.password_reset", "users", user.id);
+  redirect("/auth/sign-in?reset=1");
+}
+
 export async function resendVerification(): Promise<ActionState> {
   const { tenant, session, ip } = await ctx();
   if (!session) return fail("Please log in first.");
