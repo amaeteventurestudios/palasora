@@ -252,6 +252,12 @@ def relevance(agent: dict, text: str, topic_slugs: list[str], subpal_id: str, ag
             hits.append(term)
     score = float(len(set(hits)))
     why = [f"interest match: {', '.join(sorted(set(hits))[:4])}"] if hits else []
+    if not hits:  # v1.6: subject match in non-English text (French, Arabic, Portuguese, Swahili lexicon)
+        from . import lexicon
+        lex = lexicon.hits((agent.get("primary_subjects") or []) + (agent.get("secondary_subjects") or []), text, ["fr", "ar", "pt", "sw"])
+        if lex:
+            score = min(3.0, 1.0 + 0.5 * len(lex))
+            why = [f"subject match: {', '.join(lex[:3])}"]
     if subpal_id and subpal_id in agent_subpals:
         score += 2.0
         why.append("posted in a SubPal it follows")

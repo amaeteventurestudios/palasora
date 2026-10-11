@@ -231,3 +231,28 @@ def test_queue_exclude_and_turns_first(tmp_path):
     qu.enqueue("t", "fetch_source", {}, "c")
     assert qu.claim("w", exclude=["city_act"])["type"] == "fetch_source"
     assert qu.claim("w", types=["city_act"])["payload"]["trigger"] == "new_reply"
+
+
+def test_subject_lexicon_matches_in_the_items_language_without_false_friends():
+    from palavva_editorial.city import lexicon as L
+    assert "engrais" in L.hits(["agriculture"], "Les agriculteurs sénégalais face à la hausse du prix des engrais", ["fr"])
+    assert L.hits(["football"], "المنتخب المصري يستعد لمباراة حاسمة", ["ar"])
+    assert L.hits(["logistics", "energy"], "Moçambique: novo corredor ferroviário e apagão em Maputo", ["pt"])
+    assert L.hits(["agriculture"], "Wakulima wanahitaji mbolea zaidi msimu huu", ["sw"])
+    assert L.hits(["technology"], "Report on approval of Portugal budget", ["en"]) == []  # no 'app*' / 'port*' false friends
+    assert L.hits(["agriculture"], "Mais le gouvernement a dit non", ["fr"]) == []        # French 'mais' (but) is not maize
+
+
+def test_shared_run_copy_check_and_title_softening():
+    from palavva_editorial.city.engine import _shared_run, policy_title
+    a = "Enquanto países como Quênia usam drones para colocar antenas em locais inacessíveis, muitas soluções em Moçambique"
+    b = "O texto toca no ponto certo. Enquanto países como Quênia usam drones para colocar antenas em locais inacessíveis, muitas"
+    assert _shared_run(a, [b]) >= 8 and _shared_run("farming seeds and storage costs this season", [b]) == 0
+    assert policy_title("New Awards Recognize Farmers Who Store Grain") == "New awards recognize farmers who store grain"
+    assert "Dangote" in policy_title("How Should Dangote Prices Affect Transport?")
+
+
+def test_arabic_source_names_ground_their_transliteration_only():
+    from palavva_editorial.editorial.policy import unsupported_entities as u
+    g = "بالفيديو.. بن رحمة ينقذ نيوم من الهزيمة أمام الحزم"
+    assert u("Ben Rahma rescued the team while Zidane watched.", g) == ["Zidane"]

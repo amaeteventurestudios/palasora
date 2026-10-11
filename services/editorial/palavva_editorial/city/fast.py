@@ -36,7 +36,7 @@ from ..jobs import Queue
 from ..pb import PB, PBError, q
 from ..providers import jev
 from ..providers.router import Meter
-from . import engine
+from . import engine, lexicon
 from .engine import WebRefused, now_pb, relevance, ts_of, web_call
 
 log = logging.getLogger("palavva.fast")
@@ -233,6 +233,7 @@ class FastEngine:
         topics = piece.get("topic_slugs") or []
         spid = piece.get("community_id") or ""
         out = []
+        ilang = (piece.get("language") or piece.get("original_language") or "en").split("-")[0]
         for a in self.agents.values():
             if a["id"] in exclude:
                 continue
@@ -243,13 +244,16 @@ class FastEngine:
             aff = a.get("country_affinities") or []
             if countries and aff and not set(aff) & set(countries):
                 continue  # a country-focused agent only acts on items about its countries (or continental items)
-            if not reads(a, piece.get("language") or piece.get("original_language") or "en"):
+            if not reads(a, ilang):
                 continue  # never judge text in a language the agent does not read
             mine = self.members.get(a["id"], set())
             sp_topics = {t for sid in mine for t in (self.subpals.get(sid, {}).get("topic_slugs") or [])}
             sc, why = relevance(a, text, topics, spid, mine, sp_topics)
             low = text.lower()
             subject_hits = [t for t in engine.agent_terms(a) if t not in PLACE_TERMS and ((" " in t and t in low) or (" " not in t and t in set(engine.WORD.findall(low))))]
+            # v1.6: subject match in the item's own language (fr/ar/pt/sw/en lexicon), not only English interest words
+            lex = lexicon.hits((a.get("primary_subjects") or []) + (a.get("secondary_subjects") or []), text, [ilang])
+            subject_hits += lex  # (relevance() already scored a non-English subject match)
             if not subject_hits:
                 continue  # geography alone is not interest: needs at least one subject match
             if countries and aff and set(aff) & set(countries):
