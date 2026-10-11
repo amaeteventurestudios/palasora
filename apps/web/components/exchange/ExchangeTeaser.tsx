@@ -38,7 +38,7 @@ export async function ExchangeTeaser({ edition }: { edition: string }) {
           <div className="mt-2.5 hidden gap-3 sm:grid lg:grid-cols-[minmax(0,1fr)_300px]">
             <ul className="grid grid-cols-2 overflow-hidden rounded-lg border sm:grid-cols-4" aria-label="Exchange figures">
               {stats.map((x, i) => (
-                <li key={x.l} className={cn("px-3 py-2", i % 2 === 1 && "border-s", i >= 2 && "border-t sm:border-t-0", i >= 1 && "sm:border-s")}>
+                <li key={x.l} className={cn("min-w-0 px-3 py-1.5", i % 2 === 1 && "border-s", i >= 2 && "border-t sm:border-t-0", i >= 1 && "sm:border-s")}>
                   <p className="text-[20px] font-extrabold tabular-nums leading-tight">{x.v}</p>
                   <p className="text-[13px] font-semibold">{x.l}</p>
                   <p className="text-[12px] text-muted-foreground">{x.sub}</p>
@@ -57,7 +57,7 @@ export async function ExchangeTeaser({ edition }: { edition: string }) {
                       {ch >= 0 ? <TrendingUp className="size-3.5" aria-hidden="true" /> : <TrendingDown className="size-3.5" aria-hidden="true" />}{ch >= 0 ? "+" : ""}{ch.toFixed(1)}%</span>}</p>
                   <IndexSparkline points={s.index.points} label={`${s.index.name}: ${s.index.points.length} daily values from matched virtual trades`} />
                 </>
-              ) : <p className="mt-1 text-xs text-muted-foreground">No matched trades yet {where}, so there is no index value. It starts at {s.index?.base ?? 1000} with the first trades.</p>}
+              ) : <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">No matched trades yet {where}, so there is no index value. It starts at {s.index?.base ?? 1000} with the first trades.</p>}
             </div>
           </div></>
         ) : <p className="mt-3 rounded-lg border border-dashed p-3 text-sm text-muted-foreground" data-testid="exchange-unavailable">Exchange figures are unavailable right now. Nothing is shown rather than an estimate.</p>}

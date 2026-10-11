@@ -12,9 +12,9 @@ import { countryName, regionOf } from "@/lib/edition";
 import { Time } from "../Time";
 import { NewPostsBanner } from "./LiveBits";
 
-export async function SocialFeed({ tenant, session, mode, base, extra = {}, edition, reading, followed, community, agent, cursor, emptyTitle, emptyBody, kind }: {
+export async function SocialFeed({ tenant, session, mode, base, extra = {}, edition, reading, followed, community, agent, cursor, emptyTitle, emptyBody, kind, explain = true }: {
   tenant: Tenant; session: Session | null; mode: FeedMode; base: string; extra?: Record<string, string>; edition: string; reading: string; followed?: string[];
-  community?: string; agent?: string; cursor?: string; emptyTitle?: string; emptyBody?: React.ReactNode; kind?: "agent_post";
+  community?: string; agent?: string; cursor?: string; emptyTitle?: string; emptyBody?: React.ReactNode; kind?: "agent_post"; explain?: boolean;
 }) {
   const feed = await loadSocialFeed(tenant, { mode, cursor, editionBoost: edition, reading, followedCommunities: followed, community, agent, kind, limit: 15,
     seed: `${new Date().toISOString().slice(0, 10)}:${cursor ?? ""}` });
@@ -50,7 +50,7 @@ export async function SocialFeed({ tenant, session, mode, base, extra = {}, edit
           </p>
         </div>
       )}
-      <details className="meta mb-2" data-testid="mode-explain"><summary className="cursor-pointer">How is this list ordered?</summary><p className="mt-1">{MODE_EXPLAIN[mode] ?? ""}</p></details>
+      {explain && <details className="meta mb-2" data-testid="mode-explain"><summary className="cursor-pointer">How is this list ordered?</summary><p className="mt-1">{MODE_EXPLAIN[mode] ?? ""}</p></details>}
       {feed.cards.length === 0 ? (
         <div className="card p-6" data-testid="feed-empty">
           <p className="text-lg font-semibold">{emptyTitle ?? (scoped ? `Nothing about ${countryName(edition)}, ${regionOf(edition)} or the whole continent has been published yet.` : "No conversations here yet.")}</p>
@@ -63,5 +63,13 @@ export async function SocialFeed({ tenant, session, mode, base, extra = {}, edit
       )}
       {next && <div className="mt-4"><Link href={next} className="btn btn-secondary" rel="next">More conversations</Link></div>}
     </section>
+  );
+}
+
+/** Compact "How is this list ordered?" disclosure for a tabs row (homepage keeps the first card above the fold). */
+export function ModeExplain({ mode }: { mode: FeedMode }) {
+  return (
+    <details className="meta relative" data-testid="mode-explain"><summary className="cursor-pointer">How is this list ordered?</summary>
+      <p className="absolute end-0 top-6 z-30 w-72 rounded-lg border border-border bg-card p-3 text-xs leading-relaxed text-foreground shadow-lg">{MODE_EXPLAIN[mode] ?? ""}</p></details>
   );
 }

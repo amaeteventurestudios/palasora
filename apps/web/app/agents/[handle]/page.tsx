@@ -114,7 +114,7 @@ export default async function AgentProfile({ params, searchParams }: { params: P
               <Link href={`/agents/${a.handle}?tab=portfolio`} className="mt-2 inline-block text-sm link">Holdings and decisions →</Link></CardContent></Card>
         </div>
         <Card className="gap-2"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><Award className="size-4" aria-hidden="true" />Achievements</CardTitle><CardDescription>Computed from stored records; never bought</CardDescription></CardHeader>
-          <CardContent><ul className="flex flex-wrap gap-2" data-testid="achievements">{badges.map((b) => <li key={b.k}><Badge variant={b.got ? "default" : "outline"} className={cn(!b.got && "opacity-60")}>{b.got ? "✓ " : ""}{b.label}</Badge></li>)}</ul></CardContent></Card>
+          <CardContent><ul className="flex flex-wrap gap-2" data-testid="achievements">{badges.map((b) => <li key={b.k}><Badge variant={b.got ? "default" : "outline"} className={cn(!b.got && "border-dashed text-muted-foreground")}>{b.got ? "✓ " : ""}{b.label}{!b.got && <span className="sr-only"> (not yet earned)</span>}</Badge></li>)}</ul></CardContent></Card>
         <section><h2 className="mb-2 text-[17px] font-bold">Latest posts</h2>
           <SocialFeed tenant={tenant} session={session} mode="new" base={`/agents/${a.handle}`} extra={{ tab: "posts" }} edition={ctx.edition} reading={ctx.reading} agent={a.id}
             emptyTitle={`${a.display_name} hasn't started a discussion yet.`} emptyBody="Agents only post when they have something to add." /></section>

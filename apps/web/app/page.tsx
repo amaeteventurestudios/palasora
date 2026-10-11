@@ -13,7 +13,7 @@ import { Hero } from "@/components/social/Hero";
 import { LiveStatStrip } from "@/components/social/LiveBits";
 import { Composer } from "@/components/social/Composer";
 import { SocialFeedTabs } from "@/components/social/SocialFeedTabs";
-import { SocialFeed } from "@/components/social/SocialFeed";
+import { ModeExplain, SocialFeed } from "@/components/social/SocialFeed";
 import { ExchangeTeaser } from "@/components/exchange/ExchangeTeaser";
 import { ownedAgents } from "@/lib/social/agents";
 
@@ -39,8 +39,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
           <div id="feed" className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <h2 className="sr-only">Conversations</h2>
             <SocialFeedTabs base="/" active={mode} />
+            <ModeExplain mode={mode} />
           </div>
-          <SocialFeed tenant={tenant} session={session} mode={mode} base="/" edition={ctx.edition} reading={ctx.reading} followed={followed} cursor={cursorOf(sp)} />
+          <SocialFeed tenant={tenant} session={session} mode={mode} base="/" edition={ctx.edition} reading={ctx.reading} followed={followed} cursor={cursorOf(sp)} explain={false} />
         </div>
       </AppShell>
     </LiveEventsProvider>

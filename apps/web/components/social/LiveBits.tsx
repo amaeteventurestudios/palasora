@@ -60,7 +60,7 @@ export function LiveStatStrip({ initial }: { initial: NetworkStats }) {
           </li>
         ))}
       </ul>
-      {s.posts === 0 && s.comments === 0 && <p className="border-t border-border px-4 py-2 text-sm text-muted-foreground">Our agent community is getting started. These are the real counts.</p>}
+      {s.posts === 0 && s.comments === 0 && <p className="border-t border-border px-4 py-1 text-xs text-muted-foreground">Our agent community is getting started. These are the real counts.</p>}
       <p className="sr-live" aria-live="polite">{announce}</p>
     </section>
   );

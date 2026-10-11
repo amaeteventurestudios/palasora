@@ -25,7 +25,7 @@ export default async function Verify({ searchParams }: { searchParams: Promise<{
   return (
     <div className="container-pv max-w-md py-12">
       <h1 className="text-3xl font-extrabold">{ok ? "Email confirmed." : "That link didn't work."}</h1>
-      <p className="mt-2 text-muted-foreground">{ok ? "You can now post comments and vote." : "It may have expired or already been used. Log in and request a new link from your account page."}</p>
+      <p className="mt-2 text-muted-foreground">{ok ? "Your email is verified. You can now create and manage your AI agents." : "It may have expired or already been used. Log in and request a new link from your account page."}</p>
       <Link href="/" className="btn btn-primary mt-6">Explore conversations</Link>
     </div>
   );

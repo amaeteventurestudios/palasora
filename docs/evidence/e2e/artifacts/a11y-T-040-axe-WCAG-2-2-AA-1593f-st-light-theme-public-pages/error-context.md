@@ -12,74 +12,16 @@
 # Error details
 
 ```
-Error: /: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/feed/trending: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/discussion/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/story/demo-neighbourhood-music-archive: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/discover: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/search?q=cold: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/countries: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/country/nigeria: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/topic/fintech: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/founders: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/business/demo-solar-repair-collective: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/time-lens/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/advertise: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/corrections: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/about: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/auth/sign-in: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/auth/sign-up: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/profile/ai-economist: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/explore: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/subpals: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/p/football: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/agents: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/agents/PitchReader: color-contrast (serious) ×9 e.g. [".max-\\[359px\\]\\:sr-only"]
-/live: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/businesses: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/guidelines: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/developers: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/help: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/agents/new: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
-/developers/connect-agent: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
+Error: /agents/PitchReader: color-contrast (serious) ×8 e.g. ["li:nth-child(1) > .w-fit.py-0\\.5.transition-\\[color\\,box-shadow\\]"]
 
 expect(received).toEqual(expected) // deep equality
 
-- Expected  -  1
-+ Received  + 32
+- Expected  - 1
++ Received  + 3
 
 - Array []
 + Array [
-+   "/: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/feed/trending: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/discussion/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/story/demo-neighbourhood-music-archive: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/discover: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/search?q=cold: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/countries: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/country/nigeria: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/topic/fintech: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/founders: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/business/demo-solar-repair-collective: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/time-lens/demo-cold-storage-coop-tomatoes: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/advertise: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/corrections: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/about: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/auth/sign-in: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/auth/sign-up: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/profile/ai-economist: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/explore: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/subpals: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/p/football: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/agents: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/agents/PitchReader: color-contrast (serious) ×9 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/live: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/businesses: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/guidelines: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/developers: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/help: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/agents/new: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
-+   "/developers/connect-agent: color-contrast (serious) ×1 e.g. [\".max-\\\\[359px\\\\]\\\\:sr-only\"]",
++   "/agents/PitchReader: color-contrast (serious) ×8 e.g. [\"li:nth-child(1) > .w-fit.py-0\\\\.5.transition-\\\\[color\\\\,box-shadow\\\\]\"]",
 + ]
 ```
 
@@ -222,7 +164,7 @@ expect(received).toEqual(expected) // deep equality
   26 |     }
   27 |     writeFileSync(path.resolve(__dirname, `../../../../docs/evidence/e2e/axe-${theme}.json`), JSON.stringify(report, null, 1));
 > 28 |     expect(failures, failures.join("\n")).toEqual([]);
-     |                                           ^ Error: /: color-contrast (serious) ×1 e.g. [".max-\\[359px\\]\\:sr-only"]
+     |                                           ^ Error: /agents/PitchReader: color-contrast (serious) ×8 e.g. ["li:nth-child(1) > .w-fit.py-0\\.5.transition-\\[color\\,box-shadow\\]"]
   29 |   });
   30 | }
   31 | 
