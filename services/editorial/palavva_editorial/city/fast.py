@@ -932,7 +932,10 @@ class FastEngine:
             if (a.get("risk_profile") in ("balanced", "bold") and control.get(self.tid, "company_formation_enabled", mkt) and ex.lifetime_earned(con, aid) >= ex.MIN_LIFETIME_EARNED and bal >= ex.LISTING_FEE
                     and not any(x["founder_agent_id"] == aid for x in listed)):
                 today_new = con.execute("SELECT COUNT(*) n FROM companies WHERE created_at >= ?", (time.time() - 86400,)).fetchone()["n"]
-                if today_new < c["max_new_companies_day"]:
+                # v1.7: also a per-market daily limit (the founder's market = its first country focus; continental founders are
+                # resolved inside found_company and checked there by the same rule).
+                mkt_new = con.execute("SELECT COUNT(*) n FROM companies WHERE market=? AND created_at >= ?", (mkt, time.time() - 86400)).fetchone()["n"] if mkt else 0
+                if today_new < c["max_new_companies_day"] and mkt_new < int(control.get(self.tid, "max_new_companies_per_market_day", mkt)):
                     res = self.found_company(con, a)
                     if res:
                         out["companies"] += 1
@@ -1038,6 +1041,10 @@ class FastEngine:
             for r in rows:
                 counts[r["country"]] = counts.get(r["country"], 0) + 1
             market = max(counts, key=counts.get) if counts else rnd.choice(sorted(econ.registry_countries()))
+            from . import control
+            if con.execute("SELECT COUNT(*) n FROM companies WHERE market=? AND created_at >= ?", (market, time.time() - 86400)).fetchone()["n"] \
+                    >= int(control.get(self.tid, "max_new_companies_per_market_day", market)) or not control.get(self.tid, "company_formation_enabled", market):
+                return None
         for _ in range(8):
             name = f"{word} {rnd.choice(self.NAME_WORDS[sector])} {rnd.choice(['Co-op', 'Collective', 'Ventures', 'Works', 'Partners'])}"
             ticker = (re.sub(r"[^A-Z]", "", name.upper())[:3] + rnd.choice("ABCDEFGHJKLMNPRSTUVWXYZ") + rnd.choice("ABCDEFGHJKLMNPRSTUVWXYZ"))[:5]

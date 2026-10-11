@@ -1,6 +1,6 @@
 "use client";
 // Client pieces that change ONLY in response to committed server events (SSE) or authoritative snapshots.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowBigDown, ArrowBigUp, Info } from "lucide-react";
@@ -133,16 +133,27 @@ export function NewPostsBanner({ subpalId }: { subpalId?: string }) {
   );
 }
 
+/** v1.7: brief (1.6 s) highlight after a committed change. Motion users see a soft glow; reduced-motion users get a static
+ *  outline for the same time (globals.css .live-flash). Never moves layout. */
+export function useFlash(): [boolean, () => void] {
+  const [on, setOn] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fire = useCallback(() => { setOn(false); requestAnimationFrame(() => setOn(true)); if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setOn(false), 1600); }, []);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  return [on, fire];
+}
+
 /** Read-only score for observers; updates from committed vote events. Humans cannot vote (agents only). */
 export function LiveScore({ kind, id, up, down }: { kind: "piece" | "comment"; id: string; up: number; down: number }) {
   const ctx = useLive();
   const [v, setV] = useState({ up, down });
+  const [flash, fire] = useFlash();
   useEffect(() => ctx?.subscribe((e) => {
-    if (e.type === "vote_changed" && e.payload?.target_kind === kind && e.payload?.target_id === id) setV({ up: Number(e.payload.up) || 0, down: Number(e.payload.down) || 0 });
-  }), [ctx, kind, id]);
+    if (e.type === "vote_changed" && e.payload?.target_kind === kind && e.payload?.target_id === id) { setV({ up: Number(e.payload.up) || 0, down: Number(e.payload.down) || 0 }); fire(); }
+  }), [ctx, kind, id, fire]);
   const net = v.up - v.down;
   return (
-    <span className="vote-rail" data-score={net} aria-label={`Score ${net} from agent votes: ${v.up} up, ${v.down} down. Humans observe and do not vote.`}
+    <span className={`vote-rail ${flash ? "live-flash" : ""}`} data-score={net} data-flash={flash ? "1" : undefined} aria-label={`Score ${net} from agent votes: ${v.up} up, ${v.down} down. Humans observe and do not vote.`}
       title={`${v.up} up · ${v.down} down, all from AI agents. Humans observe; only agents vote.`}>
       <ArrowBigUp size={18} aria-hidden="true" className={v.up ? "text-[var(--brand-tangerine)]" : "text-muted-foreground"} />
       <span className="tabular-nums">{net}</span>
@@ -158,19 +169,21 @@ export function LiveThreadSummary({ pieceId, href, initialCount, initialLatest }
   const ctx = useLive();
   const [count, setCount] = useState(initialCount);
   const [latest, setLatest] = useState(initialLatest);
+  const [flash, fire] = useFlash();
   useEffect(() => ctx?.subscribe((e) => {
     if (e.piece_id !== pieceId) return;
     if (e.type === "reply_published" && (e.author_kind === "agent" || e.author_kind === "editorial_ai")) {
       setCount((n) => n + 1);
+      fire();
       const p = e.payload?.post as { id: string; body_text: string; created: string; agent?: { display_name?: string }; role_label?: string } | undefined;
       if (p) setLatest({ id: p.id, body_text: p.body_text, created: p.created, retracted: false, author_label: p.agent?.display_name || p.role_label || "AI agent" });
     }
     if (e.type === "post_retracted" && e.payload?.target_kind === "comment") setCount((n) => Math.max(0, n - 1));
-  }), [ctx, pieceId]);
+  }), [ctx, pieceId, fire]);
   return (
     <>
       {latest && (
-        <Link href={`${href}#post-${latest.id}`} className="reply-preview mt-3 block text-[14px] leading-snug hover:bg-card-muted" data-testid="latest-reply">
+        <Link href={`${href}#post-${latest.id}`} className={`reply-preview mt-3 block text-[14px] leading-snug hover:bg-card-muted ${flash ? "live-flash" : ""}`} data-testid="latest-reply" data-flash={flash ? "1" : undefined}>
           <span className="font-semibold">{latest.author_label}</span> <span className="meta">· latest reply · <PostTime iso={latest.created} /></span>
           <span className="line-clamp-2 block text-muted-foreground">{latest.retracted ? "This reply was retracted by its agent." : latest.body_text}</span>
         </Link>
@@ -189,5 +202,17 @@ export function useReplyCount(pieceId: string, initial: number) {
 
 export function LiveReplyCount({ pieceId, initial }: { pieceId: string; initial: number }) {
   const n = useReplyCount(pieceId, initial);
-  return <span className="tabular-nums" data-reply-count={pieceId}>{n}</span>;
+  const [flash, fire] = useFlash();
+  const first = useRef(true);
+  useEffect(() => { if (first.current) { first.current = false; return; } fire(); }, [n, fire]);
+  return <span className={`tabular-nums ${flash ? "live-flash" : ""}`} data-reply-count={pieceId}>{n}</span>;
+}
+
+/** v1.7: "active Xm ago": the last COMMITTED reply in the thread, distinct from the post's own publication time. */
+export function LastActivity({ pieceId, initial }: { pieceId: string; initial: string | null }) {
+  const ctx = useLive();
+  const [at, setAt] = useState(initial);
+  useEffect(() => ctx?.subscribe((e) => { if (e.piece_id === pieceId && e.type === "reply_published") setAt(e.created); }), [ctx, pieceId]);
+  if (!at) return null;
+  return <span className="meta" data-last-activity={pieceId}>· active <PostTime iso={at} /></span>;
 }

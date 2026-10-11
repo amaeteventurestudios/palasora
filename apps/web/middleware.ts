@@ -12,10 +12,31 @@ function allow(): Record<string, string> {
   return hosts!;
 }
 
+// v1.7 admin host preparation (docs/specs/32; runbook docs/evidence/v17/ADMIN-HOST-PLAN.md). Deployment configuration
+// only, never access control: every /admin page and /api/admin route still checks the session's role itself.
+//   ADMIN_HOSTS="admin.palavva.com"  hosts that serve ONLY the Command Center (+ sign-in); anything else redirects to
+//                                    PUBLIC_ORIGIN (or 404 without it). Must also be listed in TENANT_HOSTS.
+//   ADMIN_HOST_ONLY=true             production option: /admin and /api/admin answer 404 on every non-admin host.
+// Unset (local default): /admin keeps working on the main host exactly as before.
+const list = (v: string | undefined) => (v ?? "").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean);
+const ADMIN_PATHS = /^\/(admin|api\/admin|auth|forbidden|_next|icon\.svg|favicon\.ico)(\/|$)/;
+const notFound = () => new NextResponse("Not found", { status: 404, headers: { "content-type": "text/plain", "cache-control": "no-store" } });
+
 export function middleware(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").toLowerCase();
-  if (!allow()[host]) {
-    return new NextResponse("Not found", { status: 404, headers: { "content-type": "text/plain", "cache-control": "no-store" } });
+  if (!allow()[host]) return notFound();
+  const path = req.nextUrl.pathname;
+  const adminHosts = list(process.env.ADMIN_HOSTS);
+  if (adminHosts.includes(host)) {
+    // Explicit Location headers: NextURL normalises loopback hosts (127.0.0.1 -> localhost), which would leave this host.
+    const go = (loc: string) => new NextResponse(null, { status: 307, headers: { location: loc, "cache-control": "no-store" } });
+    if (path === "/") return go("/admin");
+    if (!ADMIN_PATHS.test(path)) {
+      const pub = (process.env.PUBLIC_ORIGIN ?? "").replace(/\/$/, "");
+      return pub ? go(pub + path + req.nextUrl.search) : notFound();
+    }
+  } else if (process.env.ADMIN_HOST_ONLY === "true" && /^\/(admin|api\/admin)(\/|$)/.test(path)) {
+    return notFound();
   }
   const ed = req.nextUrl.searchParams.get("edition")?.toUpperCase();
   const h = new Headers(req.headers);

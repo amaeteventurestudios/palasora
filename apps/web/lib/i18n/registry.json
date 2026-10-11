@@ -128,7 +128,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "North Africa",
    "timezone": "Africa/Algiers"
@@ -140,7 +140,7 @@
     "pt",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Southern Africa",
    "timezone": "Africa/Luanda"
@@ -152,7 +152,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Africa/Porto-Novo"
@@ -163,7 +163,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Southern Africa",
    "timezone": "Africa/Gaborone"
@@ -175,7 +175,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Africa/Ouagadougou"
@@ -187,7 +187,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Africa/Bujumbura"
@@ -199,7 +199,7 @@
     "pt",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Atlantic/Cape_Verde"
@@ -211,7 +211,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Central Africa",
    "timezone": "Africa/Douala"
@@ -223,7 +223,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Central Africa",
    "timezone": "Africa/Bangui"
@@ -235,7 +235,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Central Africa",
    "timezone": "Africa/Ndjamena"
@@ -247,7 +247,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Indian/Comoro"
@@ -259,7 +259,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Central Africa",
    "timezone": "Africa/Brazzaville"
@@ -271,7 +271,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Central Africa",
    "timezone": "Africa/Kinshasa"
@@ -283,7 +283,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Africa/Abidjan"
@@ -295,7 +295,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Africa/Djibouti"
@@ -308,7 +308,7 @@
     "en",
     "fr"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "North Africa",
    "timezone": "Africa/Cairo"
@@ -319,7 +319,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Central Africa",
    "timezone": "Africa/Malabo"
@@ -330,7 +330,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Africa/Asmara"
@@ -341,7 +341,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Southern Africa",
    "timezone": "Africa/Mbabane"
@@ -353,7 +353,7 @@
     "am",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Africa/Addis_Ababa"
@@ -365,7 +365,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Central Africa",
    "timezone": "Africa/Libreville"
@@ -376,7 +376,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Africa/Banjul"
@@ -400,7 +400,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Africa/Conakry"
@@ -412,7 +412,7 @@
     "pt",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Africa/Bissau"
@@ -435,7 +435,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Southern Africa",
    "timezone": "Africa/Maseru"
@@ -446,7 +446,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Africa/Monrovia"
@@ -458,7 +458,7 @@
     "ar",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "North Africa",
    "timezone": "Africa/Tripoli"
@@ -470,7 +470,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Indian/Antananarivo"
@@ -481,7 +481,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Southern Africa",
    "timezone": "Africa/Blantyre"
@@ -493,7 +493,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Africa/Bamako"
@@ -505,7 +505,7 @@
     "ar",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Africa/Nouakchott"
@@ -516,7 +516,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Indian/Mauritius"
@@ -529,7 +529,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "North Africa",
    "timezone": "Africa/Casablanca"
@@ -541,7 +541,7 @@
     "pt",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Southern Africa",
    "timezone": "Africa/Maputo"
@@ -552,7 +552,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Southern Africa",
    "timezone": "Africa/Windhoek"
@@ -564,7 +564,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Africa/Niamey"
@@ -591,7 +591,7 @@
     "en",
     "fr"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Africa/Kigali"
@@ -603,7 +603,7 @@
     "pt",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Central Africa",
    "timezone": "Africa/Sao_Tome"
@@ -627,7 +627,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Indian/Mahe"
@@ -638,7 +638,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Africa/Freetown"
@@ -649,7 +649,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Africa/Mogadishu"
@@ -672,7 +672,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Africa/Juba"
@@ -684,7 +684,7 @@
     "ar",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "North Africa",
    "timezone": "Africa/Khartoum"
@@ -696,7 +696,7 @@
     "sw",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Africa/Dar_es_Salaam"
@@ -708,7 +708,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "West Africa",
    "timezone": "Africa/Lome"
@@ -721,7 +721,7 @@
     "fr",
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "North Africa",
    "timezone": "Africa/Tunis"
@@ -732,7 +732,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "East Africa",
    "timezone": "Africa/Kampala"
@@ -743,7 +743,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Southern Africa",
    "timezone": "Africa/Lusaka"
@@ -754,7 +754,7 @@
    "alternates": [
     "en"
    ],
-   "map": false,
+   "map": true,
    "subdivision": "",
    "region": "Southern Africa",
    "timezone": "Africa/Harare"

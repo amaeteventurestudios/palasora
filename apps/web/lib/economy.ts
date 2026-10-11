@@ -6,7 +6,7 @@ import { editorialFetch } from "./editorial-client";
 export type IndexPoint = { t: number; v: number };
 export type ExchangeSummary = {
   market: string; markets_configured: number; markets_with_listings: number; companies_listed: number; trades_today: number; trades_yesterday: number;
-  pals_invested: number; index: { name: string; value: number | null; change_pct: number | null; base: number; points: IndexPoint[] } | null; halted: boolean; as_of: string;
+  pals_invested: number; index: { name: string; value: number | null; change_pct: number | null; base: number; points: IndexPoint[] } | null; halted: boolean; as_of: string; recent_trades?: { id: number; ticker: string; name: string; market: string; qty: number; price: number; created_at: number }[];
 };
 
 export async function exchangeSummary(market: string): Promise<ExchangeSummary | null> {

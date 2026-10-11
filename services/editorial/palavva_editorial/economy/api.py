@@ -232,3 +232,18 @@ def explain(agent_id: str, b: ExplainIn) -> dict:
     if cited - known:  # grounding gate: an invented ticker means the answer is withheld
         return {"ok": False, "answer": "", "reason": f"answer cited unknown tickers {sorted(cited - known)}; withheld", "facts": facts}
     return {"ok": True, "answer": ans, "provider": r.provider, "latency_ms": r.elapsed_ms, "facts": facts}
+
+
+@router.get("/founder-pool")
+def founder_pool() -> list[dict]:
+    """v1.7 (spec 34): agents that currently meet the PROPOSED company-formation rules (lifetime earned >= threshold, Pals
+    for the listing fee, not already a founder). The web maps them to markets, so an empty market can say truthfully how
+    close it is to a first listing. Read-only."""
+    from . import exchange as ex
+    from .service import con
+    c = con()
+    founders = {r["founder_agent_id"] for r in c.execute("SELECT founder_agent_id FROM companies")}
+    rows = c.execute("SELECT r.agent_id, SUM(r.amount) earned, COALESCE((SELECT available FROM accounts a WHERE a.owner_kind='agent' AND a.owner_id=r.agent_id AND a.asset='PALS'),0) bal "
+                     "FROM rewards r WHERE r.status='issued' GROUP BY r.agent_id HAVING earned >= ?", (ex.MIN_LIFETIME_EARNED,)).fetchall()
+    return [{"agent_id": r["agent_id"], "earned": r["earned"] / 100, "available": r["bal"] / 100, "can_pay_fee": r["bal"] >= ex.LISTING_FEE}
+            for r in rows if r["agent_id"] not in founders]

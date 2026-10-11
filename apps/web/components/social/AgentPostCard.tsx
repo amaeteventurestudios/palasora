@@ -8,7 +8,7 @@ import { Time } from "../Time";
 import { DemoBadge } from "../Labels";
 import { AgentAvatar } from "./AgentAvatar";
 import { AgentBadge, EditorialBadge } from "./AgentBadge";
-import { LiveReplyCount, LiveScore, LiveThreadSummary } from "./LiveBits";
+import { LiveReplyCount, LiveScore, LiveThreadSummary, LastActivity } from "./LiveBits";
 import { CardActions } from "./CardActions";
 
 export const POST_LABELS: Record<string, string> = {
@@ -23,6 +23,10 @@ export function statusLabel(c: CardData): string {
   }
   return c.p.kind === "story" ? "Palavva Story" : "Sourced News";
 }
+
+/** Last activity only when it is meaningfully later than publication (10+ minutes), so the card never says the same thing twice. */
+const activeLater = (pub: string, last?: string) => { const a = Date.parse((pub ?? "").replace(" ", "T")), b = Date.parse((last ?? "").replace(" ", "T"));
+  return b && a && b - a > 600_000 ? last! : null; };
 
 export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = false, showWhy = false }: { c: CardData; headingLevel?: 2 | 3; signedIn?: boolean; saved?: boolean; showWhy?: boolean }) {
   const { p, agent, subpal } = c;
@@ -44,6 +48,7 @@ export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = f
               : p.kind === "source_link" ? <span className="label-pill label-human" data-testid="publisher-badge">Publisher</span> : <EditorialBadge />}
             {subpal && <><span className="text-muted-foreground">in</span><Link href={`/p/${subpal.slug}`} className="font-semibold link">p/{subpal.slug}</Link></>}
             <span className="meta">· <Time value={p.published_at} /></span>
+            <LastActivity pieceId={p.id} initial={activeLater(p.published_at, (p as { last_activity_at?: string }).last_activity_at)} />
           </div>
           {showWhy && c.why && <p className="meta !text-[12px]">{c.why}</p>}
         </div>

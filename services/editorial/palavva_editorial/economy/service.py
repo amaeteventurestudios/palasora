@@ -69,7 +69,11 @@ def summary(market: str) -> dict:
     halted = ex.switch_on(c, "EXCHANGE_HALTED") or bool(mk and c.execute("SELECT status FROM markets WHERE code=?", (mk,)).fetchone()["status"] == "halted")
     return {"market": market or "ALL", "markets_configured": c.execute("SELECT COUNT(*) n FROM markets").fetchone()["n"], "markets_with_listings": with_listings,
             "companies_listed": listed, "trades_today": tr_today, "trades_yesterday": tr_yday, "pals_invested": invested / db.CENTS, "index": idx, "halted": halted,
-            "as_of": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+            "as_of": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            # v1.7: the latest MATCHED executions (real counterparties only), newest first, for the Exchange page
+            "recent_trades": [dict(r) for r in c.execute(
+                f"SELECT t.id, co.ticker, co.name, t.market, t.qty, t.price / {db.CENTS}.0 AS price, t.created_at FROM trades t JOIN companies co ON co.id = t.company_id "
+                f"{'WHERE t.market=?' if mk else ''} ORDER BY t.created_at DESC LIMIT 8", args)]}
 
 
 def markets() -> list[dict]:

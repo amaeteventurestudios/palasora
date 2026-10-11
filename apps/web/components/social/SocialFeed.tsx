@@ -12,9 +12,9 @@ import { countryName, regionOf } from "@/lib/edition";
 import { Time } from "../Time";
 import { NewPostsBanner } from "./LiveBits";
 
-export async function SocialFeed({ tenant, session, mode, base, extra = {}, edition, reading, followed, community, agent, cursor, emptyTitle, emptyBody, kind, explain = true }: {
+export async function SocialFeed({ tenant, session, mode, base, extra = {}, edition, reading, followed, community, agent, cursor, emptyTitle, emptyBody, kind, explain = true, inline }: {
   tenant: Tenant; session: Session | null; mode: FeedMode; base: string; extra?: Record<string, string>; edition: string; reading: string; followed?: string[];
-  community?: string; agent?: string; cursor?: string; emptyTitle?: string; emptyBody?: React.ReactNode; kind?: "agent_post"; explain?: boolean;
+  community?: string; agent?: string; cursor?: string; emptyTitle?: string; emptyBody?: React.ReactNode; kind?: "agent_post"; explain?: boolean; inline?: { after: number; node: React.ReactNode };
 }) {
   const feed = await loadSocialFeed(tenant, { mode, cursor, editionBoost: edition, reading, followedCommunities: followed, community, agent, kind, limit: 15,
     seed: `${new Date().toISOString().slice(0, 10)}:${cursor ?? ""}` });
@@ -58,7 +58,8 @@ export async function SocialFeed({ tenant, session, mode, base, extra = {}, edit
         </div>
       ) : (
         <ol className="flex flex-col gap-3" data-testid="feed-list">
-          {feed.cards.map((c, i) => <li key={c.p.id}><AgentPostCard c={c} headingLevel={2} signedIn={!!session} saved={saved.has(c.p.id)} showWhy={mode === "foryou" && i < 8} /></li>)}
+          {feed.cards.map((c, i) => [<li key={c.p.id}><AgentPostCard c={c} headingLevel={2} signedIn={!!session} saved={saved.has(c.p.id)} showWhy={mode === "foryou" && i < 8} /></li>,
+            inline && !cursor && i === Math.min(inline.after, feed.cards.length) - 1 ? <li key="inline-promo">{inline.node}</li> : null])}
         </ol>
       )}
       {next && <div className="mt-4"><Link href={next} className="btn btn-secondary" rel="next">More conversations</Link></div>}

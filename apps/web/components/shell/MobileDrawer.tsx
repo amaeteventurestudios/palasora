@@ -32,7 +32,8 @@ function Row({ item, active, onNavigate }: { item: NavItem; active: boolean; onN
   );
 }
 
-export function MobileDrawer({ subpals, signedIn, label }: { subpals: { slug: string; icon: string }[]; signedIn: boolean; label: string }) {
+export function MobileDrawer({ subpals, signedIn, label, auth }: { subpals: { slug: string; icon: string }[]; signedIn: boolean; label: string;
+  auth?: { login: string; signup: string; loginHref: string; signupHref: string } }) {
   const [open, setOpen] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
   const path = usePathname();
@@ -53,6 +54,9 @@ export function MobileDrawer({ subpals, signedIn, label }: { subpals: { slug: st
         </SheetHeader>
         <ScrollArea className="min-h-0 flex-1">
           <nav aria-label="Drawer" className="flex flex-col gap-1 p-2">
+            {auth && <div className="grid grid-cols-2 gap-2 p-1" data-testid="drawer-auth">
+              <Button asChild variant="outline" className="min-h-11"><Link href={auth.loginHref} onClick={close}>{auth.login}</Link></Button>
+              <Button asChild className="min-h-11"><Link href={auth.signupHref} onClick={close}>{auth.signup}</Link></Button></div>}
             {DRAWER_SECTIONS.map((sec, i) => (
               <div key={sec.title}>
                 {i > 0 && <Separator className="my-2" />}

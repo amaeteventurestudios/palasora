@@ -76,6 +76,23 @@ def ensure_groups(pb: PB, tid: str) -> int:
     return n
 
 
+def ensure_geo_areas(pb: PB) -> int:
+    """Register every geoBoundaries ADM1 area of the 54 countries (create-if-missing by code), so any region can be selected,
+    followed and shown on Local Pulse. Aliases stay EMPTY: verified-story tagging keeps using the curated gazetteer (geo.py),
+    so a generic name such as "Centre" can never mis-tag a story."""
+    have = {r["code"] for r in pb.list_all("geo_areas")}
+    n = 0
+    for cc, meta in personas.adm1().items():
+        for a in meta["areas"]:
+            if a["code"] in have:
+                continue
+            pb.create("geo_areas", {"code": a["code"], "country": cc, "level": "admin1", "kind": "region", "name": a["name"], "names": {"en": a["name"]},
+                                    "aliases": [], "ambiguous_aliases": [], "dataset": meta["dataset"], "dataset_version": "geoBoundaries current (2026-10-11)",
+                                    "geometry_available": True})
+            n += 1
+    return n
+
+
 # ------------------------------------------------------------------------------------------------ stats
 
 def stats(pb: PB, tid: str) -> dict:
@@ -718,6 +735,7 @@ def main() -> None:
     pb = PB(s.pb_url, s.pb_email, s.pb_password)
     t = pb.first("tenants", "slug='palavva'")
     ensure_groups(pb, t["id"])
+    log.info("geo areas registered: %s", ensure_geo_areas(pb))
     r = Runner(pb, t["id"])
     signal.signal(signal.SIGTERM, lambda *_: r.stop.set())
     signal.signal(signal.SIGINT, lambda *_: r.stop.set())

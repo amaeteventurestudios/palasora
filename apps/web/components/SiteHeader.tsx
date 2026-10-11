@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { Search, UserRound } from "lucide-react";
 import { Wordmark } from "./Wordmark";
 import type { Tenant } from "@/lib/tenant";
@@ -33,11 +34,16 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
   const readingLocales = loc.filter((l) => READING_ENABLED.includes(l.code)).map((l) => ({ code: l.code, label: `${l.native}${l.mt !== "enabled" && l.code !== "en" ? ` (${t("prefs.mtOff")})` : ""}` }));
   const [allSubpals, watched] = await Promise.all([listSubPals(tenant).catch(() => []), humanFollowedSubPals(tenant, session?.user.id).catch(() => new Set<string>())]);
   const railSubpals = recommendSubPals(allSubpals, ctx.edition, new Set(allSubpals.filter((s) => watched.has(s.slug)).map((s) => s.id)), 8);
+  // v1.7: Log in / Sign up return the reader to the page they were on (same domain; no app. subdomain hop).
+  const here = (await headers()).get("x-pv-path") ?? "/";
+  const next = here.startsWith("/auth/") ? "/" : here;
+  const nq = next === "/" ? "" : `?next=${encodeURIComponent(next)}`;
   return (
     <header className="sticky top-0 z-40 bg-masthead text-white" style={{ borderBottom: "3px solid var(--brand-accent)" }}>
       <a href="#main" className="skip-link">{t("nav.skip")}</a>
       <div className="mx-auto flex h-14 w-full max-w-[1520px] items-center gap-0.5 px-1.5 sm:gap-1.5 sm:px-4 lg:h-16">
-        <MobileDrawer subpals={railSubpals.map((s) => ({ slug: s.slug, icon: s.icon }))} signedIn={!!session} label={t("nav.menu")} />
+        <MobileDrawer subpals={railSubpals.map((s) => ({ slug: s.slug, icon: s.icon }))} signedIn={!!session} label={t("nav.menu")}
+          auth={session ? undefined : { login: t("nav.login"), signup: t("nav.signup"), loginHref: `/auth/sign-in${nq}`, signupHref: `/auth/sign-up${nq}` }} />
         <Link href="/" className="me-1 shrink-0 rounded sm:me-3" aria-label={`${tenant.name} home`}>
           {isPalavva ? <><span className="sm:hidden"><Wordmark size={21} /></span><span className="hidden sm:inline"><Wordmark size={28} /></span></>
             : <Wordmark text={tenant.branding.wordmark_text} size={20} dot={false} />}
@@ -67,8 +73,12 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
           <AccountMenu name={session.user.display_name || session.user.handle} staff={isStaff(session)}
             labels={{ accountMenu: t("nav.accountMenu"), saved: t("nav.saved"), account: t("nav.account"), commandCenter: t("nav.commandCenter"), logout: t("nav.logout") }} />
         ) : (
-          <Link href="/auth/sign-in" className="ms-0.5 inline-flex h-10 min-w-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-white/30 bg-[var(--brand-midnight)] px-2 text-[13px] font-semibold text-white hover:bg-white/10 sm:px-3 sm:text-[14px]">
-            <UserRound className="size-5 min-[360px]:hidden" aria-hidden="true" /><span className="max-[359px]:sr-only">{t("nav.login")}</span></Link>
+          <>
+            <Link href={`/auth/sign-in${nq}`} data-testid="masthead-login" className="ms-0.5 inline-flex h-10 min-w-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-white/30 bg-[var(--brand-midnight)] px-2 text-[13px] font-semibold text-white hover:bg-white/10 sm:px-3 sm:text-[14px]">
+              <UserRound className="size-5 min-[360px]:hidden" aria-hidden="true" /><span className="max-[359px]:sr-only">{t("nav.login")}</span></Link>
+            <Link href={`/auth/sign-up${nq}`} data-testid="masthead-signup" className="ms-1 hidden h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-[var(--brand-tangerine)] px-3 text-[14px] font-semibold text-white hover:opacity-90 sm:inline-flex">
+              {t("nav.signup")}</Link>
+          </>
         )}
       </div>
     </header>

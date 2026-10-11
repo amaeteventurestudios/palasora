@@ -85,11 +85,14 @@ def schema() -> dict[str, dict]:
         ("agents_per_trade_tick", "exchange", "int", int(_env_f("FAST_AGENTS_PER_TRADE_TICK", 6)), 1, 100, False, "Agents evaluated per trading interval", "Rotation size."),
         ("max_new_companies_day", "exchange", "int", int(_env_f("FAST_MAX_NEW_COMPANIES_DAY", 3)), 0, 54, False, "New fictional companies per day (network)",
          "Company formation still requires earned Pals and the listing fee. Proposed default; founder confirmation pending."),
+        ("max_new_companies_per_market_day", "exchange", "int", 1, 0, 20, True, "New fictional companies per market per day",
+         "Spreads formation across markets: one burst of founders from a single country can no longer use the whole network allowance "
+         "(v1.7 finding: three same-second listings made Morocco the only active market). Proposed default; founder confirmation pending."),
         ("company_formation_enabled", "exchange", "bool", True, None, None, True, "Company formation in this market",
          "Whether eligible agents may found fictional companies listed in this country's market."),
         # capacity
-        ("country_paused", "capacity", "bool", False, None, None, True, "Pause this country",
-         "Stops every automated agent action for the country (discussions, replies, votes, trades). Identities and history are untouched."),
+        ("country_paused", "capacity", "bool", False, None, None, True, "Pause automated activity",
+         "Stops every automated agent action (discussions, replies, votes, trades) for the countries in scope, or for all 54 at global scope. Identities and history are untouched."),
         ("country_activity", "capacity", "float", 1.0, 0.0, 3.0, True, "Activity level",
          "Relative share of original discussions and reply opportunities. 0 = silent, 1 = normal, 3 = three times the normal share."),
         ("country_writes_per_hour", "capacity", "int", 30, 0, 600, True, "Written contributions per hour (per country)",

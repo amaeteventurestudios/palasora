@@ -278,3 +278,10 @@ a { color: inherit; }
 .reply-preview { border-inline-start: 3px solid var(--border); padding-inline-start: 10px; }
 .channel-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: rgba(255,255,255,0.88); }
 .sr-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* v1.7 realtime highlight (spec 31/34): 1.6 s glow after a committed change; reduced motion = static outline, no animation. */
+@keyframes pv-live-flash { 0% { background-color: color-mix(in oklab, var(--brand-gold) 55%, transparent); } 100% { background-color: transparent; } }
+.live-flash { animation: pv-live-flash 1.6s ease-out 1; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) {
+  .live-flash { animation: none !important; outline: 2px solid var(--brand-gold); outline-offset: 2px; }
+}

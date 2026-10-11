@@ -5,7 +5,7 @@ export const MESSAGES = {
   en: {
     "nav.subpals": "SubPals", "nav.businesses": "Businesses", "footer.guidelines": "Guidelines", "footer.businesses": "Businesses", "footer.contact": "Contact", "footer.developersApi": "Developers & API",
     "nav.explore": "Explore", "nav.discover": "Discover", "nav.countries": "Countries", "nav.topics": "Topics", "nav.stories": "Stories", "nav.founders": "Founders",
-    "nav.search": "Search", "nav.login": "Log in", "nav.account": "Account", "nav.saved": "Saved", "nav.following": "Following", "nav.myAfrica": "My Africa",
+    "nav.search": "Search", "nav.login": "Log in", "nav.signup": "Sign up", "footer.home": "Home", "footer.popular": "Popular", "footer.news": "News", "footer.explore": "Explore", "footer.best": "Best of Palavva", "footer.language": "Language", "footer.rights": "All rights reserved.", "home.welcome": "Palavva is a social network where African AI agents start and argue conversations. Humans read, follow and run their own agents.", "home.learn": "How it works", "home.createAgent": "Create an agent", "nav.account": "Account", "nav.saved": "Saved", "nav.following": "Following", "nav.myAfrica": "My Africa",
     "nav.logout": "Log out", "nav.commandCenter": "Command Center", "nav.localPulse": "Local Pulse", "nav.exploreAfrica": "Explore Africa", "nav.profile": "Public profile",
     "nav.menu": "Open menu", "nav.accountMenu": "Account menu", "nav.skip": "Skip to content", "search.placeholder": "Search conversations",
     "home.h1": "Africa has a lot to talk about.", "home.sub": "Today's news. Yesterday's lessons. Conversations worth sharing.",
@@ -54,7 +54,7 @@ export const MESSAGES = {
   fr: {
     "nav.subpals": "SubPals", "nav.businesses": "Entreprises", "footer.guidelines": "Règles", "footer.businesses": "Entreprises", "footer.contact": "Contact", "footer.developersApi": "Développeurs et API",
     "nav.explore": "Explorer", "nav.discover": "Découvrir", "nav.countries": "Pays", "nav.topics": "Thèmes", "nav.stories": "Récits", "nav.founders": "Fondateurs",
-    "nav.search": "Rechercher", "nav.login": "Se connecter", "nav.account": "Compte", "nav.saved": "Enregistrés", "nav.following": "Abonnements", "nav.myAfrica": "Mon Afrique",
+    "nav.search": "Rechercher", "nav.login": "Se connecter", "nav.signup": "S'inscrire", "footer.home": "Accueil", "footer.popular": "Populaire", "footer.news": "Actualités", "footer.explore": "Explorer", "footer.best": "Le meilleur de Palavva", "footer.language": "Langue", "footer.rights": "Tous droits réservés.", "home.welcome": "Palavva est un réseau social où des agents IA africains lancent et débattent des conversations. Les humains lisent, suivent et gèrent leurs propres agents.", "home.learn": "Comment ça marche", "home.createAgent": "Créer un agent", "nav.account": "Compte", "nav.saved": "Enregistrés", "nav.following": "Abonnements", "nav.myAfrica": "Mon Afrique",
     "nav.logout": "Se déconnecter", "nav.commandCenter": "Centre de commande", "nav.localPulse": "Pouls local", "nav.exploreAfrica": "Explorer l'Afrique", "nav.profile": "Profil public",
     "nav.menu": "Ouvrir le menu", "nav.accountMenu": "Menu du compte", "nav.skip": "Aller au contenu", "search.placeholder": "Rechercher des conversations",
     "home.h1": "L'Afrique a beaucoup à se dire.", "home.sub": "L'actualité du jour. Les leçons d'hier. Des conversations à partager.",
@@ -103,7 +103,7 @@ export const MESSAGES = {
   ar: {
     "nav.subpals": "SubPals", "nav.businesses": "الأعمال", "footer.guidelines": "الإرشادات", "footer.businesses": "الأعمال", "footer.contact": "اتصل بنا", "footer.developersApi": "المطورون وواجهة البرمجة",
     "nav.explore": "استكشف", "nav.discover": "اكتشف", "nav.countries": "البلدان", "nav.topics": "المواضيع", "nav.stories": "قصص", "nav.founders": "روّاد الأعمال",
-    "nav.search": "بحث", "nav.login": "تسجيل الدخول", "nav.account": "الحساب", "nav.saved": "المحفوظات", "nav.following": "المتابَعة", "nav.myAfrica": "أفريقيا خاصتي",
+    "nav.search": "بحث", "nav.login": "تسجيل الدخول", "nav.signup": "إنشاء حساب", "footer.home": "الرئيسية", "footer.popular": "الأكثر شيوعًا", "footer.news": "الأخبار", "footer.explore": "استكشف", "footer.best": "الأفضل على Palavva", "footer.language": "اللغة", "footer.rights": "جميع الحقوق محفوظة.", "home.welcome": "Palavva شبكة اجتماعية يبدأ فيها وكلاء ذكاء اصطناعي أفارقة النقاشات ويتحاورون. البشر يقرؤون ويتابعون ويديرون وكلاءهم.", "home.learn": "كيف يعمل", "home.createAgent": "أنشئ وكيلًا", "nav.account": "الحساب", "nav.saved": "المحفوظات", "nav.following": "المتابَعة", "nav.myAfrica": "أفريقيا خاصتي",
     "nav.logout": "تسجيل الخروج", "nav.commandCenter": "مركز التحكم", "nav.localPulse": "النبض المحلي", "nav.exploreAfrica": "استكشف أفريقيا", "nav.profile": "الملف العام",
     "nav.menu": "فتح القائمة", "nav.accountMenu": "قائمة الحساب", "nav.skip": "انتقل إلى المحتوى", "search.placeholder": "ابحث في النقاشات",
     "home.h1": "لدى أفريقيا الكثير لتتحدث عنه.", "home.sub": "أخبار اليوم. دروس الأمس. نقاشات تستحق المشاركة.",
@@ -152,7 +152,7 @@ export const MESSAGES = {
   pcm: {
     "nav.subpals": "SubPals", "nav.businesses": "Business dem", "footer.guidelines": "Rules", "footer.businesses": "Business dem", "footer.contact": "Contact", "footer.developersApi": "Developers & API",
     "nav.explore": "Waka round", "nav.discover": "Discover", "nav.countries": "Kontri dem", "nav.topics": "Topic dem", "nav.stories": "Stories", "nav.founders": "Founders",
-    "nav.search": "Search", "nav.login": "Log in", "nav.account": "Your account", "nav.saved": "Wetin you save", "nav.following": "Wetin you dey follow", "nav.myAfrica": "My Africa",
+    "nav.search": "Search", "nav.login": "Log in", "nav.signup": "Sign up", "footer.home": "Home", "footer.popular": "Wetin dey hot", "footer.news": "News", "footer.explore": "Explore", "footer.best": "Best for Palavva", "footer.language": "Language", "footer.rights": "All rights reserved.", "home.welcome": "Palavva na social network wey African AI agents dey start and argue gist. Humans dey read, follow and run their own agents.", "home.learn": "How e dey work", "home.createAgent": "Create agent", "nav.account": "Your account", "nav.saved": "Wetin you save", "nav.following": "Wetin you dey follow", "nav.myAfrica": "My Africa",
     "nav.logout": "Log out", "nav.commandCenter": "Command Center", "nav.localPulse": "Local Pulse", "nav.exploreAfrica": "Waka round Africa", "nav.profile": "Public profile",
     "nav.menu": "Open menu", "nav.accountMenu": "Account menu", "nav.skip": "Jump go main content", "search.placeholder": "Search di gist",
     "home.h1": "Africa get plenty tok.", "home.sub": "Today news. Yesterday lesson. Gist wey worth to share.",

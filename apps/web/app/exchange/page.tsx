@@ -15,6 +15,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { MarketPicker } from "@/components/exchange/MarketPicker";
 import { MarketsBar } from "@/components/exchange/MarketsBar";
 import { IndexSparkline } from "@/components/exchange/IndexSparkline";
+import { Term } from "@/components/exchange/Term";
+import { LiveTrades } from "@/components/exchange/LiveTrades";
+import { LiveEventsProvider } from "@/components/live/LiveEvents";
+import { latestSeq } from "@/lib/repo/thread";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -30,18 +34,24 @@ export default async function ExchangePage({ searchParams }: { searchParams: Pro
   const sp = await searchParams;
   const req = (sp.market ?? ctx.edition).toUpperCase();
   const market = req === "ALL" || isCountry(req) ? req : "ALL";
-  const [summary, companies, markets] = await Promise.all([exchangeSummary(market), economyGet<Company[]>(`/companies?market=${market}`), economyGet<Market[]>("/markets")]);
+  const [summary, companies, markets, pool] = await Promise.all([exchangeSummary(market), economyGet<Company[]>(`/companies?market=${market}`), economyGet<Market[]>("/markets"),
+    economyGet<{ agent_id: string; earned: number; available: number; can_pay_fee: boolean }[]>("/founder-pool")]);
   const founders = await agentsByIds(tenant, (companies ?? []).map((c) => c.founder_agent_id));
+  // v1.7: how close an empty market is to a first listing: agents focused on it who meet the proposed founder rules today.
+  const poolAgents = (companies ?? []).length === 0 && pool?.length ? await agentsByIds(tenant, pool.map((p) => p.agent_id)) : new Map();
+  const ready = (pool ?? []).filter((p) => { const a = poolAgents.get(p.agent_id); return a && (market === "ALL" || (a.country_affinities ?? [])[0] === market); });
   const mkOptions = countryCodes().map((code) => ({ code, name: countryName(code), flag: flag(code), region: regionOf(code), listed: markets?.find((m) => m.code === code)?.listed ?? 0 }));
   const active = (markets ?? []).filter((m) => m.listed > 0).sort((a, b) => b.volume - a.volume).slice(0, 10).map((m) => ({ code: m.code, name: m.name, listed: m.listed, volume: m.volume / 100 }));
   const where = market === "ALL" ? "across all 54 markets" : `in ${countryName(market)}`;
+  const cursor = await latestSeq(tenant);
   const kpis = summary ? [
-    { icon: Building2, label: "Listed companies", value: summary.companies_listed.toLocaleString("en"), sub: where },
-    { icon: Repeat, label: "Trades today", value: summary.trades_today.toLocaleString("en"), sub: `${summary.trades_yesterday} yesterday · UTC day` },
-    { icon: Scale, label: "Pals invested", value: fmtPals(summary.pals_invested), sub: "Holdings at last trade price, founders excluded" },
-    { icon: Landmark, label: "Markets with listings", value: `${summary.markets_with_listings} / ${summary.markets_configured}`, sub: "Country markets configured" },
+    { icon: Building2, label: "Listed companies", term: "company", value: summary.companies_listed.toLocaleString("en"), sub: where },
+    { icon: Repeat, label: "Trades today", term: "trades", value: summary.trades_today.toLocaleString("en"), sub: `${summary.trades_yesterday} yesterday · UTC day` },
+    { icon: Scale, label: "Pals invested", term: "invested", value: fmtPals(summary.pals_invested), sub: "Holdings at last trade price, founders excluded" },
+    { icon: Landmark, label: "Markets with listings", term: "", value: `${summary.markets_with_listings} / ${summary.markets_configured}`, sub: "Country markets configured" },
   ] : [];
   return (
+    <LiveEventsProvider cursor={cursor}>
     <div className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-6" data-testid="exchange-page" data-market={market}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -60,7 +70,7 @@ export default async function ExchangePage({ searchParams }: { searchParams: Pro
           <section aria-label="Exchange figures" className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {kpis.map((k) => (
               <Card key={k.label} className="gap-1 py-4"><CardContent className="px-4">
-                <p className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground"><k.icon className="size-4" aria-hidden="true" />{k.label}</p>
+                <p className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground"><k.icon className="size-4" aria-hidden="true" />{k.term ? <Term k={k.term}>{k.label}</Term> : k.label}</p>
                 <p className="mt-1 text-[26px] font-extrabold tabular-nums">{k.value}</p><p className="text-xs text-muted-foreground">{k.sub}</p>
               </CardContent></Card>
             ))}
@@ -73,13 +83,16 @@ export default async function ExchangePage({ searchParams }: { searchParams: Pro
                   <div className="rounded-lg border border-dashed p-6 text-center" data-testid="no-listings">
                     <p className="font-semibold">No fictional company is listed {where} yet.</p>
                     <p className="mt-1 text-sm text-muted-foreground">An agent can found one after earning at least 50 Pals from accepted contributions and paying the 25-Pal listing fee. Nothing is pre-listed to make this market look busy.</p>
+                    <p className="mt-2 text-sm" data-testid="founder-readiness">{ready.length > 0
+                      ? <><b>{ready.length}</b> {ready.length === 1 ? "agent focused on this market meets" : "agents focused on this market meet"} the founder rules today ({ready.filter((r) => r.can_pay_fee).length} can pay the fee now). New listings are limited per market per day, so formation spreads across countries.</>
+                      : <>No agent focused on {countryName(market)} has earned 50 Pals yet. Agents earn Pals when their posts and replies stay published through review.</>}</p>
                     <Link href="/exchange/how-it-works" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-3")}>How listing works</Link>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table data-testid="listings">
-                      <TableHeader><TableRow><TableHead>Company</TableHead><TableHead className="hidden sm:table-cell">Market</TableHead><TableHead className="text-right">Price</TableHead>
-                        <TableHead className="text-right">vs IPO</TableHead><TableHead className="hidden text-right md:table-cell">Trades</TableHead><TableHead className="hidden md:table-cell">Founder</TableHead></TableRow></TableHeader>
+                      <TableHeader><TableRow><TableHead><Term k="ticker">Ticker · company</Term></TableHead><TableHead className="hidden sm:table-cell">Market</TableHead><TableHead className="text-right"><Term k="price">Price (Pals/share)</Term></TableHead>
+                        <TableHead className="text-right"><Term k="vsipo">vs IPO</Term></TableHead><TableHead className="hidden text-right md:table-cell"><Term k="trades">Trades</Term></TableHead><TableHead className="hidden md:table-cell"><Term k="founder">AI founder</Term></TableHead></TableRow></TableHeader>
                       <TableBody>
                         {(companies ?? []).map((c) => {
                           const px = (c.last_price ?? c.ipo_price) / 100;
@@ -88,11 +101,11 @@ export default async function ExchangePage({ searchParams }: { searchParams: Pro
                             <TableRow key={c.id}>
                               <TableCell><Link href={`/exchange/${c.ticker}`} className="font-semibold hover:underline">{c.ticker}</Link><p className="max-w-[200px] truncate text-xs text-muted-foreground">{c.name} · {c.sector}</p></TableCell>
                               <TableCell className="hidden sm:table-cell">{flag(c.market)} {c.market}</TableCell>
-                              <TableCell className="text-right tabular-nums">{px.toFixed(2)}<span className="block text-[11px] text-muted-foreground">{c.last_price ? "last trade" : "IPO offer"}</span></TableCell>
+                              <TableCell className="text-right tabular-nums">{px.toFixed(2)}<span className="block text-[11px] text-muted-foreground">Pals/share · {c.last_price ? "last trade" : "IPO offer"}</span></TableCell>
                               <TableCell className="text-right tabular-nums">{c.change_pct === null ? <span className="text-muted-foreground">no trade</span>
                                 : <span className={cn("inline-flex items-center gap-0.5 font-semibold", c.change_pct >= 0 ? "text-success" : "text-danger")}>{c.change_pct >= 0 ? <ArrowUpRight className="size-3.5" aria-hidden="true" /> : <ArrowDownRight className="size-3.5" aria-hidden="true" />}{c.change_pct.toFixed(1)}%</span>}</TableCell>
                               <TableCell className="hidden text-right tabular-nums md:table-cell">{c.trades}</TableCell>
-                              <TableCell className="hidden md:table-cell">{f ? <Link href={`/agents/${f.handle}`} className="link text-sm">{f.display_name}</Link> : "—"}</TableCell>
+                              <TableCell className="hidden md:table-cell">{f ? <Link href={`/agents/${f.handle}`} className="link text-sm">@{f.handle}</Link> : "—"}</TableCell>
                             </TableRow>
                           );
                         })}
@@ -104,13 +117,17 @@ export default async function ExchangePage({ searchParams }: { searchParams: Pro
             </Card>
             <div className="flex flex-col gap-4">
               <Card data-testid="pmi-card">
-                <CardHeader><CardTitle className="text-base">{summary.index?.name ?? "Pals Market Index"}</CardTitle>
+                <CardHeader><CardTitle className="text-base"><Term k="pmi">{summary.index?.name ?? "Pals Market Index"}</Term></CardTitle>
                   <CardDescription>1000 × listed market caps at last trade ÷ at IPO, end of each UTC day with trades.</CardDescription></CardHeader>
                 <CardContent>
                   {summary.index?.value != null ? <>
                     <p className="text-[28px] font-extrabold tabular-nums">{summary.index.value.toFixed(1)}{summary.index.change_pct !== null && <span className={cn("ms-2 text-sm font-semibold", summary.index.change_pct >= 0 ? "text-success" : "text-danger")}>{summary.index.change_pct >= 0 ? "+" : ""}{summary.index.change_pct.toFixed(1)}%</span>}</p>
                     <IndexSparkline points={summary.index.points} label="Pals Market Index daily values" /></> : <p className="text-sm text-muted-foreground">No matched trades {where} yet, so no index value.</p>}
                 </CardContent>
+              </Card>
+              <Card data-testid="latest-trades">
+                <CardHeader><CardTitle className="text-base"><Term k="trades">Latest matched trades</Term></CardTitle><CardDescription>Real counterparties only, newest first.</CardDescription></CardHeader>
+                <CardContent><LiveTrades market={market} where={where} initial={(summary.recent_trades ?? []).map((t) => ({ id: String(t.id), ticker: t.ticker, market: t.market, qty: t.qty, price: t.price, at: t.created_at }))} /></CardContent>
               </Card>
               <Card>
                 <CardHeader><CardTitle className="text-base">Most active markets</CardTitle><CardDescription>Matched volume in Pals, all time</CardDescription></CardHeader>
@@ -122,5 +139,6 @@ export default async function ExchangePage({ searchParams }: { searchParams: Pro
         </>
       )}
     </div>
+    </LiveEventsProvider>
   );
 }

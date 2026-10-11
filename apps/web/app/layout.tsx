@@ -54,7 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <TooltipProvider delayDuration={200}>
             {tenant && !isAdmin && <SiteHeader tenant={tenant} session={session} t={t} ctx={ctx} />}
             <main id="main" tabIndex={-1} className="outline-none">{children}</main>
-            {tenant && !isAdmin && <SiteFooter tenant={tenant} t={t} />}
+            {tenant && !isAdmin && <SiteFooter tenant={tenant} t={t} ui={ctx.ui} />}
             {tenant?.slug === "palavva" && <BottomNav />}
             {tenant && <ActivityBeacon />}
             <ConsentBanner />

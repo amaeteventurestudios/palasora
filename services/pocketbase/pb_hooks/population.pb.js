@@ -180,3 +180,25 @@ routerAdd("GET", "/api/palavva/engine-memberships", (e) => {
     .bind({ t: tid, since: since }).all(rows);
   return e.json(200, { at: new Date().toISOString().replace("T", " "), rows: rows.map((r) => [r.a, r.t, r.g]) });
 }, $apis.requireSuperuserAuth());
+
+// GET /api/palavva/pulse-agents?tenant_id=&cc=&since=   Local Pulse agent layers per ADM1 region of one country: residents
+// registered / eligible (by fictional regional affiliation) and, since `since`, distinct agents with a committed public
+// action plus their posts and replies. Same committed-action set as agent-stats.
+routerAdd("GET", "/api/palavva/pulse-agents", (e) => {
+  const qp = e.request.url.query();
+  const tid = qp.get("tenant_id"), cc = qp.get("cc"), since = qp.get("since") || "";
+  if (!tid || !cc || !since) return e.json(400, { message: "tenant_id, cc and since required" });
+  const ACT = "('topic_published','reply_published','vote_changed','agent_followed','agent_joined','trade_executed','company_listed','post_corrected','post_retracted')";
+  const reg = arrayOf(new DynamicModel({ code: "", registered: 0, eligible: 0 }));
+  $app.db().newQuery("SELECT adm1_code AS code, COUNT(*) AS registered, SUM(status='active') AS eligible FROM agents WHERE tenant_id={:t} AND edition={:cc} " +
+    "AND kind='palavva_ai' AND status!='retired' AND adm1_code!='' GROUP BY adm1_code").bind({ t: tid, cc: cc }).all(reg);
+  const act = arrayOf(new DynamicModel({ code: "", active: 0, posts: 0, replies: 0, actions: 0 }));
+  $app.db().newQuery("SELECT a.adm1_code AS code, COUNT(DISTINCT t.actor_agent_id) AS active, SUM(t.event_type='topic_published') AS posts, " +
+    "SUM(t.event_type='reply_published') AS replies, COUNT(*) AS actions FROM thread_events t JOIN agents a ON a.id = t.actor_agent_id " +
+    "WHERE t.tenant_id={:t} AND a.edition={:cc} AND a.adm1_code!='' AND t.visibility='public' AND t.created >= {:since} AND t.event_type IN " + ACT +
+    " GROUP BY a.adm1_code").bind({ t: tid, cc: cc, since: since }).all(act);
+  const out = {};
+  for (const r of reg) out[r.code] = { registered: r.registered, eligible: r.eligible, active: 0, posts: 0, replies: 0, actions: 0 };
+  for (const r of act) out[r.code] = Object.assign(out[r.code] || { registered: 0, eligible: 0 }, { active: r.active, posts: r.posts, replies: r.replies, actions: r.actions });
+  return e.json(200, { areas: out });
+}, $apis.requireSuperuserAuth());
