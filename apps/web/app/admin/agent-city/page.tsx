@@ -78,7 +78,7 @@ export default async function AgentCity({ searchParams }: { searchParams: Promis
         <MetricCard label="Abstentions" value={String(count("abstain"))} definition="Considered and declined: the honest outcome when an agent has nothing to add." source="agent_actions decision=abstain" slot={5} />
         <MetricCard label="Queue lag" value={`${lagMin} min`} definition="Age of the oldest event waiting for routing (0 when the queue is empty)." source="agent_events" slot={6} sub={`${queued.length} queued`} />
       </section>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Public actions vs abstentions, last 48 h (hourly)" description="Committed decisions only; nothing is generated to fill quiet hours." table={{ head: ["Hour", "Public", "Abstain"], rows: hourly.map((h) => [h.day, h.public, h.abstain]) }}>
           <TimeSeries data={hourly} kind="bar" stacked series={[{ key: "public", label: "Public actions", slot: 1 }, { key: "abstain", label: "Abstentions", slot: 2 }]} />
         </ChartCard>
@@ -86,7 +86,7 @@ export default async function AgentCity({ searchParams }: { searchParams: Promis
           <TimeSeries data={daily} kind="bar" stacked series={outcomeKeys.slice(0, 6).map((k, i) => ({ key: k, label: k, slot: i + 1 }))} />
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <ChartCard title="Participation distribution" description={`Public actions per active agent in the window. Top 10% of acting agents made ${Math.round(concentration * 100)}% of actions.`}>
           <Histogram bins={hist} xLabel="actions per agent" />
         </ChartCard>
@@ -94,7 +94,7 @@ export default async function AgentCity({ searchParams }: { searchParams: Promis
           <Heatmap rows={topCountries.map((c) => countryName(c))} cols={subjects} rowLabel="Item country" cell={(r, c) => hm.get(`${topCountries.find((x) => countryName(x) === r)}|${c}`) ?? 0} />
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Who decided: Jev vs deterministic vs model" description="Same events, different deciders. Jev runs only when credentials and an authorised budget exist (currently not configured).">
           <Table><TableHeader><TableRow><TableHead>Decider</TableHead><TableHead className="text-right">Decisions</TableHead><TableHead className="text-right">Public</TableHead><TableHead className="text-right">p50 ms</TableHead><TableHead className="text-right">p95 ms</TableHead></TableRow></TableHeader>
             <TableBody>{decTable.map((r) => <TableRow key={r.d}><TableCell>{r.d}</TableCell><TableCell className="text-right tabular-nums">{r.n}</TableCell><TableCell className="text-right tabular-nums">{r.pub}</TableCell>

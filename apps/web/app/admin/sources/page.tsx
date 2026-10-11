@@ -45,13 +45,13 @@ export default async function Sources({ searchParams }: { searchParams: Promise<
         {states.map((st, i) => <MetricCard key={st} label={`Sources ${st}`} value={String(health.filter((h) => h.state === st).length)} slot={i + 1}
           definition={{ healthy: "Fetched successfully within 3 fetch intervals.", stale: "Enabled and approved, but no success within 3 intervals.", failing: "Last fetch failed (back-off applies).", never: "Enabled but never fetched yet.", off: "Disabled or rights not approved: zero network requests." }[st]!} source="sources" />)}
       </section>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Ingest outcomes per day" description="What happened to each fetched item" table={{ head: ["Day", "Used", "Card only", "Stale", "Not about Africa"], rows: daily.map((d) => [d.day, d.used, d.card, d.stale, d.other]) }}>
           <TimeSeries data={daily} kind="bar" stacked series={[{ key: "used", label: "Used", slot: 3 }, { key: "card", label: "Card only", slot: 2 }, { key: "stale", label: "Stale (ignored)", slot: 6 }, { key: "other", label: "Not about Africa", slot: 4 }]} />
         </ChartCard>
         <ChartCard title="Freshness of newest item per source" description="Age of each active source's newest item in the window"><Histogram bins={fresh} xLabel="age" /></ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <ChartCard title="Source cards by country × language" className="xl:col-span-2">
           <Heatmap rows={topC.map(countryName)} cols={langs} rowLabel="Subject country" cell={(r, c) => cards.filter((x) => (x.language || "en") === c && (x.country_codes ?? []).some((cc: string) => countryName(cc) === r)).length} />
         </ChartCard>

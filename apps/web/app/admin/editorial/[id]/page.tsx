@@ -44,7 +44,7 @@ export default async function Review({ params }: { params: Promise<{ id: string 
         {p.review_status === "published" && <Link className="link text-sm" href={pieceHref(p)}>View public page</Link>}
       </div>
       {flags.length > 0 && <div className="card mb-4 p-4"><h2 className="font-bold">Validation flags</h2><ul className="mt-1 flex flex-wrap gap-2">{flags.map((f) => <li key={f}><Pill tone={f.startsWith("UNKNOWN") || f.includes("INJECTION") ? "bad" : "warn"}>{f}</Pill></li>)}</ul></div>}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <section className="card p-4" aria-labelledby="draft-h">
           <h2 id="draft-h" className="text-lg font-bold">Draft</h2>
           <p className="mt-2 text-muted-foreground">{p.lede}</p>

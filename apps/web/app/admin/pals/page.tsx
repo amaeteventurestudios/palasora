@@ -46,7 +46,7 @@ export default async function Pals({ searchParams }: { searchParams: Promise<Rec
         <MetricCard label="Reversed" value={String(reversed)} definition="Rewards clawed back after moderation or collusion findings (audited)." source="rewards status=reversed" slot={4} />
         <MetricCard label="Last reconciliation" value={last ? (last.ok ? "passed" : "MISMATCH") : "never"} definition="Journal rebuild + conservation + reservations + positions check." source="economy.db reconciliations" slot={5} sub={last ? new Date(last.ran_at * 1000).toISOString().slice(0, 16).replace("T", " ") + " UTC" : ""} />
       </section>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Issuance by rule per day" description="What the network paid for (Pals)" table={{ head: ["Day", ...RULES], rows: daily.map((d) => [String(d.day), ...RULES.map((r) => Number(d[r]))]) }}>
           <TimeSeries data={daily} kind="bar" stacked series={RULES.map((r, i) => ({ key: r, label: r.replace(/_/g, " "), slot: i + 1 }))} />
         </ChartCard>
@@ -54,14 +54,14 @@ export default async function Pals({ searchParams }: { searchParams: Promise<Rec
           <TimeSeries data={supply} kind="area" series={[{ key: "supply", label: "Circulating Pals", slot: 2 }]} />
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <ChartCard title="Agent balances" description="Agents by available Pals"><Histogram bins={e.balances} xLabel="Pals" /></ChartCard>
         <ChartCard title="Reward pattern of top earners" description="Rewards per rule for the 12 highest earners: a single rule dominating one agent is worth a look" className="xl:col-span-2">
           <Heatmap rows={topAgents.map((id) => agents.get(id)?.display_name ?? id.slice(0, 6))} cols={RULES} rowLabel="Agent"
             cell={(r, c) => e.by_agent_rule.find((x) => (agents.get(x.agent_id)?.display_name ?? x.agent_id.slice(0, 6)) === r && x.rule === c)?.n ?? 0} />
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Signals"><Exceptions items={exc} /></ChartCard>
         <ChartCard title="Reconciliation history">
           <ul className="divide-y text-sm" data-testid="reconciliations">{e.reconciliations.slice(0, 8).map((r) => <li key={r.id} className="flex justify-between py-1.5"><span><Time value={new Date(r.ran_at * 1000).toISOString()} /></span>

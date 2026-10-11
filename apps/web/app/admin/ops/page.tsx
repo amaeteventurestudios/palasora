@@ -45,14 +45,14 @@ export default async function Ops() {
         <MetricCard label="Queue" value={String(q2.queued ?? q2.pending ?? 0)} definition="Editorial/agent jobs waiting in jobs.db (writer, ingest, drafts)." source="editorial /status" slot={4} sub={Object.entries(q2).map(([k, v]) => `${k} ${v}`).join(" · ")} />
         <MetricCard label="SSE subscribers" value={String(hubStats().reduce((a, x) => a + x.subscribers, 0))} definition="Live streams connected to the shared per-tenant event hub (one poller per tenant)." source="live-hub (this web process)" slot={5} />
       </section>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Host capacity">{<div className="flex flex-col gap-3">{gauge("Memory", memUsed, h.memTotal, gb)}{h.disk && gauge("Disk", diskUsed, h.disk.total, gb)}{gauge("CPU load (1 min vs cores)", Math.min(h.load[0], h.cpus), h.cpus, (n) => n.toFixed(1))}</div>}
           <p className="mt-3 text-xs text-muted-foreground">Databases: {h.dbs.map((d) => `${d.name} ${mb(d.size)}`).join(" · ")}</p></ChartCard>
         <ChartCard title="Committed events, last 6 h (10-min buckets)" description="Realtime pipeline throughput; gaps mean quiet, not failure" table={{ head: ["Time", "Events"], rows: evSeries.map((x) => [x.day, x.events]) }}>
           <TimeSeries data={evSeries} kind="bar" series={[{ key: "events", label: "Events", slot: 2 }]} height={200} />
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <ChartCard title="Processes & services">
           <ul className="flex flex-col gap-1.5 text-sm">{h.procs.map((p) => <li key={p.name} className="flex justify-between"><span>{p.name}</span><Badge variant={p.running ? "secondary" : "destructive"}>{p.running ? `running · pid ${p.pid}` : "stopped"}</Badge></li>)}
             <li className="flex justify-between"><span>PocketBase API</span><Badge variant={svc.pocketbase ? "secondary" : "destructive"}>{svc.pocketbase ? "healthy" : "down"}</Badge></li>
@@ -65,7 +65,7 @@ export default async function Ops() {
         </ChartCard>
         <ChartCard title="Exceptions"><Exceptions items={exc} empty="All processes up, backups fresh." /></ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Audit trail by action" description="Latest 300 audit events (append-only, enforced in the database)"><RankedBars rows={actions.map(([k, v]) => ({ label: k, value: v }))} slot={4} valueLabel="Events" /></ChartCard>
         <ChartCard title="Recent privileged and system actions">
           <ul className="divide-y text-sm">{audit.slice(0, 12).map((a, i) => <li key={i} className="flex justify-between gap-3 py-1"><span className="truncate">{a.action} <span className="text-muted-foreground">({a.actor_type})</span></span><span className="shrink-0 text-xs text-muted-foreground"><Time value={a.created} /></span></li>)}</ul>

@@ -21,16 +21,7 @@
  "light /subpals": [],
  "light /p/football": [],
  "light /agents": [],
- "light /agents/PitchReader": [
-  {
-   "id": "color-contrast",
-   "impact": "serious",
-   "nodes": 8,
-   "sample": [
-    "li:nth-child(1) > .w-fit.py-0\\.5.transition-\\[color\\,box-shadow\\]"
-   ]
-  }
- ],
+ "light /agents/PitchReader": [],
  "light /live": [],
  "light /businesses": [],
  "light /guidelines": [],

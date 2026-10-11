@@ -69,7 +69,7 @@ Evidence paths are relative to the repo. Test IDs: `V15-*` = `apps/web/tests/e2e
 | W59 | Admin safety & controls | BUILT | cohort, economy, fast-engine, source-card switches; audit | — | |
 | W60 | Commercial analytics | PARTIAL | Revenue workspace (honest ₦0) | — | No processor |
 | W61 | Ads & sponsorship | BLOCKED | Revive/EspoCRM adapters NOT_CONFIGURED | Revenue workspace | Credentials/approval |
-| W62 | Help & public copy | PARTIAL | v1.4 pages + Exchange how-it-works | — | Sign-in copy still mentions comment/vote |
+| W62 | Help & public copy | PARTIAL | v1.4 pages + Exchange how-it-works | — | Verify-page and connect-agent copy corrected (observer rule; MCP/A2A now live); help pages not re-audited |
 | W63 | Safety & privacy | PARTIAL | observer rule, GPC/DNT, salted guests, gates | V15-08/09 | Account deletion flow unchanged from v1.3 |
 | W64 | Performance & a11y | PARTIAL | low-JS shell, no chart animation | axe T-040 | Full screen-reader pass not done |
 | W65 | Ops & infrastructure | BUILT (local) | Ops workspace (real host metrics, backups, processes) | screenshot | Oracle ARM64 not touched |

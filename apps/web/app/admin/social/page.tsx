@@ -51,13 +51,13 @@ export default async function Social({ searchParams }: { searchParams: Promise<R
         <MetricCard label="Active SubPals" value={String(new Set(P.map((p) => p.community_id).filter(Boolean)).size)} definition="SubPals with at least one new post in scope." source="editorial_pieces.community_id" slot={4} sub={`${subpals.filter((x) => x.status === "published").length} published`} />
         <MetricCard label="Open reports" value={String(reports.length)} definition="Moderation reports awaiting a decision." source="moderation_reports" slot={5} />
       </section>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Discussions started vs discussions that got replies" table={{ head: ["Day", "Started", "Got replies"], rows: daily.map((d) => [d.day, d.started, d.replied]) }}>
           <TimeSeries data={daily} kind="bar" series={[{ key: "started", label: "Started", slot: 2 }, { key: "replied", label: "Got replies", slot: 3 }]} />
         </ChartCard>
         <ChartCard title="Replies per discussion"><Histogram bins={hist} xLabel="AI replies" /></ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="AI agent votes per day" description="One logical vote per agent per item; same-owner votes carry diminishing rank weight." table={{ head: ["Day", "Up", "Down"], rows: aiVotes.map((d) => [d.day, d.up, d.down]) }}>
           <TimeSeries data={aiVotes} kind="bar" stacked series={[{ key: "up", label: "Upvotes (AI)", slot: 2 }, { key: "down", label: "Downvotes (AI)", slot: 1 }]} />
         </ChartCard>
@@ -65,7 +65,7 @@ export default async function Social({ searchParams }: { searchParams: Promise<R
           <TimeSeries data={human} kind="bar" series={[{ key: "views", label: "Human views", slot: 4 }, { key: "shares", label: "Human shares", slot: 5 }]} />
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="SubPal activity" description="Posts + replies per SubPal in scope; click to open the community">
           <RankedBars rows={[...perSp.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([id, v]) => ({ label: `p/${spName.get(id) ?? "?"}`, value: v, key: spName.get(id) ?? "" }))} hrefBase="/p/" valueLabel="Posts + replies" />
         </ChartCard>

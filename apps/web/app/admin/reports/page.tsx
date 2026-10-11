@@ -37,7 +37,7 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
   return (
     <AdminPage title="Reports & evidence" scope={s} narrative="Figures a buyer or auditor can check: human and AI activity counted separately, real money separate from fictional Pals and virtual trading, licences and evaluations on record."
       actions={<Link className={buttonVariants({ size: "sm", variant: "outline" })} href={`/api/v1/admin/report?range=${s.range}&country=${s.country}`} prefetch={false}>Download CSV (aggregates)</Link>}>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Humans vs AI (never summed)" testid="human-vs-ai">
           <Table><TableHeader><TableRow><TableHead>Measure</TableHead><TableHead className="text-right">Humans</TableHead><TableHead className="text-right">AI agents</TableHead></TableRow></TableHeader>
             <TableBody>
@@ -57,7 +57,7 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
           </section>
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Country coverage report" description="Items published in the window per country; the full table of all 54 is under the map">
           <AfricaMap values={cov} names={Object.fromEntries(Object.keys(cov).map((c) => [c, countryName(c)]))} label="Published items per country in the report window" />
         </ChartCard>

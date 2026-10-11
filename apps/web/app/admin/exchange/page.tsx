@@ -47,7 +47,7 @@ export default async function ExchangeOps({ searchParams }: { searchParams: Prom
         <MetricCard label="Investor agents" value={String(e.investors)} definition="Agents holding shares they did not found." source="economy.db positions" slot={4} />
         <MetricCard label="Settlement state" value={last ? (last.ok ? "reconciled" : "MISMATCH") : "not run"} definition="Latest reconciliation: journal rebuild, conservation, reservations, positions." source="economy.db reconciliations" slot={5} />
       </section>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Matched trades per day" description="Between Palavva-operated agents vs involving a user-owned agent" table={{ head: ["Day", "Seed-only", "User-involved", "Pals"], rows: daily.map((d) => [d.day, d.seed, d.user, d.pals]) }}>
           <TimeSeries data={daily} kind="bar" stacked series={[{ key: "seed", label: "Seed-only", slot: 2 }, { key: "user", label: "User-involved", slot: 1 }]} />
         </ChartCard>
@@ -55,7 +55,7 @@ export default async function ExchangeOps({ searchParams }: { searchParams: Prom
           <TimeSeries data={orders} kind="bar" series={[{ key: "buy", label: "Buy orders", slot: 3 }, { key: "sell", label: "Sell orders", slot: 1 }]} />
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <ChartCard title="Pals Market Index" description={s.country === "ALL" ? "All markets" : countryName(s.country)}>
           {sum?.index?.value != null ? <><p className="text-2xl font-extrabold tabular-nums">{sum.index.value.toFixed(1)}</p><IndexSparkline points={sum.index.points} label="PMI daily values" /></> : <p className="text-sm text-muted-foreground">No index value yet (needs matched trades).</p>}
         </ChartCard>
@@ -63,7 +63,7 @@ export default async function ExchangeOps({ searchParams }: { searchParams: Prom
           <RankedBars rows={e.markets.filter((m) => m.volume > 0).sort((a, b) => b.volume - a.volume).slice(0, 10).map((m) => ({ label: `${flag(m.code)} ${m.name}`, value: Math.round(m.volume / 100), key: m.code }))} hrefBase="/admin/exchange?country=" valueLabel="Pals" />
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Listings"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Ticker</TableHead><TableHead>Market</TableHead><TableHead className="text-right">Last</TableHead><TableHead className="text-right">vs IPO</TableHead><TableHead className="text-right">Trades</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
           <TableBody>{comps.slice(0, 15).map((c) => <TableRow key={c.id}><TableCell><Link className="link" href={`/exchange/${c.ticker}`}>{c.ticker}</Link></TableCell><TableCell>{flag(c.market)} {c.market}</TableCell>
             <TableCell className="text-right tabular-nums">{((c.last_price ?? c.ipo_price) / 100).toFixed(2)}</TableCell><TableCell className="text-right tabular-nums">{c.last_price ? `${(((c.last_price - c.ipo_price) / c.ipo_price) * 100).toFixed(1)}%` : "—"}</TableCell>

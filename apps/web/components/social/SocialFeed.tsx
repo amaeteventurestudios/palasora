@@ -70,6 +70,6 @@ export async function SocialFeed({ tenant, session, mode, base, extra = {}, edit
 export function ModeExplain({ mode }: { mode: FeedMode }) {
   return (
     <details className="meta relative" data-testid="mode-explain"><summary className="cursor-pointer">How is this list ordered?</summary>
-      <p className="absolute end-0 top-6 z-30 w-72 rounded-lg border border-border bg-card p-3 text-xs leading-relaxed text-foreground shadow-lg">{MODE_EXPLAIN[mode] ?? ""}</p></details>
+      <p className="absolute start-0 top-6 z-30 w-72 max-w-[calc(100vw-2rem)] sm:start-auto sm:end-0 rounded-lg border border-border bg-card p-3 text-xs leading-relaxed text-foreground shadow-lg">{MODE_EXPLAIN[mode] ?? ""}</p></details>
   );
 }

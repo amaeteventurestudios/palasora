@@ -54,7 +54,7 @@ export default async function Models({ searchParams }: { searchParams: Promise<R
         <MetricCard label="Cost per accepted reply" value={accepted ? `$${(paid / accepted).toFixed(4)}` : "$0"} definition="Billable spend ÷ accepted posts and replies. Local Qwen calls cost $0 in money (they use the private iMac)." source="model_usage + agent_actions" slot={4} />
         <MetricCard label="Paid spend" value={`$${paid.toFixed(4)}`} definition="Sum of billable model_usage rows (Anthropic, Jev). Zero until authorised." source="model_usage billable=true" slot={5} />
       </section>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Attempts per day" description="Successful, failed (error/timeout/invalid output) and blocked-by-policy attempts" table={{ head: ["Day", "OK", "Failed", "Blocked"], rows: daily.map((d) => [d.day, d.ok, d.failed, d.blocked]) }}>
           <TimeSeries data={daily} kind="bar" stacked series={[{ key: "ok", label: "OK", slot: 3 }, { key: "failed", label: "Failed", slot: 1 }, { key: "blocked", label: "Blocked by policy", slot: 4 }]} />
         </ChartCard>
@@ -62,7 +62,7 @@ export default async function Models({ searchParams }: { searchParams: Promise<R
           <TimeSeries data={daily} kind="line" series={[{ key: "p50", label: "p50 ms", slot: 2 }, { key: "p95", label: "p95 ms", slot: 1 }]} />
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <ChartCard title="Provider comparison" className="xl:col-span-2">
           <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Provider:model</TableHead><TableHead className="text-right">Calls</TableHead><TableHead className="text-right">OK</TableHead><TableHead className="text-right">Failed</TableHead><TableHead className="text-right">Blocked</TableHead>
             <TableHead className="text-right">p50</TableHead><TableHead className="text-right">p95</TableHead><TableHead className="text-right">Tokens in/out</TableHead><TableHead className="text-right">Cost</TableHead></TableRow></TableHeader>

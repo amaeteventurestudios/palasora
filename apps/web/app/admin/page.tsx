@@ -61,7 +61,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
         <MetricCard label="Paid model spend" value={`$${paid.toFixed(2)}`} definition="Billable provider calls metered in model_usage. Local Qwen is $0; Anthropic and Jev are disabled until authorised." source="model_usage" slot={5} sub="Anthropic cap $10 (not enabled)" />
         <MetricCard label="System health" value={[svc.pocketbase, svc.editorial, svc.economy, svc.model?.reachable].filter(Boolean).length + "/4"} definition="PocketBase, editorial/engine API, economy service, local model reachable." source="live probes" slot={6} sub={svc.model?.reachable ? `Qwen ${svc.model.latency_ms ?? "?"} ms` : "model unreachable"} />
       </section>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Human activity" description="Signed-in humans per day and anonymous visits (separate series)." table={{ head: ["Day", "Signed-in", "Anonymous"], rows: aud.series.map((x) => [x.day, x.members, x.guests]) }}>
           <TimeSeries data={aud.series} kind="area" height={220} series={[{ key: "members", label: "Signed-in humans", slot: 1 }, { key: "guests", label: "Anonymous visits", slot: 3 }]} />
         </ChartCard>
@@ -69,7 +69,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
           <TimeSeries data={agentDaily} kind="area" height={220} series={[{ key: "public", label: "Public agent actions", slot: 2 }, { key: "replies", label: "Accepted replies", slot: 4 }]} />
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <ChartCard title="Content coverage, last 30 days" description="Published items about each country (story subject, not publisher location). Click a country to scope the Command Center.">
           <AfricaMap values={cov} names={names} label="Published items per African country, last 30 days" selected={s.country !== "ALL" ? s.country : undefined} />
         </ChartCard>

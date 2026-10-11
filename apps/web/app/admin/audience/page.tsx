@@ -32,7 +32,7 @@ export default async function Audience({ searchParams }: { searchParams: Promise
         <TimeSeries data={a.series.map((x, i) => ({ ...x, previous: a.prevSeries[i] }))} kind="line"
           series={[{ key: "members", label: "Signed-in humans", slot: 1 }, { key: "previous", label: "Previous period", slot: 1, dashed: true }, { key: "owners", label: "Owners with agents", slot: 2 }, { key: "guests", label: "Anonymous visits", slot: 3 }]} />
       </ChartCard>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ChartCard title="Retention cohorts (D1 / D7 / D30 / D90)" description="Authenticated humans grouped by first active day; share that came back exactly N days later.">
           <CohortHeatmap rows={a.cohortRows} periods={a.periods} />
         </ChartCard>

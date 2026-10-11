@@ -52,7 +52,7 @@ export default async function Geography({ searchParams }: { searchParams: Promis
         <MetricCard label="Healthy sources" value={`${src.filter((x) => x.state === "healthy").length}/${src.filter((x) => x.state !== "off").length}`} definition="Enabled, rights-approved sources that fetched successfully within 3 fetch intervals." source="sources" slot={3} />
         <MetricCard label="Original languages" value={String(langs.length)} definition="Distinct original languages among published items in the window." source="editorial_pieces.language" slot={4} sub={langs.map((l) => LANG[l] ?? l).join(", ")} />
       </section>
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <ChartCard title="Items per country (window)" description="Click a country to inspect it. Grey = nothing published about it in this window.">
           <AfricaMap values={covWin} names={names} label="Published items per country in the selected window" selected={sel ?? undefined} />
         </ChartCard>
@@ -66,7 +66,7 @@ export default async function Geography({ searchParams }: { searchParams: Promis
           <p className="mt-2 text-xs text-muted-foreground">Each edition shows its local items first, then labelled {sel ? regionOf(sel) : "regional"} and pan-African items; items only about other regions are excluded. Verified by tests/e2e/v15-country.spec.ts.</p>
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Original language by region (window)" description="Items per region and original language; translation is labelled separately in the reader UI.">
           <Heatmap rows={regions} cols={langs.map((l) => LANG[l] ?? l)} rowLabel="Region" cell={(r, c) => win.filter((p) => (LANG[p.language || "en"] ?? p.language) === c && (p.country_codes ?? []).some((x: string) => regionOf(x) === r)).length} />
         </ChartCard>

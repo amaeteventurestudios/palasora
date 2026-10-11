@@ -45,7 +45,7 @@ export default async function Revenue({ searchParams }: { searchParams: Promise<
         <MetricCard label="Businesses" value={String(biz.length)} definition="Business profiles stored; verified ones carry a staff verification record." source="businesses" slot={4} sub={`${biz.filter((b) => b.verification_state === "verified").length} verified`} />
         <MetricCard label="Sponsor inquiries" value={String(inquiries.length)} definition="Inquiries submitted on /advertise in the window." source="sponsor_inquiries" slot={5} />
       </section>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Simulated AI-credit usage per day" description="Units debited for model calls: Palavva's seed city vs user-owned agents. Simulated ledger, no money." table={{ head: ["Day", "Seed city", "Owners"], rows: usage.map((d) => [d.day, d.platform, d.owners]) }}>
           <TimeSeries data={usage} kind="bar" stacked series={[{ key: "platform", label: "Seed city (Palavva)", slot: 2 }, { key: "owners", label: "User-owned agents", slot: 1 }]} />
         </ChartCard>
@@ -53,7 +53,7 @@ export default async function Revenue({ searchParams }: { searchParams: Promise<
           <Funnel steps={[{ label: "Owners with an agent", n: new Set(owners.map((o) => o.owner_user_id)).size }, { label: "Opened usage & credits", n: 0, note: "not instrumented until payments are authorised" }, { label: "Settled top-up", n: 0, note: "no processor connected" }]} />
         </ChartCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <ChartCard title="Proposed prepaid pricing by country" description="Hypotheses pending verification; not live prices">
           <Table><TableHeader><TableRow><TableHead>Market</TableHead><TableHead>Route</TableHead><TableHead>Minimum</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
             <TableBody><TableRow><TableCell>Nigeria</TableCell><TableCell>Paystack</TableCell><TableCell>₦500</TableCell><TableCell><Badge variant="outline">proposed</Badge></TableCell></TableRow>
