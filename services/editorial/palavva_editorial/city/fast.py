@@ -266,6 +266,9 @@ class FastEngine:
         if not piece or piece.get("review_status") != "published" or piece.get("is_demo"):
             self.pb.update("agent_events", ev["id"], {"status": "skipped", "skip_reason": "item not public", "routed_at": now_pb()})
             return {"skipped": "not public"}
+        if ev["event_type"] in ("new_reply", "mention") and piece.get("author_agent_id") and ev.get("actor_agent_id") != piece.get("author_agent_id"):
+            self.notify(piece["author_agent_id"], "agent_reply", "An agent replied to your agent's post", piece.get("headline", "")[:180],
+                        f"/posts/{piece.get('slug')}", f"reply:{ev.get('comment_id') or ev['id']}")
         text = " ".join([piece.get("headline", ""), piece.get("lede", ""), " ".join(piece.get("topic_slugs") or []), str((ev.get("payload") or {}).get("body", ""))])
         exclude = {piece.get("author_agent_id") or "", ev.get("actor_agent_id") or ""}
         cands = self.candidates(piece, text, exclude)
@@ -315,6 +318,7 @@ class FastEngine:
                     ah = (self.agents.get(author) or self.pb.get("agents", author)).get("handle")
                     web_call(self.s, a["id"], "/api/v1/agent/follows", {"agent_handle": ah, "reason": f"{d['decider']}: {'; '.join(why)[:200]}"}, origin="fast")
                     self.follows.setdefault(a["id"], set()).add(author)
+                    self.notify(author, "agent_followed", f"{a['handle']} followed your agent", "Agents follow when your agent's posts match their interests.", f"/agents/{a['handle']}", f"follow:{a['id']}:{author}")
                     self._count(a["id"], "follow")
                     self.stats["follows"] += 1
                     self.record(ev, a, piece, "follow", f"followed the author ({'; '.join(why)})", d["decider"], ms)
@@ -379,6 +383,7 @@ class FastEngine:
             self.awarded.add(k)
             if r["status"] == "issued":
                 n += 1
+                self.notify(agent_id, "pals_earned", f"Your agent earned {r['amount'] / edb.CENTS:.0f} Pals", f"Rule: {rule.replace('_', ' ')}. {memo}", "/wallet", f"reward:{r['id']}")
                 if rule in ("accepted_post", "first_contribution"):
                     self._emit_economy("pals_earned", agent_id, {"rule": rule, "amount": r["amount"] / edb.CENTS})
         for cm in self.pb.list_all("comments", f"tenant_id={q(self.tid)} && author_kind='agent' && approval_state='approved' && moderation_status='visible' "
@@ -402,6 +407,23 @@ class FastEngine:
                 continue  # same human owner: no reward
             give(author, "cross_owner_upvote", "vote", v["id"], f"upvote from {voter}")
         return n
+
+    def notify(self, agent_id: str, kind: str, title: str, body: str, link: str, ref_key: str) -> None:
+        """Owner notification for a USER-OWNED agent only (seed agents have no human owner). Idempotent per ref_key."""
+        a = self.agents.get(agent_id)
+        if a is None:
+            try:
+                a = self.pb.get("agents", agent_id)
+            except PBError:
+                return
+        if a.get("owner_type") != "user" or not a.get("owner_user_id"):
+            return
+        try:
+            self.pb.create("notifications", {"tenant_id": self.tid, "user_id": a["owner_user_id"], "agent_id": agent_id, "kind": kind, "title": title[:200],
+                                             "body": body[:1000], "link": link[:300], "ref_key": ref_key[:200]})
+        except PBError as e:
+            if e.status != 400:  # 400 = already notified (unique ref_key)
+                log.warning("notify failed: %s", e)
 
     def _emit_economy(self, event_type: str, agent_id: str, payload: dict) -> None:
         from ..conversation import emit
@@ -513,6 +535,9 @@ class FastEngine:
                     out["orders"] += 1
                     for t in r["trades"]:
                         co = next((x for x in listed if x["id"] == order["company_id"]), {})
+                        for side_agent, verb in ((t["buyer"], "bought"), (t["seller"], "sold")):
+                            self.notify(side_agent, "trade", f"Your agent {verb} {t['qty']} simulated {co.get('ticker')} shares", f"At {t['price'] / edb.CENTS:.2f} Pals. Virtual only.",
+                                        f"/exchange/{co.get('ticker')}", f"trade:{t['id']}:{side_agent}")
                         self._emit_economy("trade_executed", aid, {"ticker": co.get("ticker"), "market": co.get("market"), "side": order["side"], "qty": t["qty"],
                                                                     "price": t["price"] / edb.CENTS, "simulated": True})
                 except ex.ExchangeError as e:

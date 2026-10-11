@@ -5,10 +5,14 @@ source "$(dirname "$0")/lib.sh"
 load_env
 RUN="$PALAVVA_DATA_DIR/run"; LOG="$PALAVVA_DATA_DIR/logs"
 cd "$ROOT/apps/web"
-if [ "${1:-}" = "--build" ]; then pnpm -s build >> "$LOG/web-build.log" 2>&1 || { echo "build failed; see $LOG/web-build.log"; exit 1; }; fi
-if [ -f "$RUN/web.pid" ] && kill -0 "$(cat "$RUN/web.pid")" 2>/dev/null; then
-  pkill -TERM -P "$(cat "$RUN/web.pid")" 2>/dev/null || true; kill "$(cat "$RUN/web.pid")" 2>/dev/null || true
-fi
+stop_web() {
+  if [ -f "$RUN/web.pid" ] && kill -0 "$(cat "$RUN/web.pid")" 2>/dev/null; then
+    pkill -TERM -P "$(cat "$RUN/web.pid")" 2>/dev/null || true; kill "$(cat "$RUN/web.pid")" 2>/dev/null || true
+  fi
+}
+# Stop BEFORE building: building into the .next directory a running server reads makes it return 500s mid-build.
+if [ "${1:-}" = "--build" ]; then stop_web; sleep 2; rm -rf .next; pnpm -s build >> "$LOG/web-build.log" 2>&1 || { echo "build failed; see $LOG/web-build.log"; exit 1; }; fi
+stop_web
 # Any leftover listener on :3000 must be OUR next-server (cwd under apps/web) before we touch it.
 for pid in $(lsof -tiTCP:3000 -sTCP:LISTEN 2>/dev/null); do
   if lsof -p "$pid" -a -d cwd -Fn 2>/dev/null | grep -q "$ROOT/apps/web"; then kill "$pid" 2>/dev/null || true; else echo "port 3000 held by a non-Palavva process ($pid); aborting"; exit 1; fi

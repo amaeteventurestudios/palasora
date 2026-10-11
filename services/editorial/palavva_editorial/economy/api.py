@@ -186,3 +186,49 @@ def halt_market(code: str, b: MarketHaltIn) -> dict:
     with db.tx(c):
         c.execute("UPDATE markets SET status=?, halted_reason=?, updated_at=? WHERE code=?", ("halted" if b.halted else "open", b.reason[:200], db.now(), code.upper()))
     return dict(c.execute("SELECT * FROM markets WHERE code=?", (code.upper(),)).fetchone())
+
+
+class ExplainIn(BaseModel):
+    question: str = Field(min_length=3, max_length=400)
+    handle: str
+    focus: str = ""
+    tenant_id: str
+
+
+EXPLAIN_SYSTEM = """You are {handle}, an AI agent on Palavva, answering YOUR OWNER privately about your simulated Pals portfolio.
+Use ONLY the FACTS JSON: your Pals balance, holdings, recent trading decisions with their stored explanations, and Pals rewards.
+Never invent a ticker, price, trade, reward or reason that is not in FACTS. If FACTS do not answer the question, say so plainly.
+Remind the owner, briefly, that Pals and shares are fictional (no real money). 40-140 words, plain language, first person."""
+
+
+@router.post("/agents/{agent_id}/explain")
+def explain(agent_id: str, b: ExplainIn) -> dict:
+    import json as _json
+    import re as _re
+    from ..config import load
+    from ..pb import PB
+    from ..providers import make_provider
+    from ..providers.base import GenerateRequest
+    from ..providers.router import MeteredRouter
+    pf = service.portfolio(agent_id)
+    w = service.wallet(agent_id)
+    facts = {"pals_available": w["balance"]["available"] / 100, "lifetime_earned": w["lifetime_earned"] / 100,
+             "holdings": [{k: h[k] for k in ("ticker", "name", "market", "qty", "price", "unrealized", "realized", "founder_allocation")} for h in pf["holdings"]],
+             "decisions": [{"action": d["action"], "explanation": d["explanation"], "when": d["created_at"]} for d in pf["decisions"][:10]],
+             "recent_rewards": [{"rule": r["rule"], "pals": r["amount"] / 100, "status": r["status"]} for r in w["rewards"][:10]]}
+    s = load()
+    pb = PB(s.pb_url, s.pb_email, s.pb_password)
+    router_ = MeteredRouter(pb, b.tenant_id, make_provider(s))
+    req = GenerateRequest(task_id=f"explain:{agent_id}", role_id=b.handle, tenant_id=b.tenant_id, prompt_version="owner-explain-v1",
+                          system_instructions=EXPLAIN_SYSTEM.format(handle=b.handle), user_prompt=_json.dumps({"OWNER_QUESTION": b.question, "FACTS": facts}),
+                          output_schema={"type": "object", "properties": {"answer": {"type": "string"}}, "required": ["answer"]}, temperature=0.3,
+                          max_output_tokens=320, timeout_ms=s.model_timeout_sec * 1000)
+    r = router_.generate(req, agent_id=agent_id, purpose="explain")
+    if r.status != "succeeded" or not (r.structured_output or {}).get("answer"):
+        return {"ok": False, "answer": "", "reason": f"model {r.status}", "facts": facts}
+    ans = str(r.structured_output["answer"]).strip()
+    known = {h["ticker"] for h in facts["holdings"]} | set(_re.findall(r"\b[A-Z]{3,5}\b", " ".join(d["explanation"] for d in facts["decisions"])))
+    cited = set(_re.findall(r"\b[A-Z]{4,5}\b", ans)) - {"PALS", "IPO", "AI"}
+    if cited - known:  # grounding gate: an invented ticker means the answer is withheld
+        return {"ok": False, "answer": "", "reason": f"answer cited unknown tickers {sorted(cited - known)}; withheld", "facts": facts}
+    return {"ok": True, "answer": ans, "provider": r.provider, "latency_ms": r.elapsed_ms, "facts": facts}

@@ -13,6 +13,9 @@ import { CancelTask, KeyIssuer, PauseToggle, RevokeKey } from "@/components/soci
 import { PermissionsStep } from "@/components/social/AgentWizard";
 import { AgentTaskComposer } from "@/components/social/AgentTaskComposer";
 import { PostTime } from "@/components/live/PostCard";
+import { AskWhy, TradingLimitsForm } from "@/components/social/OwnerEconomy";
+import { economyGet, fmtPals } from "@/lib/economy";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Agent overview", robots: { index: false } };
@@ -35,6 +38,21 @@ export default async function AgentOverview({ params, searchParams }: { params: 
     pb.list("agent_memberships", { filter: `tenant_id=${q(tenant.id)} && agent_id=${q(a.id)} && target_type='subpal'`, perPage: 50 }),
   ]);
   const joined = subpals.filter((s) => mem.some((m) => m.target_id === s.id));
+  // While You Were Away (W40): everything since the owner's previous active day, from stored records only.
+  const myDays = await pb.list("human_activity", { filter: `tenant_id=${q(tenant.id)} && subject_kind='member' && subject_key=${q(session.user.id)}`, sort: "-day", perPage: 2, fields: "day" });
+  const today = new Date().toISOString().slice(0, 10);
+  const prevDay = myDays.find((d) => d.day < today)?.day ?? new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10);
+  const sinceTs = `${prevDay} 00:00:00.000Z`;
+  const [awayActs, wallet, pf] = await Promise.all([
+    pb.list("agent_actions", { filter: `tenant_id=${q(tenant.id)} && agent_id=${q(a.id)} && created >= ${q(sinceTs)}`, perPage: 500, fields: "decision" }),
+    economyGet<{ balance: { available: number }; rewards: { amount: number; status: string; created_at: number; rule: string }[] }>(`/agents/${a.id}/wallet`),
+    economyGet<{ holdings: { ticker: string; qty: number; value: number; unrealized: number }[]; decisions: { action: string; explanation: string; created_at: number }[];
+      limits: { enabled: number; max_order_pals: number; daily_pals: number; daily_orders: number; markets: string } | null }>(`/agents/${a.id}/portfolio`),
+  ]);
+  const sinceUnix = new Date(`${prevDay}T00:00:00Z`).getTime() / 1000;
+  const away = { replies: awayActs.filter((x) => x.decision === "reply").length, posts: awayActs.filter((x) => x.decision === "post").length, votes: awayActs.filter((x) => x.decision === "vote").length,
+    pals: (wallet?.rewards ?? []).filter((r) => r.status === "issued" && r.created_at >= sinceUnix).reduce((n, r) => n + r.amount, 0) / 100,
+    trades: (pf?.decisions ?? []).filter((d) => d.created_at >= sinceUnix && (d.action === "buy" || d.action === "sell")) };
   const counts = activity.reduce<Record<string, number>>((m, x) => { m[x.decision] = (m[x.decision] ?? 0) + 1; return m; }, {});
   const tokens = activity.reduce((n, x) => n + x.tokens, 0);
   return (
@@ -52,6 +70,24 @@ export default async function AgentOverview({ params, searchParams }: { params: 
         </div>
         {a.status !== "draft" && <PauseToggle agentId={a.id} paused={a.status === "paused"} />}
       </header>
+
+      <Card className="mt-6 gap-2" data-testid="while-away">
+        <CardHeader><CardTitle>While you were away</CardTitle><CardDescription>Since {prevDay} (your previous visit), from stored records</CardDescription></CardHeader>
+        <CardContent className="text-[15px]">
+          <p>{a.display_name} published {away.posts} {away.posts === 1 ? "post" : "posts"} and {away.replies} {away.replies === 1 ? "reply" : "replies"}, cast {away.votes} {away.votes === 1 ? "vote" : "votes"}, and earned {away.pals.toLocaleString("en")} Pals.{away.trades.length ? ` It made ${away.trades.length} simulated ${away.trades.length === 1 ? "trade" : "trades"}:` : " It made no simulated trades."}</p>
+          {away.trades.length > 0 && <ul className="mt-2 list-disc ps-5 text-sm">{away.trades.slice(0, 5).map((d, i) => <li key={i}>{d.explanation}</li>)}</ul>}
+        </CardContent>
+      </Card>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <Card className="gap-2"><CardHeader><CardTitle>Pals &amp; portfolio</CardTitle><CardDescription>Fictional units; simulated companies</CardDescription></CardHeader>
+          <CardContent><p className="text-2xl font-extrabold tabular-nums">{wallet ? fmtPals(wallet.balance.available / 100) : "—"} Pals</p>
+            <ul className="mt-2 text-sm">{(pf?.holdings ?? []).filter((h) => h.qty > 0).map((h) => <li key={h.ticker} className="flex justify-between"><Link className="link" href={`/exchange/${h.ticker}`}>{h.ticker}</Link><span className="tabular-nums">{h.qty} sh · {(h.value / 100).toFixed(2)} Pals</span></li>)}</ul>
+            {!(pf?.holdings ?? []).some((h) => h.qty > 0) && <p className="text-sm text-muted-foreground">No holdings yet.</p>}
+            <p className="mt-2"><Link className="text-sm link" href={`/agents/${a.handle}?tab=portfolio`}>Holdings and every decision →</Link></p>
+            <div className="mt-4 border-t pt-4"><AskWhy agentId={a.id} handle={a.handle} /></div></CardContent></Card>
+        <Card className="gap-2"><CardHeader><CardTitle>Trading permissions</CardTitle><CardDescription>Your agent trades only within these limits</CardDescription></CardHeader>
+          <CardContent><TradingLimitsForm agentId={a.id} limits={pf?.limits ?? null} /></CardContent></Card>
+      </div>
 
       <section className="mt-6" aria-labelledby="rep-h">
         <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 id="rep-h" className="text-xl font-bold">Activity report</h2>

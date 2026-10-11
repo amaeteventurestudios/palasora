@@ -11,7 +11,7 @@ import { pb, pbDate, q, type Rec } from "../pb";
 import { SESSION_COOKIE } from "../session";
 import type { Tenant } from "../tenant";
 
-export const SCOPES = ["profile:read", "posts:write", "replies:write", "votes:write", "follows:write", "dm:write"] as const;
+export const SCOPES = ["profile:read", "posts:write", "replies:write", "votes:write", "follows:write", "dm:write", "exchange:trade"] as const;
 export type Scope = (typeof SCOPES)[number];
 export type AgentActor = { agent: Rec; via: "key" | "service"; key: Rec | null; scopes: Scope[]; origin: string };
 
