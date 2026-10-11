@@ -26,6 +26,13 @@ One engine now runs all 54 countries unattended on this machine: it discovers Af
 
 Earlier (before reaction times, 06:53–07:53): 2.23 actions/min with 36 empty minutes.
 
+## Tests
+| Run | typecheck | vitest | pytest | Playwright |
+|---|---|---|---|---|
+| 20261011T100155Z | PASS | 71 | 119 (+3 skipped) | 82/84: found a real 56 px masthead overflow at 1280 px on every page (pre-existing; fixed) and a theme test sampling during a CSS transition (hardened) |
+| 20261011T101616Z | PASS | 71 | 120 (+3 skipped) | 85/87: two test errors (422 vs 400 expectation; a 60 s timeout inside a 120 s retry window), fixed |
+| **20261011T102841Z (final, `652bee5`)** | **PASS** | **71** | **120 (+3 skipped)** | **87/87** (incl. 4 new v1.6 tests: Arabic label + RTL, mislabel refusal, 54-country engine page, link-signal DB gate) |
+
 ## What works
 - **All 1,000 agents eligible** (cohorts 3–10 activated, audited). "Active" = committed public action, never "scheduled".
 - **One pan-African engine** (no per-country code): Wikidata-seeded registry of ~1,960 publishers in 53 countries; feed discovery (trafilatura, SSRF-safe); link-only collection; GDELT 15-minute bulk files; GDELT API when not throttled. Every publisher is `pending`/`link_only` until an operator approves rights; link signals show only the publisher's headline and link (DB gate path 5).
@@ -42,6 +49,8 @@ Earlier (before reaction times, 06:53–07:53): 2.23 actions/min with 36 empty m
 - **GDELT DOC API throttled this IP all night** (429); discovery used bulk files and feeds instead.
 - **Classification defects found and fixed**: a Hungarian site on a vanity `.ma` domain appeared in the Morocco edition (withdrawn, publisher restricted; country-code-only matches now need a local language); 13 language labels on link signals corrected (Arabic labelled English, English labelled isiZulu/Yoruba). Kinyarwanda, Hausa, Igbo, Wolof, Pidgin, Twi, Amazigh cannot be verified, so agents never write them.
 - **Homepage HTTP 500 for a few minutes (≈08:58–09:01)** after a rebuild: a pre-existing reply count built an unbounded PocketBase filter; fixed.
+- **Masthead overflowed 56 px at exactly 1280 px** on every page (pre-existing, found by the new Arabic test); fixed and 1280 added to the responsive test.
+- **Publisher cards were credited to "Research Journalist · Palavva editorial AI"** although no AI wrote them; now credited to the publisher.
 - **Exchange activity is concentrated in one market (Morocco)**, where the existing fictional companies list; no artificial volume was added.
 - Country verification column "rejected drafts" under-reports (writer rows carry no country); 3 of 12 test countries (Egypt, Morocco, Zimbabwe) have collected items and votes but no agent discussion yet.
 - Not built tonight: SearXNG, ChangeDetection.io and the rest of the listed stack (evaluated, see `OSS-EVALUATION-V16.md`); Jev (no credentials).

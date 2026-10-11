@@ -1,0 +1,146 @@
+[
+  {
+    "path": "/admin/engine?w=6h",
+    "width": 1440,
+    "theme": "light",
+    "status": 200,
+    "ms": 4333,
+    "overflow": 0,
+    "file": "final-admin_engine_w_6h-1440-light.png"
+  },
+  {
+    "path": "/admin/engine?w=6h",
+    "width": 390,
+    "theme": "light",
+    "status": 200,
+    "ms": 3509,
+    "overflow": 0,
+    "file": "final-admin_engine_w_6h-390-light.png"
+  },
+  {
+    "path": "/?edition=SN",
+    "width": 1440,
+    "theme": "light",
+    "status": 200,
+    "ms": 3798,
+    "overflow": 0,
+    "file": "final-edition_SN-1440-light.png"
+  },
+  {
+    "path": "/?edition=SN",
+    "width": 390,
+    "theme": "light",
+    "status": 200,
+    "ms": 2903,
+    "overflow": 0,
+    "file": "final-edition_SN-390-light.png"
+  },
+  {
+    "path": "/?edition=EG",
+    "width": 1440,
+    "theme": "light",
+    "status": 200,
+    "ms": 3862,
+    "overflow": 0,
+    "file": "final-edition_EG-1440-light.png"
+  },
+  {
+    "path": "/?edition=EG",
+    "width": 390,
+    "theme": "light",
+    "status": 200,
+    "ms": 2924,
+    "overflow": 0,
+    "file": "final-edition_EG-390-light.png"
+  },
+  {
+    "path": "/?edition=KE",
+    "width": 1440,
+    "theme": "light",
+    "status": 200,
+    "ms": 3877,
+    "overflow": 0,
+    "file": "final-edition_KE-1440-light.png"
+  },
+  {
+    "path": "/?edition=KE",
+    "width": 390,
+    "theme": "light",
+    "status": 200,
+    "ms": 3355,
+    "overflow": 0,
+    "file": "final-edition_KE-390-light.png"
+  },
+  {
+    "path": "/admin/engine?w=6h",
+    "width": 1440,
+    "theme": "dark",
+    "status": 200,
+    "ms": 4697,
+    "overflow": 0,
+    "file": "final-admin_engine_w_6h-1440-dark.png"
+  },
+  {
+    "path": "/admin/engine?w=6h",
+    "width": 390,
+    "theme": "dark",
+    "status": 200,
+    "ms": 3510,
+    "overflow": 0,
+    "file": "final-admin_engine_w_6h-390-dark.png"
+  },
+  {
+    "path": "/?edition=SN",
+    "width": 1440,
+    "theme": "dark",
+    "status": 200,
+    "ms": 3924,
+    "overflow": 0,
+    "file": "final-edition_SN-1440-dark.png"
+  },
+  {
+    "path": "/?edition=SN",
+    "width": 390,
+    "theme": "dark",
+    "status": 200,
+    "ms": 2864,
+    "overflow": 0,
+    "file": "final-edition_SN-390-dark.png"
+  },
+  {
+    "path": "/?edition=EG",
+    "width": 1440,
+    "theme": "dark",
+    "status": 200,
+    "ms": 3433,
+    "overflow": 0,
+    "file": "final-edition_EG-1440-dark.png"
+  },
+  {
+    "path": "/?edition=EG",
+    "width": 390,
+    "theme": "dark",
+    "status": 200,
+    "ms": 2947,
+    "overflow": 0,
+    "file": "final-edition_EG-390-dark.png"
+  },
+  {
+    "path": "/?edition=KE",
+    "width": 1440,
+    "theme": "dark",
+    "status": 200,
+    "ms": 3591,
+    "overflow": 0,
+    "file": "final-edition_KE-1440-dark.png"
+  },
+  {
+    "path": "/?edition=KE",
+    "width": 390,
+    "theme": "dark",
+    "status": 200,
+    "ms": 2847,
+    "overflow": 0,
+    "file": "final-edition_KE-390-dark.png"
+  }
+]
