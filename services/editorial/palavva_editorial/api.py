@@ -227,7 +227,7 @@ def engine_status() -> dict:
     s = config.load()
     run = s.data_dir / "run"
     procs = {}
-    for name in ("worker", "fast", "writers", "intel", "editorial", "pocketbase", "web"):
+    for name in ("worker", "fast", "writers", "intel", "population", "editorial", "pocketbase", "web"):
         try:
             pid = int((run / f"{name}.pid").read_text().strip())
             _os.kill(pid, 0)
@@ -263,3 +263,67 @@ def engine_status() -> dict:
                       "experiment_enabled": _os.environ.get("OPENROUTER_EXPERIMENT_ENABLED", "false") == "true"},
             "languages": [{"code": c_, "name": langs.name(c_), "status": langs.status(c_), "rtl": langs.is_rtl(c_)} for c_ in codes],
             "benchmark": bench, "local_model": {"provider": s.model_provider, "model": s.ollama_model}}
+
+
+# ---------------- v1.7 Agent Population Manager and Control Room (docs/specs/30, 31) ----------------
+# Loopback + service token like every route above. The web route handlers in front of these enforce staff RBAC, CSRF
+# and rate limits and pass the acting administrator (id + name) for the audit trail; browsers never reach this service.
+from fastapi import Body  # noqa: E402
+from fastapi.responses import JSONResponse  # noqa: E402
+
+
+def _actor(body: dict) -> dict:
+    a = body.get("actor") or {}
+    return {"id": str(a.get("id") or "")[:40], "name": str(a.get("name") or "")[:120]}
+
+
+@app.get("/population/stats", dependencies=[Depends(auth)])
+def population_stats(tenant_id: str) -> dict:
+    from .city import population
+    return population.stats(pb(), tenant_id)
+
+
+@app.post("/population/preview", dependencies=[Depends(auth)])
+def population_preview(body: dict = Body(...)) -> dict:
+    from .city import population
+    return population.preview(pb(), str(body["tenant_id"]), str(body.get("op") or "create"), str(body.get("mode") or ""),
+                              list(body.get("countries") or []), dict(body.get("params") or {}), str(S.data_dir / "pb_data"))
+
+
+@app.post("/population/jobs", dependencies=[Depends(auth)])
+def population_job(body: dict = Body(...)):
+    from .city import population
+    try:
+        return population.create_job(pb(), str(body["tenant_id"]), body, _actor(body))
+    except population.JobRefused as e:
+        return JSONResponse(status_code=409 if e.code in ("PREVIEW_CHANGED", "CONFIRMATION_REQUIRED") else 422,
+                            content={"error": {"code": e.code, "message": e.message}, **e.data})
+
+
+@app.get("/engine-config", dependencies=[Depends(auth)])
+def engine_config(tenant_id: str) -> dict:
+    from .city import control
+    return control.view(pb(), tenant_id)
+
+
+@app.post("/engine-config/preview", dependencies=[Depends(auth)])
+def engine_config_preview(body: dict = Body(...)):
+    from .city import control
+    cur = control.load(pb(), str(body["tenant_id"]), ttl=0)
+    try:
+        _, diff = control.apply_changes(cur, list(body.get("changes") or []))
+    except (ValueError, TypeError) as e:
+        return JSONResponse(status_code=422, content={"error": {"code": "INVALID", "message": str(e)}})
+    return {"diff": diff, "revision": cur.get("revision", 0)}
+
+
+@app.post("/engine-config", dependencies=[Depends(auth)])
+def engine_config_save(body: dict = Body(...)):
+    from .city import control
+    try:
+        return control.save(pb(), str(body["tenant_id"]), list(body.get("changes") or []), int(body.get("base_revision") or 0), _actor(body),
+                            str(body.get("reason") or ""), int(body.get("rollback_to") or 0))
+    except control.ConflictError as e:
+        return JSONResponse(status_code=409, content={"error": {"code": "CONFLICT", "message": str(e)}, "current_revision": e.current})
+    except (ValueError, TypeError) as e:
+        return JSONResponse(status_code=422, content={"error": {"code": "INVALID", "message": str(e)}})

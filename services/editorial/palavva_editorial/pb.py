@@ -56,6 +56,10 @@ class PB:
             return r.json() if r.content else None
         raise PBError(401, "auth retry exhausted")
 
+    def route(self, method: str, path: str, **kw) -> Any:
+        """Custom superuser routes under /api/palavva/ (pb_hooks/population.pb.js)."""
+        return self._req(method, path, **kw)
+
     def health(self) -> bool:
         try:
             return self._http.get(f"{self.url}/api/health", timeout=3).status_code == 200

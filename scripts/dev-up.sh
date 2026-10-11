@@ -40,6 +40,10 @@ if [ "${INTEL_ENABLED:-false}" = "true" ] && ! is_up intel; then  # v1.6 pan-Afr
   (cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.intel.discover >> "$LOG/intel.log" 2>&1 < /dev/null) &
   echo $! > "$RUN/intel.pid"
 fi
+if ! is_up population; then  # v1.7 Agent Population Manager runner (durable bulk jobs, resumes after restarts)
+  (cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.city.population >> "$LOG/population.log" 2>&1 < /dev/null) &
+  echo $! > "$RUN/population.pid"
+fi
 if ! is_up web; then
   port_busy 3000 && { echo "Port 3000 busy (not ours). Aborting."; exit 1; }
   cd "$ROOT/apps/web"

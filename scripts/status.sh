@@ -2,7 +2,7 @@
 # Show Palavva local service status, ports, versions and policy gates (no secrets printed).
 source "$(dirname "$0")/lib.sh"
 load_env
-for svc in pocketbase editorial worker fast writers intel web; do f="$PALAVVA_DATA_DIR/run/$svc.pid"; if [ -f "$f" ] && kill -0 "$(cat "$f")" 2>/dev/null; then echo "$svc: running (pid $(cat "$f"))"; else echo "$svc: stopped"; fi; done
+for svc in pocketbase editorial worker fast writers intel population web; do f="$PALAVVA_DATA_DIR/run/$svc.pid"; if [ -f "$f" ] && kill -0 "$(cat "$f")" 2>/dev/null; then echo "$svc: running (pid $(cat "$f"))"; else echo "$svc: stopped"; fi; done
 echo "web       $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/api/v1/health)  http://127.0.0.1:3000"
 echo "pocketbase $(curl -s -o /dev/null -w '%{http_code}' "$PB_URL/api/health")  $PB_URL (loopback)"
 echo "editorial $(curl -s -o /dev/null -w '%{http_code}' "$EDITORIAL_URL/health")  $EDITORIAL_URL (loopback)"

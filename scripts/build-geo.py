@@ -29,6 +29,47 @@ def dp(points, eps):
     return [points[0], points[-1]]
 
 
+# v1.7 (all 54 countries): geoBoundaries gbOpen omits or duplicates ISO 3166-2 codes for a few countries, truncates
+# Seychelles names at 10 characters and carries mojibake. Corrections are explicit and listed here (COUNTRY-COVERAGE.md).
+CODE_FIX = {("CF", "Sangha-Mbaéré"): "CF-SE", ("CF", "Ouham-Pendé"): "CF-OP", ("BJ", "Kouffo"): "BJ-KO", ("SD", "Abyei PCA"): "SD-ABYEI",
+            ("GM", "Kanifing"): "GM-KANIFING", ("GM", "Kuntaur"): "GM-KUNTAUR"}
+CI_CODES = {"Abidjan": "CI-AB", "Bas-Sassandra": "CI-BS", "Comoé": "CI-CM", "Denguélé": "CI-DN", "Gôh-Djiboua": "CI-GD", "Lacs": "CI-LC", "Lagunes": "CI-LG",
+            "Montagnes": "CI-MG", "Sassandra-Marahoué": "CI-SM", "Savanes": "CI-SV", "Vallée du Bandama": "CI-VB", "Woroba": "CI-WR", "Yamoussoukro": "CI-YM", "Zanzan": "CI-ZZ"}
+NAME_FIX = {
+    "CI": {"Denguele": "Denguélé", "District Autonome D'Abidjan": "Abidjan", "District Autonome De Yamoussoukro": "Yamoussoukro", "Goh-Djiboua": "Gôh-Djiboua",
+           "Sassandra-Marahoue": "Sassandra-Marahoué", "Valle Du Bandama": "Vallée du Bandama", "Comoe": "Comoé"},
+    "BJ": {"Atlanique": "Atlantique", "Oueme": "Ouémé"},
+    "SC": {"Outer Isla": "Outer Islands", "Baie Saint": "Baie Sainte Anne", "Grand Anse": "Grand Anse Praslin", "La Digue a": "La Digue and Inner Islands",
+           "Anse Aux P": "Anse aux Pins", "Anse Boile": "Anse Boileau", "Anse Etoil": "Anse Etoile", "Anse Royal": "Anse Royale", "Baie Lazar": "Baie Lazare",
+           "Beau Vallo": "Beau Vallon", "Grand'Anse": "Grand Anse Mahé", "La RiviÃ¨re": "English River", "Les Mamell": "Les Mamelles", "Mont Buxto": "Mont Buxton",
+           "Mont Fleur": "Mont Fleuri", "Pointe La": "Pointe La Rue", "Roche CaÃ¯m": "Roche Caïman", "Saint Loui": "Saint Louis"},
+}
+
+
+def slug_code(iso2: str, name: str) -> str:
+    import unicodedata
+    a = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    return f"{iso2}-" + "".join(ch for ch in a.upper() if ch.isalnum())[:14]
+
+
+def fix_name(iso2: str, name: str) -> str:
+    return NAME_FIX.get(iso2, {}).get(name, name)
+
+
+def fix_code(iso2: str, raw: str, name: str, seen: set) -> str:
+    if (iso2, name) in CODE_FIX:
+        return CODE_FIX[(iso2, name)]
+    if iso2 == "CI":
+        return CI_CODES[name]
+    if iso2 == "ZA":
+        return ZA_CODES.get(raw, raw)
+    if iso2 == "ZW" and raw.startswith("ZW") and not raw.startswith("ZW-"):
+        raw = "ZW-" + raw[2:]
+    if raw.startswith(iso2 + "-") and raw not in seen:
+        return raw
+    return slug_code(iso2, name)  # missing, malformed or duplicated in the source: stable code from the name
+
+
 def rings(geom):
     t = geom["type"]
     if t == "Polygon":
@@ -50,13 +91,12 @@ def main(src, iso2, license_, source, out):
     H = (maxy - miny) * s
     eps = (maxx - minx) / 900  # ~1 px at 1000 px width
     areas = []
+    seen: set[str] = set()
     for f in feats:
         props = f["properties"]
-        code = props.get("shapeISO") or ""
-        if iso2 == "ZA":
-            code = ZA_CODES.get(code, code)
-        if not code.startswith(iso2 + "-"):
-            raise SystemExit(f"unexpected code {code!r} for {props.get('shapeName')}")
+        name = fix_name(iso2, props.get("shapeName") or "")
+        code = fix_code(iso2, props.get("shapeISO") or "", name, seen)
+        seen.add(code)
         parts, area_sum, cx_sum, cy_sum = [], 0.0, 0.0, 0.0
         for ring in rings(f["geometry"]):
             pts = [((float(x) * k - minx) * s, (-float(y) - miny) * s) for x, y in ring[:-1]]  # drop the closing point
@@ -76,7 +116,7 @@ def main(src, iso2, license_, source, out):
                 cy_sum += (ya + yb) * cr
             area_sum += a
         cx, cy = (cx_sum / (3 * area_sum), cy_sum / (3 * area_sum)) if area_sum else (0, 0)
-        areas.append({"code": code, "name": props.get("shapeName"), "d": "".join(parts), "cx": round(cx, 1), "cy": round(cy, 1)})
+        areas.append({"code": code, "name": name, "d": "".join(parts), "cx": round(cx, 1), "cy": round(cy, 1)})
     areas.sort(key=lambda a: a["name"])
     json.dump({"country": iso2, "dataset": "geoBoundaries gbOpen ADM1", "source": source, "license": license_, "version": "9469f09",
                "attribution": f"Boundaries: geoBoundaries (gbOpen ADM1, {source}), {license_}. Simplified for display; not an authoritative border.",
