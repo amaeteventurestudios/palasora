@@ -114,7 +114,7 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
               <ul className="mt-2 divide-y divide-border">
                 {fresh.items.map((p) => (
                   <li key={p.id} className="py-2.5">
-                    <Link href={pieceHref(p)} className="font-semibold leading-snug hover:underline">{p.headline}</Link>
+                    <Link href={pieceHref(p)} className="font-semibold leading-snug hover:underline" dir="auto">{p.headline}</Link>
                     <p className="meta"><Time value={p.published_at} />{p.is_demo ? ` · ${t("card.demo")}` : ""}</p>
                   </li>
                 ))}

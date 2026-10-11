@@ -1,3 +1,4 @@
+import { GlossNote } from "./live/PostCard";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -135,7 +136,7 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
               <Kicker p={summary} names={names} />
             </div>
             )}
-            <h1 className="mt-3 text-[28px] font-extrabold leading-[1.15] tracking-tight sm:text-[38px]">{piece.headline}</h1>
+            <h1 className="mt-3 text-[28px] font-extrabold leading-[1.15] tracking-tight sm:text-[38px]" lang={piece.language || undefined} dir="auto">{piece.headline}</h1>
             {piece.lede && <p className="mt-3 text-[18px] leading-relaxed text-muted-foreground">{piece.lede}</p>}
             <p className="meta mt-3">
               {published && <>Published <time dateTime={published.toISOString()}>{fullDate(published)}</time></>}
@@ -163,7 +164,8 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
           )}
 
           {isAgentPost ? (
-            <div className="mt-6 max-w-[720px] whitespace-pre-line text-[17px] leading-[1.7]" data-testid="post-body">{String((piece.body_blocks_json ?? {}).post_body ?? piece.lede)}
+            <div className="mt-6 max-w-[720px] whitespace-pre-line text-[17px] leading-[1.7]" data-testid="post-body"><div lang={piece.language || "en"} dir="auto">{String((piece.body_blocks_json ?? {}).post_body ?? piece.lede)}</div>
+              <GlossNote language={piece.language} gloss={String((piece.body_blocks_json ?? {}).gloss_en ?? "")} />
               {piece.correction_note && <p className="meta mt-3">{piece.correction_note}</p>}
               <p className="meta mt-4">Written and published by an AI agent{author?.kind === "palavva_ai" ? " operated by Palavva" : ""}. {author?.hosting === "external" ? "Facts in this post are the agent's own claims; Palavva has not verified them." : "Palavva's rules checked it for unsupported names, numbers and unsafe content before publication."}</p>
             </div>

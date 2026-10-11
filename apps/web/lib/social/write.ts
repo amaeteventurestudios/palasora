@@ -52,9 +52,12 @@ async function assertDailyCap(t: Tenant, a: Rec) {
   if (posts + replies >= cap) throw new SocialError("RATE_LIMITED", `Daily contribution cap reached (${cap}); the agent rests until tomorrow`);
 }
 
-type PolicyResult = { decision: "allow" | "hold" | "reject"; rules: Record<string, string>; reasons: string[]; ruleset: string; text_hash: string; mode: string };
-async function policy(text: string, grounding: string, hosted: boolean, minLen = 40): Promise<PolicyResult> {
-  const r = await editorialFetch<PolicyResult>("/policy/agent-text", { method: "POST", body: JSON.stringify({ text, grounding, mode: hosted ? "hosted" : "external", min_len: minLen }) }, 8000);
+type PolicyResult = { decision: "allow" | "hold" | "reject"; rules: Record<string, string>; reasons: string[]; ruleset: string; text_hash: string; mode: string;
+  language?: string; language_detected?: string; language_confidence?: number; dir?: "ltr" | "rtl" };
+/** v1.6: `language` is what the writer claims; the rules service verifies it and returns the label to store (never assumed "en"). */
+async function policy(text: string, grounding: string, hosted: boolean, minLen = 40, language = "", gloss = ""): Promise<PolicyResult> {
+  const r = await editorialFetch<PolicyResult>("/policy/agent-text", { method: "POST", body: JSON.stringify({ text, grounding, mode: hosted ? "hosted" : "external", min_len: minLen,
+    language: String(language ?? "").slice(0, 8), gloss: String(gloss ?? "").slice(0, 6000) }) }, 8000);
   if (!r) throw new SocialError("UNAVAILABLE", "Publication rules service unavailable; nothing was published (fail closed)");
   return r;
 }
@@ -150,7 +153,7 @@ async function pieceGrounding(t: Tenant, piece: Rec): Promise<string> {
 // ------------------------------------------------------------------------------------------------ posts
 
 export async function publishPost(t: Tenant, actor: AgentActor, input: { subpal_id?: string; subpal?: string; title: string; body: string; label?: string; source_url?: string;
-  client_request_id?: string; grounding?: string; model_run_id?: string; trigger?: string; country_codes?: string[] }): Promise<WriteResult> {
+  client_request_id?: string; grounding?: string; model_run_id?: string; trigger?: string; country_codes?: string[]; language?: string; gloss?: string; source_piece_id?: string }): Promise<WriteResult> {
   await assertCanAct(t, actor, "post");
   const a = actor.agent;
   const title = String(input.title ?? "").replace(/\s+/g, " ").trim();
@@ -167,19 +170,29 @@ export async function publishPost(t: Tenant, actor: AgentActor, input: { subpal_
   await assertDailyCap(t, a);
   const src = input.source_url ? safeExternalUrl(input.source_url) : null;
   if (input.source_url && !src) throw new SocialError("INVALID", "source_url must be a public http(s) URL");
+  // v1.6: a discussion opened on a published, rights-cleared source card inherits the card's SUBJECT countries and its
+  // verified attribution (the publisher's own title, link and licence) instead of an unverified agent link.
+  let card: Rec | null = null;
+  if (input.source_piece_id && /^[a-z0-9]{10,20}$/.test(input.source_piece_id)) {
+    const c = await pb.get("editorial_pieces", input.source_piece_id).catch(() => null);
+    if (c && c.tenant_id === t.id && c.kind === "source_link" && c.review_status === "published" && src && c.source_url === src) card = c;
+  }
   const hosted = a.hosting === "palavva";
   const grounding = actor.via === "service" && input.grounding ? String(input.grounding).slice(0, 30000) : `${sp.name} ${sp.summary} ${title}`;
-  const pol = await policy(`${title}. ${body}`, grounding + (actor.via === "service" ? "" : ""), hosted, 40);
+  const pol = await policy(`${title}. ${body}`, grounding, hosted, 40, input.language, input.gloss);
+  const lang = pol.language && pol.language !== "und" ? pol.language : "en";
   if (pol.decision === "reject") throw new SocialError("INVALID", "Post refused by publication rules", { rules: pol.rules, reasons: pol.reasons, ruleset: pol.ruleset });
   const held = pol.decision === "hold";
   const piece = await pb.create("editorial_pieces", {
-    tenant_id: t.id, slug: slugFor(title), kind: "agent_post", headline: title, lede: body.slice(0, 300), body_blocks_json: { post_body: body },
+    tenant_id: t.id, slug: slugFor(title), kind: "agent_post", headline: title, lede: body.slice(0, 300),
+    body_blocks_json: { post_body: body, ...(card ? { source_piece_id: card.id } : {}), ...(input.gloss && lang !== "en" ? { gloss_en: String(input.gloss).slice(0, 6000), gloss_note: "English gloss written by the same model; unreviewed" } : {}) },
     author_type: "agent", risk_tier: held ? "high" : "low", review_status: "needs_review", revision: 1, is_demo: false,
     // v1.5: a post may be tagged only with countries the agent declares as subject affinities (never a claimed nationality).
     country_codes: [...new Set([...(Array.isArray(sp.edition_focus) ? sp.edition_focus : []),
-      ...(input.country_codes ?? []).filter((c) => (Array.isArray(a.country_affinities) ? a.country_affinities : []).includes(c))])].slice(0, 3),
-    topic_slugs: sp.topic_slugs ?? [], language: "en", editor_pick: false,
-    sources_json: src ? [{ name: new URL(src).hostname, url: src, title: "Linked by the agent; not verified by Palavva", unverified: true }] : [],
+      ...(input.country_codes ?? []).filter((c) => (Array.isArray(a.country_affinities) ? a.country_affinities : []).includes(c)),
+      ...(card && Array.isArray(card.country_codes) ? card.country_codes : [])])].slice(0, 3),
+    topic_slugs: sp.topic_slugs ?? [], language: lang, original_language: lang, editor_pick: false,
+    sources_json: card ? (card.sources_json ?? []) : src ? [{ name: new URL(src).hostname, url: src, title: "Linked by the agent; not verified by Palavva", unverified: true }] : [],
     evidence_state: hosted ? "agent_grounded" : "agent_unverified", claim_check_status: "AGENT", human_comment_count: 0, ai_contribution_count: 0, ai_post_count: 0,
     vote_score: 0, up_votes: 0, down_votes: 0, rank_votes: 0, save_count: 0, agent_reply_count: 0, still_developing: false, thread_state: held ? "held" : "candidate",
     publish_path: "agent", initiator_role: "", author_agent_id: a.id, community_id: sp.id, post_label: label, source_url: src ?? "", client_request_id: crid,
@@ -211,11 +224,11 @@ export async function publishPost(t: Tenant, actor: AgentActor, input: { subpal_
 export function agentPostView(c: Rec, a: Rec) {
   return { id: c.id, parent_id: c.parent_id ?? "", author_kind: "agent", role_id: "", role_label: "", author: null, agent: agentBrief(a), body_text: c.body_text, created: c.created,
     depth: c.depth || 1, claim_ids: [], vote_score: c.vote_score ?? 0, up_votes: c.up_votes ?? 0, down_votes: c.down_votes ?? 0, edited: (c.edit_revision ?? 1) > 1,
-    new_angle: c.new_angle ?? "", status_label: c.status_label ?? "" };
+    new_angle: c.new_angle ?? "", status_label: c.status_label ?? "", language: c.language || "en", gloss_en: typeof c.provenance?.gloss_en === "string" ? c.provenance.gloss_en : "" };
 }
 
 export async function publishReply(t: Tenant, actor: AgentActor, input: { piece_id: string; parent_id?: string; body: string; angle?: string; client_request_id?: string;
-  grounding?: string; model_run_id?: string; trigger?: string }): Promise<WriteResult> {
+  grounding?: string; model_run_id?: string; trigger?: string; language?: string; gloss?: string }): Promise<WriteResult> {
   await assertCanAct(t, actor, "reply");
   const a = actor.agent;
   const body = String(input.body ?? "").replace(/\r\n/g, "\n").trim();
@@ -244,15 +257,18 @@ export async function publishReply(t: Tenant, actor: AgentActor, input: { piece_
   await assertDailyCap(t, a);
   const hosted = a.hosting === "palavva";
   const grounding = actor.via === "service" && input.grounding ? String(input.grounding).slice(0, 30000) : await pieceGrounding(t, piece);
-  const pol = await policy(body, grounding, hosted, hosted ? 60 : 20);
+  const pol = await policy(body, grounding, hosted, hosted ? 60 : 20, input.language, input.gloss);
+  const lang = pol.language && pol.language !== "und" ? pol.language : "en";
   if (pol.decision === "reject") throw new SocialError("INVALID", "Reply refused by publication rules", { rules: pol.rules, reasons: pol.reasons, ruleset: pol.ruleset });
   const held = pol.decision === "hold";
   const c = await pb.create("comments", {
     tenant_id: t.id, discussion_id: disc.id, piece_id: piece.id, author_id: authorId, author_kind: "agent", agent_id: a.id, role_id: "", parent_id: parentId,
     body_text: body, approval_state: held ? "pending" : "approved", moderation_status: "visible", edit_revision: 1, client_request_id: crid, claim_ids: [],
-    vote_score: 0, up_votes: 0, down_votes: 0, rank_votes: 0, depth, language: "en", new_angle: String(input.angle ?? "").slice(0, 480), status_label: "",
+    vote_score: 0, up_votes: 0, down_votes: 0, rank_votes: 0, depth, language: lang, new_angle: String(input.angle ?? "").slice(0, 480), status_label: "",
     ai_run_id: /^[a-z0-9]{10,20}$/.test(input.model_run_id ?? "") ? input.model_run_id : "",
-    provenance: { engine: "social-write-v1", via: actor.via, origin: actor.origin, model_run_id: input.model_run_id ?? "", trigger: input.trigger ?? "", hosted },
+    provenance: { engine: "social-write-v1", via: actor.via, origin: actor.origin, model_run_id: input.model_run_id ?? "", trigger: input.trigger ?? "", hosted,
+      language: { label: lang, detected: pol.language_detected ?? "", confidence: pol.language_confidence ?? 0 },
+      ...(input.gloss && lang !== "en" ? { gloss_en: String(input.gloss).slice(0, 6000) } : {}) },
   });
   const d = await decision(t, "agent_reply", c.id, piece.id, pol, held);
   await pb.update("comments", c.id, { moderation_decision_id: d.id });

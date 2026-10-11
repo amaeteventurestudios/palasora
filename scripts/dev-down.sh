@@ -3,7 +3,7 @@
 source "$(dirname "$0")/lib.sh"
 load_env
 RUN="$PALAVVA_DATA_DIR/run"
-for svc in web fast worker editorial pocketbase; do
+for svc in web intel writers fast worker editorial pocketbase; do
   f="$RUN/$svc.pid"
   if [ -f "$f" ]; then
     pid=$(cat "$f")

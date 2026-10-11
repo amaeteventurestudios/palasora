@@ -99,6 +99,51 @@ def upsert_source_card(pb: PB, source: dict, item: dict, countries: list[str], t
     return card
 
 
+def upsert_link_card(pb: PB, source: dict, item: dict, countries: list[str], topics: list[str], risk: str, published: datetime, basis: str) -> dict | None:
+    """v1.6 LINK SIGNAL: a discovered publisher's own headline + link-out, no excerpt, no AI text (DB gate path 5).
+    basis: why the card is tagged with its countries ('named in the headline' or 'publisher based in XX')."""
+    tid = source["tenant_id"]
+    url = item.get("canonical_url") or ""
+    if not url or source.get("usage_policy") != "link_only" or source.get("rights_status") not in ("pending", "approved"):
+        return None
+    existing = pb.first("editorial_pieces", f"tenant_id={q(tid)} && kind='source_link' && source_url={q(url)}")
+    if existing:
+        return existing
+    subject = sorted({c for c in countries if re.fullmatch(r"[A-Z]{2}", c or "")})
+    publish = risk == "low"
+    att = {**_attribution(source, item), "license": "Link only: the publisher's headline and a link to the original", "via": "discovered via the GDELT Project",
+           "basis": basis}
+    data = {
+        "tenant_id": tid, "slug": _slug(item.get("title") or "", url), "kind": "source_link", "headline": (item.get("title") or "")[:300], "lede": "",
+        "body_blocks_json": {"card": "link-signal-v1", "basis": basis}, "author_type": "source", "risk_tier": risk or "low", "review_status": "needs_review",
+        "revision": 1, "is_demo": False, "country_codes": subject, "topic_slugs": topics or [], "language": item.get("language") or "en",
+        "original_language": item.get("language") or "en", "editor_pick": False, "sources_json": [att], "evidence_state": "link_only",
+        "claim_check_status": "NOT_APPLICABLE", "human_comment_count": 0, "ai_contribution_count": 0, "vote_score": 0, "save_count": 0,
+        "still_developing": False, "thread_state": "active", "publish_path": "link_signal", "post_label": "sourced_news", "source_url": url,
+        "source_item_id": item["id"], "origin_country": (source.get("countries") or [""])[0], "published_at": _pbdate(published),
+        "first_published_at": _pbdate(published), "last_activity_at": _pbdate(published),
+        "risk_basis": "" if publish else f"classifier risk tier {risk}: needs editor review",
+    }
+    try:
+        card = pb.create("editorial_pieces", data)
+    except PBError as e:
+        if e.status == 400:
+            again = pb.first("editorial_pieces", f"tenant_id={q(tid)} && kind='source_link' && source_url={q(url)}")
+            if again:
+                return again
+        raise
+    pb.create("discussions", {"tenant_id": tid, "piece_id": card["id"], "status": "open", "human_comment_count": 0, "ai_comment_count": 0})
+    if publish:
+        try:
+            card = pb.update("editorial_pieces", card["id"], {"review_status": "published", "reviewer_id": "system:link-signal-validator"})
+            _enqueue_news_event(pb, tid, card)
+        except PBError as e:
+            card = pb.update("editorial_pieces", card["id"], {"risk_basis": f"link-signal gate: {e}"[:1900]})
+    pb.audit(tid, "link_signal.created", "editorial_pieces", card["id"], {"source_id": source["id"], "published": card.get("review_status") == "published",
+                                                                          "countries": subject, "basis": basis}, actor_type="system", actor_id="intel")
+    return card
+
+
 def _enqueue_news_event(pb: PB, tid: str, card: dict) -> None:
     """Hand the card to the agent event engine (idempotent per card)."""
     try:

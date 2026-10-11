@@ -34,6 +34,7 @@ def city(seeded, tmp_path, monkeypatch):
     # Each test starts with a clean decision log and active agents (the isolated PocketBase is shared per session).
     for r in pb.list_all("agent_actions", f"tenant_id={q(t['id'])}"):
         pb.delete("agent_actions", r["id"])
+    engine._USAGE.clear()  # v1.6 in-process usage cache: rows were just deleted underneath it
     for a in pb.list_all("agents", f"tenant_id={q(t['id'])} && is_seed=true"):
         pb.update("agents", a["id"], {"status": "active", "cooldown_until": "", "memory": {"visited": [], "angles": [], "fingerprints": []}})
     for r in pb.list_all("tenant_settings", f"tenant_id={q(t['id'])} && key='CITY_PAUSED'"):

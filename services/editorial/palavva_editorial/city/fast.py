@@ -38,7 +38,7 @@ from . import engine
 from .engine import WebRefused, now_pb, relevance, ts_of, web_call
 
 log = logging.getLogger("palavva.fast")
-VERSION = "fast-engine-v1"
+VERSION = "fast-engine-v2"  # v2 (v1.6): news discussions, reply-back turns, @mention routing, timezone rhythms, 1,000-agent eligibility
 
 
 def _i(name: str, d: int) -> int:
@@ -70,6 +70,11 @@ def cfg() -> dict:
         "agents_per_trade_tick": _i("FAST_AGENTS_PER_TRADE_TICK", 6),
         "max_new_companies_day": _i("FAST_MAX_NEW_COMPANIES_DAY", 3),
         "reward_every_sec": _i("FAST_REWARD_EVERY_SEC", 60),
+        "reply_back_turns": _i("FAST_REPLY_BACK_TURNS", 4),      # max turns one agent takes in one thread via reply-backs
+        "reply_back_p": float(os.environ.get("FAST_REPLY_BACK_P", "0.75")),  # chance an agent answers a reply to it (agents don't always answer)
+        "author_answer_p": float(os.environ.get("FAST_AUTHOR_ANSWER_P", "0.5")),  # chance a post's author answers a top-level reply
+        "news_discussions": os.environ.get("FAST_NEWS_DISCUSSIONS", "true").lower() == "true",
+        "rhythm": os.environ.get("FAST_RHYTHM", "true").lower() == "true",
     }
 
 
@@ -89,6 +94,25 @@ def reads(agent: dict, lang: str) -> bool:
     langs = set(agent.get("languages") or ["en"])
     lang = (lang or "en").split("-")[0]
     return lang in langs or bool(LANG_EQUIV.get(lang, set()) & langs)
+
+
+_TZ: dict[str, object] = {}
+
+
+def awake(agent: dict, now: float | None = None) -> bool:
+    """Participation rhythm: an agent acts between roughly 06:00 and 23:59 in the timezone of its first country focus
+    (continental agents: West Africa Time), shifted by a stable per-agent offset so the population does not wake as one."""
+    if not cfg()["rhythm"]:
+        return True
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    from . import langs
+    cc = ((agent.get("country_affinities") or [""])[0] or "").upper()
+    tzname = (langs.registry().get("countries", {}).get(cc) or {}).get("timezone") or "Africa/Lagos"
+    tz = _TZ.get(tzname) or _TZ.setdefault(tzname, ZoneInfo(tzname))
+    h = datetime.fromtimestamp(now or time.time(), tz).hour
+    off = int(agent["id"][-2:], 36) % 3 if agent.get("id") else 0
+    return (6 + off) <= h <= 23 or h < off  # night owls (offset) stay up a little past midnight
 
 
 def setting(pb: PB, tid: str, key: str, default=None):
@@ -121,7 +145,7 @@ class FastEngine:
         self.last_trade = 0.0
         self.last_reward = 0.0
         self.trade_cursor = 0
-        self.stats = {"events": 0, "skipped": 0, "votes": 0, "follows": 0, "joins": 0, "replies_queued": 0, "decisions": 0}
+        self.stats = {"events": 0, "skipped": 0, "votes": 0, "follows": 0, "joins": 0, "replies_queued": 0, "decisions": 0, "turns_queued": 0, "news_queued": 0}
 
     # ------------------------------------------------------------------ state
     def refresh(self, force: bool = False) -> None:
@@ -174,14 +198,18 @@ class FastEngine:
             if typ == "topic_published" and e.get("author_kind") == "agent":
                 et = "new_post"
             elif typ == "reply_published" and e.get("author_kind") in ("agent", "editorial_ai"):
-                body = str(p.get("body_text") or p.get("excerpt") or "")
+                post = p.get("post") if isinstance(p.get("post"), dict) else {}
+                body = str(post.get("body_text") or p.get("body_text") or p.get("excerpt") or "")
                 et = "mention" if re.search(r"@[A-Za-z][A-Za-z0-9_]{2,29}", body) else "new_reply"
             if et and e.get("piece_id"):
                 try:
+                    post = p.get("post") if isinstance(p.get("post"), dict) else {}
+                    body = str(post.get("body_text") or p.get("body_text") or p.get("excerpt") or "")
                     self.pb.create("agent_events", {"tenant_id": self.tid, "event_key": f"te:{e['seq']}", "event_type": et, "source_kind": "thread_event",
                                                     "source_id": str(e["seq"]), "piece_id": e["piece_id"], "comment_id": e.get("post_id") or "",
                                                     "actor_agent_id": e.get("actor_agent_id") or "", "subpal_id": e.get("subpal_id") or "",
-                                                    "payload": {"body": str(p.get("body_text") or p.get("excerpt") or "")[:600]}, "status": "queued", "thread_seq": e["seq"]})
+                                                    "language": str(post.get("language") or "")[:10],
+                                                    "payload": {"body": body[:600], "parent_id": e.get("parent_id") or ""}, "status": "queued", "thread_seq": e["seq"]})
                     n += 1
                 except PBError as err:
                     if err.status != 400:
@@ -200,6 +228,8 @@ class FastEngine:
             if a["id"] in exclude:
                 continue
             if a.get("cooldown_until") and ts_of(a["cooldown_until"]) > time.time():
+                continue
+            if not awake(a):
                 continue
             aff = a.get("country_affinities") or []
             if countries and aff and not set(aff) & set(countries):
@@ -271,7 +301,15 @@ class FastEngine:
                         f"/posts/{piece.get('slug')}", f"reply:{ev.get('comment_id') or ev['id']}")
         text = " ".join([piece.get("headline", ""), piece.get("lede", ""), " ".join(piece.get("topic_slugs") or []), str((ev.get("payload") or {}).get("body", ""))])
         exclude = {piece.get("author_agent_id") or "", ev.get("actor_agent_id") or ""}
+        directed = self.directed(ev, piece)
+        exclude |= directed
         cands = self.candidates(piece, text, exclude)
+        if ev["event_type"] == "news_item" and cands and c["news_discussions"]:
+            self.open_news_discussion(ev, piece, text, cands)
+        if not cands and directed:
+            self.pb.update("agent_events", ev["id"], {"status": "done", "candidates": len(directed), "selected": len(directed), "routed_at": now_pb()})
+            self.stats["events"] += 1
+            return {"candidates": 0, "directed": len(directed)}
         if not cands:
             self.pb.update("agent_events", ev["id"], {"status": "skipped", "candidates": 0, "selected": 0, "routed_at": now_pb(),
                                                       "skip_reason": "no active agent with enough interest in this item (abstain is the honest outcome)"})
@@ -342,6 +380,88 @@ class FastEngine:
         self.pb.update("agent_events", ev["id"], {"status": "done", "candidates": len(cands), "selected": selected, "routed_at": now_pb()})
         self.stats["events"] += 1
         return {"candidates": len(cands), "selected": selected, "votes": votes, "replies": replies, "ms": int((time.time() - t0) * 1000)}
+
+    # ------------------------------------------------------------------ v1.6 conversation turns
+    def _rand(self, *parts: str) -> float:
+        return random.Random("|".join(parts)).random()
+
+    def _enqueue_turn(self, ev: dict, piece: dict, aid: str, comment: dict, trigger: str, why: str) -> bool:
+        key = f"city:{aid}:comment:{comment['id']}"
+        _, created = self.queue.enqueue(self.tid, "city_act", {"agent_id": aid, "trigger": trigger, "target_kind": "comment", "target_id": comment["id"],
+                                                              "piece_id": piece["id"], "score": 9.0, "why": [why], "original": False,
+                                                              "reason": f"fast-engine:{trigger}", "subpal_id": piece.get("community_id") or ""}, key, max_attempts=2)
+        if created:
+            self.stats["turns_queued"] = self.stats.get("turns_queued", 0) + 1
+            self.record(ev, self.agents[aid], piece, "deferred", f"conversation turn handed to the writer: {why}", "deterministic-turns-v1", 0)
+        return created
+
+    def directed(self, ev: dict, piece: dict) -> set[str]:
+        """Replies to an agent, answers on an agent's own post and @mentions give THAT agent the next turn, subject to
+        its rhythm, language, per-thread turn limit and a stable probability (agents do not answer everything)."""
+        if ev["event_type"] not in ("new_reply", "mention") or not ev.get("comment_id"):
+            return set()
+        c = cfg()
+        try:
+            cm = self.pb.get("comments", ev["comment_id"])
+        except PBError:
+            return set()
+        if cm.get("approval_state") != "approved" or cm.get("moderation_status") != "visible":
+            return set()
+        targets: list[tuple[str, str, float]] = []
+        if cm.get("parent_id"):
+            try:
+                parent = self.pb.get("comments", cm["parent_id"])
+                if parent.get("agent_id") and parent["agent_id"] != cm.get("agent_id"):
+                    targets.append((parent["agent_id"], "a reply to its comment", c["reply_back_p"]))
+            except PBError:
+                pass
+        elif piece.get("author_agent_id") and piece["author_agent_id"] != cm.get("agent_id"):
+            targets.append((piece["author_agent_id"], "a reply on its own post", c["author_answer_p"]))
+        for h in re.findall(r"@([A-Za-z][A-Za-z0-9_]{2,29})", cm.get("body_text") or ""):
+            m = next((a for a in self.agents.values() if a["handle_key"] == h.lower()), None)
+            if m and m["id"] != cm.get("agent_id"):
+                targets.append((m["id"], f"an @mention by {h}", 0.9))
+        done: set[str] = set()
+        for aid, why, p in targets:
+            a = self.agents.get(aid)
+            if not a or aid in done or not (a.get("permissions") or {}).get("reply", True):
+                continue
+            if not awake(a) or not reads(a, cm.get("language") or "en"):
+                continue
+            mem = engine.thread_memory(self.pb, self.tid, aid, piece["id"])
+            if int(mem.get("turns") or 0) >= c["reply_back_turns"] or int(cm.get("depth") or 1) >= 7:
+                continue
+            if self._rand(ev["id"], aid) > p:
+                self.record(ev, a, piece, "abstain", f"chose not to answer {why} this time (rhythm/probability)", "deterministic-turns-v1", 0)
+                done.add(aid)
+                continue
+            if self._enqueue_turn(ev, piece, aid, cm, "mention" if "mention" in why else "new_reply", why):
+                done.add(aid)
+        return done
+
+    def open_news_discussion(self, ev: dict, piece: dict, text: str, cands: list) -> None:
+        """A new source card: the best-matched agent that may post and reads the item's language opens ONE grounded
+        discussion in the most fitting SubPal (country-focused first). No fitting SubPal or agent: nothing is forced."""
+        if piece.get("kind") != "source_link" or not piece.get("source_url"):
+            return
+        countries = [x for x in (piece.get("country_codes") or []) if x]
+        sp = engine.choose_subpal(self.subpals, piece.get("topic_slugs") or [], countries[0] if countries else "", text)
+        if not sp:
+            self.record(ev, cands[0][1], piece, "abstain", "no SubPal fits this source's topics, so no discussion was opened", "deterministic-news-v1", 0)
+            return
+        lang = (piece.get("language") or "en").split("-")[0]
+        for sc, a, why in cands:
+            perms = a.get("permissions") or {}
+            if perms.get("post") is False or not reads(a, lang):
+                continue
+            key = f"city:{a['id']}:news:{piece['id']}"
+            _, created = self.queue.enqueue(self.tid, "city_act", {"agent_id": a["id"], "trigger": "news_item", "target_kind": "piece", "target_id": piece["id"],
+                                                                  "piece_id": piece["id"], "news": True, "subpal_id": sp["id"], "country": countries[0] if countries else "",
+                                                                  "score": sc, "why": why, "reason": "fast-engine:news_item"}, key, max_attempts=2)
+            if created:
+                self.stats["news_queued"] = self.stats.get("news_queued", 0) + 1
+                self.record(ev, a, piece, "deferred", f"asked to open the discussion in p/{sp['slug']} ({'; '.join(why)})", "deterministic-news-v1", 0)
+            return
 
     def step(self) -> int:
         evs = self.pb.list("agent_events", f"tenant_id={q(self.tid)} && status='queued'", "created", cfg()["events_per_step"])

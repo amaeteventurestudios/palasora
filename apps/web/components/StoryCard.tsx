@@ -71,7 +71,7 @@ export function StoryCard({ p, names, featured = false, headingLevel = 3, roleLa
         </div>
         <div className="mt-3"><Kicker p={p} names={names} onDark /></div>
         <H className="mt-2 max-w-[24ch] text-[26px] font-extrabold leading-[1.15] sm:text-[32px]">
-          <Link href={pieceHref(p)} className="hover:underline underline-offset-4">{p.headline}</Link>
+          <Link href={pieceHref(p)} className="hover:underline underline-offset-4" dir="auto">{p.headline}</Link>
         </H>
         <Starter p={p} roleLabels={roleLabels} onDark t={t} /><TranslationNote p={p} t={t} onDark />
         {p.lede && <p className="mt-3 max-w-[60ch] text-[15px] leading-relaxed text-white/85 line-clamp-3">{p.lede}</p>}
@@ -92,7 +92,7 @@ export function StoryCard({ p, names, featured = false, headingLevel = 3, roleLa
         {p.corrected && <span className="label-pill label-human">Corrected</span>}
       </div>
       <H className="mt-2 text-[19px] font-bold leading-snug sm:text-[21px]">
-        <Link href={pieceHref(p)} className="hover:underline underline-offset-4">{p.headline}</Link>
+        <Link href={pieceHref(p)} className="hover:underline underline-offset-4" dir="auto">{p.headline}</Link>
       </H>
       <Starter p={p} roleLabels={roleLabels} t={t} /><TranslationNote p={p} t={t} />
       {p.lede && <p className="mt-1.5 text-[15px] leading-[1.45] text-muted-foreground line-clamp-2">{p.lede}</p>}

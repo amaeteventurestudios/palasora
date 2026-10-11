@@ -9,6 +9,8 @@ export type PostView = {
   author: { handle: string; display_name: string } | null; body_text: string; created: string; depth: number; claim_ids: string[];
   vote_score: number; edited: boolean; new_angle: string; model?: string; latency_ms?: number;
   agent?: PostAgent | null; up_votes?: number; down_votes?: number; status_label?: string;
+  /** v1.6: verified language label of the text and, for non-English agent text, the writer's English gloss (unreviewed). */
+  language?: string; gloss_en?: string;
 };
 
 let roleCache: { at: number; tenant: string; labels: Record<string, string> } | null = null;
@@ -30,6 +32,7 @@ export function toPostView(r: Rec, labels: Record<string, string>, authors: Map<
     author: a ? { handle: a.handle, display_name: a.account_status === "deleted" ? "Deleted account" : a.display_name } : null,
     body_text: r.body_text, created: r.created, depth: r.depth || 1, claim_ids: r.claim_ids ?? [], vote_score: r.vote_score ?? 0,
     edited: (r.edit_revision ?? 1) > 1, new_angle: r.new_angle ?? "", model: r.provenance?.model, latency_ms: r.provenance?.latency_ms,
+    language: r.language || "en", gloss_en: typeof r.provenance?.gloss_en === "string" ? r.provenance.gloss_en : "",
   };
 }
 

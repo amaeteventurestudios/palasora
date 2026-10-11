@@ -30,7 +30,7 @@ export function TrendingNow({ r, t, edition }: { r: TrendResult & { items: Item[
       {!r.popularity && <p className="meta mt-1" data-testid="trend-honesty">{r.items.length ? t("trend.basis.editorial") : t("trend.empty")}</p>}
       {r.items.length > 0 && (
         <ol className="mt-2 divide-y divide-border">{r.items.map((it) => (
-          <li key={it.id} className="py-2.5"><Link href={pieceHref(it)} className="font-semibold leading-snug hover:underline">{it.headline}</Link><Basis it={it} t={t} /></li>))}</ol>
+          <li key={it.id} className="py-2.5"><Link href={pieceHref(it)} className="font-semibold leading-snug hover:underline" dir="auto">{it.headline}</Link><Basis it={it} t={t} /></li>))}</ol>
       )}
       <p className="meta mt-2">{t("trend.window", { h: r.window_h, time: r.computed_at.slice(11, 16) + " UTC" })}</p>
     </section>
@@ -52,7 +52,7 @@ export function TrendingAfrica({ r, t }: { r: TrendResult & { items: Item[] }; t
           return (
             <li key={it.id} className="py-2.5" data-origin={cc}>
               <p className="text-[12px] font-bold uppercase tracking-wide" style={{ color: "var(--link)" }}>{name}{it.topic_slugs[0] ? ` · ${it.topic_slugs[0]}` : ""}</p>
-              <Link href={pieceHref(it)} className="font-semibold leading-snug hover:underline" data-testid="africa-trend-link">{it.headline}</Link>
+              <Link href={pieceHref(it)} className="font-semibold leading-snug hover:underline" data-testid="africa-trend-link" dir="auto">{it.headline}</Link>
               {it.translation && (it.translation.status === "machine" || it.translation.status === "reviewed") && <p className="meta">{t("card.translated", { lang: localeInfo(it.translation.from)?.native ?? it.translation.from })}</p>}
               <Basis it={it} t={t} />
               <p className="mt-1 flex flex-wrap gap-x-3 text-sm">

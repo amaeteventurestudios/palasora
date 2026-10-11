@@ -18,3 +18,4 @@ pytest==8.3.5
 starlette==0.46.2
 typing_extensions==4.16.0
 uvicorn==0.32.1
+lingua-language-detector==2.1.1

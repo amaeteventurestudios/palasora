@@ -6,12 +6,31 @@ No fallback to any paid provider.
 """
 from __future__ import annotations
 
+import fcntl
 import json
+import os
 import time
+from pathlib import Path
 
 import httpx
 
 from .base import GenerateRequest, GenerateResult, semaphore
+
+
+def _host_lock(wait: float):
+    p = Path(os.environ.get("PALAVVA_DATA_DIR", "./data")).resolve() / "run" / "ollama.lock"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    f = open(p, "w")
+    end = time.time() + wait
+    while True:
+        try:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return f
+        except BlockingIOError:
+            if time.time() > end:
+                f.close()
+                return None
+            time.sleep(0.2)
 
 
 class OllamaProvider:
@@ -42,7 +61,12 @@ class OllamaProvider:
         acquired = self.sem.acquire(timeout=self.timeout)
         if not acquired:
             return None, "CONCURRENCY_TIMEOUT", int((time.time() - t0) * 1000)
+        lock = None
         try:
+            # v1.6: one request in flight on the shared Qwen host ACROSS processes (worker + writer pool), not just threads.
+            lock = _host_lock(self.timeout)
+            if lock is None:
+                return None, "CONCURRENCY_TIMEOUT", int((time.time() - t0) * 1000)
             r = httpx.post(f"{self.url}/api/chat", json=body, timeout=httpx.Timeout(min(self.timeout, req.timeout_ms / 1000), connect=8))
             return r, None, int((time.time() - t0) * 1000)
         except httpx.TimeoutException:
@@ -50,6 +74,9 @@ class OllamaProvider:
         except httpx.HTTPError as e:
             return None, f"UNREACHABLE:{type(e).__name__}", int((time.time() - t0) * 1000)
         finally:
+            if lock is not None:
+                fcntl.flock(lock, fcntl.LOCK_UN)
+                lock.close()
             self.sem.release()
 
     def generate(self, req: GenerateRequest) -> GenerateResult:

@@ -32,6 +32,14 @@ if ! is_up fast; then  # v1.5 fast action engine (model-free decisions, rewards 
   (cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.city.fast >> "$LOG/fast.log" 2>&1 < /dev/null) &
   echo $! > "$RUN/fast.pid"
 fi
+if [ "${WRITER_POOL_ENABLED:-false}" = "true" ] && ! is_up writers; then  # v1.6 shared writer pool
+  (cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.city.writers >> "$LOG/writers.log" 2>&1 < /dev/null) &
+  echo $! > "$RUN/writers.pid"
+fi
+if [ "${INTEL_ENABLED:-false}" = "true" ] && ! is_up intel; then  # v1.6 pan-African intelligence runner
+  (cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.intel.discover >> "$LOG/intel.log" 2>&1 < /dev/null) &
+  echo $! > "$RUN/intel.pid"
+fi
 if ! is_up web; then
   port_busy 3000 && { echo "Port 3000 busy (not ours). Aborting."; exit 1; }
   cd "$ROOT/apps/web"

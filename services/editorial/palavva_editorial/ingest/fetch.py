@@ -105,9 +105,12 @@ def pinned_request(url: str, ip: str) -> tuple[httpx.URL, dict[str, str], dict]:
 
 
 def safe_fetch(url: str, allowed_hosts: set[str] | None = None, timeout: float = 15.0, etag: str = "", last_modified: str = "",
-               max_redirects: int = 3, client: httpx.Client | None = None, resolver=socket.getaddrinfo) -> FetchResult:
+               max_redirects: int = 3, client: httpx.Client | None = None, resolver=socket.getaddrinfo, content_types: tuple[str, ...] | None = None) -> FetchResult:
+    """content_types: override the accepted types (v1.6 discovery reads publisher homepages as text/html, with every
+    other protection unchanged: public-IP pinning, host allowlist, redirect cap, size cap, timeout)."""
     allowed = {h.lower() for h in (allowed_hosts or set())} or {(urlsplit(url).hostname or "").lower()}
-    headers = {"User-Agent": USER_AGENT, "Accept": ", ".join(ALLOWED_CT)}
+    accept = content_types or ALLOWED_CT
+    headers = {"User-Agent": USER_AGENT, "Accept": ", ".join(accept)}
     if etag:
         headers["If-None-Match"] = etag
     if last_modified:
@@ -133,7 +136,7 @@ def safe_fetch(url: str, allowed_hosts: set[str] | None = None, timeout: float =
                 if r.status_code >= 400:
                     raise FetchError(f"HTTP_{r.status_code}")
                 ct = r.headers.get("content-type", "").split(";")[0].strip().lower()
-                if ct and not any(ct == a for a in ALLOWED_CT):
+                if ct and not any(ct == a for a in accept):
                     raise FetchError("BAD_CONTENT_TYPE", ct)
                 declared = int(r.headers.get("content-length") or 0)
                 if declared > MAX_BYTES:

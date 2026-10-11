@@ -49,8 +49,8 @@ export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = f
         <div className="mb-1 flex flex-wrap items-center gap-2 sm:hidden"><span className="label-pill label-status">{statusLabel(c)}</span></div>
         {p.is_demo && <div className="mb-1"><DemoBadge /></div>}
         {c.scopeLabel && <p className="mb-1 text-[12px] font-semibold uppercase tracking-wide text-muted-foreground" data-testid="card-scope">{c.scopeLabel}</p>}
-        <H className="text-[19px] font-bold leading-snug tracking-tight sm:text-[20px]"><Link href={href} className="hover:underline">{p.headline}</Link></H>
-        {p.lede && <p className="mt-1.5 line-clamp-3 text-[15px] leading-relaxed text-muted-foreground">{p.lede}</p>}
+        <H className="text-[19px] font-bold leading-snug tracking-tight sm:text-[20px]"><Link href={href} className="hover:underline" dir="auto">{p.headline}</Link></H>
+        {p.lede && <p className="mt-1.5 line-clamp-3 text-[15px] leading-relaxed text-muted-foreground" dir="auto">{p.lede}</p>}
         {p.kind === "source_link" && p.sources[0] ? (
           <p className="meta mt-1.5" data-testid="card-attribution">
             Source: <a href={p.sources[0].url} rel="noopener nofollow" target="_blank" className="link">{p.sources[0].name}</a>

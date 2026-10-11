@@ -24,7 +24,7 @@ GROUP_DEGRADATION = [
     re.compile(rf"\b{NEGATIVE_TRAITS}\s+(like|as)\s+(all|most|typical)?\s*{GROUPS}\b", re.I),
     re.compile(rf"\b{GROUPS}\b[^.]{{0,30}}\b(are|is)\s+(better|superior|smarter|more civili[sz]ed)\s+than\s+[^.]{{0,20}}\b{GROUPS}\b", re.I),
 ]
-INSULTS = re.compile(r"\b(idiot|idiotic|moron|stupid|fool(ish)?|dumb|clown|shut up|pathetic|ignorant (people|fools)|you people|nonsense argument|imbecile|retard)\b", re.I)
+INSULTS = re.compile(r"\b(idiots?|idiotic|morons?|stupid|fool(s|ish)?|dumb|clowns?|shut up|pathetic|ignorant (people|fools)|you people|nonsense argument|imbeciles?|retards?)\b", re.I)
 # A disclosed AI must not claim lived experience or invent witnesses.
 TESTIMONY = re.compile(r"\b(I (was|am) (there|a farmer|a trader|a vendor|from|born in|living in)|my (uncle|aunt|mother|father|brother|sister|cousin|village|neighbou?r)|"
                        r"as a (farmer|trader|mother|father|nigerian|ghanaian|kenyan) myself|I personally (saw|witnessed|know)|when I lived)\b", re.I)
@@ -50,10 +50,18 @@ ENTITY_STOP = set(("The This That These Those They There Their Then When What Wh
                    "Will Would Could Should Can May Might Must Has Have Had Does Did Not Its Our Your Who Whom Which Where Yet Also Still Even Instead However Perhaps "
                    "Africa African Africans January February March April May June July August September October November December "
                    "Monday Tuesday Wednesday Thursday Friday Saturday Sunday I If Is It As At By In On Of Or So To Up We You He She One Two A An No Yes "
-                   "Economist Technologist Consumer Builder Ethics Culture Historian Researcher Analyst Advocate Journalist Reader Readers AI").split())
+                   "Economist Technologist Consumer Builder Ethics Culture Historian Researcher Analyst Advocate Journalist Reader Readers AI "
+                   # v1.6 French / Portuguese / Swahili capitalised function words and institution nouns (not names)
+                   "État Etat États Etats Estado Estados Governo Gouvernement Afrique África Afrika Je Nous Vous Il Elle Ils Elles Le La Les Un Une Des Ce Cette Ces "
+                   "Mais Et Ou Donc Pourquoi Comment Quand Qui Que Quel Quelle Quels Quelles Selon Pour Avec Sans Dans Sur Chez Entre Aussi Peut Faut "
+                   "Os As Um Uma Mas Porque Quando Quem Como Este Esta Isso Eu Nós Para Com Sem Sobre Entre Também Pode Segundo "
+                   "Serikali Kwa Lakini Je Nani Vipi Kwanini Wakati Hii Hizi Sisi Wao").split())
 
 
-REGION_WORDS = ("africa", "sahel", "maghreb", "sub-saharan", "west", "east", "north", "south", "southern", "central", "continent", "horn")
+REGION_WORDS = ("africa", "sahel", "maghreb", "sub-saharan", "west", "east", "north", "south", "southern", "central", "continent", "horn",
+                # v1.6: world regions and demonyms used in comparative reasoning are geography, not factual claims
+                "europe", "european", "asia", "asian", "america", "american", "latin", "caribbean", "gulf", "middle", "arab", "china", "chinese",
+                "india", "indian", "global", "western", "eastern", "afrique", "africain", "áfrica", "africano", "europa", "européen", "asiatique")
 _GEO: set[str] = set()
 
 
@@ -65,6 +73,15 @@ def _is_geo(word: str) -> bool:
         _GEO.update(w[:5] for w in REGION_WORDS)
         for _iso, name, region, _p in tx.COUNTRIES:
             _GEO.update(tx.fold(w)[:5] for w in f"{name} {region}".split() if len(w) >= 4)
+            # v1.6: French/Portuguese/Arabic country names and aliases (Côte d'Ivoire, Sénégal, Moçambique, ...)
+            for alias in tx.COUNTRY_ALIASES.get(_iso, []) + tx.COUNTRY_ALIASES_I18N.get(_iso, []):
+                _GEO.update(tx.fold(w.strip("'’"))[:5] for w in re.split(r"[\s'’-]+", alias) if len(w) >= 4)
+        try:
+            from ..city import langs as _l
+            for c in _l.registry().get("countries", {}).values():
+                _GEO.update(tx.fold(w)[:5] for w in re.split(r"[\s'’-]+", c.get("name", "")) if len(w) >= 4)
+        except Exception:  # noqa: BLE001 - registry is optional here
+            pass
     return tx.fold(word)[:5] in _GEO
 
 
@@ -81,7 +98,7 @@ def unsupported_entities(text: str, grounding: str) -> list[str]:
             if m.start() == 0:
                 # Sentence-initial capitals are ordinary words unless they start a multi-word name or are possessive.
                 nxt = toks[i + 1] if i + 1 < len(toks) else None
-                multi = nxt is not None and sent[m.end():nxt.start()].strip() == "" and nxt.group(0) not in ENTITY_STOP
+                multi = nxt is not None and sent[m.end():nxt.start()].strip() == "" and nxt.group(0) not in ENTITY_STOP and not _is_geo(nxt.group(0))
                 if not (multi or re.search(r"['\u2019]s$", m.group(0))):
                     continue
             if base.lower() not in low and not _is_geo(base):

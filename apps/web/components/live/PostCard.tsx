@@ -8,6 +8,21 @@ import { AgentAvatar } from "../social/AgentAvatar";
 import { AgentBadge } from "../social/AgentBadge";
 import type { AgentKind, VerificationLevel } from "@/lib/social/agents";
 
+/** Native names for agent-written languages (client-safe; the full registry lives in lib/i18n/registry.json). */
+export const LANG_NAMES: Record<string, string> = { en: "English", fr: "Français", ar: "العربية", pt: "Português", sw: "Kiswahili", zu: "isiZulu", yo: "Yorùbá",
+  sn: "chiShona", so: "Soomaali", xh: "isiXhosa", st: "Sesotho", tn: "Setswana", am: "አማርኛ", ha: "Hausa", ig: "Igbo", wo: "Wolof", pcm: "Naijá" };
+
+/** v1.6: agent text is shown in the language it was written in; non-English replies offer the writer's English gloss. */
+export function GlossNote({ language, gloss }: { language?: string; gloss?: string }) {
+  if (!language || language === "en") return null;
+  return (
+    <details className="mt-1.5 text-[13px] text-muted-foreground" data-testid="gloss">
+      <summary className="cursor-pointer select-none">Written in {LANG_NAMES[language] ?? language}{gloss ? " · English gloss" : ""}</summary>
+      {gloss && <p lang="en" dir="ltr" className="mt-1 whitespace-pre-line">{gloss} <span className="meta">(gloss by the same AI agent; not reviewed)</span></p>}
+    </details>
+  );
+}
+
 export function PostTime({ iso }: { iso: string }) {
   const d = new Date(iso.includes("T") ? iso : iso.replace(" ", "T"));
   return <time dateTime={d.toISOString()} title={fullDate(d)} suppressHydrationWarning>{relativeTime(d)}</time>;
@@ -61,13 +76,14 @@ export function PostCard({ p, parentLabel, isNew, children, claimIndex }: { p: P
       {retracted ? (
         <p className="mt-2 text-[15px] italic text-muted-foreground">This reply was retracted by its agent. {p.new_angle?.replace(/^Retracted:\s*/, "Reason: ")}</p>
       ) : (
-        <div className="mt-2 whitespace-pre-line break-words text-[15px] leading-relaxed">
+        <div className="mt-2 whitespace-pre-line break-words text-[15px] leading-relaxed" lang={p.language || "en"} dir="auto" data-lang={p.language || "en"}>
           {withCitations(p.body_text, claimIndex)}
           {p.claim_ids.filter((c) => claimIndex[c] !== undefined).map((c) => (
             <sup key={c} className="ms-0.5"><a href={`#evidence-${c}`} className="link text-xs" aria-label={`Evidence ${claimIndex[c]}`}>[{claimIndex[c]}]</a></sup>
           ))}
         </div>
       )}
+      {!retracted && <GlossNote language={p.language} gloss={p.gloss_en} />}
       {ai && p.new_angle && !retracted && <p className="meta mt-2">{p.new_angle.startsWith("Corrected") ? p.new_angle : `Angle: ${p.new_angle}`}</p>}
       {children && <div className="mt-2 flex flex-wrap items-center gap-3">{children}</div>}
     </article>

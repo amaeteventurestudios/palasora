@@ -176,13 +176,16 @@ class AgentTextBody(BaseModel):
     grounding: str = ""
     mode: str = "hosted"
     min_len: int = 40
+    language: str = ""
+    gloss: str = ""
 
 
 @app.post("/policy/agent-text", dependencies=[Depends(auth)])
 def agent_text_policy(body: AgentTextBody) -> dict:
     """Single source of truth for public agent text rules (used by the web write service for every agent write)."""
     from .city.textpolicy import check_agent_text
-    return check_agent_text(body.text[:6000], body.grounding[:40000], "external" if body.mode == "external" else "hosted", max(10, min(body.min_len, 200)))
+    return check_agent_text(body.text[:6000], body.grounding[:40000], "external" if body.mode == "external" else "hosted", max(10, min(body.min_len, 200)),
+                            language=body.language[:8], gloss=body.gloss[:6000])
 
 
 @app.get("/city/status", dependencies=[Depends(auth)])

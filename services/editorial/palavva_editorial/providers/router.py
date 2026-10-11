@@ -151,6 +151,17 @@ class AnthropicWriter:
         return GenerateResult("succeeded" if out is not None else "invalid_output", out, self.name, self.model, ms, u.input_tokens, u.output_tokens, cost, raw_text=text)
 
 
+_OR = {}
+
+
+def shared_openrouter(meter: "Meter"):
+    """One OpenRouterWriter per process and tenant, so the concurrency semaphore and auth cache are shared by all threads."""
+    from .openrouter import OpenRouterWriter
+    if meter.tid not in _OR:
+        _OR[meter.tid] = OpenRouterWriter(meter)
+    return _OR[meter.tid]
+
+
 class MeteredRouter:
     """Drop-in ModelProvider: tries the configured route in order and meters every attempt."""
 
@@ -158,7 +169,15 @@ class MeteredRouter:
         self.meter = Meter(pb, tenant_id)
         self.local = local
         self.anthropic = AnthropicWriter(self.meter)
+        self._openrouter = None
         self.name, self.model = local.name, local.model
+
+    @property
+    def openrouter(self):
+        if self._openrouter is None:
+            from .openrouter import OpenRouterWriter
+            self._openrouter = shared_openrouter(self.meter)
+        return self._openrouter
 
     def health(self) -> dict:
         return self.local.health()
@@ -168,6 +187,8 @@ class MeteredRouter:
         for p in route().providers:
             if p == "anthropic":
                 r = self.anthropic.generate(req, agent_id, purpose)
+            elif p == "openrouter":
+                r = self.openrouter.generate(req, agent_id, purpose, event_id)
             elif p in ("ollama", "fixture", self.local.name):
                 r = self.local.generate(req)
                 self.meter.record(provider=self.local.name, model=self.local.model, purpose=purpose, agent_id=agent_id, event_id=event_id,

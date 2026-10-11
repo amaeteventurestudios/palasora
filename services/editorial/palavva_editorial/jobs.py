@@ -68,7 +68,7 @@ class Queue:
                 row = c.execute("SELECT job_id FROM jobs WHERE idempotency_key=?", (idempotency_key,)).fetchone()
                 return row["job_id"], False
 
-    def claim(self, owner: str, types: list[str] | None = None) -> dict[str, Any] | None:
+    def claim(self, owner: str, types: list[str] | None = None, exclude: list[str] | None = None) -> dict[str, Any] | None:
         now = time.time()
         with self._conn() as c:
             c.execute("BEGIN IMMEDIATE")
@@ -80,9 +80,14 @@ class Queue:
                 if types:
                     q += f" AND type IN ({','.join('?' * len(types))})"
                     args += types
+                if exclude:
+                    q += f" AND type NOT IN ({','.join('?' * len(exclude))})"
+                    args += exclude
                 # Owner instructions first (master §11.6: owner-triggered work outranks optional city chatter), then
                 # replies to live threads (reader-facing freshness), then everything else by due time.
-                row = c.execute(q + " ORDER BY (type = 'owner_task') DESC, (type = 'converse') DESC, next_at LIMIT 1", args).fetchone()
+                # v1.6: within agent work, a conversation turn (an answer to a reply or @mention) goes before new openings.
+                row = c.execute(q + " ORDER BY (type = 'owner_task') DESC, (type = 'converse') DESC, "
+                                    "(type = 'city_act' AND json_extract(payload, '$.trigger') IN ('new_reply', 'mention')) DESC, next_at LIMIT 1", args).fetchone()
                 if not row:
                     c.execute("COMMIT")
                     return None

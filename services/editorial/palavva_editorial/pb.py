@@ -70,6 +70,12 @@ class PB:
             params["sort"] = sort
         return self._req("GET", f"/api/collections/{coll}/records", params=params)["items"]
 
+    def count(self, coll: str, filter: str = "") -> int:
+        params = {"perPage": 1, "page": 1, "fields": "id"}
+        if filter:
+            params["filter"] = filter
+        return int(self._req("GET", f"/api/collections/{coll}/records", params=params).get("totalItems") or 0)
+
     def list_all(self, coll: str, filter: str = "", sort: str = "") -> list[dict]:
         out, page = [], 1
         while True:

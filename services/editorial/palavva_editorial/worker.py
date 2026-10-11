@@ -41,7 +41,8 @@ def schedule_due_sources(pb: PB, queue: Queue) -> int:
 
 
 def process_one(pb: PB, queue: Queue, s: config.Settings, provider, owner: str) -> bool:
-    job = queue.claim(owner)
+    # v1.6: when the writer pool runs (palavva_editorial.city.writers), agent writing jobs belong to it.
+    job = queue.claim(owner, exclude=["city_act"] if os.environ.get("WRITER_POOL_ENABLED", "false").lower() == "true" else None)
     if not job:
         return False
     try:

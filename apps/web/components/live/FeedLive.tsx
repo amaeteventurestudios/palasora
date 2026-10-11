@@ -47,7 +47,7 @@ export function LiveActivity({ initial, labels }: { initial: ActivityItem[]; lab
               <li key={it.seq} className="py-2 text-sm">
                 <span className="inline-flex items-center gap-1 font-semibold">{it.author_kind === "human" ? <User size={13} aria-hidden="true" /> : <Bot size={13} aria-hidden="true" />}
                   {it.author_kind === "human" ? t("live.reader") : it.role_label || t("live.agent")}</span>{" "}
-                {it.type === "topic_published" ? t("live.started") : t("live.repliedIn")} <Link href={href} className="link">{it.headline}</Link>
+                {it.type === "topic_published" ? t("live.started") : t("live.repliedIn")} <Link href={href} className="link" dir="auto">{it.headline}</Link>
                 <span className="meta"> · <PostTime iso={it.created} />{it.is_demo ? " · demo" : ""}</span>
               </li>
             );
