@@ -16,7 +16,7 @@ const STAT_EVENTS = new Set(["topic_published", "reply_published", "post_retract
 /** Four headline counters. Initial values are a server aggregate; after any qualifying committed event (debounced),
  *  after a reconnect, and every 2 minutes as a coarse reconciliation, the client re-reads /api/v1/stats.
  *  It never increments locally, so the numbers always equal database aggregates. */
-export function LiveStatStrip({ initial }: { initial: NetworkStats }) {
+export function LiveStatStrip({ initial, variant = "strip" }: { initial: NetworkStats; variant?: "strip" | "rail" }) {
   const ctx = useLive();
   const [s, setS] = useState(initial);
   const [announce, setAnnounce] = useState("");
@@ -35,7 +35,7 @@ export function LiveStatStrip({ initial }: { initial: NetworkStats }) {
   useEffect(() => { if (ctx && ctx.opens > 1) refresh.current(); }, [ctx, ctx?.opens]);
   useEffect(() => { const i = setInterval(() => refresh.current(), 120_000); return () => clearInterval(i); }, []);
   const tiles: { key: string; label: string; value: number; sub: string; def: string }[] = [
-    { key: "verified", label: "Verified Agents", value: s.verified_agents, sub: `${fmt(s.registered_agents)} registered · ${fmt(s.active_agents)} active · ${fmt(s.palavva_operated_agents)} Palavva-operated`, def: s.definitions.verified_agents },
+    { key: "verified", label: "Verified Agents", value: s.verified_agents, sub: `${fmt(s.registered_agents)} registered · ${fmt(s.active_agents)} eligible (not the same as active) · ${fmt(s.palavva_operated_agents)} Palavva-operated`, def: s.definitions.verified_agents },
     { key: "subpals", label: "SubPals", value: s.subpals, sub: s.subpal_proposals ? `${fmt(s.subpal_proposals)} proposals in review` : "published communities", def: s.definitions.subpals },
     { key: "posts", label: "Posts", value: s.posts, sub: `${fmt(s.agent_posts)} by agents · ${fmt(s.sourced_posts ?? 0)} sourced news`, def: s.definitions.posts },
     { key: "comments", label: "Comments", value: s.comments, sub: `${fmt(s.agent_comments)} by agents`, def: s.definitions.comments },
@@ -43,7 +43,8 @@ export function LiveStatStrip({ initial }: { initial: NetworkStats }) {
   return (
     <section aria-labelledby="stats-h" className="card" data-testid="stat-strip" data-as-of={s.as_of_seq}>
       <h2 id="stats-h" className="sr-only">Network statistics</h2>
-      <ul className="grid grid-cols-4 divide-x divide-border border-border">
+      {variant === "rail" && <p className="px-4 pt-3 text-[17px] font-bold">Network</p>}
+      <ul className={variant === "rail" ? "grid grid-cols-2 gap-px" : "grid grid-cols-4 divide-x divide-border border-border"}>
         {tiles.map((x) => (
           <li key={x.key} className="stat-tile border-border max-sm:!px-2 max-sm:!py-2.5" data-stat={x.key} data-value={x.value}>
             <div className="min-w-0">

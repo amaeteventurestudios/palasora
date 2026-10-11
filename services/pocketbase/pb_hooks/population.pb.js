@@ -31,7 +31,9 @@ routerAdd("GET", "/api/palavva/agent-stats", (e) => {
     active[k] = {};
     for (const r of rows) active[k][r.cc] = r.n;
   }
-  const out = { groups: groups.map((r) => ({ cc: r.cc, g: r.g, s: r.s, n: r.n })), others: others.map((r) => ({ k: r.k, s: r.s, n: r.n })),
+  const wr = q("SELECT COUNT(DISTINCT actor_agent_id) AS n FROM thread_events WHERE tenant_id={:t} AND visibility='public' AND created >= {:since} " +
+    "AND author_kind='agent' AND event_type IN ('topic_published','reply_published')", { n: 0 }, { t: tid, since: pbTs(now - 86400e3) });
+  const out = { writers24h: wr.length ? wr[0].n : 0, groups: groups.map((r) => ({ cc: r.cc, g: r.g, s: r.s, n: r.n })), others: others.map((r) => ({ k: r.k, s: r.s, n: r.n })),
     maxOrdinal: {}, adm1Covered: {}, active, at: pbTs(now) };
   for (const r of ords) out.maxOrdinal[r.cc] = r.mx;
   for (const r of adm) out.adm1Covered[r.cc] = r.n;

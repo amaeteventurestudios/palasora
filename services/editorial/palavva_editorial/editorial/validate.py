@@ -63,7 +63,10 @@ NAME_STOP = set(("The This That These Those They There Their When What Why How W
                  "January February March April May June July August September October November December "
                  "Monday Tuesday Wednesday Thursday Friday Saturday Sunday "
                  "President Minister Deputy Premier Mayor Governor Senator Chief Department Ministry Government Commissioner Director "
-                 "Speaker Parliament Assembly Presidency Cabinet Council").split())
+                 "Speaker Parliament Assembly Presidency Cabinet Council "
+                 # v1.7: sentence-opening words seen as false "entities" in agent posts (e.g. "Let's" after a dash or quote)
+                 "Let Lets Imagine Consider Think Suppose Perhaps Maybe Instead Meanwhile Yet Still Also Even Here Some Many Most "
+                 "Each Every Both Either Neither Other Another Such One Two Three First Second Third Finally However Therefore").split())
 
 
 def unsupported_names(headline: str, blocks: list[str], packet_text: str) -> list[str]:
@@ -77,7 +80,8 @@ def unsupported_names(headline: str, blocks: list[str], packet_text: str) -> lis
         for sent in re.split(r"(?<=[.!?:])\s+", text):
             for m in NAME_TOK.finditer(sent):
                 base = re.sub(r"['\u2019]s$", "", m.group(0)).strip("-")
-                if m.start() == 0 or base in NAME_STOP or len(base) < 4 or base.lower() in low:
+                # sentence start = only opening punctuation, quotes, bullets or dashes before the word
+                if not sent[:m.start()].strip(" \t\n\"'\u201c\u2018([-\u2013\u2014*\u2022#>") or base in NAME_STOP or len(base) < 4 or base.lower() in low:
                     continue
                 if full or any(len(c) >= 3 and base.startswith(c) and base != c for c in caps):
                     out.append(base)

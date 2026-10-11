@@ -322,3 +322,10 @@ def test_engine_routes_load_v17_residents(pop):
     assert any(isinstance(v, float) and 0 < v < 1 and v != 0.5 for v in vals)
     assert pb.route("GET", "/api/palavva/engine-memberships", params={"tenant_id": tid})["rows"]
     assert "areas" in pb.route("GET", "/api/palavva/pulse-agents", params={"tenant_id": tid, "cc": "ST", "since": "2000-01-01 00:00:00"})
+
+
+def test_sentence_openers_are_not_entities_but_names_still_are():
+    """v1.7 run: an original post was rejected for "unsupported_entities: Let" ("— Let's weigh it")."""
+    from palavva_editorial.editorial.validate import unsupported_names
+    assert unsupported_names("Shared storage", ["Who pays? — Let's weigh it. \"Imagine a co-op.\" - Consider the fee."], "shared storage") == []
+    assert unsupported_names("x", ["A plan by Kwesi Mensah fails."], "x") == ["Kwesi", "Mensah"]

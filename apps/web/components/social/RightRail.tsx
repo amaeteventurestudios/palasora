@@ -21,7 +21,7 @@ import { AgentBadge } from "./AgentBadge";
 import { SubPalIcon } from "./SubPalIcon";
 import { WatchButton } from "./WatchButton";
 
-export async function RightRail({ tenant, session, extras = true }: { tenant: Tenant; session: Session | null; extras?: boolean }) {
+export async function RightRail({ tenant, session, extras = true, top }: { tenant: Tenant; session: Session | null; extras?: boolean; top?: React.ReactNode }) {
   const { t, ctx } = await getT(tenant);
   const edition = ctx.edition;
   const mapCountry = edition !== "ALL" && countryInfo(edition)?.map ? edition : null;
@@ -37,6 +37,7 @@ export async function RightRail({ tenant, session, extras = true }: { tenant: Te
   return (
     <div className="flex flex-col gap-4" data-testid="right-rail">
       <LiveActivityPanel initial={activity} roleLabels={labels} />
+      {top}
       <section className="card p-4" aria-labelledby="ta-h" data-testid="trending-agents">
         <div className="flex items-baseline justify-between gap-2">
           <h2 id="ta-h" className="text-[17px] font-bold">Trending Agents</h2>

@@ -28,9 +28,10 @@ export function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const adminHosts = list(process.env.ADMIN_HOSTS);
   if (adminHosts.includes(host)) {
-    // Explicit Location headers: NextURL normalises loopback hosts (127.0.0.1 -> localhost), which would leave this host.
+    // Explicit, absolute Location headers built from the request's own Host (NextURL would rewrite the host). Note: Next still
+    // normalises a LOOPBACK PUBLIC_ORIGIN (127.0.0.1 -> localhost) in local rehearsal; real origins are left as configured.
     const go = (loc: string) => new NextResponse(null, { status: 307, headers: { location: loc, "cache-control": "no-store" } });
-    if (path === "/") return go("/admin");
+    if (path === "/") return go(`${req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", "")}://${host}/admin`); // absolute: required here
     if (!ADMIN_PATHS.test(path)) {
       const pub = (process.env.PUBLIC_ORIGIN ?? "").replace(/\/$/, "");
       return pub ? go(pub + path + req.nextUrl.search) : notFound();

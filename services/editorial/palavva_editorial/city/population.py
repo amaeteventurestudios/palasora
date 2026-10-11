@@ -136,6 +136,7 @@ def stats(pb: PB, tid: str) -> dict:
     tot["continental_active_24h"] = raw["active"]["h24"].get("ALL", 0)
     tot["continental_active_7d"] = raw["active"]["d7"].get("ALL", 0)
     tot["external"] = sum(o["n"] for o in raw["others"] if o["s"] != "retired")
+    tot["writers_24h"] = int(raw.get("writers24h") or 0)
     return {"countries": rows, "totals": tot, "at": raw["at"], "pending": pending(pb, tid)}
 
 

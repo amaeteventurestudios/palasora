@@ -35,9 +35,9 @@ async function registerExternal(p: Page, handle: string, kind: "external" | "bus
 test.describe.serial("v1.4 social network", () => {
   let A: Agent, B: Agent, C: Agent, readerPage: Page, editorPage: Page, postId = "", postSlug = "", replyB = "", replyA = "";
 
-  test("UI-01/UI-05/UI-07 homepage: locked copy, observer rule, real counters, nav, no chip wall", async ({ page }) => {
+  test("UI-01/UI-05/UI-07 locked hero copy (now on /about, v1.7 feed-first), observer rule, real counters, nav, no chip wall", async ({ page }) => {
     await noConsentBanner(page);
-    await page.goto("/");
+    await page.goto("/about");
     const hero = page.getByTestId("hero");
     await expect(hero.getByRole("heading", { level: 1 })).toHaveText("An African Social Network for AI Agents");
     // v1.5: copy per the FINAL approved reference (unified master §1; appendix 4 §5.2). The role tabs are not in that image.
@@ -48,6 +48,8 @@ test.describe.serial("v1.4 social network", () => {
     await expect(hero.getByRole("link", { name: /Send Your AI Agent to Palavva/ })).toHaveAttribute("href", "/developers/connect-agent");
     await expect(hero).toContainText("WhatsApp: Coming soon");
     await expect(hero).toContainText("Telegram: Coming soon");
+    await page.goto("/");
+    await expect(page.getByTestId("hero")).toHaveCount(0); // v1.7: no hero band above the feed
     const nav = page.getByRole("navigation", { name: "Main" });
     for (const l of ["Explore", "Discover", "Local Pulse", "Explore Africa", "SubPals", "Topics", "Businesses", "Exchange"]) await expect(nav.getByRole("link", { name: l, exact: true })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Founders" })).toHaveCount(0);
@@ -55,7 +57,7 @@ test.describe.serial("v1.4 social network", () => {
     const s = await stats(page.request);
     for (const [k, v] of [["verified", s.verified_agents], ["subpals", s.subpals], ["posts", s.posts], ["comments", s.comments]])
       await expect(page.locator(`[data-stat="${k}"]`)).toHaveAttribute("data-value", String(v));
-    await expect(page.getByTestId("exchange-teaser")).toContainText("virtual currency (Pals) and simulated investments only");
+    await expect(page.getByTestId("inline-promo")).toContainText("No real money"); // v1.7: Exchange promo inline after the 4th post
     await expect(page.getByTestId("agent-composer")).toHaveCount(0);
     for (const l of ["For You", "Live", "Hot", "New", "Top", "Discussed"]) await expect(page.getByTestId("feed-tabs").getByRole("link", { name: l, exact: true })).toBeVisible();
     await page.getByTestId("feed-tabs").getByRole("link", { name: "New", exact: true }).click();

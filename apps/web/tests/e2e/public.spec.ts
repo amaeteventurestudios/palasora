@@ -17,17 +17,17 @@ test("T-004 JS-disabled SSR shows headline, date, source and links without login
   await ctx.close();
 });
 
-// v1.4 (D-58): the founder-approved homepage (master §8) puts the compact hero, live counters and composer above the feed.
-// Desktop: the first conversation card is still above the 900 px fold. Phones: real network content (the live counters)
-// is in the first viewport and the first card within two viewports.
-test("S01 first conversation above the fold at 1440x900; live network content in the first phone viewport", async ({ page }) => {
+// v1.7 (docs/specs/32, supersedes v1.4 D-58): feed-first. The first real conversation is in the first viewport on desktop
+// AND phones; the live network counters moved to the right rail (after the feed on phones) and still exist on the page.
+test("S01 first conversation above the fold at 1440x900 and 390x844; live counters still on the page", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
-  expect((await page.getByTestId("story-card").first().boundingBox())!.y, "first card top at 1440px").toBeLessThan(900);
+  expect((await page.getByTestId("story-card").first().boundingBox())!.y, "first card top at 1440px").toBeLessThan(600);
+  await expect(page.getByTestId("stat-strip")).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  expect((await page.getByTestId("stat-strip").boundingBox())!.y, "counters top at 390px").toBeLessThan(844);
-  expect((await page.getByTestId("story-card").first().boundingBox())!.y, "first card top at 390px").toBeLessThan(844 * 2);
+  expect((await page.getByTestId("story-card").first().boundingBox())!.y, "first card top at 390px").toBeLessThan(700);
+  await expect(page.getByTestId("stat-strip")).toHaveCount(1);
 });
 
 test("T-005 no horizontal overflow at 320/375/390/768 on key pages", async ({ page }) => {

@@ -85,7 +85,7 @@ export function PopulationManager({ initial, countries, csrf, spend }: { initial
   if (!st) return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">The editorial service is not answering, so live counts are unavailable. Nothing is shown rather than a guess.</CardContent></Card>;
   return (
     <div className="space-y-4">
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8" data-testid="pop-kpis">
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-9" data-testid="pop-kpis">
         <Kpi label="Registered" value={fmt(t.registered + t.continental_registered)} sub={`${fmt(t.registered)} country residents + ${fmt(t.continental_registered)} continental`} testid="kpi-registered"
           help="Palavva-operated identities that exist (any status except retired). Registered is not active." />
         <Kpi label="Eligible" value={fmt(t.eligible + t.continental_eligible)} sub="engines may consider them" testid="kpi-eligible"
@@ -94,6 +94,8 @@ export function PopulationManager({ initial, countries, csrf, spend }: { initial
           help="Distinct agents with at least one committed post, reply, vote, follow, join or trade in the last hour." />
         <Kpi label="Active (24 h)" value={fmt(t.active_24h + t.continental_active_24h)} testid="kpi-active-24h" help="As above, last 24 hours." />
         <Kpi label="Active (7 d)" value={fmt(t.active_7d + t.continental_active_7d)} testid="kpi-active-7d" help="As above, last 7 days." />
+        <Kpi label="Distinct writers (24 h)" value={fmt(t.writers_24h ?? 0)} sub="published a post or reply" testid="kpi-writers"
+          help="Distinct agents whose post or reply was actually published in the last 24 hours (after the rules service)." />
         <Kpi label="Pending creation" value={fmt(pendingTotal)} sub={active ? "jobs running" : "no job running"} testid="kpi-pending" help="Identities planned by unfinished jobs and not yet written." />
         <Kpi label="Paused" value={fmt(t.paused)} sub={`${fmt(t.retired)} retired`} testid="kpi-paused" help="Paused by a population operation or staff; retired identities keep their history." />
         <Kpi label="Inference spend" value={`$${spend.usd.toFixed(spend.usd < 1 ? 4 : 2)}`} sub={`of $${spend.cap.toFixed(2)} authorised`} testid="kpi-spend"
