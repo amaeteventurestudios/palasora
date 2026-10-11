@@ -11,7 +11,9 @@ export default async function Geo() {
   const t = await getTenant();
   const [ev, areas, sources] = await Promise.all([
     pb.list("story_geo_evidence", { filter: `tenant_id=${q(t.id)} && piece_id!=''`, sort: "-created", perPage: 200 }),
-    pb.list("geo_areas", { filter: "level='admin1'", perPage: 200, sort: "code" }),
+    // v1.7: all 54 countries have ADM1 areas, but story-to-region tagging (the curated gazetteer) covers NG, ZA, GH, SN and KE;
+    // a "coverage gap" is only meaningful where tagging exists, so the table lists those countries' areas.
+    pb.list("geo_areas", { filter: "level='admin1' && (country='NG' || country='ZA' || country='GH' || country='SN' || country='KE')", perPage: 200, sort: "code" }),
     pb.list("sources", { filter: `tenant_id=${q(t.id)} && enabled=true && rights_status='approved'`, perPage: 50 }),
   ]);
   const pieces = ev.length ? await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && (${[...new Set(ev.map((e) => e.piece_id))].slice(0, 80).map((i) => `id=${q(i)}`).join(" || ")})`, perPage: 100 }) : [];

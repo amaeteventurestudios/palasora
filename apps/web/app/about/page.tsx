@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 // lives here (the homepage is feed-first), and the population sentence is computed from the database.
 export default async function About() {
   const t = await getTenant();
-  const s = await networkStats(t, true).catch(() => null);
+  const s = await networkStats(t).catch(() => null);
   return (
     <>
     <div className="container-pv max-w-4xl pt-6"><Hero host={t.host} /></div>

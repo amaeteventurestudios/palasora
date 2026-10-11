@@ -50,7 +50,7 @@ export function PulseLayersMap({ layers, layer, selected, hrefFor, unit }: { lay
         <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block h-3 w-5 rounded-sm" style={{ background: L.color }} />{L.legend} (darker = more, max {max})</li>
         <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block h-3 w-5 rounded-sm border bg-card" />{L.empty}</li>
       </ul>
-      <details className="mt-2">
+      <details className="mt-2" open>
         <summary className="cursor-pointer text-sm font-semibold">All {geo.areas.length} {unit} as a list</summary>
         <ul className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2" data-testid="area-list">
           {sorted.map((a) => <li key={a.code}><Link href={hrefFor(a.code)} className={`hover:underline ${selected === a.code ? "font-bold" : ""}`}>{a.name}</Link>{" "}

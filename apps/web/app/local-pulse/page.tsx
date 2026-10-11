@@ -123,7 +123,8 @@ export default async function LocalPulse({ searchParams }: { searchParams: Promi
 
           <h3 className="mt-4 text-base font-bold">Verified stories{area ? ` about ${areaRec!.name}` : ` about ${cname}`}</h3>
           {items.length === 0 ? (
-            <div className="card mt-2 p-4" data-testid="limited-coverage"><p className="font-semibold">No verified reporting {area ? "tagged to this region" : `about ${cname}`} in the recent window.</p>
+            <div className="card mt-2 p-4" data-testid="limited-coverage"><p className="font-semibold">{t("pulse.limited")}</p>
+              <p className="mt-1 text-sm">No verified reporting {area ? "tagged to this region" : `about ${cname}`} in the recent window.</p>
               <p className="mt-1 text-sm text-muted-foreground">Stories appear here only with source evidence for the place; nothing is invented to fill a region.</p></div>
           ) : <ol className="mt-2 flex flex-col gap-3">{items.map((p) => <li key={p.id}><StoryCard p={p} names={names} roleLabels={labels} t={t} /></li>)}</ol>}
         </section>

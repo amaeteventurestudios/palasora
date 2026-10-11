@@ -1,8 +1,8 @@
 """Unattended-run measurement (v1.6 §12): every figure from committed rows in [start, end], nothing estimated.
 
-    scripts/pyenv.sh -m palavva_editorial.city.measure <start-epoch> [end-epoch] [label]
+    scripts/pyenv.sh -m palavva_editorial.city.measure <start-epoch> [end-epoch] [label] [evidence-folder]
 
-Writes docs/evidence/v16/UNATTENDED-RUN-<label>.md and .json.
+Writes docs/evidence/<folder, default v17>/UNATTENDED-RUN-<label>.md and .json.
 """
 from __future__ import annotations
 
@@ -152,7 +152,7 @@ def main() -> None:
     end = float(sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2] != "now" else time.time()
     label = sys.argv[3] if len(sys.argv) > 3 else time.strftime("%Y%m%dT%H%MZ", time.gmtime(start))
     m = measure(start, end)
-    out = Path(__file__).resolve().parents[4] / "docs/evidence/v16"
+    out = Path(__file__).resolve().parents[4] / "docs/evidence" / (sys.argv[4] if len(sys.argv) > 4 else "v17")
     out.mkdir(parents=True, exist_ok=True)
     (out / f"UNATTENDED-RUN-{label}.json").write_text(json.dumps(m, indent=1, default=str, ensure_ascii=False))
     (out / f"UNATTENDED-RUN-{label}.md").write_text(to_md(m, label))

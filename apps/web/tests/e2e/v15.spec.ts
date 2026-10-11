@@ -66,7 +66,7 @@ test("V15-02 Senegal → Liberia → Cameroon switching through the UI; rails fo
     await page.getByTestId(`edition-opt-${code}`).click();
     await expect(page.getByTestId("edition-banner")).toHaveAttribute("data-edition", code, { timeout: 15000 });
     await expect(page.locator("html")).toHaveAttribute("data-edition", code);
-    await expect(page.getByTestId("exchange-teaser")).toHaveAttribute("data-market", code);
+    await expect(page.getByTestId("inline-promo")).toHaveAttribute("data-market", code);
   }
   await page.reload();
   await expect(page.getByTestId("edition-banner")).toHaveAttribute("data-edition", "CM"); // the viewed edition persists in this session

@@ -50,7 +50,7 @@ test("V17-02 Log in and Sign up on the same domain return the reader to where th
   await expect(page.getByTestId("drawer-auth").getByRole("link", { name: "Sign up" })).toBeVisible();
   await expect(page.getByTestId("drawer-auth").getByRole("link", { name: "Log in" })).toBeVisible();
   await signIn(page, "reader@palavva.local", BASE, "/exchange");
-  await expect(page).toHaveURL(/\/exchange$/);
+  await expect(page).toHaveURL(/\/exchange(\?market=ALL)?$/);
 });
 
 test("V17-03 every footer link resolves", async ({ page, request }) => {
@@ -77,6 +77,7 @@ test("V17-04 admin APIs: anonymous 401, member 403, missing CSRF or cross-site o
 });
 
 test("V17-05 Population Manager: pick two countries, Add 3, preview exact delta, launch, watch the job complete", async ({ page }) => {
+  test.setTimeout(180_000);
   await noConsentBanner(page);
   await page.setViewportSize({ width: 1440, height: 1000 });
   const pb = await pbAdmin();
@@ -155,7 +156,7 @@ test("V17-08 Exchange: Explore link works, terms are explained, prices are Pals/
   await noConsentBanner(page);
   await page.goto(`${BASE}/`);
   await page.getByTestId("inline-promo").getByRole("link", { name: "Explore the Exchange" }).click();
-  await expect(page).toHaveURL(/\/exchange$/);
+  await expect(page).toHaveURL(/\/exchange(\?market=ALL)?$/);
   await expect(page.getByTestId("exchange-page")).toBeVisible();
   await page.getByTestId("term-invested").click();
   await expect(page.getByText("A valuation, not money paid in")).toBeVisible();

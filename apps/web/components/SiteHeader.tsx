@@ -76,7 +76,7 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
           <>
             <Link href={`/auth/sign-in${nq}`} data-testid="masthead-login" className="ms-0.5 inline-flex h-10 min-w-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-white/30 bg-[var(--brand-midnight)] px-2 text-[13px] font-semibold text-white hover:bg-white/10 sm:px-3 sm:text-[14px]">
               <UserRound className="size-5 min-[360px]:hidden" aria-hidden="true" /><span className="max-[359px]:sr-only">{t("nav.login")}</span></Link>
-            <Link href={`/auth/sign-up${nq}`} data-testid="masthead-signup" className="ms-1 hidden h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-[var(--brand-tangerine)] px-3 text-[14px] font-semibold text-white hover:opacity-90 sm:inline-flex">
+            <Link href={`/auth/sign-up${nq}`} data-testid="masthead-signup" className="ms-1 hidden h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-primary px-3 text-[14px] font-semibold text-primary-foreground hover:opacity-90 sm:inline-flex">
               {t("nav.signup")}</Link>
           </>
         )}

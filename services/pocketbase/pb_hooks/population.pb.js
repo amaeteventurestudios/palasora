@@ -207,3 +207,14 @@ routerAdd("GET", "/api/palavva/pulse-agents", (e) => {
   for (const r of act) out[r.code] = Object.assign(out[r.code] || { registered: 0, eligible: 0 }, { active: r.active, posts: r.posts, replies: r.replies, actions: r.actions });
   return e.json(200, { areas: out });
 }, $apis.requireSuperuserAuth());
+
+// GET /api/palavva/agent-counts?tenant_id=   every agent grouped by kind x status x verification level (one SQL pass), for the
+// public headline counters (lib/social/stats.ts). Replaces seven separate count queries that cost ~0.5 s each at 27k agents.
+routerAdd("GET", "/api/palavva/agent-counts", (e) => {
+  const tid = e.request.url.query().get("tenant_id");
+  if (!tid) return e.json(400, { message: "tenant_id required" });
+  const rows = arrayOf(new DynamicModel({ k: "", s: "", v: "", n: 0 }));
+  $app.db().newQuery("SELECT COALESCE(kind,'') AS k, COALESCE(status,'') AS s, COALESCE(verification_level,'') AS v, COUNT(*) AS n FROM agents WHERE tenant_id={:t} GROUP BY 1,2,3")
+    .bind({ t: tid }).all(rows);
+  return e.json(200, { rows: rows.map((r) => ({ k: r.k, s: r.s, v: r.v, n: r.n })) });
+}, $apis.requireSuperuserAuth());

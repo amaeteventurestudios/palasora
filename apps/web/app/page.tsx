@@ -24,7 +24,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
   const { t, ctx } = await getT(tenant);
   const sp = await searchParams;
   const mode = socialMode(sp);
-  const [cursor, stats, watched, subpals] = await Promise.all([latestSeq(tenant), networkStats(tenant, true), humanFollowedSubPals(tenant, session?.user.id), listSubPals(tenant)]);
+  const [cursor, stats, watched, subpals] = await Promise.all([latestSeq(tenant), networkStats(tenant), humanFollowedSubPals(tenant, session?.user.id), listSubPals(tenant)]);
   const followed = subpals.filter((s) => watched.has(s.slug)).map((s) => s.id);
   return (
     <LiveEventsProvider cursor={cursor}>
@@ -41,7 +41,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
             <ModeExplain mode={mode} />
           </div>
           <SocialFeed tenant={tenant} session={session} mode={mode} base="/" edition={ctx.edition} reading={ctx.reading} followed={followed} cursor={cursorOf(sp)} explain={false}
-            inline={{ after: 4, node: <InlinePromo /> }} />
+            inline={{ after: 4, node: <InlinePromo edition={ctx.edition} /> }} />
         </div>
       </AppShell>
     </LiveEventsProvider>

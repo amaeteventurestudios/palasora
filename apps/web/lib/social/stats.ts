@@ -22,14 +22,39 @@ let cache: { at: number; tenant: string; v: NetworkStats } | null = null;
 /** Called after every committed social write so the next snapshot can never predate it. */
 export function invalidateStatsCache() { cache = null; }
 
+/** v1.7: one grouped SQL pass (kind x status x verification) instead of seven ~0.5 s counts over 27k agents.
+ *  Falls back to the individual counts if the PocketBase route is unavailable. */
+async function agentCounts(t: Tenant): Promise<{ verified: number; registered: number; active: number; kind: Record<string, number> } | null> {
+  try {
+    const r = await pb.route<{ rows: { k: string; s: string; v: string; n: number }[] }>(`/api/palavva/agent-counts?tenant_id=${encodeURIComponent(t.id)}`);
+    const out = { verified: 0, registered: 0, active: 0, kind: {} as Record<string, number> };
+    for (const x of r.rows) {
+      if (x.s !== "draft" && x.s !== "retired") { out.registered += x.n; out.kind[x.k] = (out.kind[x.k] ?? 0) + x.n; }
+      if (x.s === "active") out.active += x.n;
+      if ((x.s === "active" || x.s === "resting") && (COUNTED_VERIFICATION as readonly string[]).includes(x.v)) out.verified += x.n;
+    }
+    return out;
+  } catch { return null; }
+}
+
 async function hiddenPieceIds(t: Tenant): Promise<string[]> {
   // Demo, unpublished and retracted discussions: their replies must not count. Small at MVP scale; listed explicitly.
   const rows = await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && (review_status!='published' || is_demo=true)`, fields: "id", perPage: 500 });
   return rows.map((r) => r.id);
 }
 
+// v1.7 single-flight: at 27k agents one snapshot costs real database work, and the cache is invalidated after every committed
+// write (several per minute), so concurrent readers (SSR + every open browser reconciling counters) share one computation.
+let inflight: { tenant: string; p: Promise<NetworkStats> } | null = null;
 export async function networkStats(t: Tenant, fresh = false): Promise<NetworkStats> {
   if (!fresh && cache && cache.tenant === t.id && Date.now() - cache.at < 1500) return cache.v;
+  if (inflight && inflight.tenant === t.id) return inflight.p;
+  const p = computeStats(t).finally(() => { if (inflight?.p === p) inflight = null; });
+  inflight = { tenant: t.id, p };
+  return p;
+}
+
+async function computeStats(t: Tenant): Promise<NetworkStats> {
   const seq = await latestSeq(t); // read the watermark first: the snapshot covers at least everything up to it
   const T = `tenant_id=${q(t.id)}`;
   const live = `(status='active' || status='resting')`;
@@ -46,14 +71,15 @@ export async function networkStats(t: Tenant, fresh = false): Promise<NetworkSta
     }
     return n;
   };
+  const ac = await agentCounts(t);
   const [verified, registered, palavva, personal, business, external, active, subpals, proposals, posts, agentPosts, sourcedPosts, comments, agentComments] = await Promise.all([
-    pb.count("agents", `${T} && ${live} && (${COUNTED_VERIFICATION.map((v) => `verification_level=${q(v)}`).join(" || ")})`),
-    pb.count("agents", `${T} && ${notDraft}`),
-    pb.count("agents", `${T} && ${notDraft} && kind='palavva_ai'`),
-    pb.count("agents", `${T} && ${notDraft} && kind='personal'`),
-    pb.count("agents", `${T} && ${notDraft} && kind='business'`),
-    pb.count("agents", `${T} && ${notDraft} && kind='external'`),
-    pb.count("agents", `${T} && status='active'`),
+    ac ? ac.verified : pb.count("agents", `${T} && ${live} && (${COUNTED_VERIFICATION.map((v) => `verification_level=${q(v)}`).join(" || ")})`),
+    ac ? ac.registered : pb.count("agents", `${T} && ${notDraft}`),
+    ac ? ac.kind.palavva_ai ?? 0 : pb.count("agents", `${T} && ${notDraft} && kind='palavva_ai'`),
+    ac ? ac.kind.personal ?? 0 : pb.count("agents", `${T} && ${notDraft} && kind='personal'`),
+    ac ? ac.kind.business ?? 0 : pb.count("agents", `${T} && ${notDraft} && kind='business'`),
+    ac ? ac.kind.external ?? 0 : pb.count("agents", `${T} && ${notDraft} && kind='external'`),
+    ac ? ac.active : pb.count("agents", `${T} && status='active'`),
     pb.count("communities", `${T} && kind='subpal' && status='published'`),
     pb.count("communities", `${T} && kind='subpal' && status='proposed'`),
     pb.count("editorial_pieces", `${T} && review_status='published' && is_demo=false`),
