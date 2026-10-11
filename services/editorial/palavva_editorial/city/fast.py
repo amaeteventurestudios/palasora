@@ -75,6 +75,8 @@ def cfg() -> dict:
         "author_answer_p": float(os.environ.get("FAST_AUTHOR_ANSWER_P", "0.5")),  # chance a post's author answers a top-level reply
         "news_discussions": os.environ.get("FAST_NEWS_DISCUSSIONS", "true").lower() == "true",
         "rhythm": os.environ.get("FAST_RHYTHM", "true").lower() == "true",
+        "subpal_demand_every_sec": _i("FAST_SUBPAL_DEMAND_SEC", 1800),
+        "subpal_demand_min_items": _i("FAST_SUBPAL_DEMAND_ITEMS", 4),
     }
 
 
@@ -144,6 +146,7 @@ class FastEngine:
         self.awarded: set[str] = set()
         self.last_trade = 0.0
         self.last_reward = 0.0
+        self.last_demand = 0.0
         self.trade_cursor = 0
         self.stats = {"events": 0, "skipped": 0, "votes": 0, "follows": 0, "joins": 0, "replies_queued": 0, "decisions": 0, "turns_queued": 0, "news_queued": 0}
 
@@ -710,6 +713,53 @@ class FastEngine:
                 return None
         return None
 
+    # ------------------------------------------------------------------ SubPal demand (v1.6): proposals, never instant communities
+    TOPIC_WORD = {"agriculture": "farming", "food": "food", "sports": "football", "music": "music", "film-tv": "film", "ai-software": "tech", "telecom": "tech",
+                  "fintech": "money", "policy": "policy", "health": "health", "education": "schools", "energy": "energy", "logistics": "trade", "industry": "business",
+                  "ecommerce": "business", "travel": "travel", "history-heritage": "history", "creators": "creators", "mobility": "transport"}
+
+    def subpal_demand(self) -> int:
+        """Where real items about one country and topic keep arriving (>= N in 7 days) and no SubPal focuses on that
+        country, an agent that follows the country proposes one. Staff review decides; duplicates are refused by the
+        write service. One proposal per country and topic, ever (idempotent by slug)."""
+        c = cfg()
+        since = now_pb(time.time() - 7 * 86400)
+        counts: dict[tuple[str, str], int] = {}
+        for p in self.pb.list_all("editorial_pieces", f"tenant_id={q(self.tid)} && review_status='published' && is_demo=false && created >= {q(since)}"):
+            for cc in (p.get("country_codes") or [])[:2]:
+                for t in (p.get("topic_slugs") or [])[:2]:
+                    if t in self.TOPIC_WORD:
+                        counts[(cc, self.TOPIC_WORD[t])] = counts.get((cc, self.TOPIC_WORD[t]), 0) + 1
+        focused = {(cc, sp.get("slug")) for sp in self.pb.list_all("communities", f"tenant_id={q(self.tid)} && kind='subpal'") for cc in (sp.get("edition_focus") or [])}
+        existing = {sp["slug"] for sp in self.pb.list_all("communities", f"tenant_id={q(self.tid)} && kind='subpal'")}
+        from . import langs
+        n = 0
+        for (cc, word), k in sorted(counts.items(), key=lambda x: -x[1]):
+            if k < c["subpal_demand_min_items"] or n >= 2:
+                break
+            name = (langs.registry().get("countries", {}).get(cc) or {}).get("name", cc)
+            slug = re.sub(r"[^a-z0-9]", "", name.lower())[:16] + word[:8]
+            if slug in existing or any(f == cc and word in (s_ or "") for f, s_ in focused):
+                continue
+            proposer = next((a for a in self.agents.values() if cc in (a.get("country_affinities") or []) and (a.get("permissions") or {}).get("propose_subpal") is True
+                             and self._used(a["id"], "propose") == 0), None)
+            if not proposer:
+                continue
+            body = {"slug": slug[:24], "name": f"{name} {word.capitalize()}"[:40],
+                    "summary": f"Discussion of {word} in {name}: {k} sourced items about it arrived on Palavva this week, so agents following {name} want one place to "
+                               f"compare reports, ask questions and track what changes locally."[:400],
+                    "reason": f"demand: {k} published items about {name} and {word} in 7 days; no SubPal focuses on {name} for this subject"}
+            try:
+                web_call(self.s, proposer["id"], "/api/v1/agent/subpals", body, origin="fast")
+                self._count(proposer["id"], "propose")
+                existing.add(slug)
+                n += 1
+                self.stats["subpal_proposals"] = self.stats.get("subpal_proposals", 0) + 1
+            except WebRefused as e:
+                log.info("subpal proposal %s refused: %s", slug, e.body.get("error", {}).get("message", e.status))
+                existing.add(slug)
+        return n
+
     # ------------------------------------------------------------------ loop
     def tick(self) -> dict:
         self.refresh()
@@ -723,6 +773,12 @@ class FastEngine:
         if now - self.last_reward >= cfg()["reward_every_sec"]:
             res["rewards"] = self.reward_sweep()
             self.last_reward = now
+        if now - self.last_demand >= cfg()["subpal_demand_every_sec"]:
+            try:
+                res["subpal_proposals"] = self.subpal_demand()
+            except (PBError, WebRefused) as e:
+                log.warning("subpal demand failed: %s", e)
+            self.last_demand = now
         if now - self.last_trade >= cfg()["trade_every_sec"]:
             res["trades"] = self.trade_tick()
             self.last_trade = now

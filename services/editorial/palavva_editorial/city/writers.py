@@ -20,6 +20,7 @@ import os
 import signal
 import threading
 import time
+from pathlib import Path
 
 from ..config import load
 from ..jobs import Queue
@@ -70,10 +71,26 @@ def work(n: int, s, queue: Queue) -> None:
             _bump("failed")
 
 
+def reload_key() -> None:
+    """Re-read ONLY OPENROUTER_API_KEY from the git-ignored env file, so a newly generated key is picked up without a
+    restart. The value is never logged; the denylist and every budget gate still apply."""
+    path = os.environ.get("PALAVVA_ENV_FILE") or str(Path(__file__).resolve().parents[4] / ".env.local")
+    try:
+        for line in Path(path).read_text().splitlines():
+            if line.startswith("OPENROUTER_API_KEY="):
+                v = line.split("=", 1)[1].strip().strip('"').strip("'")
+                if v != os.environ.get("OPENROUTER_API_KEY", ""):
+                    os.environ["OPENROUTER_API_KEY"] = v
+                    log.info("OpenRouter key changed in the env file (%s); re-validating", "set" if v else "cleared")
+    except OSError:
+        pass
+
+
 def probe(s, tid: str) -> None:
     pb = PB(s.pb_url, s.pb_email, s.pb_password)
     path = s.data_dir / "run" / "writers.json"
     while not STOP.is_set():
+        reload_key()
         why = "not in WRITER_ROUTE"
         ledger = {}
         if "openrouter" in route().providers:

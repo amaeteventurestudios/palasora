@@ -120,6 +120,10 @@ class Intel:
         except gdelt.GdeltError as e:
             res.update(status="rate_limited" if e.code == "RATE_LIMITED" else "error", error=str(e)[:400])
             return self._record(res, t0)
+        return self.process(iso, arts, res, t0)
+
+    def process(self, iso: str, arts: list[dict], res: dict, t0: float) -> dict:
+        """Shared by the GDELT API and the GDELT bulk (GKG) paths: register publishers, classify, dedupe, publish."""
         res["found"] = len(arts)
         if not arts:
             res["status"] = "empty"
@@ -405,6 +409,35 @@ class Intel:
             self._record(res, t0)
         return out
 
+    # ------------------------------------------------------------------ GDELT bulk files (not rate limited)
+    def gkg_cycle(self, state_path) -> dict:
+        from ..city import langs as L
+        from . import gkg
+        registry: dict[str, list[str]] = {}
+        for src in self.pb.list_all("sources", f"tenant_id={q(self.tid)} && homepage_url!=''"):
+            host = (src.get("homepage_url") or "").split("//", 1)[-1].split("/", 1)[0].lower().removeprefix("www.")
+            if host and src.get("countries"):
+                registry[host] = src["countries"]
+        t0 = time.time()
+        try:
+            arts, stats = gkg.cycle(state_path, registry)
+        except Exception as e:  # noqa: BLE001 - recorded, retried next cycle
+            self._record({"country": "", "method": "gdelt", "status": "error", "error": f"gkg: {type(e).__name__}: {e}"[:400], "detail": {"stage": "gkg"}}, t0)
+            return {"error": type(e).__name__}
+        by: dict[str, list[dict]] = {}
+        for a in arts:
+            a["language"] = L.detect(a["title"])[0] or ""
+            by.setdefault(a["publisher_country"], []).append(a)
+        out = {"articles": len(arts), "countries": len(by), **stats, "published": 0}
+        for iso, xs in by.items():
+            if STOP["v"] or iso not in gdelt.FIPS:
+                continue
+            res = {"country": iso, "method": "gdelt", "status": "ok", "found": 0, "relevant": 0, "new_sources": 0, "new_items": 0, "published": 0, "held": 0,
+                   "duplicates": 0, "unreadable_language": 0, "error": "", "detail": {"stage": "gkg bulk file"}}
+            r = self.process(iso, xs, res, time.time())
+            out["published"] += r.get("published", 0)
+        return out
+
     # ------------------------------------------------------------------ sweep
     def sweep(self, countries: list[str], timespan: str) -> list[dict]:
         out = []
@@ -412,17 +445,19 @@ class Intel:
             if STOP["v"]:
                 break
             if time.time() < self.backoff_until:
-                time.sleep(max(0.0, self.backoff_until - time.time()))
+                break
             if _paused(self.pb, self.tid, "INGEST_PAUSED") or _paused(self.pb, self.tid, "LINK_SIGNALS_PAUSED"):
                 out.append(self._record({"country": iso, "method": "gdelt", "status": "skipped", "error": "ingest or link signals paused"}, time.time()))
                 continue
             r = self.run_country(iso, timespan)
             if r["status"] == "rate_limited":
+                # Stop this sweep at the first 429 (GDELT asks for patience); the next sweep resumes with the quietest countries.
                 self.backoff_until = time.time() + self.backoff
-                self.backoff = min(self.backoff * 2, 900)
-                log.info("GDELT rate limited; backing off %.0fs", self.backoff)
-            else:
-                self.backoff = 60.0
+                self.backoff = min(self.backoff * 2, 1800)
+                out.append(r)
+                log.info("GDELT rate limited at %s; sweep stopped, next attempt after %.0fs", iso, self.backoff)
+                break
+            self.backoff = 60.0
             out.append(r)
             log.info("intel %s %s found=%s relevant=%s published=%s held=%s dup=%s unread=%s %s", iso, r["status"], r.get("found"), r.get("relevant"),
                      r.get("published"), r.get("held"), r.get("duplicates"), r.get("unreadable_language"), r.get("error", "")[:80])
@@ -465,28 +500,68 @@ def main() -> None:
             print(r)
         print("publishers checked:", intel.check_publishers(_i("INTEL_PUBLISHER_CHECKS", 6)))
         return
-    first = True
-    last_seed = 0.0
-    while not STOP["v"]:
-        t0 = time.time()
-        intel.readable = intel._readable()
-        intel.sweep(order(pb, tid), "24h" if first else os.environ.get("GDELT_TIMESPAN", "3h"))
-        first = False
+    import threading
+
+    def gdelt_loop() -> None:
+        pb2 = PB(s.pb_url, s.pb_email, s.pb_password)
+        it = Intel(pb2, tid)
+        first = True
+        last_api = 0.0
+        while not STOP["v"]:
+            t0 = time.time()
+            try:
+                it.readable = it._readable()
+                log.info("gkg %s", it.gkg_cycle(s.data_dir / "run" / "gkg-state.json"))
+                if time.time() - last_api >= _i("INTEL_SWEEP_MINUTES", 30) * 60 and time.time() >= it.backoff_until:
+                    it.sweep(order(pb2, tid), "24h" if first else os.environ.get("GDELT_TIMESPAN", "3h"))
+                    last_api = time.time()
+                    first = False
+            except Exception:  # noqa: BLE001 - one failed sweep must not stop discovery
+                log.exception("gdelt sweep failed")
+            wait = max(60, _i("INTEL_GKG_MINUTES", 15) * 60 - (time.time() - t0))
+            for _ in range(int(wait)):
+                if STOP["v"]:
+                    return
+                time.sleep(1)
+
+    def feeds_loop() -> None:
+        pb3 = PB(s.pb_url, s.pb_email, s.pb_password)
+        it = Intel(pb3, tid)
+        state = s.data_dir / "run" / "intel-state.json"
         try:
-            if time.time() - last_seed > 86400:
-                isos = sorted(gdelt.FIPS)
-                for i in range(0, len(isos), 9):
-                    intel.seed_wikidata(isos[i:i + 9])
-                last_seed = time.time()
-            intel.check_publishers(_i("INTEL_PUBLISHER_CHECKS", 300))
-            log.info("feeds %s", intel.collect_feeds(_i("INTEL_FEEDS_PER_SWEEP", 60)))
-        except PBError as e:
-            log.warning("publisher stage failed: %s", e)
-        wait = max(60, _i("INTEL_SWEEP_MINUTES", 30) * 60 - (time.time() - t0))
-        for _ in range(int(wait)):
-            if STOP["v"]:
-                break
-            time.sleep(1)
+            import json as _json
+            last_seed = float(_json.loads(state.read_text()).get("last_seed", 0))
+        except (OSError, ValueError):
+            last_seed = 0.0
+        while not STOP["v"]:
+            t0 = time.time()
+            try:
+                it.readable = it._readable()
+                if time.time() - last_seed > 86400:
+                    isos = sorted(gdelt.FIPS)
+                    for i in range(0, len(isos), 9):
+                        it.seed_wikidata(isos[i:i + 9])
+                    last_seed = time.time()
+                    try:
+                        import json as _json
+                        state.write_text(_json.dumps({"last_seed": last_seed}))
+                    except OSError:
+                        pass
+                log.info("publishers checked %s", it.check_publishers(_i("INTEL_PUBLISHER_CHECKS", 300), workers=10))
+                log.info("feeds %s", it.collect_feeds(_i("INTEL_FEEDS_PER_SWEEP", 120)))
+            except Exception:  # noqa: BLE001
+                log.exception("feed stage failed")
+            wait = max(60, _i("INTEL_FEED_MINUTES", 10) * 60 - (time.time() - t0))
+            for _ in range(int(wait)):
+                if STOP["v"]:
+                    return
+                time.sleep(1)
+
+    ts = [threading.Thread(target=gdelt_loop, name="gdelt"), threading.Thread(target=feeds_loop, name="feeds")]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
     log.info("intel stopped")
 
 

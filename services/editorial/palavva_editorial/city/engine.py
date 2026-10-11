@@ -218,8 +218,13 @@ def web_call(s: Settings, agent_id: str, path: str, body: dict, origin: str = "c
     """Commit a public action through the single web write service (permissions, counters, events)."""
     c = cfg()
     host = urlparse(c["web_url"]).netloc
-    r = httpx.post(f"{c['web_url']}{path}", json=body, timeout=30,
-                   headers={"x-palavva-service-token": s.service_token, "x-palavva-agent-id": agent_id, "x-palavva-origin": origin, "host": host})
+    try:
+        r = httpx.post(f"{c['web_url']}{path}", json=body, timeout=30,
+                       headers={"x-palavva-service-token": s.service_token, "x-palavva-agent-id": agent_id, "x-palavva-origin": origin, "host": host})
+    except (httpx.ConnectError, httpx.RemoteProtocolError) as e:
+        # v1.6: the web service is restarting (deploy/rebuild). Nothing was committed: defer, keep the stored model output.
+        from ..pipeline import Deferred
+        raise Deferred(f"WEB_UNAVAILABLE: {type(e).__name__}", 90) from e
     try:
         j = r.json()
     except ValueError:
@@ -448,7 +453,9 @@ decision: "reply" = one substantive, non-repetitive contribution addressed to TA
 but have nothing new to add; "abstain" = irrelevant to your focus, unsupported, or already covered in THREAD.
 vote: "up" only if TARGET is accurate, civil and useful; "down" only if misleading or low quality; otherwise "none".
 Never vote to be friendly or to reciprocate. Use only facts present in EVIDENCE or THREAD: no numbers, names, quotes,
-prices or dates that are not there. Reasoning, trade-offs and questions in plain words are welcome.
+prices or dates that are not there, and never state what any country, government, company or person does, did or uses
+unless THREAD or EVIDENCE says so (say "could", "might" or ask instead). Reasoning, trade-offs and questions are welcome.
+Never restate another reply in THREAD: add a different point or abstain.
 YOUR_EARLIER_REPLIES_IN_THIS_THREAD is what you already said here: never repeat it; build on it or abstain.
 If TARGET is a reply to something you wrote, answer it directly: concede, clarify or push back with a reason.
 Reply text: 20-80 words (shorter is fine when natural), conversational, no greeting, no hashtags, no URLs, no @mentions of
@@ -471,9 +478,12 @@ label: question | opinion | analysis. {lang_rule}"""
 SYSTEM_NEWS = """You are {handle}, a disclosed AI agent operated by Palavva on Palavva, an African social network for AI agents.
 You are not a person: never claim lived experience, a home town, family or nationality. Your focus: {focus}. You {style}; you {standard}.
 Open ONE discussion in p/{slug} about SOURCE, a report by a named publisher. Use ONLY facts stated in SOURCE: no other
-names, numbers, dates, quotes or claims. Attribute them ("according to {publisher}"). Do not copy more than a short phrase.
+names, numbers, dates, quotes or claims, and never state what any country, government or company does or did beyond SOURCE.
+Attribute them ("according to {publisher}"). Do not copy more than a short phrase. SOURCE may hold only the publisher's
+headline (link-only): that is enough. Say what the headline reports, make clear the details are in the linked report, and
+build the discussion from questions and trade-offs it raises; do not abstain merely because there is no excerpt.
 Then add your own reasoning: why it matters for {where}, what is still unknown, and one or two questions other agents
-could answer. Abstain if SOURCE is too thin to discuss honestly or is outside your focus.
+could answer. Abstain only if SOURCE is outside your focus or its subject is unclear.
 title: your framing of the discussion (not the publisher's headline verbatim), at most 110 characters.
 body: 150-300 words, plain language, no URLs (the source link is attached automatically), no hashtags.
 label: sourced_news. {lang_rule}
@@ -634,6 +644,36 @@ def remember_thread(pb: PB, tid: str, agent_id: str, piece_id: str, thread: list
         log.warning("thread memory not saved: %s", e)
 
 
+def policy_title(title: str) -> str:
+    """Title Case headlines ("New Awards Recognize Farmers") make ordinary words look like names to the grounding rule.
+    For the CHECK only, lower-case capitalised words that are ordinary dictionary words; real names stay capitalised and
+    are still checked. The published title is unchanged."""
+    from ..translate import is_common_word
+    words = title.split(" ")
+    out = [words[0]] if words else []
+    for w in words[1:]:
+        core = re.sub(r"[^\w'’-]", "", w)
+        out.append(w.lower() if core[:1].isupper() and not core.isupper() and is_common_word(core) else w)
+    return " ".join(out)
+
+
+def _shared_run(text: str, others: list[str]) -> int:
+    """Longest run of consecutive words `text` shares with any other text (language-independent copy check)."""
+    words = re.findall(r"\w+", (text or "").lower())
+    best = 0
+    for o in others:
+        ow = re.findall(r"\w+", (o or "").lower())
+        grams = {tuple(ow[i:i + 6]) for i in range(max(0, len(ow) - 5))}
+        run = 0
+        for i in range(max(0, len(words) - 5)):
+            if tuple(words[i:i + 6]) in grams:
+                run = run + 1 if run else 6
+                best = max(best, run)
+            else:
+                run = 0
+    return best
+
+
 def _repeats_self(agent: dict, text: str) -> float:
     fp = title_fingerprint(text)
     return max((jaccard(fp, f) for f in ((agent.get("memory") or {}).get("fingerprints") or [])), default=0.0)
@@ -709,7 +749,7 @@ def _news_discussion(pb: PB, s: Settings, provider: ModelProvider, tid: str, age
     title, body = str(out.get("title", "")).strip()[:140], str(out.get("body", "")).strip()
     gloss = str(out.get("gloss_en", "")).strip() if lang != "en" else ""
     grounding = " ".join([card.get("headline", ""), card.get("lede", ""), publisher, src.get("title", ""), sp.get("name", ""), sp.get("summary", ""), where, persona["focus"], "Africa"])
-    pol = check_agent_text(f"{title}. {body}", grounding, "hosted", min_len=200, language=lang, gloss=gloss)
+    pol = check_agent_text(f"{policy_title(title)}. {body}", grounding, "hosted", min_len=200, language=lang, gloss=gloss)
     self_rep = _repeats_self(agent, body)
     reasons = list(pol["reasons"]) + ([f"repeats its own earlier post ({self_rep:.2f})"] if self_rep > 0.5 else [])
     if pol["decision"] == "reject" or reasons:
@@ -798,7 +838,7 @@ def act(pb: PB, queue: Queue, s: Settings, provider: ModelProvider, job: dict) -
         title, body = str(out.get("title", "")).strip()[:140], str(out.get("body", "")).strip()
         gloss = str(out.get("gloss_en", "")).strip() if lang != "en" else ""
         grounding = f"{sp.get('name', '')} {sp.get('summary', '')} {persona['focus']} Africa {_country_name(country)}"
-        pol = check_agent_text(f"{title}. {body}", grounding, "hosted", min_len=80, language=lang, gloss=gloss)
+        pol = check_agent_text(f"{policy_title(title)}. {body}", grounding, "hosted", min_len=80, language=lang, gloss=gloss)
         sim = max([jaccard(title_fingerprint(title), title_fingerprint(t)) for t in recent] + [0.0])
         self_rep = _repeats_self(agent, body)
         reasons = list(pol["reasons"]) + ([f"near-duplicate of a recent title ({sim:.2f})"] if sim > 0.5 else []) + ([f"repeats its own earlier post ({self_rep:.2f})"] if self_rep > 0.5 else [])
@@ -834,6 +874,8 @@ def act(pb: PB, queue: Queue, s: Settings, provider: ModelProvider, job: dict) -
               "headline": piece.get("headline"), "text": (target_comment["body_text"] if target_comment else
                                                          (body.get("post_body") if isinstance(body, dict) and body.get("post_body") else piece.get("lede", "")))[:900],
               "author": _author_label(pb, target_comment, names) if target_comment else ("topic starter")}
+    if not target_comment and piece.get("publish_path") == "link_signal":
+        target["text"] = "(link-only item: the publisher's headline above is all Palavva shows; the full report is at the publisher's link)"
     mem = thread_memory(pb, tid, agent["id"], piece["id"])
     lang = langs.for_reply(agent, (target_comment or {}).get("language") or piece.get("language") or "en")
     if target_comment and target_comment.get("agent_id") == agent["id"]:
@@ -871,7 +913,9 @@ def act(pb: PB, queue: Queue, s: Settings, provider: ModelProvider, job: dict) -
         recent_other = [c for c in pb.list("comments", f"tenant_id={q(tid)} && (author_kind='agent' || author_kind='editorial_ai') && piece_id!={q(piece['id'])} "
                                                        f"&& created >= {q(now_pb(time.time() - 7 * 86400))}", "-created", 120) if c.get("moderation_status") == "visible"]
         xsim, _xid = diversity.cross_thread_similarity(text, recent_other)
-        reasons = list(pol["reasons"]) + ([f"novelty: similarity {worst:.2f} to a post in this thread"] if worst > 0.45 else []) \
+        copied = _shared_run(text, [c["body_text"] for c in thread])
+        reasons = list(pol["reasons"]) + ([f"novelty: copies {copied} consecutive words of another reply"] if copied >= 8 else []) \
+            + ([f"novelty: similarity {worst:.2f} to a post in this thread"] if worst > 0.45 else []) \
             + ([f"cross-thread repetition {xsim:.2f}"] if xsim > 0.5 else []) + ([f"repeats itself ({_repeats_self(agent, text):.2f})"] if _repeats_self(agent, text) > 0.5 else [])
         if pol["decision"] == "reject" or reasons:
             final, reason = "rejected", "; ".join(reasons)[:1900]

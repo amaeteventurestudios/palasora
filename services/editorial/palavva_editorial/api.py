@@ -210,3 +210,56 @@ def city_tick_now(body: CityTickBody) -> dict:
 from .economy.api import router as economy_router  # noqa: E402
 
 app.include_router(economy_router, dependencies=[Depends(auth)])
+
+
+# ---------------- v1.6 one pan-African engine: status for Command Center ----------------
+
+@app.get("/engine/status", dependencies=[Depends(auth)])
+def engine_status() -> dict:
+    """Writer pool, paid-inference gate and spend ledger (never the key), process liveness, queue backlog by type,
+    language capability. Read-only."""
+    import json as _json
+    import os as _os
+    import sqlite3
+    import time as _time
+    from .city import langs
+    from .providers.openrouter import HARD_MAX_USD, SpendLedger
+    s = config.load()
+    run = s.data_dir / "run"
+    procs = {}
+    for name in ("worker", "fast", "writers", "intel", "editorial", "pocketbase", "web"):
+        try:
+            pid = int((run / f"{name}.pid").read_text().strip())
+            _os.kill(pid, 0)
+            procs[name] = {"up": True, "pid": pid}
+        except (OSError, ValueError):
+            procs[name] = {"up": False}
+    try:
+        writers = _json.loads((run / "writers.json").read_text())
+    except (OSError, ValueError):
+        writers = {}
+    queue = {}
+    try:
+        c = sqlite3.connect(s.jobs_db, timeout=5)
+        now = _time.time()
+        for typ, state, n, oldest in c.execute("SELECT type, state, COUNT(*), MIN(CASE WHEN state='queued' AND next_at <= ? THEN next_at END) FROM jobs "
+                                               "WHERE state IN ('queued','running') GROUP BY type, state", (now,)):
+            queue.setdefault(typ, {})[state] = n
+            if oldest:
+                queue[typ]["oldest_ready_s"] = int(now - oldest)
+        dead = c.execute("SELECT type, COUNT(*) FROM dead_letters WHERE created_at >= ? GROUP BY type", (now - 86400,)).fetchall()
+        c.close()
+    except sqlite3.Error:
+        dead = []
+    try:
+        bench = _json.loads((run / "model-benchmark.json").read_text())
+    except (OSError, ValueError):
+        bench = None
+    cap = min(float(_os.environ.get("OPENROUTER_MAX_USD", "10")), HARD_MAX_USD)
+    codes = sorted(set(langs.NAMES))
+    return {"processes": procs, "writers": writers, "queue": queue, "dead_24h": {t: n for t, n in dead},
+            "spend": {**SpendLedger().summary(), "cap_usd": cap, "cutoff_usd": min(cap, float(_os.environ.get("OPENROUTER_CUTOFF_USD", "8"))),
+                      "model": _os.environ.get("OPENROUTER_MODEL", ""), "route": _os.environ.get("WRITER_ROUTE", "ollama"),
+                      "experiment_enabled": _os.environ.get("OPENROUTER_EXPERIMENT_ENABLED", "false") == "true"},
+            "languages": [{"code": c_, "name": langs.name(c_), "status": langs.status(c_), "rtl": langs.is_rtl(c_)} for c_ in codes],
+            "benchmark": bench, "local_model": {"provider": s.model_provider, "model": s.ollama_model}}

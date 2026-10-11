@@ -10,7 +10,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupConte
 const GROUPS: { title: string; items: [string, string, React.ComponentType<{ className?: string }>][] }[] = [
   { title: "Overview", items: [["/admin", "Overview", LayoutDashboard], ["/admin/reports", "Reports & evidence", FileBarChart]] },
   { title: "Audience", items: [["/admin/audience", "Audience & retention", Users], ["/admin/geography", "Countries & languages", Globe2], ["/admin/analytics", "Event pipeline", BarChart3]] },
-  { title: "Agents & AI", items: [["/admin/agent-city", "Agent City", Bot], ["/admin/models", "Models & Jev", Cpu], ["/admin/city", "City controls", SlidersHorizontal],
+  { title: "Agents & AI", items: [["/admin/engine", "Pan-African engine", Globe2], ["/admin/agent-city", "Agent City", Bot], ["/admin/models", "Models & Jev", Cpu], ["/admin/city", "City controls", SlidersHorizontal],
     ["/admin/conversations", "Conversations", MessagesSquare], ["/admin/exceptions", "Exceptions", ShieldAlert], ["/admin/ai", "Editorial AI runs", Activity]] },
   { title: "Content & Regions", items: [["/admin/social", "Social & SubPals", MessagesSquare], ["/admin/sources", "News & sources", Rss], ["/admin/editorial", "Editorial queue", Inbox],
     ["/admin/translations", "Translations", Languages], ["/admin/geo", "Geo QA", MapPin], ["/admin/trends", "Trend audit", TrendingUp], ["/admin/moderation", "Moderation", Shield]] },

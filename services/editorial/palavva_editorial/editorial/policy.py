@@ -85,9 +85,33 @@ def _is_geo(word: str) -> bool:
     return tx.fold(word)[:5] in _GEO
 
 
+_AR2LAT = str.maketrans({"ب": "b", "ت": "t", "ث": "t", "ج": "j", "ح": "h", "خ": "k", "د": "d", "ذ": "d", "ر": "r", "ز": "z", "س": "s", "ش": "s", "ص": "s",
+                         "ض": "d", "ط": "t", "ظ": "z", "ع": "", "غ": "g", "ف": "f", "ق": "k", "ك": "k", "ل": "l", "م": "m", "ن": "n", "ه": "h", "ة": "",
+                         "و": "", "ي": "", "ى": "", "ا": "", "أ": "", "إ": "", "آ": "", "ء": "", "ئ": "", "ؤ": "", "ـ": ""})
+_AR_TOKEN = re.compile(r"[\u0621-\u064A]+")
+
+
+def _lat_skeleton(word: str) -> str:
+    w = word.lower().replace("ph", "f").replace("sh", "s").replace("kh", "k").replace("gh", "g").replace("th", "t").replace("ou", "")
+    w = w.replace("c", "k").replace("q", "k")
+    return re.sub(r"[aeiouyw'\-\s]", "", w)
+
+
+def arabic_skeletons(grounding: str) -> set[str]:
+    """Consonant skeletons of Arabic-script tokens (and adjacent pairs) in the grounding, e.g. 'بن رحمة' -> {'bn', 'rhm', 'bnrhm'}.
+    Lets the English gloss of an Arabic reply name people/places that ARE in an Arabic source (Ben Rahma), while invented
+    names still fail. Skeletons shorter than 2 consonants never match."""
+    toks = [t.removeprefix("ال") if len(t) > 3 else t for t in _AR_TOKEN.findall(grounding or "")]
+    sk = [t.translate(_AR2LAT) for t in toks]
+    out = {x for x in sk if len(x) >= 2}
+    out |= {a + b for a, b in zip(sk, sk[1:]) if len(a + b) >= 3}
+    return out
+
+
 def unsupported_entities(text: str, grounding: str) -> list[str]:
     """Names, acronyms, quotes and superlatives not found in the grounding text (evidence + visible thread)."""
     low = grounding.lower()
+    ar_sk = arabic_skeletons(grounding) if _AR_TOKEN.search(grounding or "") else set()
     out: list[str] = []
     for sent in re.split(r"(?<=[.!?:;])\s+|\n+", text):
         toks = list(NAME_TOK.finditer(sent))
@@ -101,7 +125,7 @@ def unsupported_entities(text: str, grounding: str) -> list[str]:
                 multi = nxt is not None and sent[m.end():nxt.start()].strip() == "" and nxt.group(0) not in ENTITY_STOP and not _is_geo(nxt.group(0))
                 if not (multi or re.search(r"['\u2019]s$", m.group(0))):
                     continue
-            if base.lower() not in low and not _is_geo(base):
+            if base.lower() not in low and not _is_geo(base) and not (ar_sk and len(_lat_skeleton(base)) >= 2 and _lat_skeleton(base) in ar_sk):
                 out.append(base)
     for m in ACRONYM.finditer(text):
         a = m.group(0)
