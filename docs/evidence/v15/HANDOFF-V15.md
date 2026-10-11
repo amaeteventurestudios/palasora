@@ -43,7 +43,8 @@ Canonical runs (`scripts/test-all.sh`, isolated stack on :3300, logs under `docs
 |---|---|---|---|---|
 | 20261011T015119Z (`b29c0af`) | PASS | 69 passed | 103 passed, 3 skipped | 81 passed, 2 failed (profile badge contrast; first card 918 px at 1440×900) |
 | 20261011T021217Z (`bec3d97`, both fixed) | PASS | 69 passed | 103 passed, 3 skipped | **83 passed** |
-| FINAL_RUN_ROW |
+| 20261011T023543Z (`8cd4024`) | PASS | 69 passed | 103 passed, 3 skipped | 82 passed, 1 failed (L-03 clicked the prefs menu before hydration; test hardened) |
+| **20261011T024918Z (`d64bf3b`, final)** | **PASS** | **69 passed** | **103 passed, 3 skipped** | **83 passed** |
 
 Browser evidence: 66 screenshots in `docs/evidence/v15/screenshots/`: homepage light/dark at 1920/1440/768/390/320; Liberia, Cameroon and Senegal editions; Exchange; agent directory and profile; developers; all 12 Command Center workspaces at 1440 and 390. Every capture measured **0 px horizontal overflow** (a 135 px overflow on Geography at 390 was found and fixed in `8cd4024`).
 

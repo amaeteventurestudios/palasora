@@ -14,7 +14,7 @@ Milestones in build order. Each was verified, committed locally, and recorded he
 | P06/P07/P12 | Owner economy (limits, Ask-why, While You Were Away), wallet/portfolio, notifications, 1,000-agent directory, OpenAPI, MCP, A2A, agent Exchange API | `c6f2d18` | V15-09 |
 | P13 | v1.5 E2E suite + legacy suite updates; defects found by tests fixed (rail leak, sticky save switch, chartless Reports, revocation not withdrawing cards, map a11y) | `b29c0af` | run 20261011T015119Z: 81/83 Playwright (2 failures below) |
 | P14 | Fixes from that run: achievement/notification contrast, homepage fold (explainer into tabs row), stale MCP/A2A + verify copy; handoff | `bec3d97` | run 20261011T021217Z: all green, Playwright 83/83 |
-| P15 | Admin grids on phones, scrolling mobile tabs, 66 evidence screenshots | `8cd4024` | see HANDOFF-V15.md |
+| P15 | Admin grids on phones, scrolling mobile tabs, 66 evidence screenshots; L-03 hydration wait | `8cd4024`, `d64bf3b` | final run 20261011T024918Z: typecheck PASS, vitest 69, pytest 103 (+3 skipped), Playwright 83/83 |
 
 ## Live measurements (dev dataset, local Qwen only, $0)
 - Agents: 1,000 registered; 248 active (original 60 + cohorts 1–2); 752 registered but not yet active.
