@@ -153,3 +153,30 @@ routerAdd("POST", "/api/palavva/agents-rollback", (e) => {
   });
   return e.json(200, { deleted, retired, remaining: ids.length === limit });
 }, $apis.requireSuperuserAuth());
+
+// GET /api/palavva/engine-agents?tenant_id=&since=   the fields the fast engine needs for every Palavva-hosted agent, as
+// compact rows (JSON columns returned as stored text). `since` = only rows updated at/after that time (incremental refresh).
+routerAdd("GET", "/api/palavva/engine-agents", (e) => {
+  const qp = e.request.url.query();
+  const tid = qp.get("tenant_id"), since = qp.get("since") || "";
+  if (!tid) return e.json(400, { message: "tenant_id required" });
+  const shape = { id: "", handle: "", handle_key: "", display_name: "", kind: "", owner_type: "", status: "", permissions: "", country_affinities: "",
+    edition: "", languages: "", interests: "", expertise: "", primary_subjects: "", secondary_subjects: "", cooldown_until: "", trading_enabled: false,
+    risk_profile: "", activity_propensity: 0, glyph: "", persona: "", adm1_code: "", adm1_name: "", profession: "", updated: "" };
+  const rows = arrayOf(new DynamicModel(shape));
+  $app.db().newQuery("SELECT " + Object.keys(shape).join(", ") + " FROM agents WHERE tenant_id={:t} AND hosting='palavva'" + (since ? " AND updated >= {:since}" : ""))
+    .bind({ t: tid, since: since }).all(rows);
+  const keys = Object.keys(shape);
+  return e.json(200, { at: new Date().toISOString().replace("T", " "), keys: keys, rows: rows.map((r) => keys.map((k) => r[k])) });
+}, $apis.requireSuperuserAuth());
+
+// GET /api/palavva/engine-memberships?tenant_id=&since=   [agent_id, target_type, target_id] for every membership (or new ones).
+routerAdd("GET", "/api/palavva/engine-memberships", (e) => {
+  const qp = e.request.url.query();
+  const tid = qp.get("tenant_id"), since = qp.get("since") || "";
+  if (!tid) return e.json(400, { message: "tenant_id required" });
+  const rows = arrayOf(new DynamicModel({ a: "", t: "", g: "" }));
+  $app.db().newQuery("SELECT agent_id AS a, target_type AS t, target_id AS g FROM agent_memberships WHERE tenant_id={:t}" + (since ? " AND created >= {:since}" : ""))
+    .bind({ t: tid, since: since }).all(rows);
+  return e.json(200, { at: new Date().toISOString().replace("T", " "), rows: rows.map((r) => [r.a, r.t, r.g]) });
+}, $apis.requireSuperuserAuth());

@@ -248,6 +248,18 @@ class OpenRouterWriter:
         self._auth_ok_at = 0.0
         self._auth_lock = threading.Lock()
         self._blocked_logged: dict[str, float] = {}
+        self._agent_cc: dict[str, str] = {}
+
+    def _country(self, agent_id: str) -> str:
+        if not agent_id:
+            return ""
+        if agent_id not in self._agent_cc:
+            try:
+                a = self.meter.pb.get("agents", agent_id)
+                self._agent_cc[agent_id] = a.get("edition") if a.get("edition") not in ("", "ALL", None) else ((a.get("country_affinities") or [""])[0] or "")
+            except Exception:  # noqa: BLE001 - unknown agent: no country cap applies, global caps still do
+                self._agent_cc[agent_id] = ""
+        return self._agent_cc[agent_id]
 
     # ---- configuration
     @staticmethod
@@ -328,6 +340,14 @@ class OpenRouterWriter:
                 self._blocked_logged[why] = time.time()
                 self._record(purpose, agent_id, event_id, why.split(":")[0], error=why)
             return GenerateResult("disabled", None, PROVIDER, self.model, 0, error_code=why)
+        # v1.7 Control Room pacing (kill switch, total cap, daily pace, per-country daily cap) before anything is reserved.
+        from ..city import control
+        pace = control.spend_refusal(self.meter.tid, self._country(agent_id), self._agent_cc)
+        if pace:
+            if time.time() - self._blocked_logged.get(pace, 0) > 60:
+                self._blocked_logged[pace] = time.time()
+                self._record(purpose, agent_id, event_id, "blocked_budget", error=pace)
+            return GenerateResult("disabled", None, PROVIDER, self.model, 0, error_code=f"blocked_budget: {pace}")
         pin, pout = price(self.model, self.client)
         est_in = (len(req.system_instructions) + len(req.user_prompt)) // 3 + 60
         worst = est_in * pin + req.max_output_tokens * pout

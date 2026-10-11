@@ -44,8 +44,23 @@ def _bump(key: str, outcome: str = "") -> None:
             STATS["by_outcome"][outcome] = STATS["by_outcome"].get(outcome, 0) + 1
 
 
-def work(n: int, s, queue: Queue) -> None:
+CALLS: list[float] = []   # job start times in the last minute (Control Room: max_model_calls_per_min)
+
+
+def _rate_ok(tid: str) -> bool:
+    from . import control
+    now = time.time()
+    with LOCK:
+        CALLS[:] = [t for t in CALLS if now - t < 60]
+        if len(CALLS) >= int(control.get(tid, "max_model_calls_per_min")):
+            return False
+        CALLS.append(now)
+        return True
+
+
+def work(n: int, s, queue: Queue, tid: str = "") -> None:
     from ..pipeline import Deferred
+    from . import control
     pb = PB(s.pb_url, s.pb_email, s.pb_password)
     provider = make_provider(s)
     owner = f"writer-{os.getpid()}-{n}"
@@ -53,6 +68,14 @@ def work(n: int, s, queue: Queue) -> None:
         if n > 0 and not engine.paid_route():  # local Qwen serves one request at a time: extra threads idle until paid writing is open
             STOP.wait(5)
             continue
+        if tid:
+            control.load(pb, tid)
+            if n >= int(control.get(tid, "writer_concurrency")):  # v1.7: concurrency is a live setting; surplus threads idle
+                STOP.wait(5)
+                continue
+            if not _rate_ok(tid):
+                STOP.wait(1.0)
+                continue
         job = queue.claim(owner, types=["city_act"])
         if not job:
             STOP.wait(1.0)
@@ -129,11 +152,12 @@ def main() -> None:
     threading.Thread(target=probe, args=(s, tid), daemon=True, name="probe").start()
     time.sleep(2)  # first gate probe before sizing the pool
     paid = "openrouter" in route().providers
-    n = max(1, int(os.environ.get("WRITER_POOL_SIZE", os.environ.get("OPENROUTER_MAX_CONCURRENCY", "6") if paid else "1")))
+    # v1.7: start the maximum the Control Room allows (16); `writer_concurrency` decides how many actually work.
+    n = max(1, int(os.environ.get("WRITER_POOL_SIZE", "16" if paid else "1")))
     with LOCK:
         STATS["threads"] = n
     log.info("writer pool started: %d threads, route=%s", n, route().providers)
-    threads = [threading.Thread(target=work, args=(i, s, queue), name=f"w{i}") for i in range(n)]
+    threads = [threading.Thread(target=work, args=(i, s, queue, tid), name=f"w{i}") for i in range(n)]
     for t in threads:
         t.start()
     for t in threads:

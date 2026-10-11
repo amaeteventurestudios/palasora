@@ -8,7 +8,8 @@ import geo from "@/lib/geo/africa-paths.json";
 
 const RAMP = ["var(--seq-100)", "var(--seq-250)", "var(--seq-400)", "var(--seq-550)", "var(--seq-700)"];
 
-export function AfricaMap({ values, names, label, unit = "", selected }: { values: Record<string, number>; names: Record<string, string>; label: string; unit?: string; selected?: string }) {
+export function AfricaMap({ values, names, label, unit = "", selected, picked, onPick }: { values: Record<string, number>; names: Record<string, string>; label: string; unit?: string;
+  selected?: string; picked?: Set<string>; onPick?: (iso: string) => void }) {
   const [hover, setHover] = useState<string | null>(null);
   const router = useRouter(); const sp = useSearchParams(); const path = usePathname();
   const max = Math.max(0, ...Object.values(values));
@@ -17,15 +18,17 @@ export function AfricaMap({ values, names, label, unit = "", selected }: { value
     if (iso === "EH" || !v || !max) return "var(--muted)";
     return RAMP[Math.min(RAMP.length - 1, Math.floor((v / max) * (RAMP.length - 0.001)))];
   };
-  const go = (iso: string) => { if (iso === "EH") return; const u = new URLSearchParams(sp.toString()); u.set("country", iso); router.push(`${path}?${u}`); };
+  // v1.7: with onPick the map is a multi-select picker (Population Manager); otherwise a click drills into the country.
+  const go = (iso: string) => { if (iso === "EH") return; if (onPick) { onPick(iso); return; } const u = new URLSearchParams(sp.toString()); u.set("country", iso); router.push(`${path}?${u}`); };
   const ranked = Object.entries(values).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
   return (
     <figure className="relative" data-testid="africa-map">
       <svg viewBox={geo.viewBox} className="h-auto w-full max-h-[420px]" role="group" aria-label={label}>
         {"EH" in geo.paths && <path d={(geo.paths as Record<string, string>).EH} fill="var(--muted)" stroke="var(--card)" strokeWidth={0.8} aria-hidden="true" />}
         {Object.entries(geo.paths).filter(([iso]) => iso !== "EH").map(([iso, d]) => (
-          <a key={iso} href={`${path}?country=${iso}`} onClick={(e) => { e.preventDefault(); go(iso); }} aria-label={`${names[iso] ?? iso}: ${(values[iso] ?? 0).toLocaleString("en")}${unit}`}>
-            <path d={d} fill={fill(iso)} stroke={selected === iso ? "var(--brand-tangerine)" : "var(--card)"} strokeWidth={selected === iso ? 2.5 : 0.8}
+          <a key={iso} href={`${path}?country=${iso}`} onClick={(e) => { e.preventDefault(); go(iso); }} aria-label={`${names[iso] ?? iso}: ${(values[iso] ?? 0).toLocaleString("en")}${unit}${picked ? (picked.has(iso) ? ", selected" : ", not selected") : ""}`}
+            aria-pressed={picked ? picked.has(iso) : undefined} role={onPick ? "button" : undefined}>
+            <path d={d} fill={fill(iso)} stroke={selected === iso || picked?.has(iso) ? "var(--brand-tangerine)" : "var(--card)"} strokeWidth={selected === iso || picked?.has(iso) ? 2.2 : 0.8}
               onMouseEnter={() => setHover(iso)} onMouseLeave={() => setHover(null)} onFocus={() => setHover(iso)} className="cursor-pointer outline-none transition-opacity hover:opacity-80 focus-visible:opacity-80" />
           </a>
         ))}

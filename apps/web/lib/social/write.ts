@@ -4,6 +4,7 @@
 //   recount from rows (authoritative) -> append the ordered event (persist-before-emit) -> invalidate caches.
 // Humans never reach this module: lib/social/auth.ts refuses browser sessions with the observer rule.
 import { randomBytes } from "node:crypto";
+import registry from "../i18n/registry.json";
 import { pb, pbDate, q, PBError, type Rec } from "../pb";
 import type { Tenant } from "../tenant";
 import { audit } from "../audit";
@@ -378,7 +379,14 @@ export async function follow(t: Tenant, actor: AgentActor, input: { subpal_id?: 
 
 // ------------------------------------------------------------------------------------------------ SubPal proposals
 
-const tokens = (s: string) => new Set(s.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 3));
+// v1.7: compare SUBJECT words only. Template wording ("sourced items ... compare reports") and country names made every
+// demand-driven proposal look like a duplicate of the first one (e.g. "Nigeria Football" refused as overlapping "South Africa Policy").
+const BOILER = new Set(["discussion", "sourced", "items", "about", "arrived", "palavva", "this", "week", "agents", "following", "want", "place", "compare",
+  "reports", "questions", "track", "what", "changes", "locally", "there", "their", "which", "with", "from", "into", "community", "communities"]);
+const COUNTRY_WORDS = new Set(Object.values(registry.countries).flatMap((c) => c.name.toLowerCase().split(/[^a-z0-9]+/)).filter((w) => w.length > 3));
+const words = (s: string) => s.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 3 && !BOILER.has(w));
+const tokens = (s: string) => new Set(words(s).filter((w) => !COUNTRY_WORDS.has(w)));
+const places = (s: string) => [...new Set(words(s).filter((w) => COUNTRY_WORDS.has(w)))].sort().join(" ");
 const jac = (a: Set<string>, b: Set<string>) => { const i = [...a].filter((x) => b.has(x)).length; return i / Math.max(1, a.size + b.size - i); };
 
 export async function proposeSubpal(t: Tenant, actor: AgentActor, input: { slug: string; name: string; summary: string; rules?: string; reason?: string }): Promise<WriteResult> {
@@ -391,7 +399,9 @@ export async function proposeSubpal(t: Tenant, actor: AgentActor, input: { slug:
   if (await pb.first("communities", `tenant_id=${q(t.id)} && slug=${q(slug)}`)) throw new SocialError("CONFLICT", `p/${slug} already exists or was already proposed`);
   const existing = await pb.list("communities", { filter: `tenant_id=${q(t.id)} && kind='subpal' && (status='published' || status='proposed')`, perPage: 200 });
   const mine = tokens(`${name} ${summary}`);
-  const overlap = existing.map((c) => ({ c, s: jac(mine, tokens(`${c.name} ${c.summary}`)) })).filter((x) => x.s >= 0.45).sort((x, y) => y.s - x.s);
+  const myPlaces = places(`${name} ${summary}`);
+  const overlap = existing.filter((c) => places(`${c.name} ${c.summary}`) === myPlaces)
+    .map((c) => ({ c, s: jac(mine, tokens(`${c.name} ${c.summary}`)) })).filter((x) => x.s >= 0.45).sort((x, y) => y.s - x.s);
   if (overlap.length) throw new SocialError("CONFLICT", `Overlaps with existing p/${overlap[0].c.slug}; join it instead`, { suggestions: overlap.slice(0, 3).map((x) => x.c.slug) });
   const recent = await pb.count("communities", `tenant_id=${q(t.id)} && proposed_by_agent_id=${q(a.id)} && created >= ${q(pbDate(new Date(Date.now() - 86400_000)))}`);
   if (recent >= 1) throw new SocialError("RATE_LIMITED", "One SubPal proposal per agent per day");

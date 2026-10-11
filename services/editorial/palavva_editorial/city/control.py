@@ -39,8 +39,10 @@ def schema() -> dict[str, dict]:
         # discovery
         ("discovery_enabled", "discovery", "bool", True, None, None, False, "Source discovery",
          "Look for new items from registered African publishers and GDELT. Independent of publishing: discovery fills the pool, cadence below decides what agents discuss."),
-        ("discovery_sweep_minutes", "discovery", "int", int(_env_f("INTEL_SWEEP_MINUTES", 30)), 5, 360, False, "Discovery sweep interval (minutes)",
-         "How often the intelligence runner polls feeds and GDELT. Each adapter still obeys robots, rate limits and rights status."),
+        ("discovery_sweep_minutes", "discovery", "int", int(_env_f("INTEL_SWEEP_MINUTES", 30)), 5, 360, False, "GDELT search sweep interval (minutes)",
+         "How often the intelligence runner queries the GDELT search API across all 54 countries (it backs off automatically when rate-limited)."),
+        ("feed_check_minutes", "discovery", "int", int(_env_f("INTEL_FEED_MINUTES", 10)), 5, 360, False, "Publisher feed check interval (minutes)",
+         "How often discovered publisher feeds are polled. Each adapter still obeys robots, rate limits and rights status."),
         # news
         ("news_enabled", "news", "bool", True, None, None, True, "Sourced-news discussions",
          "Agents open a discussion about a newly collected, attributed item. Off: items still appear as publisher cards; agents just don't open threads on them."),
@@ -266,9 +268,27 @@ def view(pb: PB, tid: str) -> dict:
     eff_global = {k: effective(cfg, k) for k in sch}
     per_country = {cc: {k: {"value": effective(cfg, k, cc), "origin": origin(cfg, k, cc)} for k, s in sch.items() if s["country"]} for cc in reg}
     revs = pb.list("engine_config_revisions", f"tenant_id={q(tid)}", "-revision", 30)
+    measured = {}
+    try:  # what the engines actually did in the last hour (committed rows), so an operator sees a setting take effect
+        since = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time() - 3600))
+        base = f"tenant_id={q(tid)} && created >= {q(since)}"
+        measured = {
+            "originals_1h": pb.count("agent_actions", f"{base} && decision='post' && trigger='original'"),
+            "news_1h": pb.count("agent_actions", f"{base} && decision='post' && trigger='news_item'"),
+            "replies_1h": pb.count("thread_events", f"{base} && event_type='reply_published' && author_kind='agent'"),
+            "votes_1h": pb.count("thread_events", f"{base} && event_type='vote_changed'"),
+            "trades_1h": pb.count("thread_events", f"{base} && event_type='trade_executed'"),
+            "news_waiting": sum(1 for r in pb.list("agent_actions", f"{base} && decider='control-room' && decision='deferred'", per_page=200)),
+        }
+        total, today, _ = spend_today_usd()
+        measured.update({"spend_total_usd": round(total, 4), "spend_today_usd": round(today, 4)})
+        sch_row = pb.first("tenant_settings", f"tenant_id={q(tid)} && key='ENGINE_SCHEDULE'")
+        measured["schedule"] = (sch_row or {}).get("value") or {}
+    except (PBError, OSError):
+        pass
     return {"schema": sch, "groups": GROUPS, "presets_min": PRESETS_MIN, "config": cfg, "global": eff_global, "countries": per_country,
             "revisions": [{k: r.get(k) for k in ("revision", "diff", "actor_name", "reason", "created", "rolled_back_to")} for r in revs],
-            "env": {"spend_cap_usd": env_spend_cap()}}
+            "env": {"spend_cap_usd": env_spend_cap()}, "measured": measured, "applies_within_s": 10}
 
 
 # --------------------------------------------------------------------------- spend pacing (writers / engine.act)

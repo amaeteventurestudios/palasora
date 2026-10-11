@@ -3,14 +3,13 @@
 // Economy / Commerce / Operations. Primary workspaces A01-A12 first in each group; existing tools remain as drilldowns.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, Bot, Building2, CandlestickChart, Coins, Cpu, FileBarChart, Globe2, Inbox, Languages, LayoutDashboard, MapPin, Megaphone,
-  MessagesSquare, Rss, Settings, Share2, Shield, ShieldAlert, SlidersHorizontal, TrendingUp, Users, Wallet, HeartPulse, ArrowLeft } from "lucide-react";
+import { Activity, BarChart3, Bot, Building2, CandlestickChart, Coins, Cpu, FileBarChart, Globe2, Inbox, Languages, LayoutDashboard, MapPin, Megaphone, MessagesSquare, Rss, Settings, Share2, Shield, ShieldAlert, SlidersHorizontal, TrendingUp, Users, Wallet, HeartPulse, ArrowLeft, UsersRound, Gauge } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail } from "@/components/ui/sidebar";
 
 const GROUPS: { title: string; items: [string, string, React.ComponentType<{ className?: string }>][] }[] = [
   { title: "Overview", items: [["/admin", "Overview", LayoutDashboard], ["/admin/reports", "Reports & evidence", FileBarChart]] },
   { title: "Audience", items: [["/admin/audience", "Audience & retention", Users], ["/admin/geography", "Countries & languages", Globe2], ["/admin/analytics", "Event pipeline", BarChart3]] },
-  { title: "Agents & AI", items: [["/admin/engine", "Pan-African engine", Globe2], ["/admin/agent-city", "Agent City", Bot], ["/admin/models", "Models & Jev", Cpu], ["/admin/city", "City controls", SlidersHorizontal],
+  { title: "Agents & AI", items: [["/admin/engine", "AI Engine overview", Globe2], ["/admin/engine/population", "Agent population", UsersRound], ["/admin/engine/controls", "Engine Control Room", Gauge], ["/admin/agent-city", "Agent City", Bot], ["/admin/models", "Models & Jev", Cpu], ["/admin/city", "City controls", SlidersHorizontal],
     ["/admin/conversations", "Conversations", MessagesSquare], ["/admin/exceptions", "Exceptions", ShieldAlert], ["/admin/ai", "Editorial AI runs", Activity]] },
   { title: "Content & Regions", items: [["/admin/social", "Social & SubPals", MessagesSquare], ["/admin/sources", "News & sources", Rss], ["/admin/editorial", "Editorial queue", Inbox],
     ["/admin/translations", "Translations", Languages], ["/admin/geo", "Geo QA", MapPin], ["/admin/trends", "Trend audit", TrendingUp], ["/admin/moderation", "Moderation", Shield]] },
@@ -22,7 +21,7 @@ const GROUPS: { title: string; items: [string, string, React.ComponentType<{ cla
 
 export function AdminSidebar({ tenantName, user, role }: { tenantName: string; user: string; role: string }) {
   const path = usePathname();
-  const active = (href: string) => (href === "/admin" ? path === "/admin" : path === href || path.startsWith(href + "/"));
+  const active = (href: string) => (href === "/admin" || href === "/admin/engine" ? path === href : path === href || path.startsWith(href + "/"));
   return (
     <Sidebar collapsible="icon" data-testid="admin-sidebar">
       <SidebarHeader>

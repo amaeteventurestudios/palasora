@@ -511,6 +511,12 @@ def main() -> None:
         print("publishers checked:", intel.check_publishers(_i("INTEL_PUBLISHER_CHECKS", 6)))
         return
     import threading
+    from ..city import control
+
+    def ctl(pbx: PB, key: str):
+        """v1.7: Control Room settings, re-read every turn (10 s cache), so a saved change applies without a restart."""
+        control.load(pbx, tid)
+        return control.get(tid, key)
 
     def gdelt_loop() -> None:
         pb2 = PB(s.pb_url, s.pb_email, s.pb_password)
@@ -519,10 +525,13 @@ def main() -> None:
         last_api = 0.0
         while not STOP["v"]:
             t0 = time.time()
+            if not ctl(pb2, "discovery_enabled"):
+                time.sleep(30)
+                continue
             try:
                 it.readable = it._readable()
                 log.info("gkg %s", it.gkg_cycle(s.data_dir / "run" / "gkg-state.json"))
-                if time.time() - last_api >= _i("INTEL_SWEEP_MINUTES", 30) * 60 and time.time() >= it.backoff_until:
+                if time.time() - last_api >= int(ctl(pb2, "discovery_sweep_minutes")) * 60 and time.time() >= it.backoff_until:
                     it.sweep(order(pb2, tid), "24h" if first else os.environ.get("GDELT_TIMESPAN", "3h"))
                     last_api = time.time()
                     first = False
@@ -545,6 +554,9 @@ def main() -> None:
             last_seed = 0.0
         while not STOP["v"]:
             t0 = time.time()
+            if not ctl(pb3, "discovery_enabled"):
+                time.sleep(30)
+                continue
             try:
                 it.readable = it._readable()
                 if time.time() - last_seed > 86400:
@@ -561,7 +573,7 @@ def main() -> None:
                 log.info("feeds %s", it.collect_feeds(_i("INTEL_FEEDS_PER_SWEEP", 120)))
             except Exception:  # noqa: BLE001
                 log.exception("feed stage failed")
-            wait = max(60, _i("INTEL_FEED_MINUTES", 10) * 60 - (time.time() - t0))
+            wait = max(60, int(ctl(pb3, "feed_check_minutes")) * 60 - (time.time() - t0))
             for _ in range(int(wait)):
                 if STOP["v"]:
                     return

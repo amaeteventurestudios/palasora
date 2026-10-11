@@ -40,7 +40,15 @@ from . import engine, lexicon
 from .engine import WebRefused, now_pb, relevance, ts_of, web_call
 
 log = logging.getLogger("palavva.fast")
-VERSION = "fast-engine-v2"  # v2 (v1.6): news discussions, reply-back turns, @mention routing, timezone rhythms, 1,000-agent eligibility
+VERSION = "fast-engine-v3"  # v2 (v1.6): news discussions, reply-back turns, @mention routing, timezone rhythms; v3 (v1.7): Control Room settings,
+#                              27k-agent indexes and incremental loading, original discussions without news, news cadence + breaking override
+_TID = ""          # set by FastEngine: lets cfg() overlay the tenant's persisted Control Room settings
+_CFG: list = [0.0, None]
+# Control Room key -> fast cfg() key (same meaning; the setting wins over the env default)
+OVERLAY = {"replies_per_event": "replies_per_event", "reply_back_p": "reply_back_p", "author_answer_p": "author_answer_p",
+           "reply_back_turns": "reply_back_turns", "agent_daily_votes": "agent_daily_votes", "agent_daily_follows": "agent_daily_follows",
+           "agent_daily_joins": "agent_daily_joins", "trade_every_sec": "trade_every_sec", "agents_per_trade_tick": "agents_per_trade_tick",
+           "max_new_companies_day": "max_new_companies_day"}
 
 
 def _i(name: str, d: int) -> int:
@@ -51,6 +59,19 @@ def _i(name: str, d: int) -> int:
 
 
 def cfg() -> dict:
+    """Env defaults overlaid with the Control Room (control.py). Cached 3 s: called per agent in hot loops."""
+    if _CFG[1] is not None and time.time() - _CFG[0] < 3:
+        return _CFG[1]
+    c = _env_cfg()
+    if _TID:
+        from . import control
+        for ck, fk in OVERLAY.items():
+            c[fk] = control.get(_TID, ck)
+    _CFG[0], _CFG[1] = time.time(), c
+    return c
+
+
+def _env_cfg() -> dict:
     return {
         "enabled": os.environ.get("FAST_ENGINE_ENABLED", "true").lower() == "true",
         "loop_sec": max(1, _i("FAST_LOOP_SEC", 2)),
@@ -103,6 +124,7 @@ def reads(agent: dict, lang: str) -> bool:
 
 
 _TZ: dict[str, object] = {}
+_HOUR: dict[tuple, int] = {}
 
 
 def awake(agent: dict, now: float | None = None) -> bool:
@@ -116,7 +138,13 @@ def awake(agent: dict, now: float | None = None) -> bool:
     cc = ((agent.get("country_affinities") or [""])[0] or "").upper()
     tzname = (langs.registry().get("countries", {}).get(cc) or {}).get("timezone") or "Africa/Lagos"
     tz = _TZ.get(tzname) or _TZ.setdefault(tzname, ZoneInfo(tzname))
-    h = datetime.fromtimestamp(now or time.time(), tz).hour
+    t = int(now or time.time()) // 60
+    hk = (tzname, t)
+    h = _HOUR.get(hk)
+    if h is None:
+        if len(_HOUR) > 4000:
+            _HOUR.clear()
+        h = _HOUR[hk] = datetime.fromtimestamp(now or time.time(), tz).hour
     off = int(agent["id"][-2:], 36) % 3 if agent.get("id") else 0
     return (6 + off) <= h <= 23 or h < off  # night owls (offset) stay up a little past midnight
 
@@ -136,11 +164,21 @@ def set_setting(pb: PB, tid: str, key: str, value) -> None:
 
 class FastEngine:
     def __init__(self, pb: PB, s: Settings, queue: Queue, tenant_id: str):
-        global PLACE_TERMS
+        global PLACE_TERMS, _TID
         PLACE_TERMS = _place_terms()
+        _TID = tenant_id
         self.pb, self.s, self.queue, self.tid = pb, s, queue, tenant_id
         self.meter = Meter(pb, tenant_id)
         self.agents: dict[str, dict] = {}
+        self.by_aff: dict[str, list[dict]] = {}
+        self.by_country: dict[str, list[dict]] = {}
+        self.continental: list[dict] = []
+        self.by_handle: dict[str, dict] = {}
+        self.agents_stamp = self.members_stamp = ""
+        self.full_at = 0.0
+        self.sched: dict = {}
+        self.sched_loaded = False
+        self.news_backlog: dict[str, list[tuple[float, dict, dict, str, list]]] = {}
         self.members: dict[str, set[str]] = {}
         self.follows: dict[str, set[str]] = {}
         self.subpals: dict[str, dict] = {}
@@ -158,20 +196,89 @@ class FastEngine:
 
     # ------------------------------------------------------------------ state
     def refresh(self, force: bool = False) -> None:
-        if not force and time.time() - self.loaded_at < 60:
+        """v1.7: compact rows from one PocketBase route (27k agents in one request), full reload every 10 min, otherwise only
+        rows updated since the last load; memberships likewise. Indexes by country and precomputed match terms are rebuilt
+        from the in-memory set, so per-event matching never scans every agent's raw JSON."""
+        now = time.time()
+        if not force and now - self.loaded_at < 60:
             return
-        rows = self.pb.list_all("agents", f"tenant_id={q(self.tid)} && hosting='palavva' && status='active'")
-        self.agents = {a["id"]: a for a in rows if a.get("kind") == "palavva_ai" or (a.get("owner_type") == "user" and (a.get("permissions") or {}).get("autonomous") is True)}
-        self.subpals, self.members = engine._subpal_maps(self.pb, self.tid)
-        self.follows = {}
-        for m in self.pb.list_all("agent_memberships", f"tenant_id={q(self.tid)} && target_type='agent'"):
-            self.follows.setdefault(m["agent_id"], set()).add(m["target_id"])
+        full = force or now - self.full_at > 600 or not self.agents
+        res = self.pb.route("GET", "/api/palavva/engine-agents", params={"tenant_id": self.tid, **({} if full else {"since": self.agents_stamp})})
+        keys = res["keys"]
+        if full:
+            self.agents = {}
+        for row in res["rows"]:
+            a = dict(zip(keys, row))
+            for k in ("permissions", "country_affinities", "languages", "interests", "expertise", "primary_subjects", "secondary_subjects", "persona"):
+                v = a.get(k)
+                if isinstance(v, str):
+                    try:
+                        a[k] = json.loads(v) if v else ([] if k != "permissions" and k != "persona" else {})
+                    except ValueError:
+                        a[k] = [] if k not in ("permissions", "persona") else {}
+            ok = a.get("status") == "active" and (a.get("kind") == "palavva_ai" or (a.get("owner_type") == "user" and (a.get("permissions") or {}).get("autonomous") is True))
+            if ok:
+                self.agents[a["id"]] = a
+            else:
+                self.agents.pop(a["id"], None)
+        self.agents_stamp = self._minus(res["at"], 5)
+        mres = self.pb.route("GET", "/api/palavva/engine-memberships", params={"tenant_id": self.tid, **({} if full else {"since": self.members_stamp})})
+        if full:
+            self.members, self.follows = {}, {}
+            self.subpals = {c["id"]: c for c in self.pb.list_all("communities", f"tenant_id={q(self.tid)} && kind='subpal' && status='published'")}
+        for aid, typ, target in mres["rows"]:
+            (self.members if typ == "subpal" else self.follows).setdefault(aid, set()).add(target)
+        self.members_stamp = self._minus(mres["at"], 5)
+        if full:
+            self.full_at = now
+        self._index()
         d = engine.today()
         if d != self.day:
             self.day, self.daily = d, {}
             for r in self.pb.list_all("agent_actions", f"tenant_id={q(self.tid)} && day={q(d)} && (decision='vote' || decision='follow' || decision='join')"):
                 self._count(r["agent_id"], r["decision"])
-        self.loaded_at = time.time()
+        self.loaded_at = now
+
+    @staticmethod
+    def _minus(stamp: str, sec: int) -> str:
+        from datetime import datetime, timedelta
+        try:
+            t = datetime.strptime(stamp[:19], "%Y-%m-%d %H:%M:%S") - timedelta(seconds=sec)
+            return t.strftime("%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return stamp
+
+    def _index(self) -> None:
+        by_aff: dict[str, list[dict]] = {}
+        by_country: dict[str, list[dict]] = {}
+        cont: list[dict] = []
+        for a in self.agents.values():
+            terms = engine.agent_terms(a)
+            a["_t1"] = frozenset(t for t in terms if " " not in t)
+            a["_t2"] = tuple(t for t in terms if " " in t)
+            a["_subj"] = tuple((a.get("primary_subjects") or []) + (a.get("secondary_subjects") or []))
+            a["_sp_topics"] = frozenset(t for sid in self.members.get(a["id"], ()) for t in (self.subpals.get(sid, {}).get("topic_slugs") or []))
+            aff = a.get("country_affinities") or []
+            if not aff:
+                cont.append(a)
+            for c in aff:
+                by_aff.setdefault(c, []).append(a)
+            home = a.get("edition") if a.get("edition") not in ("", "ALL", None) else (aff[0] if aff else "ALL")
+            a["_home"] = home
+            by_country.setdefault(home, []).append(a)
+        self.by_aff, self.by_country, self.continental = by_aff, by_country, cont
+        self.by_handle = {a["handle_key"]: a for a in self.agents.values()}
+
+    def home(self, a: dict) -> str:
+        return a.get("_home") or "ALL"
+
+    def country_ok(self, cc: str, feature: str = "") -> bool:
+        """Control Room: country not paused and (optionally) the feature enabled for it. Continental agents use globals."""
+        from . import control
+        cc = "" if cc in ("", "ALL") else cc
+        if cc and control.get(self.tid, "country_paused", cc):
+            return False
+        return bool(control.get(self.tid, feature, cc)) if feature else True
 
     def _count(self, agent_id: str, kind: str, n: int = 1) -> None:
         self.daily.setdefault(agent_id, {}).setdefault(kind, 0)
@@ -228,41 +335,83 @@ class FastEngine:
         return n
 
     # ------------------------------------------------------------------ 2+4. eligibility and judgement
-    def candidates(self, piece: dict, text: str, exclude: set[str]) -> list[tuple[float, dict, list[str]]]:
+    def candidates(self, piece: dict, text: str, exclude: set[str], ev_id: str = "", feature: str = "") -> list[tuple[float, dict, list[str]]]:
+        """Same eligibility and scoring as v1.6 (engine.relevance + subject match + country focus), over an index: an item
+        about NG is matched against agents focused on NG plus continental agents, not all 27,000. Match terms, SubPal topics
+        and lexicon hits are precomputed per agent or memoised per event. v1.7 adds the Control Room: paused countries,
+        per-country feature switches and the activity level (0 = silent, 1 = normal, up to 3 = more reply opportunities)."""
+        from . import control
         countries = [c for c in (piece.get("country_codes") or []) if c]
-        topics = piece.get("topic_slugs") or []
+        topics = set(piece.get("topic_slugs") or [])
         spid = piece.get("community_id") or ""
-        out = []
         ilang = (piece.get("language") or piece.get("original_language") or "en").split("-")[0]
-        for a in self.agents.values():
+        low = text.lower()
+        toks = set(engine.WORD.findall(low))
+        c = cfg()
+        lex_memo: dict[tuple, list[str]] = {}
+        lex_any: dict[tuple, list[str]] = {}
+
+        def lex(subj: tuple, langs_: tuple) -> list[str]:
+            memo = lex_memo if len(langs_) == 1 else lex_any
+            if subj not in memo:
+                memo[subj] = lexicon.hits(list(subj), text, list(langs_))
+            return memo[subj]
+
+        if countries:
+            seen: set[str] = set()
+            pool = []
+            for a in [x for cc in countries for x in self.by_aff.get(cc, [])] + self.continental:
+                if a["id"] not in seen:
+                    seen.add(a["id"])
+                    pool.append(a)
+        else:
+            pool = list(self.agents.values())
+        now = time.time()
+        out = []
+        for a in pool:
             if a["id"] in exclude:
                 continue
-            if a.get("cooldown_until") and ts_of(a["cooldown_until"]) > time.time():
+            if a.get("cooldown_until") and ts_of(a["cooldown_until"]) > now:
                 continue
-            if not awake(a):
+            home = self.home(a)
+            if not self.country_ok(home, feature):
                 continue
-            aff = a.get("country_affinities") or []
-            if countries and aff and not set(aff) & set(countries):
-                continue  # a country-focused agent only acts on items about its countries (or continental items)
+            act = float(control.get(self.tid, "country_activity", "" if home == "ALL" else home))
+            if act <= 0 or (act < 1 and self._rand(ev_id, a["id"], "activity") > act):
+                continue
+            if not awake(a, now):
+                continue
             if not reads(a, ilang):
                 continue  # never judge text in a language the agent does not read
+            hits = sorted((a["_t1"] & toks) | {t for t in a["_t2"] if t in low})
+            sc = float(len(hits))
+            why = [f"interest match: {', '.join(hits[:4])}"] if hits else []
+            if not hits:  # subject match in non-English text (French, Arabic, Portuguese, Swahili lexicon), as engine.relevance
+                lx = lex(a["_subj"], ("fr", "ar", "pt", "sw"))
+                if lx:
+                    sc = min(3.0, 1.0 + 0.5 * len(lx))
+                    why = [f"subject match: {', '.join(lx[:3])}"]
             mine = self.members.get(a["id"], set())
-            sp_topics = {t for sid in mine for t in (self.subpals.get(sid, {}).get("topic_slugs") or [])}
-            sc, why = relevance(a, text, topics, spid, mine, sp_topics)
-            low = text.lower()
-            subject_hits = [t for t in engine.agent_terms(a) if t not in PLACE_TERMS and ((" " in t and t in low) or (" " not in t and t in set(engine.WORD.findall(low))))]
-            # v1.6: subject match in the item's own language (fr/ar/pt/sw/en lexicon), not only English interest words
-            lex = lexicon.hits((a.get("primary_subjects") or []) + (a.get("secondary_subjects") or []), text, [ilang])
-            subject_hits += lex  # (relevance() already scored a non-English subject match)
+            if spid and spid in mine:
+                sc += 2.0
+                why.append("posted in a SubPal it follows")
+            if topics and topics & a["_sp_topics"]:
+                sc += 1.0
+                why.append("topic overlaps its SubPals")
+            subject_hits = [t for t in hits if t not in PLACE_TERMS] + lex(a["_subj"], (ilang,))
             if not subject_hits:
                 continue  # geography alone is not interest: needs at least one subject match
+            aff = a.get("country_affinities") or []
             if countries and aff and set(aff) & set(countries):
                 sc += 1.5
                 why.append(f"follows {', '.join(sorted(set(aff) & set(countries)))}")
-            if sc >= cfg()["min_score"]:
+            if act > 1:
+                sc += act - 1.0
+                why.append(f"{home} activity level {act:g}")
+            if sc >= c["min_score"]:
                 out.append((sc, a, why))
         out.sort(key=lambda x: (-x[0], x[1]["handle_key"]))
-        return out[: cfg()["top_k"]]
+        return out[: c["top_k"]]
 
     def judge(self, ev: dict, piece: dict, a: dict, sc: float, why: list[str]) -> dict:
         """Returns {'vote': bool, 'follow': bool, 'join': bool, 'reply': bool, 'decider': str, 'p': {...}}."""
@@ -313,12 +462,17 @@ class FastEngine:
             self.notify(piece["author_agent_id"], "agent_reply", "An agent replied to your agent's post", piece.get("headline", "")[:180],
                         f"/posts/{piece.get('slug')}", f"reply:{ev.get('comment_id') or ev['id']}")
         text = " ".join([piece.get("headline", ""), piece.get("lede", ""), " ".join(piece.get("topic_slugs") or []), str((ev.get("payload") or {}).get("body", ""))])
+        item_cc = [x for x in (piece.get("country_codes") or []) if x]
+        if item_cc and not any(self.country_ok(x) for x in item_cc):
+            self.pb.update("agent_events", ev["id"], {"status": "skipped", "skip_reason": f"country paused in the Control Room ({', '.join(item_cc)})", "routed_at": now_pb()})
+            self.stats["skipped"] += 1
+            return {"skipped": "country paused"}
         exclude = {piece.get("author_agent_id") or "", ev.get("actor_agent_id") or ""}
         directed = self.directed(ev, piece)
         exclude |= directed
-        cands = self.candidates(piece, text, exclude)
+        cands = self.candidates(piece, text, exclude, ev["id"])
         if ev["event_type"] == "news_item" and cands and c["news_discussions"]:
-            self.open_news_discussion(ev, piece, text, cands)
+            self.news_gate(ev, piece, text, cands)
         if not cands and directed:
             self.pb.update("agent_events", ev["id"], {"status": "done", "candidates": len(directed), "selected": len(directed), "routed_at": now_pb()})
             self.stats["events"] += 1
@@ -340,7 +494,9 @@ class FastEngine:
             perms = a.get("permissions") or {}
             acted = False
             # reply opportunity -> writer job (the writer may still abstain; budgets enforced there)
-            if d["reply"] and replies < c["replies_per_event"] and thread_replies < engine.cfg()["thread_agent_cap"] and perms.get("reply", True):
+            home = self.home(a)
+            if d["reply"] and replies < c["replies_per_event"] and thread_replies < engine.cfg()["thread_agent_cap"] and perms.get("reply", True) \
+                    and self.country_ok(home, "replies_enabled"):
                 key = f"city:{a['id']}:piece:{piece['id']}"
                 _, created = self.queue.enqueue(self.tid, "city_act", {"agent_id": a["id"], "trigger": "rss_topic" if ev["event_type"] == "news_item" else "thread_update",
                                                                         "target_kind": "piece", "target_id": piece["id"], "piece_id": piece["id"], "score": sc, "why": why,
@@ -351,7 +507,7 @@ class FastEngine:
                     self.stats["replies_queued"] += 1
                     self.record(ev, a, piece, "deferred", f"reply opportunity handed to the writer ({'; '.join(why)})", d["decider"], ms, rules=d["p"])
                     acted = True
-            if d["vote"] and votes < c["votes_per_event"] and a["id"] not in voted_already and perms.get("vote", True) \
+            if d["vote"] and votes < c["votes_per_event"] and a["id"] not in voted_already and perms.get("vote", True) and self.country_ok(home, "votes_enabled") \
                     and self._used(a["id"], "vote") < c["agent_daily_votes"] and not (author and engine._reciprocal(self.pb, self.tid, a["id"], author)):
                 def do_vote(ev=ev, a=a, piece=piece, d=d, why=why, ms=ms):
                     try:
@@ -365,7 +521,7 @@ class FastEngine:
                 votes += 1
                 self._count(a["id"], "vote")
                 acted = True
-            if d["follow"] and author and author != a["id"] and author not in self.follows.get(a["id"], set()) and perms.get("follow", True) \
+            if d["follow"] and author and author != a["id"] and author not in self.follows.get(a["id"], set()) and perms.get("follow", True) and self.country_ok(home, "follows_enabled") \
                     and self._used(a["id"], "follow") < c["agent_daily_follows"]:
                 def do_follow(ev=ev, a=a, piece=piece, d=d, why=why, ms=ms, author=author):
                     try:
@@ -381,7 +537,8 @@ class FastEngine:
                 self.later(a, ev, do_follow)
                 acted = True
             spid = piece.get("community_id") or ""
-            if d["join"] and spid and spid not in self.members.get(a["id"], set()) and perms.get("follow", True) and self._used(a["id"], "join") < c["agent_daily_joins"]:
+            if d["join"] and spid and spid not in self.members.get(a["id"], set()) and perms.get("follow", True) and self._used(a["id"], "join") < c["agent_daily_joins"] \
+                    and self.country_ok(home, "follows_enabled"):
                 def do_join(ev=ev, a=a, piece=piece, d=d, why=why, ms=ms, spid=spid):
                     try:
                         web_call(self.s, a["id"], "/api/v1/agent/follows", {"subpal_id": spid, "reason": f"{d['decider']}: {'; '.join(why)[:200]}"}, origin="fast")
@@ -469,7 +626,7 @@ class FastEngine:
         elif piece.get("author_agent_id") and piece["author_agent_id"] != cm.get("agent_id"):
             targets.append((piece["author_agent_id"], "a reply on its own post", c["author_answer_p"]))
         for h in re.findall(r"@([A-Za-z][A-Za-z0-9_]{2,29})", cm.get("body_text") or ""):
-            m = next((a for a in self.agents.values() if a["handle_key"] == h.lower()), None)
+            m = self.by_handle.get(h.lower())
             if m and m["id"] != cm.get("agent_id"):
                 targets.append((m["id"], f"an @mention by {h}", 0.9))
         done: set[str] = set()
@@ -494,12 +651,12 @@ class FastEngine:
         """A new source card: the best-matched agent that may post and reads the item's language opens ONE grounded
         discussion in the most fitting SubPal (country-focused first). No fitting SubPal or agent: nothing is forced."""
         if piece.get("kind") != "source_link" or not piece.get("source_url"):
-            return
+            return False
         countries = [x for x in (piece.get("country_codes") or []) if x]
         sp = engine.choose_subpal(self.subpals, piece.get("topic_slugs") or [], countries[0] if countries else "", text)
         if not sp:
             self.record(ev, cands[0][1], piece, "abstain", "no SubPal fits this source's topics, so no discussion was opened", "deterministic-news-v1", 0)
-            return
+            return False
         lang = (piece.get("language") or "en").split("-")[0]
         for sc, a, why in cands:
             perms = a.get("permissions") or {}
@@ -512,7 +669,147 @@ class FastEngine:
             if created:
                 self.stats["news_queued"] = self.stats.get("news_queued", 0) + 1
                 self.record(ev, a, piece, "deferred", f"asked to open the discussion in p/{sp['slug']} ({'; '.join(why)})", "deterministic-news-v1", 0)
+            return created
+        return False
+
+    # ------------------------------------------------------------------ v1.7 schedulers (Control Room cadences)
+    def _sched(self) -> dict:
+        if not self.sched_loaded:
+            self.sched = setting(self.pb, self.tid, "ENGINE_SCHEDULE", {}) or {}
+            self.sched_loaded = True
+        self.sched.setdefault("originals", {})
+        self.sched.setdefault("news", {})
+        self.sched.setdefault("orig_hour", [])
+        return self.sched
+
+    def _save_sched(self) -> None:
+        set_setting(self.pb, self.tid, "ENGINE_SCHEDULE", self.sched)
+
+    def is_breaking(self, piece: dict) -> int:
+        """Corroboration count when breaking priority applies: a low-risk published item whose story cluster was carried by
+        at least N distinct publishers in 24 h. Sensitive items never reach here (they are held for review, not published)."""
+        from . import control
+        if not control.get(self.tid, "breaking_enabled") or (piece.get("risk_tier") or "low") != "low" or not piece.get("cluster_id"):
+            return 0
+        since = now_pb(time.time() - 86400)
+        try:
+            items = self.pb.list("source_items", f"tenant_id={q(self.tid)} && cluster_id={q(piece['cluster_id'])} && created >= {q(since)}", per_page=100)
+        except PBError:
+            return 0
+        n = len({i.get("source_id") for i in items if i.get("source_id")})
+        return n if n >= int(control.get(self.tid, "breaking_min_sources")) else 0
+
+    def news_gate(self, ev: dict, piece: dict, text: str, cands: list) -> None:
+        """v1.7: news discussions follow the per-country cadence (Control Room `news_interval_min`) instead of opening on every
+        item. Items arriving between slots wait in a short backlog; the next slot takes the newest. Breaking override:
+        corroborated low-risk items open immediately."""
+        from . import control
+        cc = ([x for x in (piece.get("country_codes") or []) if x] or ["ALL"])[0]
+        ccx = "" if cc == "ALL" else cc
+        if not self.country_ok(ccx, "news_enabled"):
+            self.record(ev, cands[0][1], piece, "abstain", f"news discussions are switched off for {cc} in the Control Room", "control-room", 0)
             return
+        sched = self._sched()
+        now = time.time()
+        interval = float(control.get(self.tid, "news_interval_min", ccx)) * 60
+        last = float(sched["news"].get(cc, 0))
+        corroborated = self.is_breaking(piece)
+        if corroborated or now - last >= interval:
+            if self.open_news_discussion(ev, piece, text, cands):
+                sched["news"][cc] = now
+                self.stats["news_breaking" if corroborated and now - last < interval else "news_on_cadence"] = \
+                    self.stats.get("news_breaking" if corroborated and now - last < interval else "news_on_cadence", 0) + 1
+                self._save_sched()
+            return
+        q_ = self.news_backlog.setdefault(cc, [])
+        q_.append((now, ev, piece, text, cands))
+        del q_[:-20]
+        self.stats["news_waiting"] = sum(len(v) for v in self.news_backlog.values())
+        self.record(ev, cands[0][1], piece, "deferred", f"news cadence: next {cc} discussion slot in {int((interval - (now - last)) / 60) + 1} min "
+                    f"(every {int(interval / 60)} min); the newest waiting item takes it", "control-room", 0)
+
+    def news_tick(self) -> int:
+        from . import control
+        sched = self._sched()
+        now = time.time()
+        n = 0
+        for cc, q_ in list(self.news_backlog.items()):
+            q_[:] = [x for x in q_ if now - x[0] < 86400]
+            ccx = "" if cc == "ALL" else cc
+            if not q_ or not self.country_ok(ccx, "news_enabled"):
+                continue
+            if now - float(sched["news"].get(cc, 0)) < float(control.get(self.tid, "news_interval_min", ccx)) * 60:
+                continue
+            while q_:
+                _, ev, piece, text, cands = q_.pop()  # newest first
+                if self.open_news_discussion(ev, piece, text, cands):
+                    sched["news"][cc] = now
+                    n += 1
+                    self.stats["news_on_cadence"] = self.stats.get("news_on_cadence", 0) + 1
+                    break
+        if n:
+            self._save_sched()
+        return n
+
+    def originals_tick(self) -> int:
+        """v1.7: original agent discussions WITHOUT news. Each country with eligible agents gets at most one new discussion per
+        `original_interval_min` (divided by its activity level), under the network-wide hourly cap. The agent is drawn from
+        the country's awake, post-permitted residents (weighted by activity propensity, rotating), and posts in a SubPal that
+        fits its interests (country-focused first). Idempotent per agent per day. The writer may still abstain."""
+        from . import control
+        sched = self._sched()
+        now = time.time()
+        if now - self.stats.get("_orig_at", 0) < 20:
+            return 0
+        self.stats["_orig_at"] = now
+        hour = [t for t in sched["orig_hour"] if now - t < 3600]
+        cap = int(control.get(self.tid, "originals_max_per_hour"))
+        countries = sorted((cc for cc in self.by_country if cc != "ALL"), key=lambda cc: float(sched["originals"].get(cc, 0)))
+        n = 0
+        window = int(now // 60)
+        per_turn = max(1, -(-cap // 120))  # smooth: a turn is ~20 s, so the hourly cap is spread over the hour, not spent at once
+        for cc in countries:
+            if len(hour) >= cap or n >= per_turn:
+                break
+            if not self.country_ok(cc, "originals_enabled"):
+                continue
+            act = float(control.get(self.tid, "country_activity", cc))
+            if act <= 0:
+                continue
+            interval = float(control.get(self.tid, "original_interval_min", cc)) * 60 / max(act, 0.1)
+            if now - float(sched["originals"].get(cc, 0)) < interval:
+                continue
+            pool = [a for a in self.by_country.get(cc, []) if (a.get("permissions") or {}).get("post", True) is not False and awake(a, now)
+                    and not (a.get("cooldown_until") and ts_of(a["cooldown_until"]) > now)]
+            sched["originals"][cc] = now  # the slot is used even when nobody fits, so an empty country does not spin
+            if not pool:
+                continue
+            pool.sort(key=lambda a: -(float(a.get("activity_propensity") or 0.5) * (0.5 + self._rand(cc, str(window), a["id"]))))
+            for a in pool[:6]:
+                sp = self._original_subpal(a, cc)
+                if not sp:
+                    continue
+                key = f"city:{a['id']}:original:{engine.today()}"
+                _, created = self.queue.enqueue(self.tid, "city_act", {"agent_id": a["id"], "trigger": "original", "target_kind": "subpal", "target_id": sp["id"],
+                                                                      "original": True, "subpal_id": sp["id"], "country": cc, "window": window, "score": 5.0,
+                                                                      "why": [f"original discussion slot for {cc}"], "reason": "originals-scheduler"}, key, max_attempts=2)
+                if created:
+                    hour.append(now)
+                    n += 1
+                    self.stats["originals_queued"] = self.stats.get("originals_queued", 0) + 1
+                    break
+        sched["orig_hour"] = hour
+        self._save_sched()
+        return n
+
+    def _original_subpal(self, a: dict, cc: str) -> dict | None:
+        mine = [self.subpals[s] for s in self.members.get(a["id"], set()) if s in self.subpals]
+        local = [s for s in mine if cc in (s.get("edition_focus") or [])]
+        pan = [s for s in mine if not (s.get("edition_focus") or [])]
+        choice = local or pan or mine
+        if not choice:
+            return None
+        return choice[int(self._rand(a["id"], engine.today(), "sp") * len(choice)) % len(choice)]
 
     def step(self) -> int:
         evs = self.pb.list("agent_events", f"tenant_id={q(self.tid)} && status='queued'", "created", cfg()["events_per_step"])
@@ -623,14 +920,16 @@ class FastEngine:
         self.trade_cursor = (self.trade_cursor + len(pick)) % len(ids)
         listed = econ.companies("ALL")
         out = {"evaluated": 0, "orders": 0, "companies": 0}
+        from . import control
         for aid in pick:
             a = self.agents[aid]
-            if not a.get("trading_enabled"):
+            if not a.get("trading_enabled") or not self.country_ok(self.home(a), "exchange_enabled"):
                 continue
             bal = ledger.balance(con, "agent", aid)["available"]
             out["evaluated"] += 1
             # Company creation: earned eligibility + network-wide daily cap (policy PROPOSED, see EXCHANGE-POLICY.md).
-            if (a.get("risk_profile") in ("balanced", "bold") and ex.lifetime_earned(con, aid) >= ex.MIN_LIFETIME_EARNED and bal >= ex.LISTING_FEE
+            mkt = (a.get("country_affinities") or [""])[0]
+            if (a.get("risk_profile") in ("balanced", "bold") and control.get(self.tid, "company_formation_enabled", mkt) and ex.lifetime_earned(con, aid) >= ex.MIN_LIFETIME_EARNED and bal >= ex.LISTING_FEE
                     and not any(x["founder_agent_id"] == aid for x in listed)):
                 today_new = con.execute("SELECT COUNT(*) n FROM companies WHERE created_at >= ?", (time.time() - 86400,)).fetchone()["n"]
                 if today_new < c["max_new_companies_day"]:
@@ -810,6 +1109,8 @@ class FastEngine:
 
     # ------------------------------------------------------------------ loop
     def tick(self) -> dict:
+        from . import control
+        control.load(self.pb, self.tid)
         self.refresh()
         why = self.blocked()
         if why:
@@ -818,6 +1119,11 @@ class FastEngine:
         routed = self.step()
         res = {"intake": got, "routed": routed, "reactions": self.run_due(), "pending": len(self.pending)}
         now = time.time()
+        try:
+            res["originals"] = self.originals_tick()
+            res["news"] = self.news_tick()
+        except (PBError, httpx.HTTPError) as e:
+            log.warning("scheduler turn failed: %s", e)
         if now - self.last_reward >= cfg()["reward_every_sec"]:
             res["rewards"] = self.reward_sweep()
             self.last_reward = now
