@@ -345,12 +345,17 @@ class OpenRouterWriter:
                 pass
             self._record(purpose, agent_id, event_id, "blocked_budget", error=f"cutoff ${cutoff:.2f} reached (committed ${committed:.4f})")
             return GenerateResult("disabled", None, PROVIDER, self.model, 0, error_code="BUDGET_CUTOFF")
-        body = {"model": self.model, "max_tokens": req.max_output_tokens, "temperature": req.temperature,
+        body = {"model": self.model, "max_tokens": req.max_output_tokens,
                 "messages": [{"role": "system", "content": req.system_instructions}, {"role": "user", "content": req.user_prompt}],
                 "response_format": {"type": "json_schema", "json_schema": {"name": "palavva_output", "strict": True, "schema": strict_schema(req.output_schema)}},
                 "usage": {"include": True},
                 # Never route to a provider priced above the catalogue price used for the reservation (USD per million tokens).
                 "provider": {"max_price": {"prompt": round(pin * 1e6, 6), "completion": round(pout * 1e6, 6)}, "require_parameters": True}}
+        # v1.7: send only parameters the model's endpoints accept. With require_parameters=true an unsupported one
+        # (claude-haiku-5.5 takes no `temperature`) leaves no endpoint, and every call failed with HTTP 404.
+        supported = set((catalog(self.client).get(self.model) or {}).get("supported_parameters") or [])
+        if "temperature" in supported:
+            body["temperature"] = req.temperature
         if self.model in REASONING:
             body["reasoning"] = REASONING[self.model]
         t0 = time.time()
