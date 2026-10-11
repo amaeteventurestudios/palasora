@@ -55,13 +55,20 @@ ENTITY_STOP = set(("The This That These Those They There Their Then When What Wh
                    "État Etat États Etats Estado Estados Governo Gouvernement Afrique África Afrika Je Nous Vous Il Elle Ils Elles Le La Les Un Une Des Ce Cette Ces "
                    "Mais Et Ou Donc Pourquoi Comment Quand Qui Que Quel Quelle Quels Quelles Selon Pour Avec Sans Dans Sur Chez Entre Aussi Peut Faut "
                    "Os As Um Uma Mas Porque Quando Quem Como Este Esta Isso Eu Nós Para Com Sem Sobre Entre Também Pode Segundo "
-                   "Serikali Kwa Lakini Je Nani Vipi Kwanini Wakati Hii Hizi Sisi Wao").split())
+                   "Serikali Kwa Lakini Je Nani Vipi Kwanini Wakati Hii Hizi Sisi Wao "
+                   # language and language-community names are not factual claims
+                   "English French Arabic Portuguese Swahili Kiswahili Hausa Yoruba Igbo Amharic Wolof Zulu Francophone Anglophone Lusophone Arabophone "
+                   "Français Anglais Arabe Portugais Português Inglês Francês Árabe "
+                   # widely known pan-African institutions (naming them is context, not a claim about what they did)
+                   "Union Cup Nations AFCON ECOWAS CEDEAO SADC EAC COMESA AfCFTA ZLECAf CAF FIFA Sahel").split())
 
 
 REGION_WORDS = ("africa", "sahel", "maghreb", "sub-saharan", "west", "east", "north", "south", "southern", "central", "continent", "horn",
                 # v1.6: world regions and demonyms used in comparative reasoning are geography, not factual claims
                 "europe", "european", "asia", "asian", "america", "american", "latin", "caribbean", "gulf", "middle", "arab", "china", "chinese",
-                "india", "indian", "global", "western", "eastern", "afrique", "africain", "áfrica", "africano", "europa", "européen", "asiatique")
+                "india", "indian", "global", "western", "eastern", "afrique", "africain", "áfrica", "africano", "europa", "européen", "asiatique",
+                "ouest", "nord", "sud", "est", "asie", "occident", "orient", "oeste", "leste", "norte", "sul", "ásia", "austral", "centrale", "central",
+                "sud-est", "sud-ouest", "nord-est", "nord-ouest", "subsaharienne", "subsariana", "maghreb", "lusófona", "francophone")
 _GEO: set[str] = set()
 
 
@@ -117,7 +124,7 @@ def unsupported_entities(text: str, grounding: str) -> list[str]:
         toks = list(NAME_TOK.finditer(sent))
         for i, m in enumerate(toks):
             base = re.sub(r"['\u2019]s$", "", m.group(0)).strip("-")
-            if base in ENTITY_STOP or base.upper() == base or len(base) < 3:
+            if base in ENTITY_STOP or base.upper() == base or len(base) < 3 or ("-" in base and (base.split("-")[0] in ENTITY_STOP or _is_geo(base.split("-")[0]))):
                 continue
             if m.start() == 0:
                 # Sentence-initial capitals are ordinary words unless they start a multi-word name or are possessive.

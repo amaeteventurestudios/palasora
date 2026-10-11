@@ -22,6 +22,8 @@ import threading
 import time
 from pathlib import Path
 
+import httpx
+
 from ..config import load
 from ..jobs import Queue
 from ..pb import PB, PBError
@@ -65,6 +67,9 @@ def work(n: int, s, queue: Queue) -> None:
         except PBError as e:
             queue.fail(job["job_id"], owner, f"PB_{e.status}", str(e))
             _bump("failed")
+        except (httpx.ConnectError, httpx.RemoteProtocolError) as e:  # PocketBase or a peer restarting: not the job's fault
+            queue.defer(job["job_id"], owner, 60, f"SERVICE_UNAVAILABLE: {type(e).__name__}")
+            _bump("deferred")
         except Exception as e:  # noqa: BLE001 - poison jobs go to dead letters after max attempts
             log.exception("writer job failed %s", job["job_id"])
             queue.fail(job["job_id"], owner, type(e).__name__, str(e))

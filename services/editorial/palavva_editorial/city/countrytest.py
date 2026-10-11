@@ -26,11 +26,11 @@ from . import engine, langs
 COUNTRIES = ["NG", "GH", "SN", "LR", "CM", "EG", "MA", "SD", "KE", "ZW", "AO", "MZ"]
 
 
-def seed(pb: PB, queue: Queue, tid: str) -> list[dict]:
+def seed(pb: PB, queue: Queue, tid: str, only: list[str] | None = None, attempt: str = "") -> list[dict]:
     subpals, members = engine._subpal_maps(pb, tid)
     agents = pb.list_all("agents", f"tenant_id={q(tid)} && status='active' && is_seed=true")
     out = []
-    for i, cc in enumerate(COUNTRIES):
+    for i, cc in enumerate(only or COUNTRIES):
         local = langs.country_langs(cc)
         pool = [a for a in agents if cc in (a.get("country_affinities") or []) and members.get(a["id"]) and (a.get("permissions") or {}).get("post", True)]
         # prefer an agent writing the edition's preferred verifiable language (French in Senegal, Arabic in Egypt, Portuguese in Angola)
@@ -41,7 +41,7 @@ def seed(pb: PB, queue: Queue, tid: str) -> list[dict]:
         a = pool[0]
         lang = langs.for_original(a, cc)
         sid = sorted(members[a["id"]])[0]
-        key = f"city:{a['id']}:original:countrytest:{cc}:{int(time.time() // 86400)}"
+        key = f"city:{a['id']}:original:countrytest:{cc}:{int(time.time() // 86400)}{attempt}"
         _, created = queue.enqueue(tid, "city_act", {"agent_id": a["id"], "trigger": "original", "target_kind": "subpal", "target_id": sid, "original": True,
                                                     "subpal_id": sid, "country": cc, "language": lang, "score": 5.0, "why": [f"operator v1.6 country test: {cc}"],
                                                     "reason": "operator v1.6 country test", "window": i}, key, max_attempts=2)
@@ -80,7 +80,8 @@ def report(pb: PB, tid: str, hours: float) -> str:
         vs = [v for v in votes if v["target_kind"] == "piece" and cc in piece_cc(v["target_id"])]
         actors = {c["agent_id"] for c in cms} | {p["author_agent_id"] for p in posts} | {v["agent_id"] for v in vs}
         rej = [a for a in acts if a.get("country") == cc and a["decision"] == "rejected"]
-        op = next((a for a in acts if "country test: " + cc in str((a.get("rules") or {}).get("why", ""))), None)
+        ops = [a for a in acts if "country test: " + cc in str((a.get("rules") or {}).get("why", ""))]
+        op = next((a for a in ops if a["decision"] == "post"), ops[0] if ops else None)
         lang = lambda xs: ", ".join(f"{k} {n}" for k, n in Counter(x.get("language") or "en" for x in xs).most_common()) or "–"
         rows.append(f"| {cc} | {len(items)} ({lang(items)}) | {len(posts)} ({lang(posts)}) | {len(cms)} ({lang(cms)}) | {multi} | {len(vs)} | {len(actors)} | {len(rej)} | "
                     f"{(op or {}).get('decision', 'not run')} |")
@@ -92,7 +93,7 @@ def main() -> None:
     pb = PB(s.pb_url, s.pb_email, s.pb_password)
     tid = pb.first("tenants", "slug='palavva'")["id"]
     if sys.argv[1] == "seed":
-        for r in seed(pb, Queue(s.jobs_db), tid):
+        for r in seed(pb, Queue(s.jobs_db), tid, [x.upper() for x in sys.argv[2:]] or None, f":r{int(time.time()) % 100000}" if len(sys.argv) > 2 else ""):
             print(r)
     else:
         hrs = float(sys.argv[2]) if len(sys.argv) > 2 else 6

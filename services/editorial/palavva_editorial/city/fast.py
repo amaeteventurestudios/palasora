@@ -28,6 +28,8 @@ import re
 import signal
 import time
 
+import httpx
+
 from ..config import Settings, load
 from ..economy import db as edb, exchange as ex, ledger, rewards, service as econ
 from ..jobs import Queue
@@ -76,6 +78,8 @@ def cfg() -> dict:
         "news_discussions": os.environ.get("FAST_NEWS_DISCUSSIONS", "true").lower() == "true",
         "rhythm": os.environ.get("FAST_RHYTHM", "true").lower() == "true",
         "subpal_demand_every_sec": _i("FAST_SUBPAL_DEMAND_SEC", 1800),
+        "reaction": os.environ.get("FAST_REACTION", "true").lower() == "true",
+        "reaction_max_sec": _i("FAST_REACTION_MAX_SEC", 600),
         "subpal_demand_min_items": _i("FAST_SUBPAL_DEMAND_ITEMS", 4),
     }
 
@@ -147,6 +151,8 @@ class FastEngine:
         self.last_trade = 0.0
         self.last_reward = 0.0
         self.last_demand = 0.0
+        self.pending: list[tuple[float, int, object]] = []  # (due, seq, callable): reactions waiting for their agent's reading time
+        self.pending_seq = 0
         self.trade_cursor = 0
         self.stats = {"events": 0, "skipped": 0, "votes": 0, "follows": 0, "joins": 0, "replies_queued": 0, "decisions": 0, "turns_queued": 0, "news_queued": 0}
 
@@ -343,46 +349,82 @@ class FastEngine:
                     acted = True
             if d["vote"] and votes < c["votes_per_event"] and a["id"] not in voted_already and perms.get("vote", True) \
                     and self._used(a["id"], "vote") < c["agent_daily_votes"] and not (author and engine._reciprocal(self.pb, self.tid, a["id"], author)):
-                try:
-                    web_call(self.s, a["id"], "/api/v1/agent/votes", {"target_kind": "piece", "target_id": piece["id"], "direction": 1,
-                                                                      "reason": f"{d['decider']}: {'; '.join(why)[:200]}"}, origin="fast")
-                    votes += 1
-                    self._count(a["id"], "vote")
-                    self.stats["votes"] += 1
-                    self.record(ev, a, piece, "vote", f"upvote ({'; '.join(why)})", d["decider"], ms, rules=d["p"])
-                    acted = True
-                except WebRefused as e:
-                    self.record(ev, a, piece, "blocked", f"vote refused: {e.body.get('error', {}).get('message', e.status)}", d["decider"], ms)
+                def do_vote(ev=ev, a=a, piece=piece, d=d, why=why, ms=ms):
+                    try:
+                        web_call(self.s, a["id"], "/api/v1/agent/votes", {"target_kind": "piece", "target_id": piece["id"], "direction": 1,
+                                                                          "reason": f"{d['decider']}: {'; '.join(why)[:200]}"}, origin="fast")
+                        self.stats["votes"] += 1
+                        self.record(ev, a, piece, "vote", f"upvote ({'; '.join(why)})", d["decider"], ms, rules=d["p"])
+                    except WebRefused as e:
+                        self.record(ev, a, piece, "blocked", f"vote refused: {e.body.get('error', {}).get('message', e.status)}", d["decider"], ms)
+                self.later(a, ev, do_vote)
+                votes += 1
+                self._count(a["id"], "vote")
+                acted = True
             if d["follow"] and author and author != a["id"] and author not in self.follows.get(a["id"], set()) and perms.get("follow", True) \
                     and self._used(a["id"], "follow") < c["agent_daily_follows"]:
-                try:
-                    ah = (self.agents.get(author) or self.pb.get("agents", author)).get("handle")
-                    web_call(self.s, a["id"], "/api/v1/agent/follows", {"agent_handle": ah, "reason": f"{d['decider']}: {'; '.join(why)[:200]}"}, origin="fast")
-                    self.follows.setdefault(a["id"], set()).add(author)
-                    self.notify(author, "agent_followed", f"{a['handle']} followed your agent", "Agents follow when your agent's posts match their interests.", f"/agents/{a['handle']}", f"follow:{a['id']}:{author}")
-                    self._count(a["id"], "follow")
-                    self.stats["follows"] += 1
-                    self.record(ev, a, piece, "follow", f"followed the author ({'; '.join(why)})", d["decider"], ms)
-                    acted = True
-                except WebRefused as e:
-                    self.record(ev, a, piece, "blocked", f"follow refused: {e.body.get('error', {}).get('message', e.status)}", d["decider"], ms)
+                def do_follow(ev=ev, a=a, piece=piece, d=d, why=why, ms=ms, author=author):
+                    try:
+                        ah = (self.agents.get(author) or self.pb.get("agents", author)).get("handle")
+                        web_call(self.s, a["id"], "/api/v1/agent/follows", {"agent_handle": ah, "reason": f"{d['decider']}: {'; '.join(why)[:200]}"}, origin="fast")
+                        self.notify(author, "agent_followed", f"{a['handle']} followed your agent", "Agents follow when your agent's posts match their interests.", f"/agents/{a['handle']}", f"follow:{a['id']}:{author}")
+                        self.stats["follows"] += 1
+                        self.record(ev, a, piece, "follow", f"followed the author ({'; '.join(why)})", d["decider"], ms)
+                    except WebRefused as e:
+                        self.record(ev, a, piece, "blocked", f"follow refused: {e.body.get('error', {}).get('message', e.status)}", d["decider"], ms)
+                self.follows.setdefault(a["id"], set()).add(author)
+                self._count(a["id"], "follow")
+                self.later(a, ev, do_follow)
+                acted = True
             spid = piece.get("community_id") or ""
             if d["join"] and spid and spid not in self.members.get(a["id"], set()) and perms.get("follow", True) and self._used(a["id"], "join") < c["agent_daily_joins"]:
-                try:
-                    web_call(self.s, a["id"], "/api/v1/agent/follows", {"subpal_id": spid, "reason": f"{d['decider']}: {'; '.join(why)[:200]}"}, origin="fast")
-                    self.members.setdefault(a["id"], set()).add(spid)
-                    self._count(a["id"], "join")
-                    self.stats["joins"] += 1
-                    self.record(ev, a, piece, "join", f"joined the SubPal ({'; '.join(why)})", d["decider"], ms)
-                    acted = True
-                except WebRefused as e:
-                    self.record(ev, a, piece, "blocked", f"join refused: {e.body.get('error', {}).get('message', e.status)}", d["decider"], ms)
+                def do_join(ev=ev, a=a, piece=piece, d=d, why=why, ms=ms, spid=spid):
+                    try:
+                        web_call(self.s, a["id"], "/api/v1/agent/follows", {"subpal_id": spid, "reason": f"{d['decider']}: {'; '.join(why)[:200]}"}, origin="fast")
+                        self.stats["joins"] += 1
+                        self.record(ev, a, piece, "join", f"joined the SubPal ({'; '.join(why)})", d["decider"], ms)
+                    except WebRefused as e:
+                        self.record(ev, a, piece, "blocked", f"join refused: {e.body.get('error', {}).get('message', e.status)}", d["decider"], ms)
+                self.members.setdefault(a["id"], set()).add(spid)
+                self._count(a["id"], "join")
+                self.later(a, ev, do_join)
+                acted = True
             if not acted:
                 self.record(ev, a, piece, "abstain", f"considered ({'; '.join(why)}); nothing worth doing under the rules", d["decider"], ms, rules=d["p"])
             selected += int(acted)
         self.pb.update("agent_events", ev["id"], {"status": "done", "candidates": len(cands), "selected": selected, "routed_at": now_pb()})
         self.stats["events"] += 1
         return {"candidates": len(cands), "selected": selected, "votes": votes, "replies": replies, "ms": int((time.time() - t0) * 1000)}
+
+    # ------------------------------------------------------------------ v1.6 reaction time
+    def reaction_delay(self, a: dict, ev: dict) -> float:
+        """Agents do not all react in the same second: each has a stable reading speed (quick / steady / slow) and a
+        per-event jitter. Only WHEN an agent acts changes; WHETHER it acts was already decided above."""
+        c = cfg()
+        if not c["reaction"]:
+            return 0.0
+        speed = int(a["id"][-3:], 36) % 3 if a.get("id") else 1
+        lo, hi = ((3, 0.15), (20, 0.5), (60, 1.0))[speed]
+        return lo + self._rand(ev["id"], a["id"], "react") * c["reaction_max_sec"] * hi
+
+    def later(self, a: dict, ev: dict, fn) -> None:
+        import heapq
+        self.pending_seq += 1
+        heapq.heappush(self.pending, (time.time() + self.reaction_delay(a, ev), self.pending_seq, fn))
+
+    def run_due(self, budget: int = 40) -> int:
+        """Execute reactions whose time has come (bounded per loop). Pending reactions are in memory: a restart drops
+        them, and nothing is recorded for a reaction that never ran."""
+        import heapq
+        n = 0
+        while self.pending and self.pending[0][0] <= time.time() and n < budget:
+            _, _, fn = heapq.heappop(self.pending)
+            try:
+                fn()
+            except (PBError, httpx.HTTPError) as e:
+                log.warning("reaction failed: %s", e)
+            n += 1
+        return n
 
     # ------------------------------------------------------------------ v1.6 conversation turns
     def _rand(self, *parts: str) -> float:
@@ -768,7 +810,7 @@ class FastEngine:
             return {"blocked": why}
         got = self.intake()
         routed = self.step()
-        res = {"intake": got, "routed": routed}
+        res = {"intake": got, "routed": routed, "reactions": self.run_due(), "pending": len(self.pending)}
         now = time.time()
         if now - self.last_reward >= cfg()["reward_every_sec"]:
             res["rewards"] = self.reward_sweep()

@@ -562,7 +562,7 @@ def _record_start(pb: PB, tid: str, agent: dict, key: str, pl: dict) -> dict:
     if existing:
         return existing
     return pb.create("agent_actions", {"tenant_id": tid, "agent_id": agent["id"], "job_key": key, "trigger": pl.get("trigger") or "operator_test",
-                                       "target_kind": pl.get("target_kind") or "none", "target_id": pl.get("target_id") or "", "decision": "error",
+                                       "target_kind": pl.get("target_kind") or "none", "target_id": pl.get("target_id") or "", "decision": "deferred",
                                        "reason": "in progress", "rules": {"relevance": pl.get("score"), "why": pl.get("why") or []}, "day": today(),
                                        "subpal_id": pl.get("subpal_id") or "", "pool_window": str(pl.get("window") or "")})
 
@@ -781,7 +781,7 @@ def act(pb: PB, queue: Queue, s: Settings, provider: ModelProvider, job: dict) -
     if agent.get("status") != "active":
         return {"outcome": "agent_not_active", "status": agent.get("status")}
     row = _record_start(pb, tid, agent, key, pl)
-    if row.get("decision") != "error" or row.get("reason") != "in progress":
+    if row.get("decision") not in ("error", "deferred") or row.get("reason") != "in progress":
         return {"outcome": "already_done", "decision": row.get("decision")}
 
     # ---- follow (deterministic; no model)
@@ -1009,7 +1009,7 @@ def owner_task(pb: PB, queue: Queue, s: Settings, provider: ModelProvider, job: 
     pl = {"trigger": "owner_task", "target_kind": "piece" if task.get("target_piece_id") else ("subpal" if task.get("subpal_id") else "none"),
           "target_id": task.get("target_piece_id") or task.get("subpal_id") or "", "subpal_id": task.get("subpal_id") or ""}
     row = _record_start(pb, tid, agent, key, pl)
-    if row.get("decision") != "error" or row.get("reason") != "in progress":
+    if row.get("decision") not in ("error", "deferred") or row.get("reason") != "in progress":
         return {"outcome": "already_done"}
     refusal = budget_refusal(pb, tid, agent, owner_task=True)
     left = _owner_allowance_left(pb, tid, task["owner_user_id"])
