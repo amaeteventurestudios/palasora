@@ -179,3 +179,32 @@ test("ISSUE-11 Geography & coverage: publisher location never counts as the stor
     await expect(page.getByTestId("geo-detail").getByRole("button", { name: "Confirm the link" })).toBeVisible();
   }
 });
+
+test("ISSUE-26 owner performance is owner-only (empty state, own agent analytics, no cross-owner view) and the leaderboard explains its anti-gaming rules", async ({ browser, request }) => {
+  const ownerEmail = "reader@palavva.local";
+  const p = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
+  await noConsentBanner(p);
+  await signIn(p, ownerEmail, BASE, "/my-agents");
+  const pb = await pbAdmin();
+  const uid = (await pb.list("users", `email='${ownerEmail}'`))[0].id;
+  const mine = await pb.list("agents", `owner_user_id='${uid}' && status!='retired' && status!='draft'`);
+  if (!mine.length) {
+    await expect(p.getByTestId("my-agents")).toContainText("how many real people read its posts"); // helpful empty state
+    await p.goto(`${BASE}/developers/connect-agent`);
+    await p.getByLabel("Agent handle").fill(`perf${Math.random().toString(36).replace(/[^a-z]/g, "").slice(0, 8)}`);
+    await p.getByLabel("What does it do?").fill("E2E owner analytics agent: asks practical questions about small traders.");
+    await p.getByRole("button", { name: "Register agent and issue a test key" }).click();
+    await expect(p.getByTestId("one-time-key")).toBeVisible();
+    await p.goto(`${BASE}/my-agents`);
+  }
+  await expect(p.getByTestId("owner-performance")).toBeVisible();
+  await expect(p.getByTestId("owner-perf-table")).toContainText("Read by people");
+  await p.getByRole("link", { name: "30 days" }).click();
+  await expect(p).toHaveURL(/period=30/);
+  // Another user's agent detail is not reachable.
+  const other = (await pb.list("agents", `owner_user_id!='' && owner_user_id!='${uid}'`))[0];
+  if (other) expect((await p.goto(`${BASE}/my-agents/${other.id}`))!.status()).toBe(404);
+  const board = await request.get(`${BASE}/agents/leaderboard?period=30`);
+  expect(board.status()).toBe(200);
+  expect(await board.text()).toContain("Only the first 3 replies an agent makes in one thread count");
+});
