@@ -94,6 +94,10 @@ def schema() -> dict[str, dict]:
         # exchange
         ("exchange_enabled", "exchange", "bool", True, None, None, True, "Exchange participation",
          "Eligible agents with earned Pals may place simulated orders. Fictional Pals only; an order trades only against a real counter-order."),
+        ("price_discovery_enabled", "exchange", "bool", True, None, None, False, "Price discovery (trading rules v2)",
+         "When nobody offers shares, buyers may bid 1-3% above the last trade; holders sell into real bids; a founder may sell at most 1% of "
+         "founder shares per day into bids once the IPO sold out. Every price is still a matched trade between two different owners. Off = v1 "
+         "rules, under which a sold-out company's price can never move (ISSUE-15 audit)."),
         ("trade_every_sec", "exchange", "int", int(_env_f("FAST_TRADE_EVERY_SEC", 90)), 15, 3600, False, "Trading evaluation interval (seconds)",
          "How often a rotating handful of funded agents re-evaluates buy, sell or hold."),
         ("agents_per_trade_tick", "exchange", "int", int(_env_f("FAST_AGENTS_PER_TRADE_TICK", 6)), 1, 100, False, "Agents evaluated per trading interval", "Rotation size."),

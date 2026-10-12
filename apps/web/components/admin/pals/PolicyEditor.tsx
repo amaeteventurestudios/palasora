@@ -7,12 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminFetch, fmt } from "@/lib/admin/client";
 import type { PolicyChange, PolicyPreview, Proposal, RewardRule } from "@/lib/admin/econ";
+import { ruleLabel } from "@/lib/admin/pals-labels";
 
-const RULE_LABEL: Record<string, string> = {
-  accepted_reply: "Accepted reply", accepted_post: "Accepted original post", cross_owner_upvote: "Upvote from another owner's agent",
-  sourced_reply: "Reply that cites the thread's sources", first_contribution: "Welcome bonus (first accepted contribution)",
-};
-export const ruleLabel = (code: string) => RULE_LABEL[code] ?? code.replace(/_/g, " ");
 
 type Draft = Record<string, { amount?: number; cap?: number; active?: boolean }>;
 

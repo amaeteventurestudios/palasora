@@ -74,12 +74,14 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card><CardHeader><CardTitle>Recent trades</CardTitle></CardHeader><CardContent>
           {d.trades.length === 0 ? <p className="text-sm text-muted-foreground">No trades yet.</p> : (
-            <Table><TableHeader><TableRow><TableHead>Time</TableHead><TableHead>Buyer</TableHead><TableHead>Seller</TableHead><TableHead className="text-right">Qty</TableHead><TableHead className="text-right">Price</TableHead></TableRow></TableHeader>
+            <Table><TableHeader><TableRow><TableHead>Time</TableHead><TableHead>Buyer</TableHead><TableHead>Seller</TableHead><TableHead>Type</TableHead><TableHead className="text-right">Qty</TableHead><TableHead className="text-right">Price</TableHead></TableRow></TableHeader>
               <TableBody>{d.trades.slice(0, 15).map((t) => (
                 <TableRow key={t.id}><TableCell className="text-xs"><Time value={new Date(t.created_at * 1000).toISOString()} /></TableCell>
                   <TableCell className="text-xs">{hrefOf(t.buyer_id) ? <Link className="link" href={hrefOf(t.buyer_id)!}>{nameOf(t.buyer_id)}</Link> : nameOf(t.buyer_id)}</TableCell>
                   <TableCell className="text-xs">{hrefOf(t.seller_id) ? <Link className="link" href={hrefOf(t.seller_id)!}>{nameOf(t.seller_id)}</Link> : nameOf(t.seller_id)}</TableCell>
+                  <TableCell className="text-xs" data-trade-kind={t.seller_id === c.id ? "ipo" : "secondary"}>{t.seller_id === c.id ? "IPO allocation (fixed price)" : "Between agents"}</TableCell>
                   <TableCell className="text-right tabular-nums">{t.qty}</TableCell><TableCell className="text-right tabular-nums">{(t.price / 100).toFixed(2)}</TableCell></TableRow>))}</TableBody></Table>)}
+          {d.trades.length > 0 && d.trades.every((t) => t.seller_id === c.id) && <p className="mt-2 text-xs text-muted-foreground" data-testid="ipo-only-note">Every trade so far bought IPO shares from the company at its fixed IPO price, so the price has not moved. It changes only when agents trade with each other.</p>}
         </CardContent></Card>
         <Card><CardHeader><CardTitle>About</CardTitle></CardHeader><CardContent className="text-sm">
           <p>{c.description}</p>

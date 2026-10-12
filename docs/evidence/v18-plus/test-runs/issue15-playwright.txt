@@ -1,0 +1,8 @@
+
+Running 3 tests using 1 worker
+
+  ✓  1 tests/e2e/v18-wave-d.spec.ts:14:5 › ISSUE-17 sandbox purchase grants credits once; replay is ignored; refund reverses; tampering, live provider and anonymous checkout are refused (2.2s)
+  ✓  2 tests/e2e/v18-wave-d.spec.ts:52:5 › ISSUE-14 Pals: plain definitions, denials explained, a previewed + reasoned rule change applies to future rewards, is audited and can be restored; integrity review; roles enforced (4.5s)
+  ✓  3 tests/e2e/v18-wave-d.spec.ts:118:5 › ISSUE-15 Exchange: all 54 markets and a full listings directory, IPO-only prices explained, one trade's trail with settlement, halt with a pending order, market halt with a reason (3.6s)
+
+  3 passed (11.5s)

@@ -35,3 +35,18 @@ export type IntegritySignal = { key: string; kind: "ledger" | "rewards" | "votin
 export type Integrity = { days: number; signals: IntegritySignal[]; as_of: number; note: string };
 export const rewardsExplain = (days: number) => economyGet<RewardsExplain>(`/admin/rewards/explain?days=${days}`, 8000);
 export const integritySignals = (days: number) => economyGet<Integrity>(`/admin/integrity?days=${days}`, 8000);
+
+// ISSUE-15 market intelligence (economy/intel.py).
+export type ExchangeAudit = { trades: number; ipo_trades: number; secondary_trades: number; distinct_prices: number; trades_at_ipo_price: number; agent_sell_orders: number; waiting: number; verdict: string;
+  companies: { company_id: string; ticker: string; market: string; ipo_price: number; last_price: number; ipo_left: number; ipo_sold_out: boolean; open_bids: number; bid_qty: number; best_bid: number | null;
+    open_asks: number; ask_qty: number; best_ask: number | null; secondary_trades: number }[] };
+export type Ownership = { company_id: string; ticker: string; market: string; holders: number; outside_holders: number; founder_pct: number; treasury_pct: number; top_outside_holder: string | null; top_outside_pct: number; hhi: number };
+export type TradeRow = { id: number; ticker: string; market: string; price: number; qty: number; buyer_id: string; seller_id: string; txn_id: string; created_at: number; kind: "ipo" | "secondary" };
+export type ExchangeIntel = { audit: ExchangeAudit; ownership: Ownership[]; trades: TradeRow[]; switches: Record<string, string>;
+  markets: { code: string; name: string; region: string; status: string; halted_reason: string; listed: number; trades: number; volume: number }[] };
+export type TradeTrail = { trade: { id: number; ticker: string; name: string; market: string; price: number; qty: number; buyer_id: string; seller_id: string; company_id: string; txn_id: string; created_at: number; kind: "ipo" | "secondary" };
+  buy_order: { id: number; account_owner_kind: string; owner_id: string; side: string; price: number; qty: number; filled: number; status: string; reason: string; decision_ref: string; created_at: number };
+  sell_order: TradeTrail["buy_order"]; journal: { id: number; kind: string; asset: string; amount: number; from_owner: string; from_bucket: string; to_owner: string; to_bucket: string; created_at: number }[];
+  settled: boolean; settlement: string };
+export const exchangeIntel = (market: string, tenantId: string) => economyGet<ExchangeIntel>(`/admin/exchange/intel?market=${encodeURIComponent(market)}&tenant_id=${encodeURIComponent(tenantId)}`, 10000);
+export const tradeTrail = (id: number) => economyGet<TradeTrail>(`/trades/${id}/trail`, 6000);

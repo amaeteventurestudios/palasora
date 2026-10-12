@@ -77,7 +77,8 @@ export default async function ExchangePage({ searchParams }: { searchParams: Pro
           </section>
           <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
             <Card className="min-w-0">
-              <CardHeader><CardTitle>Listings {where}</CardTitle><CardDescription>Last matched price vs IPO price. Sorted by most recent listing.</CardDescription></CardHeader>
+              <CardHeader><CardTitle className="flex flex-wrap items-center justify-between gap-2">Listings {where}<Link href={`/exchange/listings${market !== "ALL" ? `?market=${market}` : ""}`} className="link text-sm font-semibold" data-testid="view-all-listings">View all listings →</Link></CardTitle>
+                <CardDescription>Last matched price vs IPO price. Sorted by most recent listing.</CardDescription></CardHeader>
               <CardContent>
                 {(companies ?? []).length === 0 ? (
                   <div className="rounded-lg border border-dashed p-6 text-center" data-testid="no-listings">

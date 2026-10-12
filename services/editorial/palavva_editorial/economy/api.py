@@ -11,7 +11,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from . import db, exchange as ex, policy, rewards, service
+from . import db, exchange as ex, intel, policy, rewards, service
 
 router = APIRouter(prefix="/economy")
 
@@ -247,6 +247,34 @@ def integrity_review(b: ReviewIn) -> dict:
         return policy.review(service.con(), b.signal_key, b.disposition, b.note, b.by)
     except policy.PolicyError as e:
         _perr(e)
+
+
+# ---- ISSUE-15 market intelligence (read-only)
+def _discovery(tenant_id: str) -> bool | None:
+    if not tenant_id:
+        return None
+    try:
+        from ..api import pb
+        from ..city import control
+        return bool(control.effective(control.load(pb(), tenant_id), "price_discovery_enabled"))
+    except Exception:  # noqa: BLE001 - the verdict simply omits the setting if the Control Room cannot be read
+        return None
+
+
+@router.get("/admin/exchange/intel")
+def exchange_intel(market: str = "ALL", tenant_id: str = "", trades: int = 500) -> dict:
+    c = service.con()
+    mk = None if market in ("", "ALL") else market
+    return {"audit": intel.price_audit(c, mk, _discovery(tenant_id)), "ownership": intel.ownership(c, mk), "trades": intel.recent_trades(c, mk, trades),
+            "switches": {r["key"]: r["value"] for r in c.execute("SELECT key, value FROM switches")}, "markets": service.markets()}
+
+
+@router.get("/trades/{tid}/trail")
+def trade_trail(tid: int) -> dict:
+    r = intel.trade_trail(service.con(), tid)
+    if not r:
+        raise HTTPException(status_code=404, detail={"code": "NOT_FOUND", "message": "no such trade"})
+    return r
 
 
 class SwitchIn(BaseModel):

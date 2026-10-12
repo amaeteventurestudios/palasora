@@ -117,6 +117,19 @@ export async function economySwitch(_: ActionState, f: FormData): Promise<Action
   return { ok: true, message: `${key} is now ${on ? "ON" : "off"}.` };
 }
 
+/** ISSUE-15: halt or reopen ONE country market (other markets keep trading). Needs a reason; audited. Resting orders stay on the book. */
+export async function marketHalt(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await staff("tenant_admin");
+  const code = s(f, "code", 2).toUpperCase(), halted = s(f, "halted", 1) === "1", reason = s(f, "reason", 200);
+  if (!/^[A-Z]{2}$/.test(code)) return fail("Choose a market.");
+  if (halted && reason.length < 10) return fail("Say why the market is halted (at least 10 characters); readers of the Exchange see this reason.");
+  const r = await editorialFetch<{ code: string; status: string }>(`/economy/markets/${code}/halt`, { method: "POST", body: JSON.stringify({ halted, reason }) });
+  if (!r) return fail("Economy service unavailable: market NOT changed.");
+  await audit(tenant.id, session.user.id, halted ? "economy.market_halted" : "economy.market_reopened", "economy", code, { reason });
+  revalidatePath("/admin/exchange"); revalidatePath("/exchange");
+  return { ok: true, message: `${code} market is now ${r.status}.` };
+}
+
 /** Run a reconciliation now (read-only checks; mismatches are recorded, never auto-fixed). */
 export async function runReconcile(_: ActionState): Promise<ActionState> {
   const { tenant, session } = await staff("moderator");

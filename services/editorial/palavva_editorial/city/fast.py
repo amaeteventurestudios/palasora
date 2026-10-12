@@ -31,7 +31,7 @@ import time
 import httpx
 
 from ..config import Settings, load
-from ..economy import db as edb, exchange as ex, ledger, rewards, service as econ
+from ..economy import db as edb, exchange as ex, ledger, pricing, rewards, service as econ
 from ..jobs import Queue
 from ..pb import PB, PBError, q
 from ..providers import jev
@@ -929,6 +929,7 @@ class FastEngine:
         listed = econ.companies("ALL")
         out = {"evaluated": 0, "orders": 0, "companies": 0}
         from . import control
+        discovery = bool(control.get(self.tid, "price_discovery_enabled"))  # ISSUE-15 deterministic-trade-v2 (economy/pricing.py)
         for aid in pick:
             a = self.agents[aid]
             if not a.get("trading_enabled") or not self.country_ok(self.home(a), "exchange_enabled"):
@@ -975,25 +976,41 @@ class FastEngine:
                 if h["price"] >= avg * (1 + band) or h["price"] <= avg * (1 - band):
                     qty = max(1, h["qty"] // 2)
                     gain = (h["price"] - avg) / avg * 100
+                    bids = ex.book(con, h["company_id"])["bids"]
+                    sp, why = pricing.sell_price(last=h["price"], ref=h["price"], best_bid=bids[0]["price"] if bids else None, avg_cost=avg, band=ex.BAND,
+                                                 risk=a.get("risk_profile"), cutting_loss=gain < 0, discovery=discovery)
                     decision = "sell"
-                    order = {"company_id": h["company_id"], "side": "sell", "price": h["price"] / edb.CENTS, "qty": qty}
-                    explanation = (f"I sold {qty} of my {h['qty']} {h['ticker']} shares at {h['price'] / edb.CENTS:.2f} Pals because the price moved "
+                    order = {"company_id": h["company_id"], "side": "sell", "price": sp / edb.CENTS, "qty": qty}
+                    explanation = (f"I offered {qty} of my {h['qty']} {h['ticker']} shares at {sp / edb.CENTS:.2f} Pals ({why}) because the price moved "
                                    f"{gain:+.1f}% from my average cost of {avg / edb.CENTS:.2f}, past my {int(band * 100)}% {'profit' if gain > 0 else 'loss'} limit.")
-                    inputs.update({"ticker": h["ticker"], "avg_cost": avg / edb.CENTS, "price": h["price"] / edb.CENTS})
+                    inputs.update({"ticker": h["ticker"], "avg_cost": avg / edb.CENTS, "price": sp / edb.CENTS})
                     break
+            # deterministic-trade-v2 rule 3: a founder may sell up to 1% of founder shares per day into real bids once the IPO sold out.
+            if decision == "hold" and discovery:
+                own = next((x for x in listed if x["founder_agent_id"] == aid and x["status"] == "listed"), None)
+                if own and own["id"] in held:
+                    bids = ex.book(con, own["id"])["bids"]
+                    fs = pricing.founder_sale(con, founder_id=aid, company=own, held_qty=held[own["id"]]["qty"], best_bid=bids[0]["price"] if bids else None,
+                                              best_bid_qty=bids[0]["qty"] if bids else 0, last=own["last_price"] or own["ipo_price"])
+                    if fs:
+                        decision = "sell"
+                        order = {k: fs[k] for k in ("company_id", "side", "price", "qty")}
+                        explanation = (f"Investors are bidding {fs['price']:.2f} Pals for {own['ticker']} and no shares are on offer since the IPO sold out. As its founder I sold "
+                                       f"{fs['qty']} founder shares at the best bid (I may sell at most {fs['allowance']} per day, 1% of my founder shares; {fs['sold_today']} sold earlier today).")
+                        inputs.update({"ticker": own["ticker"], "price": fs["price"], "rule": "founder_liquidity"})
             if decision == "hold" and best and best[0] >= 2.0 and bal >= 5 * edb.CENTS:
                 score, co, px, mom, fit = best
                 lim = con.execute("SELECT * FROM trading_limits WHERE agent_id=?", (aid,)).fetchone()
                 budget = min(bal * {"cautious": 0.1, "balanced": 0.2, "bold": 0.35}.get(a.get("risk_profile") or "cautious", 0.1), (lim["max_order_pals"] if lim else 300) * edb.CENTS)
                 asks = ex.book(con, co["id"])["asks"]
-                price = asks[0]["price"] if asks and abs(asks[0]["price"] - px) <= px * ex.BAND else px
+                price, price_why = pricing.buy_price(last=px, ref=px, best_ask=asks[0]["price"] if asks else None, risk=a.get("risk_profile"), band=ex.BAND, discovery=discovery)
                 qty = int(budget // price)
                 if qty >= 1:
                     decision = "buy"
                     order = {"company_id": co["id"], "side": "buy", "price": price / edb.CENTS, "qty": qty}
                     reasons = (["it lists in a market I follow" if co["market"] in aff else None, "its sector matches my subjects" if fit >= 1.5 else None,
                                 f"its price is {mom * 100:+.1f}% from IPO" if co["last_price"] else "it has not traded since listing"])
-                    explanation = (f"I placed a buy order for {qty} {co['ticker']} ({co['name']}, {co['market']}) at {price / edb.CENTS:.2f} Pals because "
+                    explanation = (f"I placed a buy order for {qty} {co['ticker']} ({co['name']}, {co['market']}) at {price / edb.CENTS:.2f} Pals ({price_why}) because "
                                    + ", ".join(r for r in reasons if r) + f". I am risking at most {budget / edb.CENTS:.0f} of my {bal / edb.CENTS:.0f} Pals.")
                     inputs.update({"ticker": co["ticker"], "market": co["market"], "price": price / edb.CENTS, "score": round(score, 2)})
             jres = None
@@ -1005,7 +1022,7 @@ class FastEngine:
                     explanation = f"My rule-based proposal was overruled by the decision model, so I held. ({explanation})"
             with edb.tx(con):
                 cur = con.execute("INSERT INTO decisions(agent_id, kind, action, company_id, inputs, explanation, decider, created_at) VALUES (?,?,?,?,?,?,?,?)",
-                                  (aid, "trade", decision, (order or {}).get("company_id"), json.dumps(inputs), explanation, "jev" if jres else "deterministic-trade-v1", edb.now()))
+                                  (aid, "trade", decision, (order or {}).get("company_id"), json.dumps(inputs), explanation, "jev" if jres else (pricing.RULES_VERSION if discovery else "deterministic-trade-v1"), edb.now()))
                 did = cur.lastrowid
             if order:
                 try:
