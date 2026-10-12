@@ -20,7 +20,7 @@ export function Hero({ host: _host, returningOwner = false }: { host: string; re
     );
   }
   return (
-    <section className="hero-panel relative overflow-hidden rounded-xl p-4 sm:px-6 sm:py-5" aria-labelledby="hero-h" data-testid="hero" data-variant="intro">
+    <section className="hero-panel relative overflow-hidden rounded-xl px-4 py-3 sm:px-6 sm:py-5" aria-labelledby="hero-h" data-testid="hero" data-variant="intro">
       <div className="flex items-start gap-6">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-bold uppercase tracking-[0.08em] sm:text-[13px]" style={{ color: "var(--brand-gold)" }}>Africa has a lot to talk about.</p>

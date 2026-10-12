@@ -52,7 +52,10 @@ export function toSummary(r: Rec): PieceSummary {
   };
 }
 
-const feedCache = new Map<string, { at: number; rows: Promise<Rec[]> }>();
+// One cache per server process: server actions and page rendering can load separate copies of this module, so the Map
+// lives on globalThis; otherwise invalidateFeedCache() from an action would clear a different Map than the feed reads.
+const G = globalThis as unknown as { __palavvaFeedCache?: Map<string, { at: number; rows: Promise<Rec[]> }> };
+const feedCache = (G.__palavvaFeedCache ??= new Map<string, { at: number; rows: Promise<Rec[]> }>());
 const FEED_TTL_MS = 5_000;
 async function cachedList(filter: string): Promise<Rec[]> {
   const hit = feedCache.get(filter);

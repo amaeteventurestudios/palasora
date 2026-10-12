@@ -1,0 +1,113 @@
+
+Running 39 tests using 1 worker
+
+  ✓   1 tests/e2e/v13.spec.ts:23:5 › A-04/A-06/A-07 demo thread: nested AI replies arrive live without reload; replay is ordered and duplicate-free (8.5s)
+  ✓   2 tests/e2e/v13.spec.ts:67:5 › A-06 (v1.4) an open thread is live for observers; the human reply path is closed (agent live replies: v14.spec.ts) (1.2s)
+  ✓   3 tests/e2e/v13.spec.ts:77:5 › A-09 AI posts never count as human demand: trend audit shows AI posts excluded (1.5s)
+  ✓   4 tests/e2e/v13.spec.ts:87:5 › A-02/A-10 held or rejected candidates emit no public event and are visible to editors with risk basis (1.0s)
+  ✓   5 tests/e2e/v13.spec.ts:104:5 › L-01 Nigeria guest: English UI, Nigeria edition, feed immediately visible; no-country fallback is safe (1.3s)
+  ✓   6 tests/e2e/v13.spec.ts:116:5 › L-02 Senegal guest with no conflicting language gets French UI automatically (695ms)
+  ✓   7 tests/e2e/v13.spec.ts:125:5 › L-03/L-18 Arabic market: RTL UI, usable menus and map, numerals and source URLs legible (1.4s)
+  ✓   8 tests/e2e/v13.spec.ts:146:5 › L-04 saved explicit English + Nigeria edition survive a trip to Senegal (1.0s)
+  ✓   9 tests/e2e/v13.spec.ts:157:5 › L-05/L-24 browser French beats coarse English-country default; a visible override persists across refresh and login (3.5s)
+  ✓  10 tests/e2e/v13.spec.ts:176:5 › L-08/L-09/L-17 French reading: honest pending → machine label with original link; Pidgin (MT disabled) falls back openly (1.4s)
+  ✓  11 tests/e2e/v13.spec.ts:203:5 › L-08/L-23 editor can see, correct and block translations; geography evidence and coverage gaps are inspectable (2.9s)
+  ✓  12 tests/e2e/v13.spec.ts:233:5 › L-10/L-19 Nigeria map: 36 states + FCT, every area keyboard-reachable, text list equivalent (1.3s)
+  ✓  13 tests/e2e/v13.spec.ts:251:5 › L-11/L-14 state drill filters real stories or says Limited reporting; no glow without real recent activity (624ms)
+  ✓  14 tests/e2e/v13.spec.ts:263:5 › L-15/L-16 home shows two separately labelled trend panels with freshness and origin; cross-border click keeps language (683ms)
+  ✓  15 tests/e2e/v13.spec.ts:283:5 › L-20 no geolocation request on load; site fully usable with geolocation denied (2.9s)
+  ✓  16 tests/e2e/v13.spec.ts:299:5 › L-19 reduced motion: no running animations on home or Local Pulse (746ms)
+L-22 {"/ visible_ms":1924,"/ fcp_ms":1700,"/ cls":0.04029349465827564,"/local-pulse?country=NG visible_ms":776,"/local-pulse?country=NG fcp_ms":-1,"/local-pulse?country=NG cls":0}
+  ✓  17 tests/e2e/v13.spec.ts:310:5 › L-22 performance: first story and map render fast on a throttled mobile profile; no layout shift from the map (6.1s)
+  ✓  18 tests/e2e/v13.spec.ts:339:5 › L-25 demo content is labelled as fictional and kept out of trend popularity (833ms)
+  ✓  19 tests/e2e/v13.spec.ts:347:5 › S-v13 screenshots: home rail, Local Pulse, Explore Africa, My Africa at 320/390/768/1440, light and dark (11.5s)
+  ✓  20 tests/e2e/v13.spec.ts:365:5 › A-05 rights revocation propagates: topic withdrawn, public correction, thread_paused event (1.8s)
+  ✓  21 tests/e2e/v13.spec.ts:387:5 › L-03 header menus stay inside the viewport in RTL and LTR at 320/390 (2.9s)
+  ✓  22 tests/e2e/v18-wave-b.spec.ts:28:5 › ISSUE-02 a quick reaction from an agent is published; empty or abusive text is still refused (1.0s)
+  ✓  23 tests/e2e/v18-wave-b.spec.ts:52:5 › ISSUE-03 Nigeria copy is 36 states + FCT, and a committed reply lights its region once, links to the thread, then fades (10.6s)
+  ✓  24 tests/e2e/v18-wave-b.spec.ts:79:5 › ISSUE-03 Regional priorities: 37 Nigerian units, founder list at 2x, a reasoned change is saved and audited; readers are refused (2.5s)
+  ✓  25 tests/e2e/v18-wave-b.spec.ts:109:5 › ISSUE-10 an English reader sees a stored Arabic->English translation, clearly labelled, and can switch to the original in one click (6.7s)
+  ✓  26 tests/e2e/v18-wave-b.spec.ts:137:5 › ISSUE-10 Translations admin: four separate coverage columns incl. Fante, compact searchable table, side-by-side review (1.1s)
+  ✓  27 tests/e2e/v18-wave-b.spec.ts:155:5 › ISSUE-12 Trend audit separates humans from agents, explains the score, and history is de-duplicated (1.7s)
+  ✓  28 tests/e2e/v18-wave-b.spec.ts:173:5 › ISSUE-11 Geography & coverage: publisher location never counts as the story's place; evidence opens with review actions (896ms)
+  ✓  29 tests/e2e/v18-wave-b.spec.ts:187:5 › ISSUE-26 owner performance is owner-only (empty state, own agent analytics, no cross-owner view) and the leaderboard explains its anti-gaming rules (1.3s)
+  ✓  30 tests/e2e/v18-wave-b.spec.ts:216:5 › ISSUE-07 Editorial queue explains holds, previews the refined rules, and releases a checked batch through human approval only (1.2s)
+  ✓  31 tests/e2e/v18-wave-c.spec.ts:5:5 › ISSUE-20 llms.txt / llms-full.txt: public links only, honest status, no private paths (728ms)
+  ✓  32 tests/e2e/v18-wave-c.spec.ts:20:5 › ISSUE-20 robots blocks crawling before launch; sitemap lists only resolvable public pages (650ms)
+  ✓  33 tests/e2e/v18-wave-c.spec.ts:31:5 › ISSUE-20 Markdown exists for Palavva-original posts only, with canonical link; publisher cards and drafts are refused (100ms)
+  ✓  34 tests/e2e/v18-wave-c.spec.ts:48:5 › ISSUE-21 Infrastructure & services: all 8 processes, running vs healthy, packages with licences, impact view, jobs without [object Object] (1.6s)
+  ✓  35 tests/e2e/v18-wave-c.spec.ts:67:5 › ISSUE-22 Settings say what each switch does, confirm disruptive changes, audit is searchable and redacted, mail previews hide links (1.9s)
+  ✓  36 tests/e2e/v18-wave-c.spec.ts:94:5 › ISSUE-13 Trust & safety: honest zero states, automatic decisions charted, refusal reasons in plain words, rules service health (1.2s)
+  ✓  37 tests/e2e/v18-wave-c.spec.ts:106:5 › ISSUE-09 Source registry: compact grid, actionable view by default, archived discoveries kept but hidden, details drawer with rights evidence (1.2s)
+  ✓  38 tests/e2e/v18-wave-c.spec.ts:123:5 › ISSUE-06 a clearly new, rule-passing SubPal proposal opens automatically; a near-duplicate waits with a stated reason (141ms)
+  ✘  39 tests/e2e/v18-wave-d.spec.ts:13:5 › ISSUE-17 sandbox purchase grants credits once; replay is ignored; refund reverses; tampering, live provider and anonymous checkout are refused (6.4s)
+
+
+  1) tests/e2e/v18-wave-d.spec.ts:13:5 › ISSUE-17 sandbox purchase grants credits once; replay is ignored; refund reverses; tampering, live provider and anonymous checkout are refused 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/Sandbox: order paid/)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/Sandbox: order paid/)
+
+
+      22 |   const orderId = page.url().split("/").pop()!;
+      23 |   await page.getByRole("button", { name: "Simulate successful payment" }).click();
+    > 24 |   await expect(page.getByText(/Sandbox: order paid/)).toBeVisible();
+         |                                                       ^
+      25 |   const pb = await pbAdmin();
+      26 |   const order = (await pb.list("payment_orders", `id='${orderId}'`))[0];
+      27 |   expect(order.status).toBe("paid");
+        at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-wave-d.spec.ts:24:55
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-d-ISSUE-17-sandbo-6cbbb-nymous-checkout-are-refused/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-d-ISSUE-17-sandbo-6cbbb-nymous-checkout-are-refused/test-failed-9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-d-ISSUE-17-sandbo-6cbbb-nymous-checkout-are-refused/test-failed-10.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-d-ISSUE-17-sandbo-6cbbb-nymous-checkout-are-refused/test-failed-3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #5: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-d-ISSUE-17-sandbo-6cbbb-nymous-checkout-are-refused/test-failed-4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #6: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-d-ISSUE-17-sandbo-6cbbb-nymous-checkout-are-refused/test-failed-5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #7: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-d-ISSUE-17-sandbo-6cbbb-nymous-checkout-are-refused/test-failed-6.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #8: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-d-ISSUE-17-sandbo-6cbbb-nymous-checkout-are-refused/test-failed-7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #9: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-d-ISSUE-17-sandbo-6cbbb-nymous-checkout-are-refused/test-failed-8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #10: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-d-ISSUE-17-sandbo-6cbbb-nymous-checkout-are-refused/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../docs/evidence/e2e/artifacts/v18-wave-d-ISSUE-17-sandbo-6cbbb-nymous-checkout-are-refused/error-context.md
+
+  1 failed
+    tests/e2e/v18-wave-d.spec.ts:13:5 › ISSUE-17 sandbox purchase grants credits once; replay is ignored; refund reverses; tampering, live provider and anonymous checkout are refused 
+  38 passed (1.6m)

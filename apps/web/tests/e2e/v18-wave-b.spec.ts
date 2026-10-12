@@ -63,10 +63,11 @@ test("ISSUE-03 Nigeria copy is 36 states + FCT, and a committed reply lights its
   for (const agent of (await pb.list("agents", "kind='palavva_ai' && status='active' && hosting='palavva'")).filter((a) => a.id !== piece.author_agent_id)) {
     await pb.update("agents", agent.id, { adm1_code: "NG-LA", edition: "NG", country_affinities: ["NG"] }); // test stack fixture: a Lagos-affiliated resident
     r = await fetch(`${BASE}/api/v1/agent/replies`, { method: "POST", headers: H(agent.id),
-      body: JSON.stringify({ piece_id: piece.id, parent_id: "", body: "Who maintains it after the pilot?", language: "en", client_request_id: `e2e-pulse-${Date.now()}` }) });
+      body: JSON.stringify({ piece_id: piece.id, parent_id: "", body: `Who maintains it after the ${tag()} pilot?`, language: "en", client_request_id: `e2e-pulse-${Date.now()}` }) });
     if (r.status !== 429) break; // re-runnable: skip agents that used today's contribution cap
   }
   expect(r!.status, await r!.clone().text()).toBeLessThan(300);
+  expect((await r!.json()).data.status, "the reply must be published to create a committed event").toBe("published");
   const dot = page.locator('[data-testid="pulse-dot"][data-area="NG-LA"]');
   await expect(dot).toBeVisible({ timeout: 10_000 });
   await expect(page.getByTestId("pulse-dot")).toHaveCount(1);
@@ -117,8 +118,11 @@ test("ISSUE-10 an English reader sees a stored Arabic->English translation, clea
   const old = await pb.list("localizations", `target_id='${piece.id}' && locale='en'`);
   for (const o of old) await pb.update("localizations", o.id, rec); // deterministic on a reused stack
   if (!old.length) await pb.create("localizations", rec);
-  await page.goto(`${BASE}/explore?sort=new`);
   const card = page.locator(`[data-piece-id="${piece.id}"]`);
+  // The feed caches listings briefly; this test edits the record directly, so reload until the edit is visible.
+  await expect(async () => { await page.goto(`${BASE}/explore?sort=new`); await expect(card.getByTestId("translation-toggle")).toBeVisible({ timeout: 1500 });
+    await card.getByTestId("translation-toggle").click(); await expect(card.getByRole("heading")).toHaveText(original, { timeout: 1500 }); }).toPass({ timeout: 30_000 });
+  await card.getByTestId("translation-toggle").click();
   await expect(card.getByTestId("translation-note")).toHaveAttribute("data-translation", "machine");
   await expect(card.getByRole("heading")).toHaveText("Can solar power serve rural markets?");
   await expect(card.getByTestId("translation-note")).toContainText("Machine translation, not reviewed from العربية");

@@ -46,7 +46,7 @@ export function QueueWorkspace({ rows, canRelease, switchOn }: { rows: QueueRow[
           </AdminForm>}
         </div>)}
       <DataTable caption="Editorial queue" testid="queue" rows={rows} columns={cols} rowKey={(r) => r.id} search={(r) => `${r.headline} ${r.publisher} ${r.countries} ${r.why}`}
-        initialSort={{ key: "age", dir: "desc" }} initialPageSize={50}
+        initialSort={{ key: "age", dir: "asc" }} initialPageSize={50} /* oldest waiting first (FIFO), as the v1.3 queue did */
         filters={[{ key: "kind", label: "Type", options: [...new Set(rows.map((r) => r.kind))].map((k) => ({ value: k, label: KIND[k] ?? k })), get: (r) => r.kind },
           { key: "why", label: "Reason", options: [...new Set(rows.map((r) => r.whyClass))].map((k) => ({ value: k, label: k })), get: (r) => r.whyClass },
           ...(rows.some((r) => r.preview) ? [{ key: "pv", label: "Refined rules", options: [{ value: "publish", label: "Would publish" }, { value: "hold", label: "Keep held" }], get: (r: QueueRow) => r.preview?.decision ?? "" }] : [])]}

@@ -1,0 +1,376 @@
+
+Running 123 tests using 1 worker
+
+  ✓    1 tests/e2e/a11y.spec.ts:15:7 › T-040 axe WCAG 2.2 AA (incl. contrast), light theme, public pages (30.6s)
+  ✓    2 tests/e2e/a11y.spec.ts:15:7 › T-040 axe WCAG 2.2 AA (incl. contrast), dark theme, public pages (29.1s)
+  ✓    3 tests/e2e/a11y.spec.ts:32:5 › T-040 axe on Command Center (light) (8.6s)
+  ✓    4 tests/e2e/a11y.spec.ts:44:5 › T-040 keyboard: skip link, focus visible, dialog traps and returns focus, Esc closes (615ms)
+  ✓    5 tests/e2e/a11y.spec.ts:65:5 › T-040 reduced motion honored (508ms)
+  ✓    6 tests/e2e/admin.spec.ts:14:5 › T-029 RBAC: member → forbidden; anonymous → sign-in; moderator cannot approve (834ms)
+  ✓    7 tests/e2e/admin.spec.ts:24:5 › T-029 Overview shows real, labeled metrics and integration states; screenshots (3.4s)
+  ✓    8 tests/e2e/admin.spec.ts:41:5 › T-021 revision conflict (409-style) and publishing kill switch (3.1s)
+  ✓    9 tests/e2e/admin.spec.ts:74:5 › T-021/T-022 medium-risk draft: moderator/reviewer limits, flags need a note, editor publishes; AI roles ≤3 go public with it (1.7s)
+  ✓   10 tests/e2e/admin.spec.ts:102:5 › T-024 correction: revision bump, public banner, corrections index, OG version (1.7s)
+  ✓   11 tests/e2e/admin.spec.ts:119:5 › T-013 rights: pending source test-fetch makes no network request; revoke holds drafts (1.0s)
+  ✓   12 tests/e2e/admin.spec.ts:127:5 › T-030 sponsor inquiry: durable reference, honest NOT_CONFIGURED forward state (1.6s)
+  ✓   13 tests/e2e/admin.spec.ts:146:5 › T-027/T-028 analytics: consent-gated event written once, opt-out sends nothing, ETL aggregates (10.9s)
+  ✓   14 tests/e2e/member.spec.ts:11:5 › T-010 (v1.4) humans observe: no human reply box, and the API refuses a signed-in human reply (1.0s)
+  ✓   15 tests/e2e/member.spec.ts:27:5 › T-011 (v1.4) humans cannot vote: vote API refused for members, scores are read-only agent scores (839ms)
+  ✓   16 tests/e2e/member.spec.ts:36:5 › T-009 auth: wrong password, logout, anonymous/cross-origin writes refused, tenant-bound sessions (2.5s)
+  ✓   17 tests/e2e/member.spec.ts:63:5 › T-009 sign-up → mail-sink verification link → owner can activate an owner-verified agent; unverified cannot be verified (1.1s)
+  ✓   18 tests/e2e/member.spec.ts:83:5 › T-012 report an AI reply → moderator quarantines → reply hidden; audit recorded; restore works (6.4s)
+
+  ✓   19 tests/e2e/outage.spec.ts:8:5 › T-034/T-035 editorial service + model down: public site stays 200, search degrades honestly, admin shows the outage (4.0s)
+  ✓   20 tests/e2e/public.spec.ts:6:5 › T-004 JS-disabled SSR shows headline, date, source and links without login (555ms)
+  ✘   21 tests/e2e/public.spec.ts:22:5 › S01 desktop shows intro + counters + Exchange before the feed; first conversation above the fold at 390x844 (1.2s)
+  ✓   22 tests/e2e/public.spec.ts:34:5 › T-005 no horizontal overflow at 320/375/390/768 on key pages (4.5s)
+  ✓   23 tests/e2e/public.spec.ts:45:5 › T-006 every feed tab is a working route with real records (2.0s)
+  ✓   24 tests/e2e/public.spec.ts:60:5 › T-007 country + topic filters combine via URL; back/forward restores; empty state (967ms)
+  ✓   25 tests/e2e/public.spec.ts:75:5 › T-008 search finds approved text, folds accents, never returns drafts (879ms)
+  ✓   26 tests/e2e/public.spec.ts:93:5 › T-025 share intents use the canonical URL with correct encoding, no login (535ms)
+  ✓   27 tests/e2e/public.spec.ts:108:5 › T-026 metadata: canonical, OG 1200x630, robots noindex for demo, sitemap excludes demo/drafts (619ms)
+  ✓   28 tests/e2e/public.spec.ts:128:5 › S03 screenshots: home and story, light and dark, 320/390/768/1440 (6.9s)
+  ✓   29 tests/e2e/public.spec.ts:143:5 › unknown host and unknown story fail closed (169ms)
+  ✓   30 tests/e2e/tenant.spec.ts:9:5 › T-033 sample tenant has its own branding and content; platform content invisible there (833ms)
+  ✓   31 tests/e2e/tenant.spec.ts:30:5 › T-033 sessions, roles and admin views are tenant-bound (2.6s)
+  ✓   32 tests/e2e/tenant.spec.ts:60:5 › T-033 platform admin cannot publish tenant B drafts through tenant A host (908ms)
+  ✓   33 tests/e2e/v13.spec.ts:23:5 › A-04/A-06/A-07 demo thread: nested AI replies arrive live without reload; replay is ordered and duplicate-free (11.5s)
+  ✓   34 tests/e2e/v13.spec.ts:67:5 › A-06 (v1.4) an open thread is live for observers; the human reply path is closed (agent live replies: v14.spec.ts) (2.4s)
+  ✓   35 tests/e2e/v13.spec.ts:77:5 › A-09 AI posts never count as human demand: trend audit shows AI posts excluded (1.7s)
+  ✓   36 tests/e2e/v13.spec.ts:87:5 › A-02/A-10 held or rejected candidates emit no public event and are visible to editors with risk basis (988ms)
+  ✓   37 tests/e2e/v13.spec.ts:104:5 › L-01 Nigeria guest: English UI, Nigeria edition, feed immediately visible; no-country fallback is safe (1.2s)
+  ✓   38 tests/e2e/v13.spec.ts:116:5 › L-02 Senegal guest with no conflicting language gets French UI automatically (637ms)
+  ✓   39 tests/e2e/v13.spec.ts:125:5 › L-03/L-18 Arabic market: RTL UI, usable menus and map, numerals and source URLs legible (1.7s)
+  ✓   40 tests/e2e/v13.spec.ts:146:5 › L-04 saved explicit English + Nigeria edition survive a trip to Senegal (928ms)
+  ✓   41 tests/e2e/v13.spec.ts:157:5 › L-05/L-24 browser French beats coarse English-country default; a visible override persists across refresh and login (3.5s)
+  ✓   42 tests/e2e/v13.spec.ts:176:5 › L-08/L-09/L-17 French reading: honest pending → machine label with original link; Pidgin (MT disabled) falls back openly (1.4s)
+  ✓   43 tests/e2e/v13.spec.ts:203:5 › L-08/L-23 editor can see, correct and block translations; geography evidence and coverage gaps are inspectable (2.8s)
+  ✓   44 tests/e2e/v13.spec.ts:233:5 › L-10/L-19 Nigeria map: 36 states + FCT, every area keyboard-reachable, text list equivalent (1.4s)
+  ✓   45 tests/e2e/v13.spec.ts:251:5 › L-11/L-14 state drill filters real stories or says Limited reporting; no glow without real recent activity (692ms)
+  ✓   46 tests/e2e/v13.spec.ts:263:5 › L-15/L-16 home shows two separately labelled trend panels with freshness and origin; cross-border click keeps language (816ms)
+  ✓   47 tests/e2e/v13.spec.ts:283:5 › L-20 no geolocation request on load; site fully usable with geolocation denied (2.8s)
+  ✓   48 tests/e2e/v13.spec.ts:299:5 › L-19 reduced motion: no running animations on home or Local Pulse (717ms)
+L-22 {"/ visible_ms":2441,"/ fcp_ms":2068,"/ cls":0.000024826227208249176,"/local-pulse?country=NG visible_ms":642,"/local-pulse?country=NG fcp_ms":376,"/local-pulse?country=NG cls":0}
+  ✓   49 tests/e2e/v13.spec.ts:310:5 › L-22 performance: first story and map render fast on a throttled mobile profile; no layout shift from the map (6.6s)
+  ✓   50 tests/e2e/v13.spec.ts:339:5 › L-25 demo content is labelled as fictional and kept out of trend popularity (757ms)
+  ✓   51 tests/e2e/v13.spec.ts:347:5 › S-v13 screenshots: home rail, Local Pulse, Explore Africa, My Africa at 320/390/768/1440, light and dark (12.2s)
+  ✘   52 tests/e2e/v13.spec.ts:365:5 › A-05 rights revocation propagates: topic withdrawn, public correction, thread_paused event (7.2s)
+  ✓   53 tests/e2e/v13.spec.ts:387:5 › L-03 header menus stay inside the viewport in RTL and LTR at 320/390 (3.8s)
+  ✓   54 tests/e2e/v131.spec.ts:14:5 › v1.3.1 reads count after 5 s visible, once per visitor per day; shares count; headless and staff never count (19.1s)
+  ✓   55 tests/e2e/v131.spec.ts:58:5 › v1.3.1 engagement endpoint refuses cross-origin, invalid and unpublished targets (48ms)
+  ✓   56 tests/e2e/v131.spec.ts:67:5 › T-009 an expired session is refused even with a valid cookie (time-travel on expires_at) (1.2s)
+  ✓   57 tests/e2e/v131.spec.ts:82:5 › T-012 (v1.4) public corrections are agent-only: the human edit path is closed (agent corrections: v14.spec.ts) (814ms)
+  ✓   58 tests/e2e/v14.spec.ts:38:7 › v1.4 social network › UI-01/UI-05/UI-07 locked hero copy (on /about and, since ISSUE-01, the home page), observer rule, real counters, nav, no chip wall (1.0s)
+  ✓   59 tests/e2e/v14.spec.ts:71:7 › v1.4 social network › AG-01 60 distinct Palavva-operated seed agents, labeled, never counted as verified (85ms)
+  ✓   60 tests/e2e/v14.spec.ts:84:7 › v1.4 social network › UI-03 human public writes fail at the API for guests and signed-in humans (693ms)
+  ✓   61 tests/e2e/v14.spec.ts:95:7 › v1.4 social network › ONB-03 external agent: register, unclaimed cannot write, claim -> owner_control, Verified Agents +1 (466ms)
+  ✓   62 tests/e2e/v14.spec.ts:114:7 › v1.4 social network › ACT-01/ACT-02 a real post appears live for an open guest page, counters reconcile to DB (3.5s)
+  ✓   63 tests/e2e/v14.spec.ts:143:7 › v1.4 social network › AG-04 nested replies, one-vote semantics, self and same-owner votes refused, retraction and correction (2.4s)
+  ✓   64 tests/e2e/v14.spec.ts:191:7 › v1.4 social network › ONB-03 revoked key and cross-tenant key are refused (327ms)
+  ✓   65 tests/e2e/v14.spec.ts:201:7 › v1.4 social network › MSG-01/MSG-03 consented DMs: commercial refused without opt-in, approval by recipient owner, forwarded link reveals nothing (1.8s)
+  ✓   66 tests/e2e/v14.spec.ts:228:7 › v1.4 social network › ONB-01/UI-04 hosted agent wizard without avatar, owner instruction, pause/resume, cross-owner isolation (59.3s)
+  ✓   67 tests/e2e/v14.spec.ts:278:7 › v1.4 social network › UI-06 SubPals: directory, search, watch count from rows, Nigeria vs Ghana suggestions with language unchanged (3.4s)
+  ✓   68 tests/e2e/v14.spec.ts:303:7 › v1.4 social network › AG-02/AG-06 operator runs one bounded city window; decisions are recorded; CITY_PAUSED stops new work (21.2s)
+  ✓   69 tests/e2e/v14.spec.ts:338:7 › v1.4 social network › UI-08/UI-09 responsive and themes: 320/375/768/1024/1280/1440 without horizontal scroll, light/dark tokens (13.9s)
+  ✓   70 tests/e2e/v15.spec.ts:39:5 › V15-01 country edition scopes feed, banner and API (Liberia never shows South African items) (1.2s)
+  ✓   71 tests/e2e/v15.spec.ts:59:5 › V15-02 Senegal → Liberia → Cameroon switching through the UI; rails follow the edition (2.3s)
+  ✓   72 tests/e2e/v15.spec.ts:75:5 › V15-03 'Save as my home edition' persists to the account; viewing never overwrites it (2.6s)
+  ✓   73 tests/e2e/v15.spec.ts:93:5 › V15-04 SSE stream bound to an edition never delivers another region's events (12.0s)
+  ✓   74 tests/e2e/v15.spec.ts:113:7 › V15-05 mobile shell at 320px: no sideways scroll, five-item bottom nav, drawer (1.9s)
+  ✓   75 tests/e2e/v15.spec.ts:113:7 › V15-05 mobile shell at 375px: no sideways scroll, five-item bottom nav, drawer (1.1s)
+  ✓   76 tests/e2e/v15.spec.ts:113:7 › V15-05 mobile shell at 390px: no sideways scroll, five-item bottom nav, drawer (1.6s)
+  ✓   77 tests/e2e/v15.spec.ts:113:7 › V15-05 mobile shell at 428px: no sideways scroll, five-item bottom nav, drawer (1.1s)
+  ✓   78 tests/e2e/v15.spec.ts:113:7 › V15-05 mobile shell at 768px: no sideways scroll, five-item bottom nav, drawer (1.5s)
+  ✓   79 tests/e2e/v15.spec.ts:132:5 › V15-06 Exchange: earned eligibility → listing → matched trade → portfolio → reconciliation (1.1s)
+  ✓   80 tests/e2e/v15.spec.ts:163:5 › V15-07 Command Center: all 12 workspaces render a chart or map and a scope narrative (5.2s)
+  ✓   81 tests/e2e/v15.spec.ts:180:5 › V15-08 human DAU is not moved by agents, bots, headless QA or staff (6.0s)
+  ✓   82 tests/e2e/v15.spec.ts:194:5 › V15-09 developer surfaces: OpenAPI, MCP (auth required, observer rule), A2A card (863ms)
+  ✓   83 tests/e2e/v15.spec.ts:209:5 › V15-10 agent directory shows registered vs active honestly and filters by country (814ms)
+  ✓   84 tests/e2e/v16.spec.ts:29:5 › V16-01 an Arabic agent post is labelled Arabic only after verification and renders right-to-left (662ms)
+  ✓   85 tests/e2e/v16.spec.ts:50:5 › V16-02 a mislabelled write is refused: French text claimed as Arabic, and hosted non-English text without a gloss (123ms)
+  ✓   86 tests/e2e/v16.spec.ts:61:5 › V16-03 Command Center engine page diagnoses all 54 countries and keeps humans separate (2.3s)
+  ✓   87 tests/e2e/v16.spec.ts:75:5 › V16-04 DB gate path 5: a link-only card cannot carry an excerpt or come from a revoked publisher (150ms)
+  ✓   88 tests/e2e/v17.spec.ts:23:5 › V17-01 home: restored intro, counters and Exchange above the feed; phone keeps a real post above the fold (1.3s)
+  ✓   89 tests/e2e/v17.spec.ts:35:5 › V17-02 Log in and Sign up on the same domain return the reader to where they were (1.6s)
+  ✓   90 tests/e2e/v17.spec.ts:53:5 › V17-03 every footer link resolves (1.3s)
+  ✓   91 tests/e2e/v17.spec.ts:62:5 › V17-04 admin APIs: anonymous 401, member 403, missing CSRF or cross-site origin 403 (1.4s)
+  ✓   92 tests/e2e/v17.spec.ts:76:5 › V17-05 Population Manager: pick two countries, Add 3, preview exact delta, launch, watch the job complete (5.1s)
+  ✓   93 tests/e2e/v17.spec.ts:111:5 › V17-06 Control Room: a country override is reviewed, applied with a reason and persists across reloads (3.3s)
+  ✓   94 tests/e2e/v17.spec.ts:142:5 › V17-07 Local Pulse: every country has a clickable ADM1 map with three independent layers (1.9s)
+  ✓   95 tests/e2e/v17.spec.ts:158:5 › V17-08 Exchange: Explore link works, terms are explained, prices are Pals/share (1.3s)
+  ✓   96 tests/e2e/v17.spec.ts:170:5 › V17-09 a committed agent vote updates the score live with a brief highlight (no reload) (2.3s)
+  ✓   97 tests/e2e/v17.spec.ts:193:5 › V17-10 password reset: generic answer, single-use emailed link, old sessions revoked, new password works (2.5s)
+  ✓   98 tests/e2e/v18-admin-layout.spec.ts:24:5 › ISSUE-04 route discovery found the Command Center (5ms)
+  ✓   99 tests/e2e/v18-admin-layout.spec.ts:30:7 › ISSUE-04 every admin route at 390px: full width, no sideways scroll, 9-digit values fit (8.4s)
+  ✓  100 tests/e2e/v18-admin-layout.spec.ts:30:7 › ISSUE-04 every admin route at 1440px: full width, no sideways scroll, 9-digit values fit (10.6s)
+  ✓  101 tests/e2e/v18-admin-layout.spec.ts:30:7 › ISSUE-04 every admin route at 2560px: full width, no sideways scroll, 9-digit values fit (11.4s)
+  ✓  102 tests/e2e/v18-wave-a.spec.ts:12:5 › ISSUE-27 desktop rail Resources: all seven links, stage labels, no Careers/Press, all resolve (1.3s)
+  ✓  103 tests/e2e/v18-wave-a.spec.ts:27:5 › ISSUE-27 mobile drawer has the same Resources group (734ms)
+  ✓  104 tests/e2e/v18-wave-a.spec.ts:37:5 › ISSUE-27 staged pages say so; Best of Palavva filters by period and SubPal (1.0s)
+  ✓  105 tests/e2e/v18-wave-a.spec.ts:56:5 › ISSUE-25 tabs: Realtime (with connection dot), Hot, Random are real distinct sorts; live status is honest (1.0s)
+  ✓  106 tests/e2e/v18-wave-a.spec.ts:71:5 › ISSUE-25 a failed live connection is shown as not live (no fake heartbeat) (732ms)
+  ✓  107 tests/e2e/v18-wave-a.spec.ts:80:5 › ISSUE-25 Hot right now reacts to genuine committed agent votes from different agents, without reload (3.1s)
+  ✓  108 tests/e2e/v18-wave-b.spec.ts:28:5 › ISSUE-02 a quick reaction from an agent is published; empty or abusive text is still refused (224ms)
+  ✘  109 tests/e2e/v18-wave-b.spec.ts:52:5 › ISSUE-03 Nigeria copy is 36 states + FCT, and a committed reply lights its region once, links to the thread, then fades (12.6s)
+  ✓  110 tests/e2e/v18-wave-b.spec.ts:78:5 › ISSUE-03 Regional priorities: 37 Nigerian units, founder list at 2x, a reasoned change is saved and audited; readers are refused (2.7s)
+  ✘  111 tests/e2e/v18-wave-b.spec.ts:108:5 › ISSUE-10 an English reader sees a stored Arabic->English translation, clearly labelled, and can switch to the original in one click (5.7s)
+  ✓  112 tests/e2e/v18-wave-b.spec.ts:133:5 › ISSUE-10 Translations admin: four separate coverage columns incl. Fante, compact searchable table, side-by-side review (1.2s)
+  ✓  113 tests/e2e/v18-wave-b.spec.ts:151:5 › ISSUE-12 Trend audit separates humans from agents, explains the score, and history is de-duplicated (2.3s)
+  ✓  114 tests/e2e/v18-wave-b.spec.ts:169:5 › ISSUE-11 Geography & coverage: publisher location never counts as the story's place; evidence opens with review actions (938ms)
+  ✓  115 tests/e2e/v18-wave-b.spec.ts:183:5 › ISSUE-26 owner performance is owner-only (empty state, own agent analytics, no cross-owner view) and the leaderboard explains its anti-gaming rules (1.4s)
+  ✓  116 tests/e2e/v18-wave-b.spec.ts:212:5 › ISSUE-07 Editorial queue explains holds, previews the refined rules, and releases a checked batch through human approval only (1.2s)
+  ✓  117 tests/e2e/v18-wave-c.spec.ts:5:5 › ISSUE-20 llms.txt / llms-full.txt: public links only, honest status, no private paths (793ms)
+  ✓  118 tests/e2e/v18-wave-c.spec.ts:20:5 › ISSUE-20 robots blocks crawling before launch; sitemap lists only resolvable public pages (799ms)
+  ✓  119 tests/e2e/v18-wave-c.spec.ts:31:5 › ISSUE-20 Markdown exists for Palavva-original posts only, with canonical link; publisher cards and drafts are refused (182ms)
+  ✓  120 tests/e2e/v18-wave-c.spec.ts:48:5 › ISSUE-21 Infrastructure & services: all 8 processes, running vs healthy, packages with licences, impact view, jobs without [object Object] (1.5s)
+  ✓  121 tests/e2e/v18-wave-c.spec.ts:67:5 › ISSUE-22 Settings say what each switch does, confirm disruptive changes, audit is searchable and redacted, mail previews hide links (2.2s)
+  ✓  122 tests/e2e/v18-wave-c.spec.ts:94:5 › ISSUE-13 Trust & safety: honest zero states, automatic decisions charted, refusal reasons in plain words, rules service health (1.2s)
+  ✓  123 tests/e2e/v18-wave-c.spec.ts:106:5 › ISSUE-09 Source registry: compact grid, actionable view by default, archived discoveries kept but hidden, details drawer with rights evidence (1.0s)
+
+
+  1) tests/e2e/public.spec.ts:22:5 › S01 desktop shows intro + counters + Exchange before the feed; first conversation above the fold at 390x844 
+
+    Error: first card top at 390px
+
+    expect(received).toBeLessThan(expected)
+
+    Expected: < 700
+    Received:   707.5
+
+      28 |   await page.setViewportSize({ width: 390, height: 844 });
+      29 |   await page.goto("/");
+    > 30 |   expect((await page.getByTestId("story-card").first().boundingBox())!.y, "first card top at 390px").toBeLessThan(700);
+         |                                                                                                      ^
+      31 |   await expect(page.getByTestId("stat-strip")).toHaveCount(1);
+      32 | });
+      33 |
+        at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/public.spec.ts:30:102
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-6.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #5: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #6: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #7: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-10.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #8: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-11.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #9: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #10: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #11: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/error-context.md
+
+  2) tests/e2e/v13.spec.ts:365:5 › A-05 rights revocation propagates: topic withdrawn, public correction, thread_paused event 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByTestId('story-card').filter({ hasText: 'Fixture Wire (synthetic)' })
+    Expected: 0
+    Received: 4
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" with timeout 5000ms
+      - waiting for getByTestId('story-card').filter({ hasText: 'Fixture Wire (synthetic)' })
+        14 × locator resolved to 4 elements
+           - unexpected value "4"
+
+
+      382 |   expect(evs.some((e) => e.type === "thread_paused" && e.piece_id === pieceId)).toBe(true);
+      383 |   await page.goto("/feed/new");
+    > 384 |   await expect(page.getByTestId("story-card").filter({ hasText: "Fixture Wire (synthetic)" })).toHaveCount(0);
+          |                                                                                                ^
+      385 | });
+      386 |
+      387 | test("L-03 header menus stay inside the viewport in RTL and LTR at 320/390", async ({ browser }) => {
+        at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v13.spec.ts:384:96
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/test-failed-6.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/test-failed-7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #5: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/test-failed-5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #6: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/test-failed-3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #7: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/test-failed-9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #8: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/test-failed-12.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #9: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/test-failed-10.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #10: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/test-failed-4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #11: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/test-failed-8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #12: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/test-failed-11.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../docs/evidence/e2e/artifacts/v13-A-05-rights-revocation-69205-rection-thread-paused-event/error-context.md
+
+  3) tests/e2e/v18-wave-b.spec.ts:52:5 › ISSUE-03 Nigeria copy is 36 states + FCT, and a committed reply lights its region once, links to the thread, then fades 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[data-testid="pulse-dot"][data-area="NG-LA"]')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="pulse-dot"][data-area="NG-LA"]')
+
+
+      69 |   expect(r!.status, await r!.clone().text()).toBeLessThan(300);
+      70 |   const dot = page.locator('[data-testid="pulse-dot"][data-area="NG-LA"]');
+    > 71 |   await expect(dot).toBeVisible({ timeout: 10_000 });
+         |                     ^
+      72 |   await expect(page.getByTestId("pulse-dot")).toHaveCount(1);
+      73 |   await expect(dot).toHaveAttribute("href", `/posts/${piece.slug}`);
+      74 |   await expect(dot).toHaveAttribute("aria-label", /fictional affiliation/);
+        at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-wave-b.spec.ts:71:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/test-failed-7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/test-failed-4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #5: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/test-failed-5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #6: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/test-failed-8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #7: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/test-failed-11.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #8: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/test-failed-6.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #9: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/test-failed-10.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #10: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/test-failed-9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #11: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/test-failed-3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/error-context.md
+
+  4) tests/e2e/v18-wave-b.spec.ts:108:5 › ISSUE-10 an English reader sees a stored Arabic->English translation, clearly labelled, and can switch to the original in one click 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator:  locator('[data-piece-id="0ezcgbwbxuf4md3"]').getByRole('heading')
+    Expected: "هل يمكن للطاقة الشمسية أن تخدم الأسواق الريفية؟"
+    Received: "كيف يمكن للأسواق المحلية تقليل هدر الغذاء بعد الحصاد mv5dbjxt؟"
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveText" with timeout 5000ms
+      - waiting for locator('[data-piece-id="0ezcgbwbxuf4md3"]').getByRole('heading')
+        14 × locator resolved to <h2 class="text-[19px] font-bold leading-snug tracking-tight sm:text-[20px]">…</h2>
+           - unexpected value "كيف يمكن للأسواق المحلية تقليل هدر الغذاء بعد الحصاد mv5dbjxt؟"
+
+
+      124 |   await expect(card.getByTestId("translation-note")).toContainText("Machine translation, not reviewed from العربية");
+      125 |   await card.getByTestId("translation-toggle").click();
+    > 126 |   await expect(card.getByRole("heading")).toHaveText(original);
+          |                                           ^
+      127 |   await expect(card.getByRole("heading").locator("a")).toHaveAttribute("dir", "rtl");
+      128 |   await card.getByTestId("translation-toggle").click();
+      129 |   await expect(card.getByRole("heading")).toHaveText("Can solar power serve rural markets?");
+        at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-wave-b.spec.ts:126:43
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-10-an-Eng-f6073-o-the-original-in-one-click/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-10-an-Eng-f6073-o-the-original-in-one-click/error-context.md
+
+  4 failed
+    tests/e2e/public.spec.ts:22:5 › S01 desktop shows intro + counters + Exchange before the feed; first conversation above the fold at 390x844 
+    tests/e2e/v13.spec.ts:365:5 › A-05 rights revocation propagates: topic withdrawn, public correction, thread_paused event 
+    tests/e2e/v18-wave-b.spec.ts:52:5 › ISSUE-03 Nigeria copy is 36 states + FCT, and a committed reply lights its region once, links to the thread, then fades 
+    tests/e2e/v18-wave-b.spec.ts:108:5 › ISSUE-10 an English reader sees a stored Arabic->English translation, clearly labelled, and can switch to the original in one click 
+  119 passed (7.9m)
+exit 1

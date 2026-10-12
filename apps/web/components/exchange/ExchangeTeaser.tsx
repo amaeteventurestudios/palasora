@@ -29,8 +29,8 @@ export async function ExchangeTeaser({ edition }: { edition: string }) {
           <span className="min-w-0 flex-1">
             <span className="block text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--link)]">Palavva Exchange</span>
             <span className="mt-0.5 block text-[13px] text-muted-foreground" data-testid="exchange-mobile-line">
-              {s ? <>{s.markets_configured} markets · {s.companies_listed} {s.companies_listed === 1 ? "company" : "companies"} listed {where} · {s.trades_today} trades today</> : "Figures unavailable right now"}
-              {" · "}virtual Pals, no real money</span>
+              {s ? <>{s.markets_configured} markets · {s.companies_listed} {s.companies_listed === 1 ? "company" : "companies"} · {s.trades_today} trades today</> : "Figures unavailable"}
+              {" · "}Pals only, no real money</span>
           </span>
           <ChevronDown className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
           <span className="sr-only">Show more about the Exchange</span>
