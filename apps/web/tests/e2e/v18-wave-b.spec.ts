@@ -165,3 +165,17 @@ test("ISSUE-12 Trend audit separates humans from agents, explains the score, and
   const ordered = [...sigs.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([, v]) => v);
   for (let i = 1; i < ordered.length; i++) expect(ordered[i], "consecutive snapshots must differ").not.toBe(ordered[i - 1]);
 });
+
+test("ISSUE-11 Geography & coverage: publisher location never counts as the story's place; evidence opens with review actions", async ({ page }) => {
+  await noConsentBanner(page);
+  await signIn(page, "editor@palavva.local", BASE, "/admin/geo?country=NG");
+  await expect(page.getByTestId("narrative")).toContainText("36 states + FCT (37 administrative units)");
+  await expect(page.locator('[data-metric="Accuracy of reviewed links"]')).toBeVisible();
+  await expect(page.getByTestId("geo-regions").locator("tbody tr")).toHaveCount(37);
+  const first = page.getByTestId("geo-evidence").locator("tbody tr[data-row]").first();
+  if (await first.count()) {
+    await first.click();
+    await expect(page.getByTestId("geo-detail")).toContainText("Why this link exists");
+    await expect(page.getByTestId("geo-detail").getByRole("button", { name: "Confirm the link" })).toBeVisible();
+  }
+});

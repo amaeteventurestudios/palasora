@@ -220,9 +220,11 @@ test("L-08/L-23 editor can see, correct and block translations; geography eviden
   }
   await page.screenshot({ path: `${shotDir}/v13-admin-translations-1440.png`, fullPage: true });
   await page.goto("/admin/geo");
-  await expect(page.getByRole("heading", { level: 1, name: "Geography" })).toBeVisible();
-  await expect(page.getByRole("table").last()).toContainText("NG-KN");
-  await expect(page.getByRole("table").last()).toContainText(/coverage gap|reporting/);
+  await expect(page.getByRole("heading", { level: 1, name: "Geography & coverage" })).toBeVisible();
+  // v1.8+ ISSUE-11: regions table (all 37 Nigerian units) and the evidence workspace replace the v1.3 tables.
+  await expect(page.getByTestId("geo-regions")).toContainText("NG-KN");
+  await expect(page.getByTestId("geo-regions").locator("tbody tr")).toHaveCount(37);
+  await expect(page.getByTestId("geo-regions")).toContainText(/No verified story yet|Has verified reporting|Only held links/);
   await page.screenshot({ path: `${shotDir}/v13-admin-geo-1440.png` });
 });
 
