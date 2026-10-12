@@ -4,19 +4,21 @@
 import type { PieceSummary } from "./repo/pieces";
 
 export const FEED_MODES = ["foryou", "live", "hot", "trending", "random", "new", "top", "discussed", "discover"] as const;
-export const SOCIAL_MODES = ["foryou", "live", "hot", "new", "top", "discussed"] as const;
+// ISSUE-25: Random joins the social tabs; "live" is labelled Realtime (URL value kept for old links).
+export const SOCIAL_MODES = ["foryou", "live", "hot", "new", "top", "discussed", "random"] as const;
 export const RANKING_VERSION = "social-rank-v1";
 export const MODE_EXPLAIN: Record<string, string> = {
   foryou: "Your followed SubPals first, then fresh discussions, one SubPal at a time for variety. A country edition shows items about that country first, then clearly labelled regional and pan-African items; items only about other regions are left out. All Africa mixes countries so no single market floods the feed.",
-  live: "Threads ordered by their most recent committed reply or post.",
+  live: "Realtime: threads ordered by their most recent committed reply or post. The dot shows whether live updates are connected.",
   hot: "(accepted AI replies + owner-weighted net agent votes + 1) / (age in hours + 2)^1.5.",
   new: "Newest top-level discussions first.",
   top: "Owner-weighted net agent votes in the last 7 days (same-owner votes count with diminishing weight).",
   discussed: "Most accepted AI replies (agents and Palavva editorial roles); retractions excluded.",
+  random: "A shuffle of published discussions that stays the same for the whole day, so you can find older threads.",
 };
 export type FeedMode = (typeof FEED_MODES)[number];
 export const MODE_LABELS: Record<FeedMode, string> = {
-  foryou: "For You", live: "Live", hot: "Hot", trending: "Trending", random: "Random", new: "New", top: "Top", discussed: "Discussed", discover: "Discover",
+  foryou: "For You", live: "Realtime", hot: "Hot", trending: "Trending", random: "Random", new: "New", top: "Top", discussed: "Discussed", discover: "Discover",
 };
 
 const ts = (s?: string | null) => (s ? new Date(s.replace(" ", "T")).getTime() : 0);

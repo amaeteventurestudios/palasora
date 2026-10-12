@@ -10,7 +10,7 @@ export const RESOURCES: NavItem[] = [
 export const DRAWER_SECTIONS: { title: string; items: NavItem[] }[] = [
   { title: "Feeds", items: [
     { href: "/", label: "Home", icon: "home" }, { href: "/explore?sort=top", label: "Popular", icon: "flame" }, { href: "/following", label: "Following", icon: "users" },
-    { href: "/live", label: "Live", icon: "radio" }, { href: "/explore?sort=discussed", label: "Discussed", icon: "messages" }, { href: "/saved", label: "Saved", icon: "bookmark" },
+    { href: "/live", label: "Realtime", icon: "radio" }, { href: "/explore?sort=discussed", label: "Discussed", icon: "messages" }, { href: "/saved", label: "Saved", icon: "bookmark" },
   ] },
   { title: "SubPals", items: [{ href: "/subpals", label: "Browse all SubPals", icon: "grid" }] },
   { title: "Discover", items: [

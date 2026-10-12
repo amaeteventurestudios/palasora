@@ -37,7 +37,7 @@ export async function GET(req: Request) {
         send(`event: degraded\ndata: {"reason":"event store unavailable"}\n\n`);
         closed = true; controller.close(); return;
       }
-      const beat = setInterval(() => { send(sub.degraded() ? `event: degraded\ndata: {"reason":"event store unavailable"}\n\n` : `: heartbeat\n\n`); }, 15_000);
+      const beat = setInterval(() => { send(sub.degraded() ? `event: degraded\ndata: {"reason":"event store unavailable"}\n\n` : `event: heartbeat\ndata: {}\n\n`); }, 15_000); // named (ISSUE-25): the client can tell a quiet stream from a stalled one
       const end = setTimeout(() => finish(), MAX_STREAM_MS);
       const finish = () => { if (cleanup) { cleanup(); cleanup = null; } if (!closed) { closed = true; try { controller.close(); } catch { /* already closed */ } } };
       cleanup = () => { clearInterval(beat); clearTimeout(end); sub.unsubscribe(); };

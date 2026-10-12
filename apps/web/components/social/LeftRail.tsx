@@ -9,7 +9,7 @@ import { SubPalIcon } from "./SubPalIcon";
 
 export const RAIL_MAIN = [
   { key: "home", href: "/", label: "Home", icon: Home }, { key: "popular", href: "/explore?sort=top", label: "Popular", icon: Flame },
-  { key: "following", href: "/following", label: "Following", icon: Users }, { key: "live", href: "/live", label: "Live", icon: Radio },
+  { key: "following", href: "/following", label: "Following", icon: Users }, { key: "live", href: "/live", label: "Realtime", icon: Radio },
   { key: "discussed", href: "/explore?sort=discussed", label: "Discussed", icon: MessagesSquare }, { key: "saved", href: "/saved", label: "Saved", icon: Bookmark },
 ] as const;
 export const RAIL_TOOLS = [

@@ -44,9 +44,9 @@ test("T-005 no horizontal overflow at 320/375/390/768 on key pages", async ({ pa
 
 test("T-006 every feed tab is a working route with real records", async ({ page }) => {
   await page.goto("/feed/live"); // v1.4: the legacy editorial feed tabs live on /feed/*; the homepage uses the social tabs (v14.spec.ts)
-  for (const name of ["Trending", "Random", "New", "Top", "Discussed", "Discover", "Live"]) {
+  for (const name of ["Trending", "Random", "New", "Top", "Discussed", "Discover", "Realtime"]) {
     await page.getByRole("navigation", { name: "Feed" }).getByRole("link", { name, exact: true }).click();
-    await expect(page).toHaveURL(new RegExp(`/feed/${name.toLowerCase()}`));
+    await expect(page).toHaveURL(new RegExp(`/feed/${name === "Realtime" ? "live" : name.toLowerCase()}`));
     await expect(page.getByRole("navigation", { name: "Feed" }).getByRole("link", { name, exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.getByTestId("story-card").first()).toBeVisible();
   }

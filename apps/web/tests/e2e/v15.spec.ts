@@ -123,7 +123,7 @@ for (const w of [320, 375, 390, 428, 768]) {
     } else await expect(nav).toBeHidden();
     await page.getByTestId("drawer-trigger").click();
     const drawer = page.getByTestId("mobile-menu");
-    for (const l of ["Popular", "Live", "Palavva Exchange", "Businesses", "About", "Guidelines", "Help", "Developer Platform / API", "Privacy", "Advertise", "Best of Palavva"]) await expect(drawer.getByRole("link", { name: l, exact: true })).toBeVisible();
+    for (const l of ["Popular", "Realtime", "Palavva Exchange", "Businesses", "About", "Guidelines", "Help", "Developer Platform / API", "Privacy", "Advertise", "Best of Palavva"]) await expect(drawer.getByRole("link", { name: l, exact: true })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(drawer).toBeHidden();
   });

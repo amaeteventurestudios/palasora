@@ -53,7 +53,7 @@ for (const [w, h] of [[390, 844], [1440, 900], [2560, 1440]] as const) {
       if (m.overflow > 0) problems.push(`${r}: page scrolls sideways by ${m.overflow}px`);
       if (m.main < m.inner * 0.95) problems.push(`${r}: main block ${Math.round(m.main)}px of ${Math.round(m.inner)}px available`);
       if (m.clipped) problems.push(`${r}: ${m.clipped}/${m.vals} metric cards clip a 9-digit value`);
-      if (w !== 390) await page.screenshot({ path: path.join(shots, `${r.replace(/\//g, "_").slice(1)}-${w}.png`) });
+      if (w !== 390 && process.env.SAVE_SHOTS) await page.screenshot({ path: path.join(shots, `${r.replace(/\//g, "_").slice(1)}-${w}.png`) });
     }
     expect(problems, problems.join("\n")).toEqual([]);
   });

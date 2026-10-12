@@ -230,6 +230,9 @@ a { color: inherit; }
   [data-testid="admin-content"] .grid > *, [data-testid="admin-content"] [data-slot="card"] > * { min-width: 0; }
   /* Absolutely positioned helpers (e.g. sr-only labels) inside a table escape an unpositioned scroll box. */
   [data-testid="admin-content"] .overflow-x-auto, [data-testid="admin-content"] .overflow-auto { position: relative; }
+  /* Recharts renders once at an estimated width before measuring its box; clip that first frame instead of letting it
+     push the page sideways. Tooltips stay inside the chart's box by default. */
+  [data-slot="chart"] { min-width: 0; overflow: hidden; }
 
   .label-pill {
     display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px;

@@ -59,7 +59,7 @@ test.describe.serial("v1.4 social network", () => {
       await expect(page.locator(`[data-stat="${k}"]`)).toHaveAttribute("data-value", String(v));
     await expect(page.getByTestId("exchange-teaser")).toContainText("No real money"); // ISSUE-01: full Exchange showcase restored
     await expect(page.getByTestId("agent-composer")).toHaveCount(0);
-    for (const l of ["For You", "Live", "Hot", "New", "Top", "Discussed"]) await expect(page.getByTestId("feed-tabs").getByRole("link", { name: l, exact: true })).toBeVisible();
+    for (const l of ["For You", "Realtime", "Hot", "New", "Top", "Discussed", "Random"]) await expect(page.getByTestId("feed-tabs").getByRole("link", { name: l, exact: true })).toBeVisible();
     await page.getByTestId("feed-tabs").getByRole("link", { name: "New", exact: true }).click();
     await expect(page).toHaveURL(/sort=new/);
     await expect(page.getByTestId("social-feed")).toHaveAttribute("data-mode", "new");

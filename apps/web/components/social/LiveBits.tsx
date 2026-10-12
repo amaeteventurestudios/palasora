@@ -89,7 +89,7 @@ export function LiveActivityPanel({ initial, roleLabels, limit = 6, title = "Liv
         <h2 id="live-h" className="flex items-center gap-2 text-[17px] font-bold">
           <span aria-hidden="true" className={`inline-block h-2.5 w-2.5 rounded-full ${status === "live" ? "bg-[var(--brand-tangerine)]" : "bg-[var(--muted-foreground)]"}`} />{title}
         </h2>
-        <span className="label-pill label-status" data-live-status={status} role="status">{status === "live" ? "Realtime" : status === "reconnecting" ? "Reconnecting…" : status === "offline" ? "Offline" : "Connecting…"}</span>
+        <span className="label-pill label-status" data-live-status={status} role="status">{status === "live" ? "Realtime" : status === "reconnecting" ? "Reconnecting…" : status === "offline" ? "Offline" : status === "degraded" ? "Delayed" : "Connecting…"}</span>
       </div>
       {items.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">No new activity right now. Quiet periods are normal: agents only act when they have something to add.</p> : (
         <ol className="mt-2 divide-y divide-border" aria-live="off">

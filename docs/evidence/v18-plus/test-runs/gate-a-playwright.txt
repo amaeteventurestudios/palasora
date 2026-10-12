@@ -1,0 +1,182 @@
+
+Running 107 tests using 1 worker
+
+  ✓    1 tests/e2e/a11y.spec.ts:15:7 › T-040 axe WCAG 2.2 AA (incl. contrast), light theme, public pages (1.2m)
+  ✓    2 tests/e2e/a11y.spec.ts:15:7 › T-040 axe WCAG 2.2 AA (incl. contrast), dark theme, public pages (1.1m)
+  ✓    3 tests/e2e/a11y.spec.ts:32:5 › T-040 axe on Command Center (light) (18.5s)
+  ✓    4 tests/e2e/a11y.spec.ts:44:5 › T-040 keyboard: skip link, focus visible, dialog traps and returns focus, Esc closes (1.0s)
+  ✓    5 tests/e2e/a11y.spec.ts:65:5 › T-040 reduced motion honored (858ms)
+  ✓    6 tests/e2e/admin.spec.ts:14:5 › T-029 RBAC: member → forbidden; anonymous → sign-in; moderator cannot approve (2.1s)
+  ✓    7 tests/e2e/admin.spec.ts:24:5 › T-029 Overview shows real, labeled metrics and integration states; screenshots (6.7s)
+  ✓    8 tests/e2e/admin.spec.ts:41:5 › T-021 revision conflict (409-style) and publishing kill switch (6.5s)
+  ✓    9 tests/e2e/admin.spec.ts:73:5 › T-021/T-022 medium-risk draft: moderator/reviewer limits, flags need a note, editor publishes; AI roles ≤3 go public with it (3.1s)
+  ✓   10 tests/e2e/admin.spec.ts:101:5 › T-024 correction: revision bump, public banner, corrections index, OG version (5.9s)
+  ✓   11 tests/e2e/admin.spec.ts:118:5 › T-013 rights: pending source test-fetch makes no network request; revoke holds drafts (4.3s)
+  ✓   12 tests/e2e/admin.spec.ts:126:5 › T-030 sponsor inquiry: durable reference, honest NOT_CONFIGURED forward state (3.1s)
+  ✓   13 tests/e2e/admin.spec.ts:145:5 › T-027/T-028 analytics: consent-gated event written once, opt-out sends nothing, ETL aggregates (10.0s)
+  ✓   14 tests/e2e/member.spec.ts:11:5 › T-010 (v1.4) humans observe: no human reply box, and the API refuses a signed-in human reply (2.3s)
+  ✓   15 tests/e2e/member.spec.ts:27:5 › T-011 (v1.4) humans cannot vote: vote API refused for members, scores are read-only agent scores (1.9s)
+  ✓   16 tests/e2e/member.spec.ts:36:5 › T-009 auth: wrong password, logout, anonymous/cross-origin writes refused, tenant-bound sessions (5.1s)
+  ✓   17 tests/e2e/member.spec.ts:63:5 › T-009 sign-up → mail-sink verification link → owner can activate an owner-verified agent; unverified cannot be verified (2.7s)
+  ✓   18 tests/e2e/member.spec.ts:83:5 › T-012 report an AI reply → moderator quarantines → reply hidden; audit recorded; restore works (7.2s)
+
+  ✓   19 tests/e2e/outage.spec.ts:8:5 › T-034/T-035 editorial service + model down: public site stays 200, search degrades honestly, admin shows the outage (6.9s)
+  ✓   20 tests/e2e/public.spec.ts:6:5 › T-004 JS-disabled SSR shows headline, date, source and links without login (1.1s)
+  ✘   21 tests/e2e/public.spec.ts:22:5 › S01 desktop shows intro + counters + Exchange before the feed; first conversation above the fold at 390x844 (2.9s)
+  ✓   22 tests/e2e/public.spec.ts:34:5 › T-005 no horizontal overflow at 320/375/390/768 on key pages (9.0s)
+  ✓   23 tests/e2e/public.spec.ts:45:5 › T-006 every feed tab is a working route with real records (3.6s)
+  ✓   24 tests/e2e/public.spec.ts:60:5 › T-007 country + topic filters combine via URL; back/forward restores; empty state (2.0s)
+  ✓   25 tests/e2e/public.spec.ts:75:5 › T-008 search finds approved text, folds accents, never returns drafts (1.9s)
+  ✓   26 tests/e2e/public.spec.ts:93:5 › T-025 share intents use the canonical URL with correct encoding, no login (1.2s)
+  ✓   27 tests/e2e/public.spec.ts:108:5 › T-026 metadata: canonical, OG 1200x630, robots noindex for demo, sitemap excludes demo/drafts (1.3s)
+  ✓   28 tests/e2e/public.spec.ts:128:5 › S03 screenshots: home and story, light and dark, 320/390/768/1440 (15.7s)
+  ✓   29 tests/e2e/public.spec.ts:143:5 › unknown host and unknown story fail closed (395ms)
+  ✓   30 tests/e2e/tenant.spec.ts:9:5 › T-033 sample tenant has its own branding and content; platform content invisible there (1.7s)
+  ✓   31 tests/e2e/tenant.spec.ts:30:5 › T-033 sessions, roles and admin views are tenant-bound (5.2s)
+  ✓   32 tests/e2e/tenant.spec.ts:60:5 › T-033 platform admin cannot publish tenant B drafts through tenant A host (2.2s)
+  ✓   33 tests/e2e/v13.spec.ts:23:5 › A-04/A-06/A-07 demo thread: nested AI replies arrive live without reload; replay is ordered and duplicate-free (12.4s)
+  ✓   34 tests/e2e/v13.spec.ts:67:5 › A-06 (v1.4) an open thread is live for observers; the human reply path is closed (agent live replies: v14.spec.ts) (4.3s)
+  ✓   35 tests/e2e/v13.spec.ts:77:5 › A-09 AI posts never count as human demand: trend audit shows AI posts excluded (2.6s)
+  ✓   36 tests/e2e/v13.spec.ts:86:5 › A-02/A-10 held or rejected candidates emit no public event and are visible to editors with risk basis (2.4s)
+  ✓   37 tests/e2e/v13.spec.ts:103:5 › L-01 Nigeria guest: English UI, Nigeria edition, feed immediately visible; no-country fallback is safe (2.7s)
+  ✓   38 tests/e2e/v13.spec.ts:115:5 › L-02 Senegal guest with no conflicting language gets French UI automatically (1.6s)
+  ✓   39 tests/e2e/v13.spec.ts:124:5 › L-03/L-18 Arabic market: RTL UI, usable menus and map, numerals and source URLs legible (4.1s)
+  ✓   40 tests/e2e/v13.spec.ts:145:5 › L-04 saved explicit English + Nigeria edition survive a trip to Senegal (2.5s)
+  ✓   41 tests/e2e/v13.spec.ts:156:5 › L-05/L-24 browser French beats coarse English-country default; a visible override persists across refresh and login (7.5s)
+  ✓   42 tests/e2e/v13.spec.ts:175:5 › L-08/L-09/L-17 French reading: honest pending → machine label with original link; Pidgin (MT disabled) falls back openly (3.7s)
+  ✓   43 tests/e2e/v13.spec.ts:202:5 › L-08/L-23 editor can see, correct and block translations; geography evidence and coverage gaps are inspectable (5.3s)
+  ✓   44 tests/e2e/v13.spec.ts:222:5 › L-10/L-19 Nigeria map: 36 states + FCT, every area keyboard-reachable, text list equivalent (3.6s)
+  ✓   45 tests/e2e/v13.spec.ts:240:5 › L-11/L-14 state drill filters real stories or says Limited reporting; no glow without real recent activity (1.7s)
+  ✓   46 tests/e2e/v13.spec.ts:252:5 › L-15/L-16 home shows two separately labelled trend panels with freshness and origin; cross-border click keeps language (1.9s)
+  ✓   47 tests/e2e/v13.spec.ts:272:5 › L-20 no geolocation request on load; site fully usable with geolocation denied (4.2s)
+  ✓   48 tests/e2e/v13.spec.ts:288:5 › L-19 reduced motion: no running animations on home or Local Pulse (1.8s)
+L-22 {"/ visible_ms":5407,"/ fcp_ms":2388,"/ cls":0,"/local-pulse?country=NG visible_ms":1487,"/local-pulse?country=NG fcp_ms":1000,"/local-pulse?country=NG cls":0.004847683518984703}
+  ✓   49 tests/e2e/v13.spec.ts:299:5 › L-22 performance: first story and map render fast on a throttled mobile profile; no layout shift from the map (12.7s)
+  ✓   50 tests/e2e/v13.spec.ts:328:5 › L-25 demo content is labelled as fictional and kept out of trend popularity (2.1s)
+  ✓   51 tests/e2e/v13.spec.ts:336:5 › S-v13 screenshots: home rail, Local Pulse, Explore Africa, My Africa at 320/390/768/1440, light and dark (32.8s)
+  ✓   52 tests/e2e/v13.spec.ts:354:5 › A-05 rights revocation propagates: topic withdrawn, public correction, thread_paused event (4.9s)
+  ✓   53 tests/e2e/v13.spec.ts:376:5 › L-03 header menus stay inside the viewport in RTL and LTR at 320/390 (9.4s)
+  ✓   54 tests/e2e/v131.spec.ts:14:5 › v1.3.1 reads count after 5 s visible, once per visitor per day; shares count; headless and staff never count (20.0s)
+  ✓   55 tests/e2e/v131.spec.ts:58:5 › v1.3.1 engagement endpoint refuses cross-origin, invalid and unpublished targets (69ms)
+  ✓   56 tests/e2e/v131.spec.ts:67:5 › T-009 an expired session is refused even with a valid cookie (time-travel on expires_at) (2.6s)
+  ✓   57 tests/e2e/v131.spec.ts:82:5 › T-012 (v1.4) public corrections are agent-only: the human edit path is closed (agent corrections: v14.spec.ts) (1.8s)
+  ✓   58 tests/e2e/v14.spec.ts:38:7 › v1.4 social network › UI-01/UI-05/UI-07 locked hero copy (on /about and, since ISSUE-01, the home page), observer rule, real counters, nav, no chip wall (2.5s)
+  ✓   59 tests/e2e/v14.spec.ts:71:7 › v1.4 social network › AG-01 60 distinct Palavva-operated seed agents, labeled, never counted as verified (182ms)
+  ✓   60 tests/e2e/v14.spec.ts:84:7 › v1.4 social network › UI-03 human public writes fail at the API for guests and signed-in humans (1.3s)
+  ✓   61 tests/e2e/v14.spec.ts:95:7 › v1.4 social network › ONB-03 external agent: register, unclaimed cannot write, claim -> owner_control, Verified Agents +1 (961ms)
+  ✓   62 tests/e2e/v14.spec.ts:114:7 › v1.4 social network › ACT-01/ACT-02 a real post appears live for an open guest page, counters reconcile to DB (6.2s)
+  ✓   63 tests/e2e/v14.spec.ts:143:7 › v1.4 social network › AG-04 nested replies, one-vote semantics, self and same-owner votes refused, retraction and correction (5.2s)
+  ✓   64 tests/e2e/v14.spec.ts:191:7 › v1.4 social network › ONB-03 revoked key and cross-tenant key are refused (692ms)
+  ✓   65 tests/e2e/v14.spec.ts:201:7 › v1.4 social network › MSG-01/MSG-03 consented DMs: commercial refused without opt-in, approval by recipient owner, forwarded link reveals nothing (4.4s)
+  ✓   66 tests/e2e/v14.spec.ts:228:7 › v1.4 social network › ONB-01/UI-04 hosted agent wizard without avatar, owner instruction, pause/resume, cross-owner isolation (11.8s)
+  ✓   67 tests/e2e/v14.spec.ts:278:7 › v1.4 social network › UI-06 SubPals: directory, search, watch count from rows, Nigeria vs Ghana suggestions with language unchanged (14.1s)
+  ✓   68 tests/e2e/v14.spec.ts:303:7 › v1.4 social network › AG-02/AG-06 operator runs one bounded city window; decisions are recorded; CITY_PAUSED stops new work (36.2s)
+  ✓   69 tests/e2e/v14.spec.ts:338:7 › v1.4 social network › UI-08/UI-09 responsive and themes: 320/375/768/1024/1280/1440 without horizontal scroll, light/dark tokens (29.9s)
+  ✓   70 tests/e2e/v15.spec.ts:39:5 › V15-01 country edition scopes feed, banner and API (Liberia never shows South African items) (2.7s)
+  ✓   71 tests/e2e/v15.spec.ts:59:5 › V15-02 Senegal → Liberia → Cameroon switching through the UI; rails follow the edition (4.4s)
+  ✓   72 tests/e2e/v15.spec.ts:75:5 › V15-03 'Save as my home edition' persists to the account; viewing never overwrites it (4.1s)
+  ✓   73 tests/e2e/v15.spec.ts:93:5 › V15-04 SSE stream bound to an edition never delivers another region's events (12.0s)
+  ✓   74 tests/e2e/v15.spec.ts:113:7 › V15-05 mobile shell at 320px: no sideways scroll, five-item bottom nav, drawer (2.7s)
+  ✓   75 tests/e2e/v15.spec.ts:113:7 › V15-05 mobile shell at 375px: no sideways scroll, five-item bottom nav, drawer (2.5s)
+  ✓   76 tests/e2e/v15.spec.ts:113:7 › V15-05 mobile shell at 390px: no sideways scroll, five-item bottom nav, drawer (2.8s)
+  ✓   77 tests/e2e/v15.spec.ts:113:7 › V15-05 mobile shell at 428px: no sideways scroll, five-item bottom nav, drawer (2.4s)
+  ✓   78 tests/e2e/v15.spec.ts:113:7 › V15-05 mobile shell at 768px: no sideways scroll, five-item bottom nav, drawer (2.5s)
+  ✓   79 tests/e2e/v15.spec.ts:132:5 › V15-06 Exchange: earned eligibility → listing → matched trade → portfolio → reconciliation (1.9s)
+  ✓   80 tests/e2e/v15.spec.ts:163:5 › V15-07 Command Center: all 12 workspaces render a chart or map and a scope narrative (12.2s)
+  ✓   81 tests/e2e/v15.spec.ts:180:5 › V15-08 human DAU is not moved by agents, bots, headless QA or staff (6.7s)
+  ✓   82 tests/e2e/v15.spec.ts:194:5 › V15-09 developer surfaces: OpenAPI, MCP (auth required, observer rule), A2A card (2.3s)
+  ✓   83 tests/e2e/v15.spec.ts:209:5 › V15-10 agent directory shows registered vs active honestly and filters by country (1.6s)
+  ✓   84 tests/e2e/v16.spec.ts:29:5 › V16-01 an Arabic agent post is labelled Arabic only after verification and renders right-to-left (1.5s)
+  ✓   85 tests/e2e/v16.spec.ts:50:5 › V16-02 a mislabelled write is refused: French text claimed as Arabic, and hosted non-English text without a gloss (270ms)
+  ✓   86 tests/e2e/v16.spec.ts:61:5 › V16-03 Command Center engine page diagnoses all 54 countries and keeps humans separate (6.4s)
+  ✓   87 tests/e2e/v16.spec.ts:75:5 › V16-04 DB gate path 5: a link-only card cannot carry an excerpt or come from a revoked publisher (237ms)
+  ✓   88 tests/e2e/v17.spec.ts:23:5 › V17-01 home: restored intro, counters and Exchange above the feed; phone keeps a real post above the fold (3.2s)
+  ✓   89 tests/e2e/v17.spec.ts:35:5 › V17-02 Log in and Sign up on the same domain return the reader to where they were (4.5s)
+  ✓   90 tests/e2e/v17.spec.ts:53:5 › V17-03 every footer link resolves (4.4s)
+  ✓   91 tests/e2e/v17.spec.ts:62:5 › V17-04 admin APIs: anonymous 401, member 403, missing CSRF or cross-site origin 403 (3.9s)
+  ✓   92 tests/e2e/v17.spec.ts:76:5 › V17-05 Population Manager: pick two countries, Add 3, preview exact delta, launch, watch the job complete (9.6s)
+  ✓   93 tests/e2e/v17.spec.ts:111:5 › V17-06 Control Room: a country override is reviewed, applied with a reason and persists across reloads (10.3s)
+  ✓   94 tests/e2e/v17.spec.ts:142:5 › V17-07 Local Pulse: every country has a clickable ADM1 map with three independent layers (5.0s)
+  ✓   95 tests/e2e/v17.spec.ts:158:5 › V17-08 Exchange: Explore link works, terms are explained, prices are Pals/share (7.1s)
+  ✓   96 tests/e2e/v17.spec.ts:170:5 › V17-09 a committed agent vote updates the score live with a brief highlight (no reload) (3.8s)
+  ✓   97 tests/e2e/v17.spec.ts:193:5 › V17-10 password reset: generic answer, single-use emailed link, old sessions revoked, new password works (7.7s)
+  ✓   98 tests/e2e/v18-admin-layout.spec.ts:24:5 › ISSUE-04 route discovery found the Command Center (17ms)
+  ✓   99 tests/e2e/v18-admin-layout.spec.ts:30:7 › ISSUE-04 every admin route at 390px: full width, no sideways scroll, 9-digit values fit (24.7s)
+  ✓  100 tests/e2e/v18-admin-layout.spec.ts:30:7 › ISSUE-04 every admin route at 1440px: full width, no sideways scroll, 9-digit values fit (39.9s)
+  ✓  101 tests/e2e/v18-admin-layout.spec.ts:30:7 › ISSUE-04 every admin route at 2560px: full width, no sideways scroll, 9-digit values fit (44.1s)
+  ✓  102 tests/e2e/v18-wave-a.spec.ts:12:5 › ISSUE-27 desktop rail Resources: all seven links, stage labels, no Careers/Press, all resolve (3.0s)
+  ✓  103 tests/e2e/v18-wave-a.spec.ts:27:5 › ISSUE-27 mobile drawer has the same Resources group (2.1s)
+  ✓  104 tests/e2e/v18-wave-a.spec.ts:37:5 › ISSUE-27 staged pages say so; Best of Palavva filters by period and SubPal (2.6s)
+  ✓  105 tests/e2e/v18-wave-a.spec.ts:56:5 › ISSUE-25 tabs: Realtime (with connection dot), Hot, Random are real distinct sorts; live status is honest (3.8s)
+  ✓  106 tests/e2e/v18-wave-a.spec.ts:71:5 › ISSUE-25 a failed live connection is shown as not live (no fake heartbeat) (1.9s)
+  ✓  107 tests/e2e/v18-wave-a.spec.ts:80:5 › ISSUE-25 Hot right now reacts to genuine committed agent votes from different agents, without reload (6.5s)
+
+
+  1) tests/e2e/public.spec.ts:22:5 › S01 desktop shows intro + counters + Exchange before the feed; first conversation above the fold at 390x844 
+
+    Error: first card top at 390px
+
+    expect(received).toBeLessThan(expected)
+
+    Expected: < 700
+    Received:   726.6875
+
+      28 |   await page.setViewportSize({ width: 390, height: 844 });
+      29 |   await page.goto("/");
+    > 30 |   expect((await page.getByTestId("story-card").first().boundingBox())!.y, "first card top at 390px").toBeLessThan(700);
+         |                                                                                                      ^
+      31 |   await expect(page.getByTestId("stat-strip")).toHaveCount(1);
+      32 | });
+      33 |
+        at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/public.spec.ts:30:102
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-6.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #5: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #6: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #7: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-10.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #8: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #9: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #10: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #11: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/test-failed-11.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../docs/evidence/e2e/artifacts/public-S01-desktop-shows-i-60ace-n-above-the-fold-at-390x844/error-context.md
+
+  1 failed
+    tests/e2e/public.spec.ts:22:5 › S01 desktop shows intro + counters + Exchange before the feed; first conversation above the fold at 390x844 
+  106 passed (13.4m)
+exit 1
