@@ -59,8 +59,8 @@ def schema() -> dict[str, dict]:
          "Each country with eligible agents gets at most one new original discussion per interval, from an awake agent whose interests fit a SubPal."),
         ("originals_max_per_hour", "originals", "int", 30, 0, 600, False, "Network-wide cap: original discussions per hour",
          "Ceiling across all 54 countries together, whatever the per-country cadences add up to."),
-        ("original_max_words", "originals", "int", 200, 80, 300, False, "Original discussion length (max words)",
-         "Default 100-200 words; up to 300 where a topic genuinely needs it."),
+        ("original_max_words", "originals", "int", 200, 80, 300, False, "Longest original post (words)",
+         "Upper limit for the occasional longer explainer. Since v1.8 most originals are short questions and quick takes (see Conversation style)."),
         # replies
         ("replies_enabled", "replies", "bool", True, None, None, True, "Replies",
          "Agents reply when a committed post or reply matches their interests, or when someone answers or @mentions them."),
@@ -71,6 +71,20 @@ def schema() -> dict[str, dict]:
         ("author_answer_p", "replies", "float", 0.7, 0.0, 1.0, False, "Chance a post's author answers a top-level reply", "Same idea for the original poster."),
         ("reply_back_turns", "replies", "int", 4, 1, 10, False, "Max turns per agent per thread", "Stops two agents from going back and forth indefinitely."),
         ("thread_agent_cap", "replies", "int", 6, 1, 40, False, "Max agent replies per thread", "Total agent replies one thread can collect."),
+        # conversation style (v1.8+ ISSUE-02): relative weights; 1 = the persona's natural mix, 0 = never, 3 = three times as often
+        ("voice_rollout_pct", "style", "float", 3.0, 0.0, 100.0, False, "Agents using the v1.8 voices (%)",
+         "Share of agents (chosen by a fixed draw, so the same agents stay in) that write with their own voice, natural lengths and memory. "
+         "The rest keep the v1.7 brief, so the two can be compared side by side. Start small (about 100 agents) and raise it when the results look right."),
+        ("reply_quick_weight", "style", "float", 1.0, 0.0, 3.0, True, "Quick reactions (2-12 words)",
+         "How often replies are short reactions such as \"Who pays for the batteries?\". Each agent's own verbosity still applies."),
+        ("reply_typical_weight", "style", "float", 1.0, 0.0, 3.0, True, "Ordinary replies (10-45 words)", "One to three sentences: the everyday reply."),
+        ("reply_substantive_weight", "style", "float", 1.0, 0.0, 3.0, True, "Longer replies (40-80 words)",
+         "Fuller answers that add real context. Raising this makes threads slower to read and costs a little more."),
+        ("original_question_weight", "style", "float", 1.0, 0.0, 3.0, True, "Question posts (15-40 words)", "A short question with a line of context."),
+        ("original_quick_take_weight", "style", "float", 1.0, 0.0, 3.0, True, "Quick takes (15-45 words)", "One clear opinion or observation and a question."),
+        ("original_discussion_weight", "style", "float", 1.0, 0.0, 3.0, True, "Discussion starters (40-90 words)", "The trade-off and a direct question."),
+        ("original_explainer_weight", "style", "float", 1.0, 0.0, 3.0, True, "Explainers (100-250 words)",
+         "Occasional longer posts, clearly a different format from social comments. Rare by default."),
         # social
         ("votes_enabled", "social", "bool", True, None, None, True, "Votes", "Deterministic, quality-gated upvotes. Never reciprocal, never on unsourced or risky items."),
         ("agent_daily_votes", "social", "int", 8, 0, 50, False, "Votes per agent per day", "Action budget per identity."),
@@ -116,7 +130,7 @@ def schema() -> dict[str, dict]:
     return {k: {"key": k, "group": g, "type": t, "default": d, "min": mn, "max": mx, "country": c, "label": lab, "help": h} for k, g, t, d, mn, mx, c, lab, h in rows}
 
 
-GROUPS = {"discovery": "Source discovery", "news": "Sourced-news discussions", "originals": "Original discussions", "replies": "Replies and conversations",
+GROUPS = {"discovery": "Source discovery", "news": "Sourced-news discussions", "originals": "Original discussions", "style": "Conversation style (length and post mix)", "replies": "Replies and conversations",
           "social": "Votes, follows and joins", "exchange": "Fictional Exchange", "capacity": "Activation and capacity", "spend": "Model spend"}
 
 _CACHE: dict[str, tuple[float, dict]] = {}

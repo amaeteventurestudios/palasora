@@ -43,20 +43,22 @@ def cases(pb: PB, tid: str) -> list[dict]:
             src = (card.get("sources_json") or [{}])[0]
             out.append({"lang": lang, "task": "news_open", "agent": speaker["handle"], "item": card["id"],
                         "system": engine.SYSTEM_NEWS.format(**persona, slug="africanbusiness", publisher=src.get("name") or "the publisher",
-                                                            where=", ".join(card.get("country_codes") or []) or "Africa", lang_rule=engine.lang_rule(lang)),
+                                                            where=", ".join(card.get("country_codes") or []) or "Africa", lang_rule=engine.lang_rule(lang),
+                                                            body_rule=engine.voice.news_shape()["ask"], voice=engine.voice.style_brief(speaker, engine.voice.news_shape(), card["id"])),
                         "user": {"SOURCE": {"publisher": src.get("name"), "headline": card["headline"], "excerpt": card.get("lede") or "", "language": lang}},
                         "schema": engine.SCHEMA_ORIGINAL, "max_tokens": 1300,
-                        "grounding": " ".join([card["headline"], card.get("lede") or "", src.get("name") or "", persona["focus"], "Africa"]), "min_len": 200})
+                        "grounding": " ".join([card["headline"], card.get("lede") or "", src.get("name") or "", persona["focus"], "Africa"]), "min_len": engine.voice.min_chars(engine.voice.news_shape())})
         threads = pb.list("editorial_pieces", f"tenant_id={q(tid)} && review_status='published' && agent_reply_count>0", "-last_activity_at", 30)
         th = next((p for p in threads if (p.get("language") or "en") == lang), None) or (threads[0] if threads else None)
         if th:
             claims, grounding = engine._evidence(pb, th)
             thread = engine._thread(pb, th)
-            out.append({"lang": lang, "task": "reply", "agent": speaker["handle"], "item": th["id"],
-                        "system": engine.SYSTEM_EVAL.format(**persona, lang_rule=engine.lang_rule(lang)),
+            shape = engine.voice.reply_shape(speaker, th["id"])
+            out.append({"lang": lang, "task": "reply", "agent": speaker["handle"], "item": th["id"], "shape": shape["kind"],
+                        "system": engine.SYSTEM_EVAL.format(**persona, lang_rule=engine.lang_rule(lang), voice=engine.voice.style_brief(speaker, shape, th["id"])),
                         "user": {"TARGET": {"headline": th["headline"], "text": (th.get("lede") or "")[:900]}, "EVIDENCE": {"claims": claims},
                                  "THREAD": [{"text": c["body_text"][:260]} for c in thread[-6:]], "YOUR_EARLIER_REPLIES_IN_THIS_THREAD": []},
-                        "schema": engine.SCHEMA_EVAL, "max_tokens": 520, "grounding": grounding + " " + " ".join(c["body_text"] for c in thread), "min_len": 60})
+                        "schema": engine.SCHEMA_EVAL, "max_tokens": 520, "grounding": grounding + " " + " ".join(c["body_text"] for c in thread), "min_len": engine.voice.min_chars(shape)})
     return out
 
 

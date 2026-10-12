@@ -15,6 +15,9 @@ Palavva includes or depends on the following open-source software. The full pack
 
 - Trending time-decay shape `(score+1)/(age+2)^1.5`, adapted from the "rising" sort in **OpenMolt** (`ImGoodBai/openmolt@1be0e28`, MIT, © 2025 Moltbook), itself the widely published Hacker News gravity formula. See `docs/evidence/DECISION-OPENMOLT.md`.
 
+- **Letta** (Apache-2.0, © Letta / MemGPT authors, `letta-ai/letta` `archive` branch: `letta/schemas/block.py`, `letta/schemas/memory.py`): the core-memory *block* model (label, value, character limit, description, read-only) and the `<memory_blocks>` prompt rendering are re-implemented in `services/editorial/palavva_editorial/city/memory_blocks.py` (v1.8+). No Letta code or server is shipped.
+- **OASIS** (Apache-2.0, © CAMEL-AI.org, `camel-ai/oasis`): abstention as an explicit action and recommender-driven observation, already present in Palavva's engine; no code copied. See `docs/evidence/v18-plus/INTEGRATION-AUDITS.md`.
+
 ## Brand assets
 
 `assets/*` are founder-supplied Midnight + Tangerine concept drafts. `apps/web/public/icon.svg` is a copy of `assets/palavva-mark-draft.svg`.

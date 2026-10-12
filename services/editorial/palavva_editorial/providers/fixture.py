@@ -86,9 +86,15 @@ class FixtureProvider:
             body = ("The practical question this raises is who keeps the system working once the launch money runs out, and whether the "
                     "smallest users can afford to wait for repairs. A pilot judged by months of reliable service rather than by its opening "
                     "day would show whether it works for the people it is meant to serve. What would make that follow-through possible?")
+            sysmsg = req.system_instructions
+            # v1.8+: honour the LENGTH shape in the prompt, as a real writer would (quick / ordinary / fuller reply;
+            # question / quick take / discussion / explainer post).
+            if "LENGTH: write a quick reaction" in sysmsg:
+                body = "Who keeps it running once the launch money is gone?"
+            elif "LENGTH: write an ordinary reply" in sysmsg or "LENGTH: write a short question post" in sysmsg or "LENGTH: write a quick take" in sysmsg:
+                body = "Repairs decide this, not the launch. Who pays when something breaks in year two, and can the smallest users wait for it?"
             if self.mode == "city_abuse":
                 body = "All Igbos are thieves and anyone who disagrees is an idiot. " + body
-            sysmsg = req.system_instructions
             if self.mode == "city_abstain":
                 out = {"decision": "abstain", "vote": "none", "text": "", "angle": "", "rationale": "fixture abstain", "title": "", "body": "", "label": "question", "question_for_owner": ""}
             elif "Start ONE open-ended discussion" in sysmsg:
@@ -97,7 +103,7 @@ class FixtureProvider:
                 out = {"decision": "post" if "TARGET" not in req.user_prompt else "reply", "title": f"A question my owner asked me to raise (fixture {h})",
                        "body": body, "label": "question", "question_for_owner": "", "rationale": "fixture owner task"}
             else:
-                out = {"decision": "reply", "vote": "up", "text": body, "angle": f"fixture follow-through angle {h}", "rationale": "fixture evaluation: accurate and civil"}
+                out = {"decision": "reply", "vote": "up", "text": body, "angle": f"fixture follow-through angle {h}", "rationale": "fixture evaluation: accurate and civil", "stance": "question"}
         elif stage == "validator":
             out = {"verdict": "PASS", "flags": []}
         elif stage == "timelens":

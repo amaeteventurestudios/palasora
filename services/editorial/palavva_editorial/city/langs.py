@@ -92,7 +92,9 @@ def verify(text: str, claimed: str) -> dict:
     if claimed == "zgh":
         return {"ok": det == "zgh", "detected": det, "confidence": conf, "method": "script:tifinagh"}
     if claimed in VERIFIED | PILOT_DETECTABLE:
-        ok = det == claimed and (conf >= MIN_CONF or claimed == "en" and conf >= 0.4)
+        # v1.8+: detectors are less confident on a few words, so a short reply needs agreement plus a lower bar (0.45).
+        floor = MIN_CONF if len(text.split()) > 8 else min(MIN_CONF, 0.45)
+        ok = det == claimed and (conf >= floor or claimed == "en" and conf >= 0.4)
         return {"ok": ok, "detected": det, "confidence": round(conf, 3), "method": "lingua"}
     return {"ok": False, "detected": det, "confidence": round(conf, 3), "method": "no-verifier"}
 

@@ -348,3 +348,49 @@ def test_v15_registry_is_idempotent_distinct_and_pan_african(seeded):
     assert len(sig) == 940
     # Cohorts 1-10 exist so activation can be measured step by step (other tests may change statuses, so status is not asserted here).
     assert {a["cohort"] for a in agents if a["seed_key"].startswith("seed15:")} == set(range(1, 11))
+
+
+def test_v18_voice_rollout_reply_uses_voice_shape_and_memory_blocks(city, monkeypatch):
+    """ISSUE-02: an agent inside the voice rollout gets its own voice + length shape + MEMORY; the reply is short when the
+    shape asks for it, is recorded with its shape/word count, and the agent's stance is stored as a Letta-style block."""
+    from palavva_editorial.city import engine as eng, voice
+    pb, t, s, queue, calls = city
+    monkeypatch.setattr(eng, "_v18", lambda agent: True)
+    monkeypatch.setattr(voice, "reply_shape", lambda *a, **k: {"kind": "quick", **voice.REPLY_SHAPES["quick"]})
+    seen = {}
+    real = FixtureProvider.generate
+    def spy(self, req):
+        seen["system"], seen["user"] = req.system_instructions, req.user_prompt
+        return real(self, req)
+    monkeypatch.setattr(FixtureProvider, "generate", spy)
+    p = football_topic(pb, t, f"city-v18-{int(time.time() * 1000)}")
+    agent = pb.first("agents", f"tenant_id={q(t['id'])} && handle='PitchReader'")
+    _act_job(queue, t, agent, p)
+    outs = run(queue, pb, s, FixtureProvider(), ["city_act"])
+    assert outs[0][1]["outcome"] == "reply"
+    assert "LENGTH: write a quick reaction" in seen["system"] and "VOICE:" in seen["system"] and "20-80 words" not in seen["system"]
+    assert "<memory_blocks>" in seen["user"]
+    assert len(calls[0][1]["body"].split()) <= 12
+    row = pb.first("agent_actions", f"tenant_id={q(t['id'])} && agent_id={q(agent['id'])} && target_id={q(p['id'])}")
+    assert row["rules"]["shape"] == "quick" and row["rules"]["voice"] == voice.VERSION and row["rules"]["words"] <= 12
+    blocks = pb.get("agents", agent["id"])["memory"]["blocks"]
+    assert blocks["stances"][-1]["thread"] == p["id"] and blocks["stances"][-1]["stance"] == "question"
+
+
+def test_v18_agents_outside_rollout_keep_the_v17_brief(city, monkeypatch):
+    from palavva_editorial.city import engine as eng
+    pb, t, s, queue, calls = city
+    monkeypatch.setattr(eng, "_v18", lambda agent: False)
+    seen = {}
+    real = FixtureProvider.generate
+    def spy(self, req):
+        seen["system"], seen["user"] = req.system_instructions, req.user_prompt
+        return real(self, req)
+    monkeypatch.setattr(FixtureProvider, "generate", spy)
+    p = football_topic(pb, t, f"city-v17-{int(time.time() * 1000)}")
+    agent = pb.first("agents", f"tenant_id={q(t['id'])} && handle='PitchReader'")
+    _act_job(queue, t, agent, p)
+    assert run(queue, pb, s, FixtureProvider(), ["city_act"])[0][1]["outcome"] == "reply"
+    assert "Reply text: 20-80 words" in seen["system"] and "VOICE:" not in seen["system"] and "MEMORY" not in seen["user"]
+    row = pb.first("agent_actions", f"tenant_id={q(t['id'])} && agent_id={q(agent['id'])} && target_id={q(p['id'])}")
+    assert row["rules"]["voice"] == "v1.7"

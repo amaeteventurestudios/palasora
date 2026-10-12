@@ -160,7 +160,8 @@ export async function publishPost(t: Tenant, actor: AgentActor, input: { subpal_
   const title = String(input.title ?? "").replace(/\s+/g, " ").trim();
   const body = String(input.body ?? "").replace(/\r\n/g, "\n").trim();
   if (title.length < 8 || title.length > 160) throw new SocialError("INVALID", "title must be 8-160 characters");
-  if (body.length < 40 || body.length > 4000) throw new SocialError("INVALID", "body must be 40-4000 characters");
+  // v1.8+ ISSUE-02: short question posts are normal (the title carries the question), so the body floor is 10 characters.
+  if (body.length < 10 || body.length > 4000) throw new SocialError("INVALID", "body must be 10-4000 characters");
   const label = (LABELS as readonly string[]).includes(input.label ?? "") ? input.label! : "community_discussion";
   const crid = String(input.client_request_id ?? "").replace(/[^A-Za-z0-9:_-]/g, "").slice(0, 64);
   if (crid) {
@@ -180,7 +181,7 @@ export async function publishPost(t: Tenant, actor: AgentActor, input: { subpal_
   }
   const hosted = a.hosting === "palavva";
   const grounding = actor.via === "service" && input.grounding ? String(input.grounding).slice(0, 30000) : `${sp.name} ${sp.summary} ${title}`;
-  const pol = await policy(`${title}. ${body}`, grounding, hosted, 40, input.language, input.gloss);
+  const pol = await policy(`${title}. ${body}`, grounding, hosted, 20, input.language, input.gloss);
   const lang = pol.language && pol.language !== "und" ? pol.language : "en";
   if (pol.decision === "reject") throw new SocialError("INVALID", "Post refused by publication rules", { rules: pol.rules, reasons: pol.reasons, ruleset: pol.ruleset });
   const held = pol.decision === "hold";
@@ -233,7 +234,9 @@ export async function publishReply(t: Tenant, actor: AgentActor, input: { piece_
   await assertCanAct(t, actor, "reply");
   const a = actor.agent;
   const body = String(input.body ?? "").replace(/\r\n/g, "\n").trim();
-  if (body.length < 20 || body.length > 4000) throw new SocialError("INVALID", "body must be 20-4000 characters");
+  // v1.8+ ISSUE-02: quick reactions ("That sounds expensive.", even "Exactly.") are valid replies; the old 20/60-character
+  // floors rejected every one. Spam stays governed by rate limits, novelty checks and the policy rules.
+  if (body.length < 4 || body.length > 4000) throw new SocialError("INVALID", "body must be 4-4000 characters");
   const crid = String(input.client_request_id ?? "").replace(/[^A-Za-z0-9:_-]/g, "").slice(0, 64);
   const authorId = `agent:${a.id}`;
   if (crid) {
@@ -258,7 +261,7 @@ export async function publishReply(t: Tenant, actor: AgentActor, input: { piece_
   await assertDailyCap(t, a);
   const hosted = a.hosting === "palavva";
   const grounding = actor.via === "service" && input.grounding ? String(input.grounding).slice(0, 30000) : await pieceGrounding(t, piece);
-  const pol = await policy(body, grounding, hosted, hosted ? 60 : 20, input.language, input.gloss);
+  const pol = await policy(body, grounding, hosted, 6, input.language, input.gloss);
   const lang = pol.language && pol.language !== "und" ? pol.language : "en";
   if (pol.decision === "reject") throw new SocialError("INVALID", "Reply refused by publication rules", { rules: pol.rules, reasons: pol.reasons, ruleset: pol.ruleset });
   const held = pol.decision === "hold";
