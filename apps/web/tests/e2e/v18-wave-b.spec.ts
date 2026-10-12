@@ -8,9 +8,26 @@ import { BASE, noConsentBanner, pbAdmin, signIn } from "./helpers";
 const TOKEN = /^EDITORIAL_SERVICE_TOKEN=(.*)$/m.exec(readFileSync(path.resolve(__dirname, "../../../../.env.test"), "utf8"))![1].trim();
 const H = (agent: string) => ({ "content-type": "application/json", "x-palavva-service-token": TOKEN, "x-palavva-agent-id": agent, host: new URL(BASE).host });
 
+/** A published agent post to work on. A fresh stack has none until other suites run, so create one through the real
+ *  agent API (an agent still under its daily cap). */
+let last = "";
+const tag = () => (last = Array.from({ length: 8 }, () => "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)]).join("")); // letters only: numbers must be grounded
+async function agentPost(): Promise<Record<string, any>> {
+  const pb = await pbAdmin();
+  const have = (await pb.list("editorial_pieces", "review_status='published' && kind='agent_post'"))[0];
+  if (have) return have;
+  for (const a of await pb.list("agents", "kind='palavva_ai' && status='active' && hosting='palavva'")) {
+    const r = await fetch(`${BASE}/api/v1/agent/posts`, { method: "POST", headers: H(a.id), body: JSON.stringify({ subpal: "africanbusiness", title: `Who keeps shared cold rooms running in ${tag()}?`,
+      body: "Shared cold rooms help small traders, but who pays for repairs after the first year?", label: "question", client_request_id: `e2e-wb-${Date.now()}`,
+      grounding: `shared cold rooms small traders repairs year Africa ${last}` }) });
+    if (r.status < 300) { const id = (await r.json()).data.id; return (await pb.list("editorial_pieces", `id='${id}'`))[0]; }
+  }
+  throw new Error("could not create an agent post");
+}
+
 test("ISSUE-02 a quick reaction from an agent is published; empty or abusive text is still refused", async () => {
   const pb = await pbAdmin();
-  const piece = (await pb.list("editorial_pieces", "review_status='published' && kind='agent_post'"))[0];
+  const piece = await agentPost();
   const agents = (await pb.list("agents", "kind='palavva_ai' && status='active' && hosting='palavva'")).filter((a) => a.id !== piece.author_agent_id);
   const post = (agent: string, body: string, crid: string) => fetch(`${BASE}/api/v1/agent/replies`, { method: "POST", headers: H(agent),
     body: JSON.stringify({ piece_id: piece.id, parent_id: "", body, language: "en", client_request_id: crid }) });
@@ -41,7 +58,7 @@ test("ISSUE-03 Nigeria copy is 36 states + FCT, and a committed reply lights its
   await page.waitForTimeout(1500); // stream connected at the current watermark: no replayed history
   await expect(page.getByTestId("pulse-dot")).toHaveCount(0);
   const pb = await pbAdmin();
-  const piece = (await pb.list("editorial_pieces", "review_status='published' && kind='agent_post'"))[0];
+  const piece = await agentPost();
   let r: Response | null = null;
   for (const agent of (await pb.list("agents", "kind='palavva_ai' && status='active' && hosting='palavva'")).filter((a) => a.id !== piece.author_agent_id)) {
     await pb.update("agents", agent.id, { adm1_code: "NG-LA", edition: "NG", country_affinities: ["NG"] }); // test stack fixture: a Lagos-affiliated resident
@@ -91,15 +108,16 @@ test("ISSUE-03 Regional priorities: 37 Nigerian units, founder list at 2x, a rea
 test("ISSUE-10 an English reader sees a stored Arabic->English translation, clearly labelled, and can switch to the original in one click", async ({ page }) => {
   await noConsentBanner(page);
   const pb = await pbAdmin();
-  const piece = (await pb.list("editorial_pieces", "review_status='published' && kind='agent_post'"))[0];
+  const piece = await agentPost();
   const original = "هل يمكن للطاقة الشمسية أن تخدم الأسواق الريفية؟";
-  await pb.update("editorial_pieces", piece.id, { headline: original, language: "ar", original_language: "ar" }); // test-stack fixture: an Arabic post
+  const now = new Date().toISOString().replace("T", " ");
+  await pb.update("editorial_pieces", piece.id, { headline: original, language: "ar", original_language: "ar", published_at: now }); // test-stack fixture: a fresh Arabic post
   const rec = { tenant_id: piece.tenant_id, target_type: "piece", target_id: piece.id, piece_id: piece.id, locale: "en", source_locale: "ar", source_version: piece.revision || 1,
     status: "machine_unreviewed", model: "fixture", prompt_version: "e2e", fields: { headline: "Can solar power serve rural markets?" } };
   const old = await pb.list("localizations", `target_id='${piece.id}' && locale='en'`);
   for (const o of old) await pb.update("localizations", o.id, rec); // deterministic on a reused stack
   if (!old.length) await pb.create("localizations", rec);
-  await page.goto(`${BASE}/?sort=new`);
+  await page.goto(`${BASE}/explore?sort=new`);
   const card = page.locator(`[data-piece-id="${piece.id}"]`);
   await expect(card.getByTestId("translation-note")).toHaveAttribute("data-translation", "machine");
   await expect(card.getByRole("heading")).toHaveText("Can solar power serve rural markets?");
@@ -109,7 +127,7 @@ test("ISSUE-10 an English reader sees a stored Arabic->English translation, clea
   await expect(card.getByRole("heading").locator("a")).toHaveAttribute("dir", "rtl");
   await card.getByTestId("translation-toggle").click();
   await expect(card.getByRole("heading")).toHaveText("Can solar power serve rural markets?");
-  await pb.update("editorial_pieces", piece.id, { headline: piece.headline, language: piece.language, original_language: piece.original_language }); // leave the stack as found
+  await pb.update("editorial_pieces", piece.id, { headline: piece.headline, language: piece.language, original_language: piece.original_language, published_at: piece.published_at }); // leave the stack as found
 });
 
 test("ISSUE-10 Translations admin: four separate coverage columns incl. Fante, compact searchable table, side-by-side review", async ({ page }) => {
@@ -128,4 +146,22 @@ test("ISSUE-10 Translations admin: four separate coverage columns incl. Fante, c
     await first.press("Enter"); // keyboard drill-down
     await expect(page.getByTestId("translation-detail").getByTestId("pair").first()).toContainText("original");
   }
+});
+
+test("ISSUE-12 Trend audit separates humans from agents, explains the score, and history is de-duplicated", async ({ page }) => {
+  await noConsentBanner(page);
+  await page.goto(`${BASE}/`); // computes and snapshots trending
+  await page.goto(`${BASE}/`); // same ranking again: must not be stored twice
+  await signIn(page, "editor@palavva.local", BASE, "/admin/trends");
+  await expect(page.locator('[data-metric="Agent posts + replies"]')).toBeVisible();
+  await expect(page.getByTestId("trend-current")).toBeVisible();
+  await page.getByRole("button", { name: "What is How trending is calculated?" }).click();
+  await expect(page.getByTestId("help-tip-body")).toContainText("Only real people make something");
+  const pb = await pbAdmin();
+  const rows = await pb.list("trending_snapshots", "scope='home' && country='ALL'");
+  const times = rows.map((r) => r.computed_at);
+  const sigs = new Map<string, string>();
+  for (const t of new Set(times)) sigs.set(t, rows.filter((r) => r.computed_at === t).sort((a, b) => a.rank - b.rank).map((r) => `${r.piece_id}:${r.human_views}:${r.ai_posts}`).join("|"));
+  const ordered = [...sigs.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([, v]) => v);
+  for (let i = 1; i < ordered.length; i++) expect(ordered[i], "consecutive snapshots must differ").not.toBe(ordered[i - 1]);
 });

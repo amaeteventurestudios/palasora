@@ -79,8 +79,9 @@ test("A-09 AI posts never count as human demand: trend audit shows AI posts excl
   await expect(page.getByTestId("trending-now")).toBeVisible();
   await signIn(page, "editor@palavva.local", BASE, "/admin/trends");
   await expect(page.getByRole("heading", { level: 1, name: "Trend audit" })).toBeVisible();
-  await expect(page.getByRole("columnheader", { name: "AI posts (excluded)" })).toBeVisible();
-  await expect(page.getByRole("columnheader", { name: "Human votes" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: /Agent replies \(not in score\)/ })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: /Readers: reads \/ shares/ })).toBeVisible();
+  await expect(page.getByTestId("narrative")).toContainText("never change the score");
 });
 
 test("A-02/A-10 held or rejected candidates emit no public event and are visible to editors with risk basis", async ({ page }) => {

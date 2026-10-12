@@ -6,9 +6,9 @@ const CHROME = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.
 
 async function summary(page: Page) {
   await page.goto("/admin/trends");
-  const cards = page.getByTestId("engagement-summary").locator(".card");
-  const val = async (i: number) => Number(await cards.nth(i).locator("p").nth(1).innerText());
-  return { reads: await val(0), shares: await val(1), bot: await val(2), dup: await val(3) };
+  // v1.8+ ISSUE-12: shared MetricCards (data-metric / data-value) replace the v1.3 summary boxes.
+  const val = async (label: string) => Number((await page.locator(`[data-metric="${label}"] [data-value]`).getAttribute("data-value"))!.replace(/,/g, ""));
+  return { reads: await val("Human reads"), shares: await val("Human shares"), bot: await val("Refused as bot or headless"), dup: await val("Refused as repeat") };
 }
 
 test("v1.3.1 reads count after 5 s visible, once per visitor per day; shares count; headless and staff never count", async ({ browser }) => {
@@ -52,7 +52,7 @@ test("v1.3.1 reads count after 5 s visible, once per visitor per day; shares cou
   expect(after.shares).toBe(before.shares + 1);
   expect(after.dup).toBeGreaterThanOrEqual(before.dup + 1);   // the reload was not double-counted
   expect(after.bot).toBeGreaterThanOrEqual(before.bot + 1);   // the headless read was refused
-  await expect(admin.getByRole("columnheader", { name: "Human reads" })).toBeVisible();
+  await expect(admin.getByRole("columnheader", { name: /Readers: reads \/ shares/ })).toBeVisible();
 });
 
 test("v1.3.1 engagement endpoint refuses cross-origin, invalid and unpublished targets", async ({ request }) => {

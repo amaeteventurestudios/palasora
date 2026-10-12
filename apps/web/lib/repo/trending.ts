@@ -81,10 +81,26 @@ export async function computeTrending(t: Tenant, scope: "home" | "africa", editi
 }
 
 const lastSnap = new Map<string, number>();
+const lastSig = new Map<string, string>();
+/** ISSUE-12: what a snapshot says (order + every scoring input). Identical rankings are not re-stored. */
+export const trendSignature = (r: Pick<TrendResult, "items">) =>
+  r.items.map((it) => `${it.rank}:${it.id}:${it.metrics.human_comments}/${it.metrics.human_votes}/${it.metrics.human_views}/${it.metrics.human_shares}/${it.metrics.source_count}/${it.metrics.ai_posts}`).join("|");
+
 async function snapshot(t: Tenant, r: TrendResult) {
   const k = `${t.id}:${r.scope}:${r.country}`;
   if ((lastSnap.get(k) ?? 0) > Date.now() - 5 * 60_000) return;
   lastSnap.set(k, Date.now());
+  // v1.7 stored the same top-5 every 5 minutes on every page view (1,276 rows, 250 distinct computations). Only a
+  // changed ranking or changed inputs are written now; after a restart the newest stored snapshot is the baseline.
+  const sig = trendSignature(r);
+  if (!lastSig.has(k)) {
+    const prev = await pb.list("trending_snapshots", { filter: `tenant_id=${q(t.id)} && scope=${q(r.scope)} && country=${q(r.country)}`, sort: "-computed_at,rank", perPage: 25 });
+    const at = prev[0]?.computed_at;
+    const rows = prev.filter((p) => p.computed_at === at);
+    lastSig.set(k, rows.map((p) => `${p.rank}:${p.piece_id}:${p.human_comments}/${p.human_votes}/${p.human_views ?? 0}/${p.human_shares ?? 0}/${p.source_count}/${p.ai_posts}`).join("|"));
+  }
+  if (lastSig.get(k) === sig) return;
+  lastSig.set(k, sig);
   const ws = pbDate(new Date(Date.now() - r.window_h * 3600_000)), we = pbDate(), at = pbDate(new Date(r.computed_at));
   for (const it of r.items) {
     await pb.create("trending_snapshots", { tenant_id: t.id, scope: r.scope, country: r.country, area_code: "", piece_id: it.id, window_start: ws, window_end: we, computed_at: at,
