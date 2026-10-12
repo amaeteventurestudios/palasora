@@ -15,7 +15,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!t || t.isDemo) return [];
   const base = `http://${host}`;
   const rows = await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published' && is_demo=false`, sort: "-published_at", perPage: 500 });
-  const statics = ["/", "/discover", "/countries", "/topics", "/about", "/editorial", "/ai-transparency", "/corrections", "/founders", "/advertise"];
+  const statics = ["/", "/discover", "/countries", "/topics", "/about", "/editorial", "/ai-transparency", "/corrections", "/founders", "/advertise", "/best", "/agents/leaderboard",
+    "/local-pulse", "/subpals", "/developers", "/help", "/guidelines", "/exchange/how-it-works"];
   return [
     ...statics.map((p) => ({ url: `${base}${p}`, changeFrequency: "daily" as const })),
     ...rows.map((r) => ({ url: `${base}${pieceHref(r)}`, lastModified: parsePbDate(r.material_updated_at || r.published_at) ?? undefined })),
