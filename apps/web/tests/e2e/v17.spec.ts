@@ -18,21 +18,18 @@ async function firstCardTop(page: Page) {
   return (await card.boundingBox())!.y;
 }
 
-test("V17-01 anonymous home is feed-first: a real post above the fold at 1440 and 390, no hero band", async ({ page }) => {
+// v1.8+ ISSUE-01 supersedes the v1.7 "no hero band" rule: the approved intro, counters and Exchange showcase are back above
+// the feed. Phones keep the feed near the top: compact intro, folded Exchange summary, first post inside the first screen.
+test("V17-01 home: restored intro, counters and Exchange above the feed; phone keeps a real post above the fold", async ({ page }) => {
   await noConsentBanner(page);
   for (const [w, h] of [[1440, 900], [390, 844]] as const) {
     await page.setViewportSize({ width: w, height: h });
     await page.goto(`${BASE}/`);
     const top = await firstCardTop(page);
-    expect(top, `first post at ${w}px`).toBeLessThan(h - 120);
-    await expect(page.getByText("Your agent has a social life")).toHaveCount(0); // the old Exchange band is not above the feed
+    for (const id of ["hero", "stat-strip", "exchange-teaser"]) expect((await page.getByTestId(id).boundingBox())!.y, `${id} above the feed at ${w}px`).toBeLessThan(top);
+    if (w < 640) expect(top, `first post at ${w}px`).toBeLessThan(h - 120);
     await page.screenshot({ path: path.join(shots, `v17-home-${w}.png`) });
   }
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`${BASE}/`);
-  await expect(page.getByTestId("inline-promo")).toBeVisible(); // the promos moved inline, below several posts
-  const promoTop = (await page.getByTestId("inline-promo").boundingBox())!.y;
-  expect(promoTop).toBeGreaterThan(await firstCardTop(page));
 });
 
 test("V17-02 Log in and Sign up on the same domain return the reader to where they were", async ({ page }) => {
@@ -161,7 +158,7 @@ test("V17-07 Local Pulse: every country has a clickable ADM1 map with three inde
 test("V17-08 Exchange: Explore link works, terms are explained, prices are Pals/share", async ({ page }) => {
   await noConsentBanner(page);
   await page.goto(`${BASE}/`);
-  await page.getByTestId("inline-promo").getByRole("link", { name: "Explore the Exchange" }).click();
+  await page.getByTestId("exchange-teaser").getByRole("link", { name: "Explore Exchange" }).click();
   await expect(page).toHaveURL(/\/exchange(\?market=ALL)?$/);
   await expect(page.getByTestId("exchange-page")).toBeVisible();
   await page.getByTestId("term-invested").click();

@@ -17,13 +17,14 @@ test("T-004 JS-disabled SSR shows headline, date, source and links without login
   await ctx.close();
 });
 
-// v1.7 (docs/specs/32, supersedes v1.4 D-58): feed-first. The first real conversation is in the first viewport on desktop
-// AND phones; the live network counters moved to the right rail (after the feed on phones) and still exist on the page.
-test("S01 first conversation above the fold at 1440x900 and 390x844; live counters still on the page", async ({ page }) => {
+// v1.8+ ISSUE-01 (supersedes the v1.7 feed-first fold rule on desktop): the intro, the four live counters and the Exchange
+// showcase sit above the feed on desktop; on phones they are compact so the first conversation is still in the first screen.
+test("S01 desktop shows intro + counters + Exchange before the feed; first conversation above the fold at 390x844", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
-  expect((await page.getByTestId("story-card").first().boundingBox())!.y, "first card top at 1440px").toBeLessThan(600);
+  await expect(page.getByTestId("hero")).toBeVisible();
   await expect(page.getByTestId("stat-strip")).toBeVisible();
+  await expect(page.getByTestId("exchange-teaser")).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   expect((await page.getByTestId("story-card").first().boundingBox())!.y, "first card top at 390px").toBeLessThan(700);

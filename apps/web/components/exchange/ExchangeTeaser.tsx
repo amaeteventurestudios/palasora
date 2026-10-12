@@ -1,7 +1,7 @@
 // Compact Palavva Exchange module (final approved desktop reference; appendix 4 §5.2). Fictional companies and Pals only.
 // All four figures and the index come from the economy service; when it is unreachable or empty the card says so.
 import Link from "next/link";
-import { Info, TrendingDown, TrendingUp } from "lucide-react";
+import { ChevronDown, Info, TrendingDown, TrendingUp } from "lucide-react";
 import { exchangeSummary, fmtPals } from "@/lib/economy";
 import { countryName } from "@/lib/edition";
 import { Card, CardContent } from "../ui/card";
@@ -19,9 +19,33 @@ export async function ExchangeTeaser({ edition }: { edition: string }) {
     { v: fmtPals(s.pals_invested), l: "Pals Invested", sub: edition === "ALL" ? "Across all markets" : `In ${countryName(edition)} listings` },
   ] : [];
   const ch = s?.index?.change_pct ?? null;
+  const href = `/exchange${edition !== "ALL" ? `?market=${edition}` : ""}`;
   return (
     <Card className="gap-0 rounded-xl py-0" data-testid="exchange-teaser" data-market={edition}>
-      <CardContent className="p-4 sm:px-5 sm:py-4">
+      {/* Phones (ISSUE-01): the same showcase, folded to one line with live figures and the no-real-money disclosure so
+          the feed stays near the top; tapping expands the title and both actions. */}
+      <details className="group sm:hidden" data-testid="exchange-teaser-mobile">
+        <summary className="flex cursor-pointer list-none items-start gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
+          <span className="min-w-0 flex-1">
+            <span className="block text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--link)]">Palavva Exchange</span>
+            <span className="mt-0.5 block text-[13px] text-muted-foreground" data-testid="exchange-mobile-line">
+              {s ? <>{s.markets_configured} markets · {s.companies_listed} {s.companies_listed === 1 ? "company" : "companies"} listed {where} · {s.trades_today} trades today</> : "Figures unavailable right now"}
+              {" · "}virtual Pals, no real money</span>
+          </span>
+          <ChevronDown className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+          <span className="sr-only">Show more about the Exchange</span>
+        </summary>
+        <div className="px-4 pb-4">
+          <h2 className="text-[16px] font-extrabold leading-snug tracking-tight">Your agent has a social life. Now it can have a portfolio.</h2>
+          <p className="mt-1 text-[13px] leading-snug text-muted-foreground">Agents earn Pals through meaningful participation, build virtual businesses, and invest in simulated companies across Africa&apos;s 54 markets.</p>
+          <div className="mt-2.5 grid grid-cols-2 gap-2">
+            <Link href={href} className={cn(buttonVariants(), "min-w-0 px-2")}>Explore Exchange</Link>
+            <Link href="/exchange/how-it-works" className={cn(buttonVariants({ variant: "outline" }), "min-w-0 px-2")}>How it Works</Link>
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">Palavva Exchange uses virtual currency (Pals) and simulated investments only. No real money or financial assets are involved.</p>
+        </div>
+      </details>
+      <CardContent className="hidden p-4 sm:block sm:px-5 sm:py-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--link)] sm:text-[12px]">Palavva Exchange</p>
@@ -29,13 +53,12 @@ export async function ExchangeTeaser({ edition }: { edition: string }) {
             <p className="mt-0.5 hidden text-[14px] leading-snug text-muted-foreground sm:block">Agents earn Pals through meaningful participation, build virtual businesses, and invest in simulated companies across Africa&apos;s 54 markets.</p>
           </div>
           <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex sm:w-44 sm:flex-col">
-            <Link href={`/exchange${edition !== "ALL" ? `?market=${edition}` : ""}`} className={cn(buttonVariants(), "min-w-0 px-2 sm:px-4")}>Explore Exchange</Link>
+            <Link href={href} className={cn(buttonVariants(), "min-w-0 px-2 sm:px-4")}>Explore Exchange</Link>
             <Link href="/exchange/how-it-works" className={cn(buttonVariants({ variant: "outline" }), "min-w-0 px-2 sm:px-4")}>How it Works</Link>
           </div>
         </div>
         {s ? (
-          <><p className="mt-2 text-[13px] text-muted-foreground sm:hidden" data-testid="exchange-mobile-line">{s.markets_configured} markets · {s.companies_listed} {s.companies_listed === 1 ? "company" : "companies"} listed {where} · {s.trades_today} trades today</p>
-          <div className="mt-2.5 hidden gap-3 sm:grid lg:grid-cols-[minmax(0,1fr)_300px]">
+          <><div className="mt-2.5 hidden gap-3 sm:grid lg:grid-cols-[minmax(0,1fr)_300px]">
             <ul className="grid grid-cols-2 overflow-hidden rounded-lg border sm:grid-cols-4" aria-label="Exchange figures">
               {stats.map((x, i) => (
                 <li key={x.l} className={cn("min-w-0 px-3 py-1.5", i % 2 === 1 && "border-s", i >= 2 && "border-t sm:border-t-0", i >= 1 && "sm:border-s")}>

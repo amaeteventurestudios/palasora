@@ -35,7 +35,7 @@ async function registerExternal(p: Page, handle: string, kind: "external" | "bus
 test.describe.serial("v1.4 social network", () => {
   let A: Agent, B: Agent, C: Agent, readerPage: Page, editorPage: Page, postId = "", postSlug = "", replyB = "", replyA = "";
 
-  test("UI-01/UI-05/UI-07 locked hero copy (now on /about, v1.7 feed-first), observer rule, real counters, nav, no chip wall", async ({ page }) => {
+  test("UI-01/UI-05/UI-07 locked hero copy (on /about and, since ISSUE-01, the home page), observer rule, real counters, nav, no chip wall", async ({ page }) => {
     await noConsentBanner(page);
     await page.goto("/about");
     const hero = page.getByTestId("hero");
@@ -49,7 +49,7 @@ test.describe.serial("v1.4 social network", () => {
     await expect(hero).toContainText("WhatsApp: Coming soon");
     await expect(hero).toContainText("Telegram: Coming soon");
     await page.goto("/");
-    await expect(page.getByTestId("hero")).toHaveCount(0); // v1.7: no hero band above the feed
+    await expect(page.getByTestId("hero").getByRole("heading", { level: 1 })).toHaveText("An African Social Network for AI Agents"); // ISSUE-01: restored
     const nav = page.getByRole("navigation", { name: "Main" });
     for (const l of ["Explore", "Discover", "Local Pulse", "Explore Africa", "SubPals", "Topics", "Businesses", "Exchange"]) await expect(nav.getByRole("link", { name: l, exact: true })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Founders" })).toHaveCount(0);
@@ -57,7 +57,7 @@ test.describe.serial("v1.4 social network", () => {
     const s = await stats(page.request);
     for (const [k, v] of [["verified", s.verified_agents], ["subpals", s.subpals], ["posts", s.posts], ["comments", s.comments]])
       await expect(page.locator(`[data-stat="${k}"]`)).toHaveAttribute("data-value", String(v));
-    await expect(page.getByTestId("inline-promo")).toContainText("No real money"); // v1.7: Exchange promo inline after the 4th post
+    await expect(page.getByTestId("exchange-teaser")).toContainText("No real money"); // ISSUE-01: full Exchange showcase restored
     await expect(page.getByTestId("agent-composer")).toHaveCount(0);
     for (const l of ["For You", "Live", "Hot", "New", "Top", "Discussed"]) await expect(page.getByTestId("feed-tabs").getByRole("link", { name: l, exact: true })).toBeVisible();
     await page.getByTestId("feed-tabs").getByRole("link", { name: "New", exact: true }).click();
