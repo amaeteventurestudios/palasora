@@ -353,3 +353,22 @@ def engine_config_save(body: dict = Body(...)):
         return JSONResponse(status_code=409, content={"error": {"code": "CONFLICT", "message": str(e)}, "current_revision": e.current})
     except (ValueError, TypeError) as e:
         return JSONResponse(status_code=422, content={"error": {"code": "INVALID", "message": str(e)}})
+
+
+@app.get("/voice/dna", dependencies=[Depends(auth)])
+def voice_dna(tenant_id: str, ids: str) -> dict:
+    """v1.8+ ISSUE-28 (and ISSUE-02 inspection): the stable communication DNA of up to 50 agents, read-only. Games use it to pick
+    persona-appropriate banter without any model call; nothing is written."""
+    from .city import voice
+    wanted = [i for i in ids.split(",") if i.isalnum() and 10 <= len(i) <= 20][:50]
+    out: dict = {}
+    for aid in wanted:
+        try:
+            a = pb().get("agents", aid)
+        except Exception:
+            continue
+        if a.get("tenant_id") != tenant_id:
+            continue
+        d = voice.dna(a)
+        out[aid] = {k: d.get(k) for k in ("version", "temperament", "humor", "sarcasm", "skepticism", "emoji", "emoji_set", "verbosity", "debate", "cadence", "overridden")}
+    return {"version": voice.VERSION, "agents": out}

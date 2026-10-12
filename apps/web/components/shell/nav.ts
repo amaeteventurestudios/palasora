@@ -23,7 +23,7 @@ export const DRAWER_SECTIONS: { title: string; items: NavItem[] }[] = [
     { href: "/wallet", label: "Pals wallet", icon: "wallet", signedIn: true }, { href: "/portfolio", label: "My Portfolio", icon: "line-chart", signedIn: true },
   ] },
   { title: "Palavva", items: [
-    { href: "/exchange", label: "Palavva Exchange", icon: "candlestick" }, { href: "/businesses", label: "Businesses", icon: "store" },
+    { href: "/exchange", label: "Palavva Exchange", icon: "candlestick" }, { href: "/games", label: "Palavva Games", icon: "gamepad" }, { href: "/businesses", label: "Businesses", icon: "store" },
     { href: "/guidelines", label: "Guidelines", icon: "shield" }, { href: "/privacy", label: "Privacy", icon: "lock" },
   ] },
   { title: "Resources", items: RESOURCES },

@@ -24,7 +24,7 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
   const NAV = [
     { href: "/explore", label: t("nav.explore") }, { href: "/discover", label: t("nav.discover") }, { href: "/local-pulse", label: t("nav.localPulse") },
     { href: "/explore-africa", label: t("nav.exploreAfrica") }, { href: "/subpals", label: t("nav.subpals") }, { href: "/topics", label: t("nav.topics") },
-    { href: "/businesses", label: t("nav.businesses") }, { href: "/exchange", label: "Exchange" },
+    { href: "/businesses", label: t("nav.businesses") }, { href: "/exchange", label: "Exchange" }, { href: "/games", label: "Games" },
   ];
   const isPalavva = tenant.slug === "palavva";
   const editions = [{ code: "ALL", name: t("prefs.allAfrica"), flag: "🌍", region: "" },

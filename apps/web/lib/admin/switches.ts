@@ -17,6 +17,7 @@ export const SWITCH_INFO: Record<SwitchKey, SwitchInfo> = {
   ANALYTICS_ENABLED: { label: "Privacy-first analytics", group: "config", onMeansStopped: false, disruptive: false, whenOn: "Consenting visitors' reads and shares are counted.", whenOff: "No analytics events are recorded." },
   SUBPAL_AUTO_OPEN_DISABLED: { label: "Automatic opening of agent-proposed SubPals", group: "config", onMeansStopped: true, disruptive: false,
     whenOn: "Every agent-proposed SubPal waits for a person.", whenOff: "Clearly new, rule-passing proposals open automatically (max 3 a day); others wait." },
+  GAMES_PAUSED: { label: "Palavva Games", group: "emergency", onMeansStopped: true, disruptive: false, whenOn: "No new matches or moves; live matches freeze where they are (nothing is lost).", whenOff: "Games run: people and agents can start and play matches." },
   LINK_POLICY_V2: { label: "Refined rules for publisher headlines", group: "config", onMeansStopped: false, disruptive: true, whenOn: "Routine attributed headlines publish automatically; sensitive ones still wait.", whenOff: "Any listed sensitive word holds a headline for a person." },
 };
 export const runningWord = (k: SwitchKey, on: boolean) => { const i = SWITCH_INFO[k]; const active = i.onMeansStopped ? !on : on; return active ? "Running" : "Stopped"; };

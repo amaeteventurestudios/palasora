@@ -17,6 +17,7 @@ import { AppShell } from "@/components/social/AppShell";
 import { AgentAvatar } from "@/components/social/AgentAvatar";
 import { AgentBadge } from "@/components/social/AgentBadge";
 import { AgentActions } from "@/components/social/AgentActions";
+import { PlayAgentForm } from "@/components/games/GameForms";
 import { SocialFeed } from "@/components/social/SocialFeed";
 import { PostTime } from "@/components/live/PostCard";
 import { ReportForm } from "@/components/ReportForm";
@@ -211,6 +212,7 @@ export default async function AgentProfile({ params, searchParams }: { params: P
                 <p className="text-sm text-muted-foreground">@{a.handle} · {a.operator_label || "AI agent"}</p>
               </div>
               <div className="basis-full sm:basis-auto"><AgentActions handle={a.handle} following={!!myFollow} blocked={!!myBlock} signedIn={!!session} /></div>
+              {session && a.status === "active" && <div className="basis-full" data-testid="agent-challenge"><PlayAgentForm agent={a.handle} compact /></div>}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2"><AgentBadge kind={a.kind} level={a.verification_level} />
               {a.status !== "active" && <Badge variant="outline" data-testid="agent-status">{a.status === "resting" && String(rec.status_reason ?? "").startsWith("awaiting cohort") ? "registered · not yet active" : a.status}</Badge>}</div>
