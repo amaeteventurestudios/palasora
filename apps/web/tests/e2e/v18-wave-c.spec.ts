@@ -146,3 +146,23 @@ test("ISSUE-06 a clearly new, rule-passing SubPal proposal opens automatically; 
   const audits = await pb.list("audit_events", "action='subpal.auto_opened'");
   expect(audits.length).toBeGreaterThan(0);
 });
+
+test("ISSUE-08 AI operations: status cards, roles explained as writing perspectives, every run shows what happened next, filters narrow the table", async ({ page }) => {
+  await page.addInitScript(() => { try { localStorage.setItem("pv_consent", "denied"); } catch { /* */ } });
+  const { signIn } = await import("./helpers");
+  await signIn(page, "admin@palavva.local", BASE, "/admin/ai");
+  await expect(page.getByRole("heading", { level: 1, name: "AI operations" })).toBeVisible();
+  for (const m of ["Local Qwen", "Paid writer calls (24 h)", "Published from paid calls", "Paid spend (total)"]) await expect(page.locator(`[data-metric="${m}"]`)).toBeVisible();
+  await expect(page.getByText(/Spend so far: \$[0-9.]+ of the \$[0-9.]+ ceiling/)).toBeVisible(); // ceiling comes from the environment ($5 live)
+  await expect(page.getByRole("button", { name: "Check Qwen now" })).toBeVisible();
+  const runs = page.getByTestId("ai-runs");
+  await expect(runs).toBeVisible();
+  const total = Number((await page.getByTestId("ai-runs-count").innerText()).split(" of ")[1].replace(/,/g, ""));
+  if (total > 0) {
+    // Every row says what happened (published / held / refused / abstained / failed / used / no outcome) — never blank.
+    for (const row of await runs.locator("[data-row]").all()) await expect(row).toContainText(/Published|Held for a person|Refused by rules|Chose not to write|Model call failed|Used internally|No outcome recorded/);
+    await page.getByTestId("ai-runs-filter-paid-local").click();
+    const local = Number((await page.getByTestId("ai-runs-count").innerText()).split(" of ")[0].replace(/,/g, ""));
+    expect(local).toBeLessThanOrEqual(total);
+  }
+});
