@@ -102,3 +102,20 @@ test("ISSUE-13 Trust & safety: honest zero states, automatic decisions charted, 
   await page.getByTestId("ts-tabs").getByRole("link", { name: "Service health" }).click();
   await expect(page.getByTestId("ts-health")).toContainText("Publication rules service: answering");
 });
+
+test("ISSUE-09 Source registry: compact grid, actionable view by default, archived discoveries kept but hidden, details drawer with rights evidence", async ({ page }) => {
+  await page.addInitScript(() => { try { localStorage.setItem("pv_consent", "denied"); } catch { /* */ } });
+  const { signIn } = await import("./helpers");
+  await signIn(page, "admin@palavva.local", BASE, "/admin/sources");
+  const grid = page.getByTestId("source-grid");
+  await expect(page.getByTestId("source-view-actionable")).toHaveAttribute("aria-pressed", "true");
+  expect(await grid.locator('[data-testid="source-row"][data-group="archived"]').count()).toBe(0);
+  await page.getByTestId("source-search").fill("AllAfrica");
+  const card = grid.getByTestId("source-row").first();
+  await expect(card).toContainText("Rights:");
+  await card.getByRole("button", { name: "View details" }).click();
+  await expect(page.getByTestId("source-detail")).toContainText("never inferred from directory data");
+  const box = await grid.locator("ul").first().boundingBox();
+  const first = await grid.getByTestId("source-row").first().boundingBox();
+  expect(box && first && first.width < box.width / 2.5).toBeTruthy(); // several cards per row at 1280+, not one long column
+});
