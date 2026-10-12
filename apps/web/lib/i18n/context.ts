@@ -111,6 +111,16 @@ const UNIT_I18N: Record<string, Record<string, string>> = {
   Provinces: { en: "provinces", fr: "provinces", ar: "المقاطعات", pcm: "provinces" },
   Regions: { en: "regions", fr: "régions", ar: "الأقاليم", pcm: "regions" },
 };
+/** ISSUE-03: a COUNT of subdivisions, said correctly. Nigeria has 36 states plus the Federal Capital Territory, so 37
+ *  units render as "36 states + FCT (37 administrative units)", never "37 states + FCT". */
+export function subdivisionCount(iso: string, n: number, ui: string): string {
+  if ((COUNTRIES[iso]?.subdivision || "") === "States + FCT" && n > 1) {
+    const units = { en: "administrative units", fr: "unités administratives", ar: "وحدة إدارية", pcm: "administrative units" }[ui] ?? "administrative units";
+    return `${n - 1} ${subdivisionLabel(iso, ui)} (${n} ${units})`;
+  }
+  return `${n} ${subdivisionLabel(iso, ui)}`;
+}
+
 /** Localized, correctly-cased subdivision unit for a country ("states + FCT", "régions", ...). */
 export function subdivisionLabel(iso: string, ui: string): string {
   const sub = COUNTRIES[iso]?.subdivision || "";

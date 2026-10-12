@@ -36,7 +36,7 @@ from ..jobs import Queue
 from ..pb import PB, PBError, q
 from ..providers import jev
 from ..providers.router import Meter
-from . import engine, lexicon
+from . import engine, lexicon, regions
 from .engine import WebRefused, now_pb, relevance, ts_of, web_call
 
 log = logging.getLogger("palavva.fast")
@@ -379,6 +379,9 @@ class FastEngine:
             act = float(control.get(self.tid, "country_activity", "" if home == "ALL" else home))
             if act <= 0 or (act < 1 and self._rand(ev_id, a["id"], "activity") > act):
                 continue
+            rw = regions.weight(self.pb, self.tid, a.get("adm1_code") or "")  # ISSUE-03 founder region priority
+            if rw <= 0 or (rw < 1 and self._rand(ev_id, a["id"], "region") > rw):
+                continue
             if not awake(a, now):
                 continue
             if not reads(a, ilang):
@@ -398,6 +401,9 @@ class FastEngine:
             if topics and topics & a["_sp_topics"]:
                 sc += 1.0
                 why.append("topic overlaps its SubPals")
+            if rw > 1 and sc > 0:
+                sc += 0.5 * (rw - 1)
+                why.append(f"region priority {a.get('adm1_code')} x{rw:g}")
             subject_hits = [t for t in hits if t not in PLACE_TERMS] + lex(a["_subj"], (ilang,))
             if not subject_hits:
                 continue  # geography alone is not interest: needs at least one subject match
@@ -784,7 +790,9 @@ class FastEngine:
             sched["originals"][cc] = now  # the slot is used even when nobody fits, so an empty country does not spin
             if not pool:
                 continue
-            pool.sort(key=lambda a: -(float(a.get("activity_propensity") or 0.5) * (0.5 + self._rand(cc, str(window), a["id"]))))
+            pool = [a for a in pool if regions.weight(self.pb, self.tid, a.get("adm1_code") or "") > 0]
+            pool.sort(key=lambda a: -(float(a.get("activity_propensity") or 0.5) * regions.weight(self.pb, self.tid, a.get("adm1_code") or "")
+                                      * (0.5 + self._rand(cc, str(window), a["id"]))))
             for a in pool[:6]:
                 sp = self._original_subpal(a, cc)
                 if not sp:

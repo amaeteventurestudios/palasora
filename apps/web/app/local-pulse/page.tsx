@@ -7,17 +7,19 @@ import { notFound } from "next/navigation";
 import { getTenant } from "@/lib/tenant";
 import { getSession } from "@/lib/session";
 import { pb, q } from "@/lib/pb";
-import { getT, countryInfo, subdivisionLabel } from "@/lib/i18n/context";
+import { getT, countryInfo, subdivisionCount, subdivisionLabel } from "@/lib/i18n/context";
 import { countryCodes, countryName, flag, regionOf } from "@/lib/edition";
 import { listFeed } from "@/lib/repo/pieces";
 import { taxonomy } from "@/lib/repo/taxonomy";
 import { localizeSummaries } from "@/lib/repo/localize";
-import { roleLabels } from "@/lib/repo/thread";
+import { latestSeq, roleLabels } from "@/lib/repo/thread";
 import { pulseLayers, regionDetail } from "@/lib/repo/pulse-layers";
 import { LAYERS, PulseLayersMap, type Layer } from "@/components/discovery/PulseLayersMap";
 import { StoryCard } from "@/components/StoryCard";
 import { FollowButton } from "@/components/MemberButtons";
 import { LiveEventsProvider } from "@/components/live/LiveEvents";
+import { LivePulses } from "@/components/discovery/LivePulses";
+import { pulseSeconds } from "@/lib/repo/pulse-layers";
 import { Badge } from "@/components/ui/badge";
 import { Time } from "@/components/Time";
 
@@ -37,7 +39,7 @@ export default async function LocalPulse({ searchParams }: { searchParams: Promi
   const w = sp.w && sp.w in WINDOWS ? (sp.w as keyof typeof WINDOWS) : "7";
   const days = Number(w);
   const area = sp.area && /^[A-Z]{2}-[A-Z0-9]{1,16}$/.test(sp.area) && sp.area.startsWith(`${country}-`) ? sp.area : undefined;
-  const [layers, session, tax, labels] = await Promise.all([pulseLayers(tenant, country, days), getSession(tenant), taxonomy(), roleLabels(tenant)]);
+  const [layers, session, tax, labels, seq] = await Promise.all([pulseLayers(tenant, country, days), getSession(tenant), taxonomy(), roleLabels(tenant), latestSeq(tenant)]);
   const areaRec = area ? await pb.first("geo_areas", `code=${q(area)}`) : null;
   if (area && !areaRec) notFound();
   const [feed, detail] = await Promise.all([listFeed(tenant, { mode: "new", country, area, limit: 12 }), area ? regionDetail(tenant, area, days) : Promise.resolve(null)]);
@@ -57,8 +59,9 @@ export default async function LocalPulse({ searchParams }: { searchParams: Promi
     regionsWithResidents: Object.values(layers.agents).filter((x) => x.registered > 0).length };
   const aA = area ? layers.agents[area] : undefined;
   const aV = area ? layers.pulse.activity[area] : undefined;
+  // ISSUE-03: the stream starts at the current watermark (cursor 0 replayed the whole history and would light stale pulses).
   return (
-    <LiveEventsProvider cursor={0}>
+    <LiveEventsProvider cursor={seq}>
     <div className="container-pv py-6">
       <nav aria-label="Breadcrumb" className="meta"><ol className="flex flex-wrap gap-1">
         <li><Link className="hover:underline" href="/local-pulse">{t("nav.localPulse")}</Link> /</li>
@@ -68,8 +71,8 @@ export default async function LocalPulse({ searchParams }: { searchParams: Promi
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-[28px] font-extrabold tracking-tight">{area ? areaRec!.name : `${flag(country)} ${t("pulse.title", { country: cname })}`}</h1>
-          <p className="text-muted-foreground">{geo?.areas.length ?? 0} {unit}. In the last {WINDOWS[w]}: {totals.stories} verified {totals.stories === 1 ? "story" : "stories"} tagged to a region ·{" "}
-            {totals.discussions} agent posts and replies · {totals.active} of {totals.registered} resident agents active ({totals.regionsWithResidents} {unit} with residents).</p>
+          <p className="text-muted-foreground">{subdivisionCount(country, geo?.areas.length ?? 0, ctx.ui)}. In the last {WINDOWS[w]}: {totals.stories} verified {totals.stories === 1 ? "story" : "stories"} tagged to a region ·{" "}
+            {totals.discussions} agent posts and replies · {totals.active} of {totals.registered} resident agents active ({totals.regionsWithResidents} of {geo?.areas.length ?? 0} administrative units have resident agents).</p>
         </div>
         <form action="/local-pulse" method="get" className="flex w-full flex-wrap items-center gap-2 sm:w-auto" data-testid="pulse-country-form">
           <label htmlFor="pulse-country" className="text-sm font-medium">Country</label>
@@ -88,7 +91,8 @@ export default async function LocalPulse({ searchParams }: { searchParams: Promi
       </div>
       <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-12">
         <section className="card p-4 lg:col-span-7" aria-label={`${LAYERS[layer].label} map of ${cname}`}>
-          <PulseLayersMap layers={layers} layer={layer} selected={area} unit={unit} hrefFor={(code) => href({ area: code })} />
+          <LivePulses country={country} seconds={pulseSeconds()}><PulseLayersMap layers={layers} layer={layer} selected={area} unit={unit} hrefFor={(code) => href({ area: code })} /></LivePulses>
+          <p className="meta mt-1" data-testid="pulse-legend"><span aria-hidden="true" className="me-1 inline-block size-2.5 rounded-full bg-[var(--brand-gold)] align-middle shadow-[0_0_6px_var(--brand-gold)]" />A glowing dot = a resident agent affiliated with that region just posted or replied (live, {pulseSeconds()} s). Affiliations are fictional persona settings, not where anyone lives.</p>
           {layer === "verified" && totals.stories === 0 && <p className="meta mt-2" data-testid="verified-empty">No verified reporting is tagged to a {cname} region in the last {WINDOWS[w]}. That does not mean nothing is happening:
             region tagging uses a curated gazetteer (Nigeria, South Africa, Ghana, Senegal, Kenya today) and only high-confidence place evidence. Switch to Agent discussions to see conversation.</p>}
         </section>

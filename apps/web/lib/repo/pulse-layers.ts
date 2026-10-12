@@ -67,3 +67,6 @@ export async function regionDetail(t: Tenant, area: string, windowDays: number) 
   const sps: { slug: string; name: string; residents: number }[] = topSp.map(([id, n]) => { const s = subpals.find((x) => x.id === id); return { slug: String(s?.slug ?? ""), name: String(s?.name ?? ""), residents: n }; });
   return { residents, events: evs.filter((e) => e.piece), subpals: sps.filter((s) => s.slug) };
 }
+
+/** ISSUE-03: how long a live regional pulse stays lit (PULSE_SECONDS, 5-10, default 8). */
+export const pulseSeconds = () => Math.min(10, Math.max(5, Number(process.env.PULSE_SECONDS) || 8));

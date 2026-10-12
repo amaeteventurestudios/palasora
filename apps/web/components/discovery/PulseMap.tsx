@@ -12,7 +12,6 @@ export function PulseMap({ pulse, t, ui = "en", selected, compact = false, hrefF
   const info = countryInfo(pulse.country);
   const unit = subdivisionLabel(pulse.country, ui);
   if (!pulse.geo) return <p className="text-sm text-muted-foreground">{t("pulse.noMap")}</p>;
-  const now = Date.now();
   const areas = [...pulse.geo.areas].sort((a, b) => (pulse.activity[b.code]?.stories ?? 0) - (pulse.activity[a.code]?.stories ?? 0) || a.name.localeCompare(b.name));
   const level = (code: string) => { const s = pulse.activity[code]?.stories ?? 0; return s ? 0.35 + 0.6 * (s / Math.max(1, pulse.max_stories)) : 0; };
   return (
@@ -21,13 +20,12 @@ export function PulseMap({ pulse, t, ui = "en", selected, compact = false, hrefF
         {pulse.geo.areas.map((a) => {
           const act = pulse.activity[a.code];
           const lv = level(a.code);
-          const recent = act?.latest && now - new Date(act.latest.replace(" ", "T")).getTime() < 86400_000;
           const label = act ? `${a.name}: ${t("pulse.stories", { n: act.stories })}, ${t("pulse.aiReplies", { n: act.ai_posts })}, ${t("pulse.humanReplies", { n: act.human_comments })}` : `${a.name}: ${t("pulse.limited")}`;
           return (
-            <a key={a.code} href={hrefFor(a.code)} aria-label={label} data-area={a.code} data-stories={act?.stories ?? 0} className="group focus:outline-none">
+            <a key={a.code} href={hrefFor(a.code)} aria-label={label} data-area={a.code} data-name={a.name} data-stories={act?.stories ?? 0} className="group focus:outline-none">
               <title>{label}</title>
               <path d={a.d} strokeWidth={selected === a.code ? 3 : 1.2} vectorEffect="non-scaling-stroke"
-                className={`transition-[fill-opacity] group-hover:fill-[var(--brand-gold)] group-focus-visible:fill-[var(--brand-gold)] ${recent ? "motion-safe:animate-pulse" : ""}`}
+                className="transition-[fill-opacity] group-hover:fill-[var(--brand-gold)] group-focus-visible:fill-[var(--brand-gold)]"
                 style={{ fill: lv ? "var(--brand-tangerine)" : "var(--card)", fillOpacity: lv || 1, stroke: selected === a.code ? "var(--focus-ring)" : "var(--muted-foreground)" }} />
             </a>
           );

@@ -12,7 +12,7 @@ import type { Tenant } from "./tenant";
 import { eventsSince, type ThreadEvent } from "./repo/thread";
 import { ALL, inEdition, scopeOf, type Scope } from "./edition";
 
-export type HubEvent = ThreadEvent & { country_codes: string[]; agent_affinities: string[] };
+export type HubEvent = ThreadEvent & { country_codes: string[]; agent_affinities: string[]; /** ISSUE-03: acting resident's fictional ADM1 affiliation (public on its profile) */ actor_adm1?: string };
 type Sub = { piece?: string; edition: string; push: (e: HubEvent & { scope: Scope }) => void };
 type Hub = { cursor: number; subs: Set<Sub>; timer: ReturnType<typeof setInterval> | null; busy: boolean; tenant: Tenant; failures: number };
 
@@ -65,6 +65,8 @@ function retime(h: Hub) {
 const hubs = new Map<string, Hub>();
 const pieceCountries = new Map<string, string[]>(); // bounded cache: piece -> subject countries
 const agentAffinity = new Map<string, string[]>();
+const agentAdm1 = new Map<string, string>(); // ISSUE-03: actor -> fictional regional affiliation, for live map pulses
+const PULSE_TYPES = new Set(["reply_published", "topic_published"]);
 
 async function enrich(t: Tenant, evs: ThreadEvent[]): Promise<HubEvent[]> {
   const needP = [...new Set(evs.map((e) => e.piece_id).filter((id) => id && !pieceCountries.has(id)))];
@@ -72,14 +74,17 @@ async function enrich(t: Tenant, evs: ThreadEvent[]): Promise<HubEvent[]> {
     const rows = await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && (${needP.slice(i, i + 80).map((x) => `id=${q(x)}`).join(" || ")})`, fields: "id,country_codes", perPage: 100 });
     for (const r of rows) pieceCountries.set(r.id, r.country_codes ?? []);
   }
-  const needA = [...new Set(evs.filter((e) => !e.piece_id && e.actor_agent_id).map((e) => e.actor_agent_id!).filter((id) => !agentAffinity.has(id)))];
+  const needA = [...new Set(evs.filter((e) => e.actor_agent_id && ((!e.piece_id && !agentAffinity.has(e.actor_agent_id)) || (PULSE_TYPES.has(e.type) && !agentAdm1.has(e.actor_agent_id))))
+    .map((e) => e.actor_agent_id!))];
   for (let i = 0; i < needA.length; i += 80) {
-    const rows = await pb.list("agents", { filter: `tenant_id=${q(t.id)} && (${needA.slice(i, i + 80).map((x) => `id=${q(x)}`).join(" || ")})`, fields: "id,country_affinities", perPage: 100 });
-    for (const r of rows) agentAffinity.set(r.id, r.country_affinities ?? []);
+    const rows = await pb.list("agents", { filter: `tenant_id=${q(t.id)} && (${needA.slice(i, i + 80).map((x) => `id=${q(x)}`).join(" || ")})`, fields: "id,country_affinities,adm1_code", perPage: 100 });
+    for (const r of rows) { agentAffinity.set(r.id, r.country_affinities ?? []); agentAdm1.set(r.id, r.adm1_code ?? ""); }
   }
   if (pieceCountries.size > 20000) pieceCountries.clear();
   if (agentAffinity.size > 5000) agentAffinity.clear();
-  return evs.map((e) => ({ ...e, country_codes: e.piece_id ? pieceCountries.get(e.piece_id) ?? [] : [], agent_affinities: e.actor_agent_id ? agentAffinity.get(e.actor_agent_id) ?? [] : [] }));
+  if (agentAdm1.size > 30000) agentAdm1.clear();
+  return evs.map((e) => ({ ...e, country_codes: e.piece_id ? pieceCountries.get(e.piece_id) ?? [] : [], agent_affinities: e.actor_agent_id ? agentAffinity.get(e.actor_agent_id) ?? [] : [],
+    ...(PULSE_TYPES.has(e.type) && e.actor_agent_id && agentAdm1.get(e.actor_agent_id) ? { actor_adm1: agentAdm1.get(e.actor_agent_id) } : {}) }));
 }
 
 /** Does this event belong in a stream bound to `edition` (and optionally one thread)? */

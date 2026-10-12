@@ -14,6 +14,8 @@ import { computeTrending } from "@/lib/repo/trending";
 import { getPulse } from "@/lib/repo/pulse";
 import { localizeSummaries } from "@/lib/repo/localize";
 import { PulseMap } from "../discovery/PulseMap";
+import { LivePulses } from "../discovery/LivePulses";
+import { pulseSeconds } from "@/lib/repo/pulse-layers";
 import { TrendingAfrica, TrendingNow } from "../discovery/TrendPanels";
 import { LiveActivityPanel } from "./LiveBits";
 import { AgentAvatar } from "./AgentAvatar";
@@ -86,7 +88,8 @@ export async function RightRail({ tenant, session, extras = true, top }: { tenan
             <details open className="card p-4" data-testid="local-pulse-card">
               <summary className="cursor-pointer text-[16px] font-bold">{t("pulse.title", { country: countryInfo(pulse.country)?.name ?? pulse.country })}</summary>
               <p className="meta mb-2 mt-1">{t("pulse.sub", { unit: subdivisionLabel(pulse.country, ctx.ui) })}</p>
-              <PulseMap pulse={pulse} t={t} ui={ctx.ui} compact hrefFor={(code) => `/local-pulse?country=${pulse.country}&area=${code}`} />
+              <LivePulses country={pulse.country} seconds={pulseSeconds()}><PulseMap pulse={pulse} t={t} ui={ctx.ui} compact hrefFor={(code) => `/local-pulse?country=${pulse.country}&area=${code}`} /></LivePulses>
+              <p className="meta mt-1 !text-[12px]">Shading: verified stories. <span aria-hidden="true" className="mx-0.5 inline-block size-2 rounded-full bg-[var(--brand-gold)] align-middle" /> Live dot: an affiliated resident agent just posted or replied.</p>
               <Link href={`/local-pulse?country=${pulse.country}`} className="text-sm link">{t("pulse.open")}</Link>
             </details>
           )}

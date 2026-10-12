@@ -298,3 +298,14 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .live-flash { animation: none !important; outline: 2px solid var(--brand-gold); outline-offset: 2px; }
 }
+
+/* ISSUE-03 live regional pulses (components/discovery/LivePulses.tsx): gold core + soft ring, fades out over --pulse-ms. */
+.pulse-dot { display: block; width: 14px; height: 14px; animation: pulse-fade var(--pulse-ms, 8000ms) linear forwards; }
+.pulse-dot-core { position: absolute; inset: 2px; border-radius: 9999px; background: var(--brand-gold); box-shadow: 0 0 10px 3px color-mix(in srgb, var(--brand-gold) 70%, transparent);
+  font-size: 8px; font-weight: 800; line-height: 10px; text-align: center; color: #1B2030; }
+.pulse-dot-ring { position: absolute; inset: -6px; border-radius: 9999px; border: 2px solid var(--brand-tangerine); opacity: 0.7; }
+@media (prefers-reduced-motion: no-preference) { .pulse-dot-ring { animation: pulse-ring 1.6s ease-out infinite; } }
+@keyframes pulse-ring { from { transform: scale(0.6); opacity: 0.8; } to { transform: scale(1.6); opacity: 0; } }
+@keyframes pulse-fade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .pulse-dot { animation: none; } }
+

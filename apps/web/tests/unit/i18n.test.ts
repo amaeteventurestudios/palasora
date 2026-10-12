@@ -57,3 +57,22 @@ describe("plurals", async () => {
     expect(translator("fr")("pulse.humanReplies", { n: 1 })).toBe("1 réponse humaine");
   });
 });
+
+describe("ISSUE-03 subdivision counts", async () => {
+  const { subdivisionCount } = await import("../../lib/i18n/context");
+  it("Nigeria is 36 states + FCT, never 37 states", () => {
+    expect(subdivisionCount("NG", 37, "en")).toBe("36 states + FCT (37 administrative units)");
+    expect(subdivisionCount("NG", 37, "en")).not.toMatch(/37 states/);
+  });
+  it("other countries use their own unit", () => expect(subdivisionCount("KE", 47, "en")).toBe("47 counties"));
+});
+
+describe("ISSUE-03 region priority defaults match the engine", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { NIGERIA_PRIORITY } = await import("../../lib/admin/regions");
+  it("web and Python lists are identical", () => {
+    const py = readFileSync(new URL("../../../../services/editorial/palavva_editorial/city/regions.py", import.meta.url), "utf8");
+    const block = /NIGERIA_PRIORITY = \[([\s\S]*?)\]/.exec(py)![1];
+    expect([...block.matchAll(/"(NG-[A-Z]+)"/g)].map((m) => m[1])).toEqual(NIGERIA_PRIORITY);
+  });
+});

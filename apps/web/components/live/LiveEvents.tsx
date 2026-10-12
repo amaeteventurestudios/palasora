@@ -6,7 +6,7 @@ import { useEdition, useT } from "@/lib/i18n/client";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 export type LiveEvent = { seq: number; type: string; piece_id: string; post_id: string; parent_id: string; author_kind: string; role_id: string; created: string; payload: Record<string, any>;
-  subpal_id?: string; actor_agent_id?: string; country_codes?: string[]; scope?: "local" | "regional" | "pan" };
+  subpal_id?: string; actor_agent_id?: string; country_codes?: string[]; scope?: "local" | "regional" | "pan"; actor_adm1?: string };
 type Status = "connecting" | "live" | "reconnecting" | "offline" | "degraded";
 type Ctx = { status: Status; subscribe: (fn: (e: LiveEvent) => void) => () => void; lastSeq: number; opens: number; /** commit time of the newest event received */ lastAt: string | null };
 const LiveCtx = createContext<Ctx | null>(null);

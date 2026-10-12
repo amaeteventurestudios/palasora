@@ -12,7 +12,7 @@ const GROUPS: { title: string; items: [string, string, React.ComponentType<{ cla
   { title: "Agents & AI", items: [["/admin/engine", "AI Engine overview", Globe2], ["/admin/engine/population", "Agent population", UsersRound], ["/admin/engine/controls", "Engine Control Room", Gauge], ["/admin/agent-city", "Agent City", Bot], ["/admin/models", "Models & Jev", Cpu], ["/admin/city", "City controls", SlidersHorizontal],
     ["/admin/conversations", "Conversations", MessagesSquare], ["/admin/exceptions", "Exceptions", ShieldAlert], ["/admin/ai", "Editorial AI runs", Activity]] },
   { title: "Content & Regions", items: [["/admin/social", "Social & SubPals", MessagesSquare], ["/admin/sources", "News & sources", Rss], ["/admin/editorial", "Editorial queue", Inbox],
-    ["/admin/translations", "Translations", Languages], ["/admin/geo", "Geo QA", MapPin], ["/admin/trends", "Trend audit", TrendingUp], ["/admin/moderation", "Moderation", Shield]] },
+    ["/admin/translations", "Translations", Languages], ["/admin/geo", "Geo QA", MapPin], ["/admin/regions", "Regional priorities", MapPin], ["/admin/trends", "Trend audit", TrendingUp], ["/admin/moderation", "Moderation", Shield]] },
   { title: "Economy", items: [["/admin/pals", "Pals economy", Coins], ["/admin/exchange", "Virtual Exchange", CandlestickChart]] },
   { title: "Commerce", items: [["/admin/revenue", "Revenue & business", Wallet], ["/admin/sponsors", "Sponsors & inquiries", Megaphone], ["/admin/businesses", "Businesses", Building2],
     ["/admin/distribution", "Distribution & search", Share2]] },

@@ -38,7 +38,7 @@ export function PulseLayersMap({ layers, layer, selected, hrefFor, unit }: { lay
           const op = v ? 0.3 + 0.65 * (v / Math.max(1, max)) : layer === "residents" && reg ? 0.12 : 0;
           const label = describe(a.code, a.name);
           return (
-            <a key={a.code} href={hrefFor(a.code)} aria-label={label} data-area={a.code} data-value={v} className="group focus:outline-none">
+            <a key={a.code} href={hrefFor(a.code)} aria-label={label} data-area={a.code} data-name={a.name} data-value={v} className="group focus:outline-none">
               <title>{label}</title>
               <path d={a.d} vectorEffect="non-scaling-stroke" strokeWidth={selected === a.code ? 3 : 1}
                 className="transition-[fill-opacity] group-hover:fill-[var(--brand-gold)] group-focus-visible:fill-[var(--brand-gold)]"
@@ -51,7 +51,7 @@ export function PulseLayersMap({ layers, layer, selected, hrefFor, unit }: { lay
         <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block h-3 w-5 rounded-sm border bg-card" />{L.empty}</li>
       </ul>
       <details className="mt-2" open>
-        <summary className="cursor-pointer text-sm font-semibold">All {geo.areas.length} {unit} as a list</summary>
+        <summary className="cursor-pointer text-sm font-semibold">All {geo.areas.length} administrative units ({unit}) as a list</summary>
         <ul className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2" data-testid="area-list">
           {sorted.map((a) => <li key={a.code}><Link href={hrefFor(a.code)} className={`hover:underline ${selected === a.code ? "font-bold" : ""}`}>{a.name}</Link>{" "}
             <span className="meta">{valueOf(layers, layer, a.code) || "–"}</span></li>)}
