@@ -97,3 +97,28 @@ one more failure mode, and less explainable than the current rules.
 and SubPal proposal classification — low volume, where a probability with confidence could route items to a person faster.
 Before any test: point the adapter at the documented endpoint, verify field names against the docs, create a separate
 authorised budget row. No credentials were used and no billing was enabled during this audit.
+
+## Payment providers (ISSUE-17) — research snapshot, 2026-10-12
+
+Purpose: collect real money for **AI credits, ad packages, SubPal sponsorships, optional Palavva Pro and invoices**. Pals stay
+fictional and are never sold. Nothing below is an agreement, a quote or a merchant approval; most public sources are third-party
+and several disagree, so every row needs confirmation on the provider's official pages and with their sales team.
+
+| Provider | Merchant markets (as reported) | Notes and uncertainty |
+| --- | --- | --- |
+| Paystack (Stripe-owned) | Nigeria, Ghana, Kenya, South Africa, Côte d'Ivoire; Egypt and Rwanda licences reported (live status unclear) | Settlement currencies reported NGN, GHS, ZAR, KES (+USD in NG/KE). Reported 2026 reorganisation under a new holding company. Natural first adapter for the ₦500 credit idea (not ratified). Sources: Chargebee Paystack docs, Techpoint Africa, Daba Finance. |
+| Flutterwave | Infrastructure reach reported in ~30-34 African countries; direct merchant onboarding depth varies | No authoritative 2026 country list found; check the developer docs per country. Sources: Flutterwave press (2024), third-party reviews (2026). |
+| Peach Payments | South Africa, Kenya, Mauritius, Eswatini; Francophone West Africa via a reported PayDunya deal (2025) | Strong for Southern Africa cards and local methods. Sources: TechAfrica News, PayAtlas, Peach Payments site. |
+| Paymob | Egypt (core), UAE, Saudi Arabia, Pakistan, Oman reported; Kenya/Jordan reports conflict; no Morocco evidence | Candidate for Egypt / North Africa. Sources: Forbes Middle East (2025), TechCrunch (2024), Daba Finance. |
+| Stripe | Africa largely via Paystack ("extended network" for NG/GH/KE/ZA/CI); Egypt/Morocco not found as payments markets | Stripe Tax listed for several African countries; that is not payment acceptance. Sources: third-party 2025-2026 reviews. |
+| Finix, Moov, Stax, PAYARC, Helcim | United States (Helcim and Stax also serve Canada) payment processors/infrastructure | Relevant only if Palavva contracts through a US (or Canadian) entity for international card customers or US advertisers; they do not onboard African merchants. Not researched beyond product scope in this pass. |
+
+**Design decision:** a provider-neutral adapter with per-country routing (Paystack first for NG/GH/KE/ZA/CI, Paymob for Egypt,
+Peach for Southern Africa where Paystack is weaker, Flutterwave as wider-coverage fallback after verification), idempotent
+webhooks, and one ledger for real money that never touches Pals. **Live payments stay disabled** until the founder approves a
+provider, the merchant account is approved and webhooks are verified end to end in sandbox.
+
+**Partnership candidates (no claims of interest or funding):** provider startup/partner programmes (Paystack, Flutterwave,
+Paymob and Peach all run partner or startup programmes publicly; terms unknown), telco wallets for local top-ups, and
+pan-African advertisers via the Sponsors pipeline. Unanswered: legal entity and country of incorporation for merchant accounts,
+VAT/GST handling per country, refund and chargeback policy for AI credits, minimum top-up per currency.
