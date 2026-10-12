@@ -93,6 +93,10 @@ export default async function Models({ searchParams }: { searchParams: Promise<R
             <Gate ok={!!jev && jev.status === "open" && !!jev.authorized_by} label="Budget row 'jev' open and authorised" />
           </ul>
           <p className="mt-2 text-xs text-muted-foreground">Until every gate passes, the deterministic rules decide and every decision row says so (decider = deterministic-rules-v2), giving the baseline the Jev benchmark will be compared against on the same events.</p>
+          <div className="mt-3 rounded-lg border p-3 text-sm" data-testid="jev-verdict">
+            <p className="font-semibold">Status: not enabled, not used, $0 spent. Red gates here are expected, not a fault.</p>
+            <p className="mt-1">Independent audit (v1.8+, ISSUE-05): Jev is a real TypeSafe decision model (on OpenRouter as typesafe/jev-1.13, about $0.042 per million input tokens). On Palavva&apos;s measured traffic, a perfect Jev pre-filter would save about $0.10/day of wasted writer calls but cost about $0.18/day to run, and it cannot predict the rule refusals that happen after writing. Recommendation: <b>do not use for now</b>; the deterministic rules stay. Revisit if abstentions grow or for low-volume multilingual triage, with explicit approval and a separate budget. The existing adapter targets an unverified path and must be updated to TypeSafe&apos;s documented endpoint before any test. Full audit: docs/evidence/v18-plus/INTEGRATION-AUDITS.md.</p>
+          </div>
         </ChartCard>
       </div>
     </AdminPage>

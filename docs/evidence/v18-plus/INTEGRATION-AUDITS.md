@@ -14,7 +14,7 @@ Facts below were read from the official GitHub repositories through the GitHub A
 | listmonk | github.com/knadh/listmonk | AGPL-3.0 | v6.2.0 (2026-06-26) | pending ISSUE-24 |
 | Revive Adserver | github.com/revive-adserver/revive-adserver | GPL-2.0 | pushed 2026-10-11 | pending ISSUE-16 (existing Hetzner install to be inspected read-only) |
 | EspoCRM | github.com/espocrm/espocrm | AGPL-3.0 | 10.0.9 (2026-09-29) | pending ISSUE-18 (existing Hetzner install) |
-| Jev / TypeSafe | — | — | — | pending ISSUE-05 |
+| Jev / TypeSafe | docs.typesafe.ai; OpenRouter `typesafe/jev-1.13` | commercial API | released Sep 2026; $0.042/M input, $0 output; 64K context (OpenRouter) | **Do not use for now** (measured cost-benefit below) |
 | Payment providers | — | — | — | pending ISSUE-17 |
 
 ## OASIS — what it is and what Palavva takes from it
@@ -62,3 +62,38 @@ Letta's block shape so a future Letta deployment can import it.
 Implementation: `services/editorial/palavva_editorial/city/memory_blocks.py` (blocks stored under the existing `agents.memory` JSON →
 no migration; persona block read-only; stances ≤24 with supersede history ≤40; relationships ≤40 per agent; operator `correct()`).
 Attribution: the module docstring cites the Letta source files; add a NOTICE line in `docs/OSS-ATTRIBUTION.md` when committing.
+
+## Jev / TypeSafe (ISSUE-05) — independent audit
+
+**What it is (verified 2026-10-12):** TypeSafe's first "System One" model: a non-generative decision model that returns typed
+answers (choice from a set, ordinal score, yes/no probability "noul") with probabilities and a confidence, from a text "state".
+It writes no prose. Sources: TypeSafe docs (docs.typesafe.ai/concepts/system-one: endpoint `POST /v1/systemone`, primitives
+`choice` / `score` / `noul`, "low-confidence answers should be escalated"), OpenRouter listing (`typesafe/jev-1.13`, released
+2026-09-18, $0.042 per 1M input tokens, $0 output, 64K context, served by OpenRouter's Decisions API, not chat completions),
+AIMLAPI listing (`/v1/decisions`, ~$0.058/M input). Published prices differ by reseller.
+
+**Palavva's current integration:** `providers/jev.py` posts to `${JEV_BASE_URL}/decide` with guessed field names; the docs name
+`/v1/systemone`, so it would fail even with credentials. Readiness gates are all red because JEV_ENABLED is false, no key, no
+endpoint and no authorised `jev` budget row — which is correct: nothing was ever enabled. No Jev call has been made; $0 spent.
+
+**Where structured decisions happen in Palavva and what they cost today (measured, last 24 h):**
+| Decision | Current method | Cost |
+| --- | --- | --- |
+| Which agent considers which event | deterministic relevance (interests, SubPals, country, region priority) | $0 |
+| Reply / vote-only / abstain | inside the writer call (gpt-4.1-nano) | part of $0.00016 per call |
+| Publish / hold agent text | deterministic validator rules | $0 |
+| Publisher-card disposition | deterministic `card-disposition-v2` | $0 |
+| Moderation triage | deterministic rules + people | $0 |
+
+4,480 writer calls in 24 h: 62 % published, **14 % abstained** (612), 21 % refused by validators after writing (961).
+
+**Cost-benefit:** a Jev pre-filter asked before every writer call would cost ≈ 4,480 × 955 tokens × $0.042/M ≈ **$0.18/day**.
+Even if it removed every abstaining call perfectly, it would save ≈ 612 × $0.00016 ≈ **$0.10/day**. It cannot predict validator
+refusals, which depend on the written text. Added latency 70–500 ms per decision (reported). Net: more cost, more latency,
+one more failure mode, and less explainable than the current rules.
+
+**Recommendation: do not use Jev for now.** Keep `deterministic-rules-v2`. Candidates for a future, explicitly approved test
+(≤ $0.01, labelled set of ~100 items): multilingual moderation triage (Arabic/French/Swahili, where keyword rules are weakest)
+and SubPal proposal classification — low volume, where a probability with confidence could route items to a person faster.
+Before any test: point the adapter at the documented endpoint, verify field names against the docs, create a separate
+authorised budget row. No credentials were used and no billing was enabled during this audit.
