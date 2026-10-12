@@ -143,8 +143,10 @@ test("T-030 sponsor inquiry: durable reference, honest NOT_CONFIGURED forward st
   await signIn(page, "admin@palavva.local", BASE, "/admin/sponsors");
   const row = page.locator("tr", { hasText: ref });
   await expect(row).toContainText("NOT_CONFIGURED");
-  await row.getByRole("button", { name: "Retry forward" }).click();
-  await expect(row.getByText("Forward state: NOT_CONFIGURED")).toBeVisible();
+  await row.click(); // ISSUE-18: the inquiry panel replaces the old table buttons
+  await expect(page.getByTestId("inquiry-forward")).toHaveText("NOT_CONFIGURED");
+  await page.getByRole("button", { name: "Send to EspoCRM now" }).click();
+  await expect(page.getByText("EspoCRM is not configured; the inquiry stays safely in Palavva.")).toBeVisible();
 });
 
 test("T-027/T-028 analytics: consent-gated event written once, opt-out sends nothing, ETL aggregates", async ({ browser }) => {

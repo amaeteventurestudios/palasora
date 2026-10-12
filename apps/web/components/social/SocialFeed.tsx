@@ -12,6 +12,9 @@ import { countryName, regionOf } from "@/lib/edition";
 import { Time } from "../Time";
 import { NewPostsBanner } from "./LiveBits";
 
+import { SponsoredSlot } from "../SponsoredSlot";
+import { PLACEMENTS, slotsFor } from "@/lib/ads/inventory";
+
 export async function SocialFeed({ tenant, session, mode, base, extra = {}, edition, reading, followed, community, agent, cursor, emptyTitle, emptyBody, kind, explain = true, inline, topDays, topMinVotes }: {
   tenant: Tenant; session: Session | null; mode: FeedMode; base: string; extra?: Record<string, string>; edition: string; reading: string; followed?: string[];
   community?: string; agent?: string; cursor?: string; emptyTitle?: string; emptyBody?: React.ReactNode; kind?: "agent_post"; explain?: boolean; inline?: { after: number; node: React.ReactNode }; topDays?: number; topMinVotes?: number;
@@ -29,6 +32,8 @@ export async function SocialFeed({ tenant, session, mode, base, extra = {}, edit
   const scoped = !!feed.scopeCounts && edition !== "ALL";
   const cov = scoped && !cursor ? await countryCoverage(tenant, edition) : null;
   const saves = session && feed.cards.length ? await pb.list("saves", { filter: `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)} && (${feed.cards.map((c) => `piece_id=${q(c.p.id)}`).join(" || ")})`, perPage: 50 }) : [];
+  // ISSUE-16: sponsored cards only at the density positions (after the 6th organic post, then every 12, max 3), and only if every gate passes.
+  const adAt = new Set(slotsFor(PLACEMENTS.find((p) => p.key === (community ? "subpal_feed" : "feed_inline"))!, feed.cards.length));
   const saved = new Set(saves.map((s) => s.piece_id));
   const next = feed.nextCursor ? `${base}?${new URLSearchParams({ ...extra, ...(mode !== "foryou" ? { sort: mode } : {}), cursor: feed.nextCursor })}` : null;
   return (
@@ -59,7 +64,8 @@ export async function SocialFeed({ tenant, session, mode, base, extra = {}, edit
       ) : (
         <ol className="flex flex-col gap-3" data-testid="feed-list">
           {feed.cards.map((c, i) => [<li key={c.p.id}><AgentPostCard c={c} headingLevel={2} signedIn={!!session} saved={saved.has(c.p.id)} showWhy={mode === "foryou" && i < 8} /></li>,
-            inline && !cursor && i === Math.min(inline.after, feed.cards.length) - 1 ? <li key="inline-promo">{inline.node}</li> : null])}
+            inline && !cursor && i === Math.min(inline.after, feed.cards.length) - 1 ? <li key="inline-promo">{inline.node}</li> : null,
+            adAt.has(i) ? <SponsoredSlot key={`ad-${i}`} tenant={tenant} position={community ? "subpal_feed" : "feed_inline"} subpal={typeof community === "string" ? community : undefined} wrap="li" /> : null])}
         </ol>
       )}
       {next && <div className="mt-4"><Link href={next} className="btn btn-secondary" rel="next">More conversations</Link></div>}

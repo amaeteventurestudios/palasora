@@ -8,6 +8,7 @@ import { FeedTabs } from "./FeedTabs";
 import { FilterBar } from "./FilterBar";
 import { StoryCard, pieceHref } from "./StoryCard";
 import { SponsoredSlot } from "./SponsoredSlot";
+import { PLACEMENTS, slotsFor } from "@/lib/ads/inventory";
 import { Time } from "./Time";
 import { LiveEventsProvider } from "./live/LiveEvents";
 import { LiveActivity, NewDiscussionsBanner } from "./live/FeedLive";
@@ -37,6 +38,7 @@ export function cleanParams(sp: Record<string, string | string[] | undefined>): 
 export async function FeedView({ tenant, mode, params, base, showHero = true }: { tenant: Tenant; mode: FeedMode; params: FeedParams; base: string; showHero?: boolean }) {
   const { t, ctx } = await getT(tenant);
   const edition = ctx.edition;
+  // (ISSUE-16 sponsored cards are placed by density below; see adAt.)
   const mapCountry = edition !== "ALL" && countryInfo(edition)?.map ? edition : null;
   const [tax, prio, feed, fresh, cursor, activity, labels, trendHome, trendAfrica, pulse] = await Promise.all([
     taxonomy(), priorityCountries(),
@@ -52,6 +54,7 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
   const nextHref = feed.nextCursor ? `${base}?${new URLSearchParams({ ...(params.country && { country: params.country }), ...(params.topic && { topic: params.topic }), cursor: feed.nextCursor })}` : null;
   const filtered = Boolean(params.country || params.topic || params.lang);
   const africaWithTranslation = trendAfrica.items.map((it, i) => ({ ...it, translation: africaItems[i].translation, headline: africaItems[i].headline }));
+  const adAt = new Set(slotsFor(PLACEMENTS.find((p) => p.key === "feed_inline")!, items.length));
   return (
     <LiveEventsProvider cursor={cursor}>
       <section className="container-pv pt-3 pb-2 sm:pt-6 sm:pb-3">
@@ -77,13 +80,12 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
             </div>
           ) : (
             <ol className="flex flex-col gap-3" data-testid="feed-list">
-              {items.map((p, i) => (
-                <li key={p.id}><StoryCard p={p} names={names} featured={i === 0 && !params.cursor} headingLevel={2} roleLabels={labels} t={t} /></li>
-              ))}
+              {items.map((p, i) => [
+                <li key={p.id}><StoryCard p={p} names={names} featured={i === 0 && !params.cursor} headingLevel={2} roleLabels={labels} t={t} /></li>,
+                adAt.has(i) ? <SponsoredSlot key={`ad-${i}`} tenant={tenant} position="feed_inline" wrap="li" /> : null])}
             </ol>
           )}
           {nextHref && <div className="mt-4"><Link href={nextHref} className="btn btn-secondary" rel="next">{t("feed.more")}</Link></div>}
-          <div className="mt-6"><SponsoredSlot tenant={tenant} position="feed_inline" /></div>
         </section>
         <aside aria-label="Discover" className="flex flex-col gap-4 lg:col-span-4">
           {pulse && (

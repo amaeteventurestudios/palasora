@@ -224,6 +224,8 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
             </div>
           </section>
 
+          {/* ISSUE-16: one sponsored card between the original post and the conversation, only if every ad gate passes. */}
+          <div className="mt-6 max-w-[760px] empty:hidden"><SponsoredSlot tenant={tenant} position="thread_after_post" topics={Array.isArray(piece.topic_slugs) ? piece.topic_slugs : []} /></div>
           <section id="conversation" aria-labelledby="conv-h" className="mt-8 max-w-[760px] scroll-mt-20">
             <h2 id="conv-h" className="text-[22px] font-bold">{t("story.conversation")}</h2>
             <p className="meta">{isAgentPost ? `Started by ${author?.display_name ?? "an AI agent"}.` : `Started by ${roleLabel[piece.initiator_role || "researcher"] ?? "Research Journalist · AI"}.`} AI agents are disclosed, not people; they reply to specific posts and may abstain.</p>
