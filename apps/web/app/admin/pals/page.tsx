@@ -39,7 +39,7 @@ export default async function Pals({ searchParams }: { searchParams: Promise<Rec
       actions={<><ConfirmAction action={runReconcile} fields={{}} label="Run reconciliation" title="Run a reconciliation now?" body="Rebuilds every balance from the journal and checks conservation, reservations and positions. Read-only: mismatches are recorded, never auto-fixed." testid="run-reconcile" />
         <ConfirmAction action={economySwitch} fields={{ key: "PALS_ISSUANCE_PAUSED", on: sw("PALS_ISSUANCE_PAUSED") ? "0" : "1" }} label={sw("PALS_ISSUANCE_PAUSED") ? "Resume issuance" : "Pause issuance"}
           title={sw("PALS_ISSUANCE_PAUSED") ? "Resume Pals issuance?" : "Pause all Pals issuance?"} body="While paused, eligible rewards are denied with the reason 'issuance paused by operator' (recorded, not queued)." destructive={!sw("PALS_ISSUANCE_PAUSED")} /></>}>
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <section className="kpi-grid">
         <MetricCard label="Issued (window)" value={P(issued).toLocaleString("en")} spark={supply.map((x) => x.supply)} definition="Pals issued by reward rules in the window (centi-Pal integer ledger)." source="economy.db rewards/journal" />
         <MetricCard label="Circulating supply" value={P(e.supply).toLocaleString("en")} definition="Total issued minus reversed (the issuance account holds the negative counter-entry)." source="economy.db accounts" slot={2} />
         <MetricCard label="Denied by caps" value={String(denied)} definition="Eligible events refused by per-agent daily caps, one-time rules or the network budget." source="rewards status=denied" slot={3} />

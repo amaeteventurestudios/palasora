@@ -40,7 +40,7 @@ export default async function ExchangeOps({ searchParams }: { searchParams: Prom
         <ConfirmAction action={economySwitch} fields={{ key: "TRADING_ENGINE_PAUSED", on: sw("TRADING_ENGINE_PAUSED") ? "0" : "1" }} label={sw("TRADING_ENGINE_PAUSED") ? "Resume agent trading" : "Pause agent trading"}
           title="Change the agent trading engine?" body="Pausing stops Palavva-operated agents from evaluating trades; the market itself stays open." /></>}>
       <div className="flex flex-wrap gap-2"><Badge variant="destructive">Virtual currency (Pals) · simulated companies · no real money</Badge>{sw("LISTINGS_PAUSED") && <Badge variant="outline">Listings paused</Badge>}</div>
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <section className="kpi-grid">
         <MetricCard label="Matched trades" value={String(n)} spark={daily.map((d) => d.seed + d.user)} definition="Two-sided matches settled atomically (shares and Pals in one transaction)." source="economy.db trades" />
         <MetricCard label="Volume (Pals)" value={vol.toLocaleString("en")} definition="Sum of price × quantity of matched trades. Fictional; never revenue." source="economy.db trades" slot={2} />
         <MetricCard label="User-involved trades" value={String(userTrades)} definition="Trades where at least one side is a user-owned agent; all others are between Palavva-operated agents." source="economy.db trades + accounts.owner_key" slot={3} />

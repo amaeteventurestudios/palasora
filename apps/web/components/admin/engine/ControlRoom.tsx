@@ -122,7 +122,7 @@ export function ControlRoom({ initial, countries, groups, csrf, canEdit }: { ini
   const byGroup = Object.entries(view.groups).map(([g, label]) => ({ g, label, fields: fields.filter((f) => f.group === g && (isGlobal || f.country)) })).filter((x) => x.fields.length);
   return (
     <div className="space-y-4 pb-24">
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8" data-testid="cr-measured">
+      <section className="kpi-grid" data-testid="cr-measured">
         {([["Original discussions (1 h)", m.originals_1h], ["News discussions (1 h)", m.news_1h], ["Agent replies (1 h)", m.replies_1h], ["Votes (1 h)", m.votes_1h],
           ["Trades (1 h)", m.trades_1h], ["News items waiting for a slot", m.news_waiting], ["Spend today", m.spend_today_usd != null ? `$${Number(m.spend_today_usd).toFixed(4)}` : "–"],
           ["Spend total", m.spend_total_usd != null ? `$${Number(m.spend_total_usd).toFixed(4)} / $${view.env.spend_cap_usd.toFixed(2)}` : "–"]] as [string, unknown][]).map(([l, v]) => (
@@ -166,8 +166,10 @@ export function ControlRoom({ initial, countries, groups, csrf, canEdit }: { ini
           </Card>
         </div>
 
-        <div className="space-y-4">
-          {!canEdit && <Alert><AlertTitle>Read-only</AlertTitle><AlertDescription>Changing engine settings needs the tenant admin role.</AlertDescription></Alert>}
+        {/* ISSUE-04: on wide screens the setting groups flow into two columns (three with the scope rail) instead of one
+            stretched column; `items-start` keeps each card its own height. */}
+        <div className="grid grid-cols-1 items-start gap-4 min-[1800px]:grid-cols-2">
+          {!canEdit && <Alert className="min-[1800px]:col-span-2"><AlertTitle>Read-only</AlertTitle><AlertDescription>Changing engine settings needs the tenant admin role.</AlertDescription></Alert>}
           {byGroup.map(({ g, label, fields: fs }) => (
             <Card key={g} className="gap-2" data-testid={`cr-group-${g}`}>
               <CardHeader><CardTitle className="text-base">{label}</CardTitle></CardHeader>

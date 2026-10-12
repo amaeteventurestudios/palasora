@@ -14,7 +14,7 @@ const shortDay = (d: string) => (d.length >= 10 ? `${d.slice(8, 10)}/${d.slice(5
 export function Sparkline({ values, slot = 1, label }: { values: number[]; slot?: number; label: string }) {
   const data = values.map((v, i) => ({ i, v }));
   return (
-    <div className="h-8 w-full" role="img" aria-label={`${label}: ${values.join(", ")}`}>
+    <div className="h-8 w-full min-w-0 overflow-hidden" role="img" aria-label={`${label}: ${values.join(", ")}`}>
       <ChartContainer config={{ v: { label, color: `var(--chart-${slot})` } }} className="aspect-auto h-8 w-full">
         <LineChart data={data} margin={{ top: 2, bottom: 2, left: 0, right: 0 }}><Line dataKey="v" stroke="var(--color-v)" strokeWidth={2} dot={false} isAnimationActive={false} /></LineChart>
       </ChartContainer>

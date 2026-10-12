@@ -41,7 +41,7 @@ export default async function Sources({ searchParams }: { searchParams: Promise<
   return (
     <AdminPage title="News & sources" scope={s}
       narrative={`${scoped.length} feed items ingested in scope: ${daily.reduce((a, d) => a + d.used, 0)} used, ${daily.reduce((a, d) => a + d.card, 0)} became cards only (7-30 days old), ${daily.reduce((a, d) => a + d.stale, 0)} ignored as stale. ${health.filter((h) => h.state === "healthy").length} sources healthy, ${health.filter((h) => h.state === "failing").length} failing.`}>
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <section className="kpi-grid">
         {states.map((st, i) => <MetricCard key={st} label={`Sources ${st}`} value={String(health.filter((h) => h.state === st).length)} slot={i + 1}
           definition={{ healthy: "Fetched successfully within 3 fetch intervals.", stale: "Enabled and approved, but no success within 3 intervals.", failing: "Last fetch failed (back-off applies).", never: "Enabled but never fetched yet.", off: "Disabled or rights not approved: zero network requests." }[st]!} source="sources" />)}
       </section>

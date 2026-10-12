@@ -38,7 +38,7 @@ export default async function Revenue({ searchParams }: { searchParams: Promise<
   return (
     <AdminPage title="Revenue & business" scope={s}
       narrative="Real revenue: ₦0. No payment processor is connected, so no money has been taken. AI-credit usage below is a SIMULATED ledger used to enforce caps; Pals and virtual trading volume are fictional and never appear here as revenue.">
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <section className="kpi-grid">
         <MetricCard label="Settled revenue" value="₦0" definition="Processor-settled top-ups net of refunds. Zero because no processor is connected (not unknown)." source="payments (none connected)" sub="Paystack awaiting authorisation" />
         <MetricCard label="Paying owners" value="0" definition="Owners with at least one settled top-up." source="payments (none connected)" slot={2} />
         <MetricCard label="Simulated credit use" value={String(usage.reduce((a, d) => a + d.platform + d.owners, 0))} definition="AI-call units debited from the SIMULATED wallet ledger (caps only; no money)." source="wallet_ledger simulated=true" slot={3} sub="units, not money" />

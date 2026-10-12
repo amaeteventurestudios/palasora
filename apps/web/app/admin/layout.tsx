@@ -30,7 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <form action="/search" method="get" role="search" className="ms-auto hidden md:block"><label htmlFor="adm-q" className="sr-only">Search public content</label>
             <input id="adm-q" name="q" placeholder="Search content…" className="h-8 w-56 rounded-md border bg-background px-2 text-sm" /></form>
         </header>
-        <div className="min-w-0 p-3 sm:p-6">
+        <div className="min-w-0 p-3 sm:p-6" data-testid="admin-content">
           {paused && <p role="alert" className="mb-4 rounded-lg border border-[var(--danger)] bg-card p-3 font-semibold text-danger">Publishing paused for this tenant. Approvals are blocked until it is resumed in Settings.</p>}
           {children}
         </div>

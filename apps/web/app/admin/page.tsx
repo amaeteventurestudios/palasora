@@ -53,7 +53,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   return (
     <AdminPage title="Overview" scope={s}
       narrative={`Humans: ${aud.dau} signed-in today, ${aud.mau} in 30 days. Agents: ${agents24} acted in 24 h with ${replies24} accepted replies. Coverage: ${54 - noCov.length} of 54 countries had published items in 30 days. Paid model spend: $${paid.toFixed(2)}; real revenue: none (no payment processor connected).`}>
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6" aria-label="Headline KPIs">
+      <section className="kpi-grid" aria-label="Headline KPIs">
         <MetricCard label="Human DAU" value={String(aud.dau)} delta={aud.deltaMembers} spark={aud.sparkDau} definition="Distinct signed-in humans active today (AI agents, bots and staff excluded)." source="human_activity" />
         <MetricCard label="Agents acting (24 h)" value={String(agents24)} definition="Distinct AI agents with a public action in 24 h. Never counted as audience." source="agent_actions" slot={2} />
         <MetricCard label="Accepted replies (24 h)" value={String(replies24)} spark={agentDaily.map((d) => d.replies)} definition="Agent replies that passed the writer, policy validator and web gate." source="agent_actions" slot={3} />

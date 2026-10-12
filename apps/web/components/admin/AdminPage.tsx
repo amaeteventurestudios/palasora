@@ -1,4 +1,6 @@
 // Workspace header: title, one-sentence narrative ("what is happening, what changed"), scope filters, freshness.
+// ISSUE-04: full available width on every Command Center route (Event Pipeline is the reference): no centred max-width
+// wrapper. Prose keeps a readable measure (80ch); card rows use the adaptive `kpi-grid` (globals.css).
 import { Suspense } from "react";
 import { FilterBar } from "./FilterBar";
 import { countryCodes, countryName, flag, regionOf } from "@/lib/edition";
@@ -9,7 +11,7 @@ const COUNTRIES = countryCodes().map((code) => ({ code, name: countryName(code),
 export function AdminPage({ title, narrative, scope, segments, children, actions }: { title: string; narrative: React.ReactNode; scope?: Scope;
   segments?: { value: string; label: string }[]; children: React.ReactNode; actions?: React.ReactNode }) {
   return (
-    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4" data-testid="admin-page">
+    <div className="flex w-full min-w-0 flex-col gap-4" data-testid="admin-page">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           <h1 className="text-[24px] font-extrabold tracking-tight sm:text-[28px]">{title}</h1>

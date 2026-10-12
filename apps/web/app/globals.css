@@ -220,6 +220,16 @@ a { color: inherit; }
   .btn:disabled, .btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
 
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+  /* ISSUE-04: adaptive metric-card rows for every Command Center page. Cards wrap onto more rows as the window narrows
+     instead of squeezing 6-9 tiny cards into one row; two per row on phones; values never clip (6-9+ digit numbers). */
+  .kpi-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr)); }
+  @media (min-width: 1024px) { .kpi-grid { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); } }
+  .kpi-grid > * { min-width: 0; }
+  /* Grid/flex items default to min-width:auto, which lets one wide table or chart stretch its card and make the whole
+     admin page scroll sideways on phones. Dense content keeps its own horizontal scroll container instead. */
+  [data-testid="admin-content"] .grid > *, [data-testid="admin-content"] [data-slot="card"] > * { min-width: 0; }
+  /* Absolutely positioned helpers (e.g. sr-only labels) inside a table escape an unpositioned scroll box. */
+  [data-testid="admin-content"] .overflow-x-auto, [data-testid="admin-content"] .overflow-auto { position: relative; }
 
   .label-pill {
     display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px;

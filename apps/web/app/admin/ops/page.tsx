@@ -38,7 +38,7 @@ export default async function Ops() {
   const actions = [...audit.reduce((m, a) => m.set(a.action, (m.get(a.action) ?? 0) + 1), new Map<string, number>()).entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
   return (
     <AdminPage title="Reliability & security" narrative={`${h.procs.filter((p) => p.running).length}/${h.procs.length} processes running on ${h.platform}/${h.arch} (${h.cpus} CPUs). Last backup ${lastBackup ? `${Math.round(backupAgeH)} h ago` : "never"}; last restore drill ${lastDrill ? new Date(lastDrill.at).toISOString().slice(0, 10) : "never"}. Values are measured on this host; the Oracle ARM64 target is not deployed.`}>
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <section className="kpi-grid">
         <MetricCard label="Load (1 min)" value={h.load[0].toFixed(2)} definition={`OS load average; baseline is CPU count (${h.cpus}).`} source="node:os" sub={`5m ${h.load[1].toFixed(2)} · 15m ${h.load[2].toFixed(2)}`} />
         <MetricCard label="Memory used" value={gb(memUsed)} definition="Host memory in use (all processes, not only Palavva)." source="node:os" slot={2} sub={`of ${gb(h.memTotal)}`} />
         <MetricCard label="Disk free" value={h.disk ? gb(h.disk.free) : "unknown"} definition="Free space on the volume holding the project." source="statfs" slot={3} />

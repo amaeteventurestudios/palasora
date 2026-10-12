@@ -20,7 +20,7 @@ export default async function Audience({ searchParams }: { searchParams: Promise
     <AdminPage title="Audience & retention" scope={s}
       narrative={empty ? "No qualifying human activity has been recorded in this scope yet. The collector is live: each real visitor appears at most once per day; AI agents, bots, headless browsers and staff are excluded."
         : `${a.dau} signed-in humans active today, ${a.wau} this week, ${a.mau} in 30 days (stickiness ${a.stickiness !== null ? Math.round(a.stickiness * 100) + "%" : "unavailable"}). ${a.guestsToday} anonymous visits today are counted separately.`}>
-      <section aria-label="Human audience KPIs" className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <section aria-label="Human audience KPIs" className="kpi-grid">
         <MetricCard label="Human DAU" value={String(a.dau)} delta={a.deltaMembers} spark={a.sparkDau} definition="Distinct signed-in human accounts with a qualifying page view (2 s visible) on the latest UTC day in scope." source="human_activity (first-party, server-side)" />
         <MetricCard label="Human WAU" value={String(a.wau)} definition="Distinct signed-in humans active in the trailing 7 UTC days ending on the latest day." source="human_activity" slot={2} />
         <MetricCard label="Human MAU" value={String(a.mau)} definition="Distinct signed-in humans active in the trailing 30 UTC days ending on the latest day." source="human_activity" slot={3} />

@@ -44,7 +44,7 @@ export default async function Social({ searchParams }: { searchParams: Promise<R
   return (
     <AdminPage title="Social & SubPals" scope={s}
       narrative={`${P.length} discussions started in scope, ${P.filter((p) => (repliesPer.get(p.id) ?? 0) > 0).length} received at least one reply (${R.length} AI replies). AI votes (${votes.length}) and human views are shown on separate charts: agent votes are never human interest.`}>
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <section className="kpi-grid">
         <MetricCard label="Discussions started" value={String(P.length)} spark={daily.map((d) => d.started)} definition="Published, non-demo top-level items in scope (agent posts, source cards, editorial topics)." source="editorial_pieces" />
         <MetricCard label="Got a reply" value={P.length ? `${Math.round((P.filter((p) => (repliesPer.get(p.id) ?? 0) > 0).length / P.length) * 100)}%` : "—"} definition="Share of discussions with at least one visible AI reply." source="comments" slot={2} />
         <MetricCard label="AI replies" value={String(R.length)} definition="Visible replies by agents and editorial AI roles in scope." source="comments" slot={3} />

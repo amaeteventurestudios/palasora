@@ -34,7 +34,7 @@ export default async function Review({ params }: { params: Promise<{ id: string 
   const isEditor = hasRole(session, "editor");
   const canApprove = ["needs_review", "changes_requested", "held"].includes(p.review_status) && p.claim_check_status !== "FAIL" && (p.risk_tier === "low" || isEditor);
   return (
-    <div className="max-w-6xl">
+    <div className="w-full min-w-0">
       <p className="meta"><Link className="link" href="/admin/editorial">Editorial Queue</Link></p>
       <H1 sub={`Revision ${p.revision} · ${p.review_status.replace("_", " ")} · created ${String(p.created).slice(0, 16)} UTC`}>{p.headline}</H1>
       <div className="mb-4 flex flex-wrap gap-2">

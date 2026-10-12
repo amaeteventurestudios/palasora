@@ -17,8 +17,8 @@ export function MetricCard({ label, value, delta, definition, source, spark, slo
           <Tooltip><TooltipTrigger asChild><button type="button" className="text-muted-foreground hover:text-foreground" aria-label={`Definition of ${label}`}><Info className="size-3.5" /></button></TooltipTrigger>
             <TooltipContent className="max-w-xs"><p>{definition}</p><p className="mt-1 opacity-80">Source: {source}</p></TooltipContent></Tooltip>
         </div>
-        <div className="mt-1 flex items-baseline gap-2">
-          <p className="text-[26px] font-extrabold leading-none tabular-nums" data-value={value}>{value}</p>
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <p className="min-w-0 text-[26px] font-extrabold leading-none tabular-nums [overflow-wrap:anywhere]" data-value={value}>{value}</p>
           {delta !== undefined && (delta === null ? <Badge variant="outline" className="text-[11px]">new</Badge> : (
             <span className={cn("inline-flex items-center text-xs font-semibold", delta > 0 ? "text-success" : delta < 0 ? "text-danger" : "text-muted-foreground")}>
               {delta > 0 ? <ArrowUpRight className="size-3.5" aria-hidden="true" /> : delta < 0 ? <ArrowDownRight className="size-3.5" aria-hidden="true" /> : <Minus className="size-3.5" aria-hidden="true" />}

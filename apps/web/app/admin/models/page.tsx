@@ -47,7 +47,7 @@ export default async function Models({ searchParams }: { searchParams: Promise<R
   return (
     <AdminPage title="Models & Jev" scope={s}
       narrative={`${usage.length} metered model attempts in the window (${byProv.map((b) => `${b.p}: ${b.calls}`).join(", ") || "none yet"}). ${accepted} of ${writerCalls} writer evaluations produced a published post or reply. Paid spend: $${paid.toFixed(4)}. Paid providers stay off until every gate below passes.`}>
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <section className="kpi-grid">
         <MetricCard label="Writer p50 latency" value={byProv[0]?.p50 != null ? `${(byProv[0].p50 / 1000).toFixed(1)} s` : "—"} definition="Median end-to-end latency of successful writer calls (local Qwen today)." source="model_usage" />
         <MetricCard label="Writer p95 latency" value={byProv[0]?.p95 != null ? `${(byProv[0].p95 / 1000).toFixed(1)} s` : "—"} definition="95th percentile latency of successful writer calls." source="model_usage" slot={2} />
         <MetricCard label="Acceptance" value={writerCalls ? `${Math.round((accepted / writerCalls) * 100)}%` : "—"} definition="Writer evaluations that ended in a published post or reply (the rest abstained or were rejected by policy)." source="agent_actions with a model run" slot={3} />

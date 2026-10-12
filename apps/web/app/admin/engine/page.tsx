@@ -71,7 +71,7 @@ export default async function Engine({ searchParams }: { searchParams: Promise<R
     <AdminPage title="Pan-African engine" narrative={narrative}
       actions={<div className="flex flex-wrap gap-1" role="group" aria-label="Time window">{(Object.keys(WINDOWS) as (keyof typeof WINDOWS)[]).map((w) => (
         <Button key={w} asChild size="sm" variant={w === win ? "default" : "outline"}><Link href={href({ w })} aria-current={w === win ? "page" : undefined}>{w}</Link></Button>))}</div>}>
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6" data-testid="engine-metrics">
+      <section className="kpi-grid" data-testid="engine-metrics">
         <MetricCard label="Actions / minute" value={fmt(d.eventsPerMin, 2)} sub={`last 10 min: ${fmt(d.last10PerMin, 1)}/min · one every ${d.eventsPerMin > 0 ? fmt(60 / d.eventsPerMin, 0) + " s" : "–"}`}
           definition="Committed public agent events (posts, replies, votes, follows, joins, trades, listings) per minute. Rewards are excluded." source="thread_events" testid="m-rate" />
         <MetricCard label="Agents acting" value={`${d.activeAgents} / ${d.eligibleAgents}`} sub={`${d.totalAgents} registered`} slot={2}

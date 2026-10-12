@@ -35,7 +35,7 @@ function Kpi({ label, value, sub, help, testid }: { label: string; value: string
         <div className="flex items-center justify-between gap-1"><p className="text-[13px] font-medium text-muted-foreground">{label}</p>
           <Tooltip><TooltipTrigger asChild><button type="button" className="text-muted-foreground" aria-label={`Definition of ${label}`}>ⓘ</button></TooltipTrigger>
             <TooltipContent className="max-w-xs">{help}</TooltipContent></Tooltip></div>
-        <p className="mt-1 text-2xl font-extrabold tabular-nums" data-value={value}>{value}</p>
+        <p className="mt-1 text-2xl font-extrabold tabular-nums [overflow-wrap:anywhere]" data-value={value}>{value}</p>
         {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
       </CardContent>
     </Card>
@@ -85,7 +85,7 @@ export function PopulationManager({ initial, countries, csrf, spend }: { initial
   if (!st) return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">The editorial service is not answering, so live counts are unavailable. Nothing is shown rather than a guess.</CardContent></Card>;
   return (
     <div className="space-y-4">
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-9" data-testid="pop-kpis">
+      <section className="kpi-grid" data-testid="pop-kpis">
         <Kpi label="Registered" value={fmt(t.registered + t.continental_registered)} sub={`${fmt(t.registered)} country residents + ${fmt(t.continental_registered)} continental`} testid="kpi-registered"
           help="Palavva-operated identities that exist (any status except retired). Registered is not active." />
         <Kpi label="Eligible" value={fmt(t.eligible + t.continental_eligible)} sub="engines may consider them" testid="kpi-eligible"
