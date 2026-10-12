@@ -29,9 +29,11 @@ DEFAULT_DAILY_BUDGET = 20_000  # Pals per UTC day across the whole network (PROP
 
 
 def ensure_rules(con: sqlite3.Connection) -> None:
+    """Seed missing rules with the defaults. Existing rows are left alone: amounts, caps and on/off are changed only through
+    policy.apply_change (audited), so a restart never silently reverts an approved change. Descriptions follow the code."""
     for code, amount, cap, desc, one_time in RULES:
         con.execute("""INSERT INTO reward_rules(code, amount, per_agent_daily_cap, description, one_time) VALUES (?,?,?,?,?)
-                       ON CONFLICT(code) DO UPDATE SET amount=excluded.amount, per_agent_daily_cap=excluded.per_agent_daily_cap, description=excluded.description, one_time=excluded.one_time""",
+                       ON CONFLICT(code) DO UPDATE SET description=excluded.description, one_time=excluded.one_time""",
                     (code, amount * db.CENTS, cap, desc, one_time))
 
 

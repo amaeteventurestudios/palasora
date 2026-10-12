@@ -112,6 +112,18 @@ CREATE TABLE IF NOT EXISTS decisions (
   order_id INTEGER, created_at REAL NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_decisions_agent ON decisions (agent_id, created_at);
+-- ISSUE-14: every reward-policy change (rule amount/cap/active, network budget) with before/after, reason and the preview shown.
+-- Changes apply to FUTURE rewards only; past rows in `rewards` and `journal` are never rewritten.
+CREATE TABLE IF NOT EXISTS reward_policy_changes (
+  id INTEGER PRIMARY KEY, target TEXT NOT NULL, before_json TEXT NOT NULL, after_json TEXT NOT NULL, reason TEXT NOT NULL,
+  preview_json TEXT NOT NULL DEFAULT '{}', changed_by TEXT NOT NULL, rollback_of INTEGER, created_at REAL NOT NULL
+);
+-- ISSUE-14: a person's disposition of an integrity signal (signals are warnings, not proof).
+CREATE TABLE IF NOT EXISTS integrity_reviews (
+  id INTEGER PRIMARY KEY, signal_key TEXT NOT NULL, disposition TEXT NOT NULL CHECK (disposition IN ('looks_fine','investigating','action_taken')),
+  note TEXT NOT NULL, reviewed_by TEXT NOT NULL, created_at REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_integrity_reviews_key ON integrity_reviews (signal_key, created_at);
 CREATE TABLE IF NOT EXISTS switches (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_by TEXT NOT NULL DEFAULT '', updated_at REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS reconciliations (
   id INTEGER PRIMARY KEY, ran_at REAL NOT NULL, ok INTEGER NOT NULL, accounts INTEGER NOT NULL, journal_rows INTEGER NOT NULL,

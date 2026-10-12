@@ -11,7 +11,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from . import db, exchange as ex, rewards, service
+from . import db, exchange as ex, policy, rewards, service
 
 router = APIRouter(prefix="/economy")
 
@@ -159,6 +159,94 @@ def reconcile() -> dict:
 @router.get("/admin/stats")
 def admin_stats(days: int = 30) -> dict:
     return service.admin_stats(max(1, min(days, 365)))
+
+
+# ---- ISSUE-14: reward policy explained, previewed, changed with an audit trail; integrity signals. The web layer checks the
+# admin's role and writes its own audit row as well; these routes keep the economy-side record (before/after, reason, preview).
+@router.get("/admin/rewards/explain")
+def rewards_explain(days: int = 14) -> dict:
+    return policy.explain(service.con(), max(1, min(days, 90)))
+
+
+class RuleChange(BaseModel):
+    amount: float | None = None
+    cap: int | None = None
+    active: bool | None = None
+
+
+class PolicyIn(BaseModel):
+    rules: dict[str, RuleChange] = {}
+    budget: int | None = None
+    confirm_large: bool = False
+
+    def proposal(self) -> dict:
+        p: dict = {"rules": {k: {f: v for f, v in r.model_dump().items() if v is not None} for k, r in self.rules.items()}}
+        p["rules"] = {k: v for k, v in p["rules"].items() if v}
+        if self.budget is not None:
+            p["budget"] = self.budget
+        if self.confirm_large:
+            p["confirm_large"] = True
+        return p
+
+
+class PolicyChangeIn(PolicyIn):
+    by: str = Field(min_length=1)
+    reason: str
+    expected_revision: int
+
+
+def _perr(e: policy.PolicyError):
+    raise HTTPException(status_code=409 if e.code in ("CONFLICT", "CONFIRM_LARGE") else (404 if e.code == "NOT_FOUND" else 422), detail={"code": e.code, "message": str(e)})
+
+
+@router.post("/admin/rewards/preview")
+def rewards_preview(b: PolicyIn, days: int = 7) -> dict:
+    try:
+        return policy.preview(service.con(), b.proposal(), days)
+    except policy.PolicyError as e:
+        _perr(e)
+
+
+@router.post("/admin/rewards/policy")
+def rewards_policy(b: PolicyChangeIn) -> dict:
+    try:
+        return policy.apply_change(service.con(), b.proposal(), by=b.by, reason=b.reason, expected_revision=b.expected_revision)
+    except policy.PolicyError as e:
+        _perr(e)
+
+
+class RollbackIn(BaseModel):
+    by: str = Field(min_length=1)
+    reason: str
+    expected_revision: int
+
+
+@router.post("/admin/rewards/policy/{cid}/rollback")
+def rewards_rollback(cid: int, b: RollbackIn) -> dict:
+    try:
+        return policy.rollback(service.con(), cid, by=b.by, reason=b.reason, expected_revision=b.expected_revision)
+    except policy.PolicyError as e:
+        _perr(e)
+
+
+@router.get("/admin/integrity")
+def integrity(days: int = 7) -> dict:
+    return policy.integrity(service.con(), days)
+
+
+class ReviewIn(BaseModel):
+    signal_key: str = Field(min_length=1, max_length=200)
+    disposition: Literal["looks_fine", "investigating", "action_taken"]
+    note: str
+    by: str = Field(min_length=1)
+
+
+@router.post("/admin/integrity/review")
+def integrity_review(b: ReviewIn) -> dict:
+    try:
+        return policy.review(service.con(), b.signal_key, b.disposition, b.note, b.by)
+    except policy.PolicyError as e:
+        _perr(e)
 
 
 class SwitchIn(BaseModel):
