@@ -55,6 +55,7 @@ test("T-021 revision conflict (409-style) and publishing kill switch", async ({ 
   await expect(a.getByText(/revision conflict/)).toBeVisible();
   // Kill switch: pause publishing, approval is blocked, then resume.
   await b.goto("/admin/settings");
+  b.on("dialog", (d) => d.accept()); // v1.8+ ISSUE-22: disruptive switches ask for confirmation
   const sw = b.getByTestId("switch-PUBLISHING_PAUSED");
   await sw.getByPlaceholder("Reason (required)").fill("E2E kill-switch drill");
   await sw.getByRole("button", { name: "Turn on" }).click();

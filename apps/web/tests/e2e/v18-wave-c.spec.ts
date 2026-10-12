@@ -63,3 +63,30 @@ test("ISSUE-21 Infrastructure & services: all 8 processes, running vs healthy, p
   await page.goto(`${BASE}/admin/ops`);
   await expect(page.locator("body")).not.toContainText("[object Object]");
 });
+
+test("ISSUE-22 Settings say what each switch does, confirm disruptive changes, audit is searchable and redacted, mail previews hide links", async ({ page }) => {
+  await page.addInitScript(() => { try { localStorage.setItem("pv_consent", "denied"); } catch { /* */ } });
+  const { signIn } = await import("./helpers");
+  await signIn(page, "admin@palavva.local", BASE, "/admin/settings");
+  await expect(page.getByTestId("switch-AUTO_PUBLISH_DISABLED")).toContainText(/Automatic publication\s*(Running|Stopped)/);
+  const ads = page.getByTestId("switch-AD_SLOTS_DISABLED");
+  const before = await ads.locator("span.font-mono").innerText();
+  page.once("dialog", (d) => d.dismiss()); // not disruptive: no dialog expected; if one appears, it is dismissed
+  await ads.getByPlaceholder("Reason (required)").fill("e2e: settings audit check");
+  await ads.getByRole("button", { name: /Turn (on|off)/ }).click();
+  await expect(ads.locator("span.font-mono")).not.toHaveText(before);
+  await page.reload();
+  await page.getByTestId("audit-search").fill("AD_SLOTS_DISABLED");
+  const row = page.getByTestId("audit").locator("tbody tr[data-row]").first();
+  await expect(row).toContainText("e2e: settings audit check");
+  await row.click();
+  await expect(page.getByTestId("audit-raw")).toBeVisible();
+  await expect(page.getByTestId("audit-raw")).not.toContainText(/[a-f0-9]{32}/);
+  // restore
+  await page.keyboard.press("Escape");
+  await ads.getByPlaceholder("Reason (required)").fill("e2e: restore");
+  await ads.getByRole("button", { name: /Turn (on|off)/ }).click();
+  await expect(ads.locator("span.font-mono")).toHaveText(before);
+  const sink = page.getByTestId("mail-sink");
+  if (await sink.count()) await expect(sink).not.toContainText(/token=[A-Za-z0-9]/);
+});
