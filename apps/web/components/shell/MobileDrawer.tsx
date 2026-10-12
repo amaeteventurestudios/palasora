@@ -28,6 +28,7 @@ function Row({ item, active, onNavigate }: { item: NavItem; active: boolean; onN
     <Link href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined}
       className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-medium hover:bg-accent aria-[current=page]:bg-accent aria-[current=page]:font-semibold">
       <Icon className="size-[18px] shrink-0 text-muted-foreground" aria-hidden="true" />{item.label}
+      {item.status && <span className="ms-auto rounded-full border px-1.5 text-[11px] font-semibold text-muted-foreground">{item.status}</span>}
     </Link>
   );
 }

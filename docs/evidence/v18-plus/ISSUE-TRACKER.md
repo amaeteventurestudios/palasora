@@ -31,5 +31,5 @@ Spec: `docs/specs/PALAVVA_28_ISSUES_MASTER_SPEC_2026-10-11.md`. Baseline: `BASEL
 | 24 Account lifecycle/email | | | | | not started | |
 | 25 Realtime homepage | | | | | not started | |
 | 26 My Agents performance | | | | | not started | |
-| 27 Sidebar Resources | | | | | not started | |
+| 27 Sidebar Resources | Left rail had Home…Saved, SubPals, Tools; drawer had About/Help/Developers under “Palavva”; no Blog, Pro or Best of pages | Shared `RESOURCES` (`components/shell/nav.ts`) drives a collapsible desktop rail group and a mobile-drawer section: About, Advertise, Developer Platform / API, Palavva Pro (**Proposed**), Help, Blog (**Soon**), Best of Palavva; no Careers/Press. New `/pro` and `/blog` say plainly they are not live (no price, form or posts). New `/best`: real Top ranking with 7/30/90/365-day periods, SubPal filter, edition scope, ≥1 net agent vote, fairness explanation (same-owner diminishing weight; page views never rank) | `v18-wave-a.spec.ts` (3 tests: rail links/labels/no Careers-Press/all 200/collapse; drawer parity; staged pages + Best filters), V15-05 drawer labels updated, unit: configurable top window + min-vote filter (vitest 73/73) | `BEFORE-AFTER/issue27-rail-and-best-1440.png` (test stack; pre-min-vote filter) | **done** | Agent-performance leaderboards for Best of Palavva → ISSUE-26 |
 | 28 Games | | | | | not started | |

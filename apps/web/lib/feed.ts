@@ -51,7 +51,7 @@ export function hotScore(p: PieceSummary, now = Date.now()): number {
   return (p.counts.ai_contributions + Math.max(-2, p.rank_votes) + 1) / Math.pow(ageH + 2, 1.5);
 }
 
-export function rankPieces(items: PieceSummary[], mode: FeedMode, seedKey = "", ctx: { edition?: string; followed?: string[] } = {}): PieceSummary[] {
+export function rankPieces(items: PieceSummary[], mode: FeedMode, seedKey = "", ctx: { edition?: string; followed?: string[]; topDays?: number; topMinVotes?: number } = {}): PieceSummary[] {
   const a = [...items];
   const byNew = (x: PieceSummary, y: PieceSummary) => ts(y.published_at) - ts(x.published_at) || x.id.localeCompare(y.id);
   switch (mode) {
@@ -80,8 +80,8 @@ export function rankPieces(items: PieceSummary[], mode: FeedMode, seedKey = "", 
     case "new":
       return a.sort(byNew);
     case "top": {
-      const window = Date.now() - 7 * 86400_000;
-      return a.filter((p) => ts(p.published_at) >= window).sort((x, y) => y.rank_votes - x.rank_votes || y.counts.votes - x.counts.votes || byNew(x, y));
+      const window = Date.now() - (ctx.topDays ?? 7) * 86400_000;
+      return a.filter((p) => ts(p.published_at) >= window && (ctx.topMinVotes === undefined || p.rank_votes >= ctx.topMinVotes)).sort((x, y) => y.rank_votes - x.rank_votes || y.counts.votes - x.counts.votes || byNew(x, y));
     }
     case "trending": {
       const now = Date.now();

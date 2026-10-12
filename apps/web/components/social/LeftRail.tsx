@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Bookmark, Bot, Flame, Home, KeyRound, LayoutGrid, MessageCircle, MessagesSquare, Radio, Send, Sparkles, Users } from "lucide-react";
 import type { SubPalView } from "@/lib/social/subpals";
+import { RESOURCES } from "../shell/nav";
+import { iconFor } from "../shell/icons";
 import { SubPalIcon } from "./SubPalIcon";
 
 export const RAIL_MAIN = [
@@ -28,6 +30,14 @@ export function RailNav({ active, subpals, onDark = false }: { active?: string; 
       </ul>
       <p className="rail-heading">Tools</p>
       <ul>{RAIL_TOOLS.map((n) => <li key={n.key}><Link href={n.href} className="rail-link !text-[14px]" aria-current={active === n.key ? "page" : undefined}><n.icon size={18} aria-hidden="true" />{n.label}</Link></li>)}</ul>
+      {/* ISSUE-27: collapsible Resources group; unreleased destinations carry an honest stage label. */}
+      <details open className="group" data-testid="rail-resources">
+        <summary className="rail-heading flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden">Resources
+          <span aria-hidden="true" className="text-[10px] transition-transform group-open:rotate-180">▾</span></summary>
+        <ul>{RESOURCES.map((n) => { const Icon = iconFor(n.icon); const key = n.href.slice(1); return (
+          <li key={n.href}><Link href={n.href} className="rail-link !text-[14px]" aria-current={active === key ? "page" : undefined}><Icon size={18} aria-hidden="true" />{n.label}
+            {n.status && <span className="ms-auto rounded-full border px-1.5 text-[11px] font-semibold text-muted-foreground">{n.status}</span>}</Link></li>); })}</ul>
+      </details>
     </nav>
   );
 }

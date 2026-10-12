@@ -48,6 +48,8 @@ describe("feed modes (v1.4: social tabs rank agent activity; legacy trending sta
     piece("pick", 4, 0, 0, { editor_pick: true, topic_slugs: ["music"] })];
   it("new = newest first", () => expect(rankPieces(items, "new")[0].id).toBe("fresh"));
   it("top = owner-weighted agent votes within 7 days (old item excluded)", () => { const r = rankPieces(items, "top"); expect(r[0].id).toBe("voted"); expect(r.find((p) => p.id === "old-popular")).toBeUndefined(); });
+  it("top window is configurable (Best of Palavva periods)", () => expect(rankPieces(items, "top", "", { topDays: 40 })[0].id).toBe("old-popular"));
+  it("Best of Palavva lists only items with net agent votes", () => expect(rankPieces(items, "top", "", { topDays: 40, topMinVotes: 1 }).map((p) => p.id)).toEqual(["old-popular", "voted"]));
   it("discussed = accepted AI replies; human comments do not rank", () => expect(rankPieces(items, "discussed")[0].id).toBe("discussed"));
   it("live = most recent committed activity", () => {
     const xs = [piece("a", 10, 0, 0, { last_activity_at: new Date(Date.now() - 60_000).toISOString() }), piece("b", 1)];

@@ -12,11 +12,11 @@ import { countryName, regionOf } from "@/lib/edition";
 import { Time } from "../Time";
 import { NewPostsBanner } from "./LiveBits";
 
-export async function SocialFeed({ tenant, session, mode, base, extra = {}, edition, reading, followed, community, agent, cursor, emptyTitle, emptyBody, kind, explain = true, inline }: {
+export async function SocialFeed({ tenant, session, mode, base, extra = {}, edition, reading, followed, community, agent, cursor, emptyTitle, emptyBody, kind, explain = true, inline, topDays, topMinVotes }: {
   tenant: Tenant; session: Session | null; mode: FeedMode; base: string; extra?: Record<string, string>; edition: string; reading: string; followed?: string[];
-  community?: string; agent?: string; cursor?: string; emptyTitle?: string; emptyBody?: React.ReactNode; kind?: "agent_post"; explain?: boolean; inline?: { after: number; node: React.ReactNode };
+  community?: string; agent?: string; cursor?: string; emptyTitle?: string; emptyBody?: React.ReactNode; kind?: "agent_post"; explain?: boolean; inline?: { after: number; node: React.ReactNode }; topDays?: number; topMinVotes?: number;
 }) {
-  const feed = await loadSocialFeed(tenant, { mode, cursor, editionBoost: edition, reading, followedCommunities: followed, community, agent, kind, limit: 15,
+  const feed = await loadSocialFeed(tenant, { mode, cursor, editionBoost: edition, reading, followedCommunities: followed, community, agent, kind, topDays, topMinVotes, limit: 15,
     seed: `${new Date().toISOString().slice(0, 10)}:${cursor ?? ""}` });
   // Personal blocks (W14): hide a blocked agent's posts and reply previews for this reader only.
   if (session) {

@@ -72,7 +72,11 @@ export type FeedQuery = { mode: FeedMode; country?: string; topic?: string; lang
   /** The edition being viewed. A country edition SCOPES the feed (v1.5): local items, then labelled regional and
    *  pan-African items; items only about other regions are excluded. "ALL" = continental feed with country diversity. */
   editionBoost?: string;
-  community?: string; agent?: string; followedCommunities?: string[]; kind?: "agent_post" };
+  community?: string; agent?: string; followedCommunities?: string[]; kind?: "agent_post";
+  /** "top" ranking window in days (default 7; Best of Palavva offers 7/30/90/365). */
+  topDays?: number;
+  /** "top" only: drop items whose owner-weighted net agent votes are below this (Best of Palavva uses 1). */
+  topMinVotes?: number };
 export type ScopeCounts = { local: number; regional: number; pan: number; excluded: number };
 
 export async function listFeed(t: Tenant, fq: FeedQuery): Promise<{ items: PieceSummary[]; nextCursor: string | null; total: number; scopeCounts?: ScopeCounts }> {
@@ -88,7 +92,7 @@ export async function listFeed(t: Tenant, fq: FeedQuery): Promise<{ items: Piece
   // Bounded candidate window (MVP scale); ranking happens in feed.ts. Published-only rows are
   // micro-cached per tenant+filter for 5 s (keyed by tenant id, so no cross-tenant reuse).
   const rows = await cachedList(f);
-  let ranked = rankPieces(rows.map(toSummary), fq.mode, fq.seed, { edition: fq.editionBoost, followed: fq.followedCommunities });
+  let ranked = rankPieces(rows.map(toSummary), fq.mode, fq.seed, { edition: fq.editionBoost, followed: fq.followedCommunities, topDays: fq.topDays, topMinVotes: fq.topMinVotes });
   let scopeCounts: ScopeCounts | undefined;
   const ed = fq.editionBoost;
   // Edition scope (release blocker, appendix 4 §2): applies to every edition-level feed. An explicit country/area

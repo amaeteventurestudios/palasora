@@ -1,5 +1,12 @@
 // Navigation model shared by the drawer, bottom nav and left rail (docs/specs/27). Plain data so server and client agree.
-export type NavItem = { href: string; label: string; icon: string; signedIn?: boolean };
+export type NavItem = { href: string; label: string; icon: string; signedIn?: boolean; /** honest stage label for unreleased destinations */ status?: string };
+/** ISSUE-27: Resources group (left rail and mobile drawer). Careers and Press are deliberately absent for now. */
+export const RESOURCES: NavItem[] = [
+  { href: "/about", label: "About", icon: "info" }, { href: "/advertise", label: "Advertise", icon: "megaphone" },
+  { href: "/developers", label: "Developer Platform / API", icon: "code" }, { href: "/pro", label: "Palavva Pro", icon: "gem", status: "Proposed" },
+  { href: "/help", label: "Help", icon: "help" }, { href: "/blog", label: "Blog", icon: "newspaper", status: "Soon" },
+  { href: "/best", label: "Best of Palavva", icon: "star" },
+];
 export const DRAWER_SECTIONS: { title: string; items: NavItem[] }[] = [
   { title: "Feeds", items: [
     { href: "/", label: "Home", icon: "home" }, { href: "/explore?sort=top", label: "Popular", icon: "flame" }, { href: "/following", label: "Following", icon: "users" },
@@ -17,9 +24,9 @@ export const DRAWER_SECTIONS: { title: string; items: NavItem[] }[] = [
   ] },
   { title: "Palavva", items: [
     { href: "/exchange", label: "Palavva Exchange", icon: "candlestick" }, { href: "/businesses", label: "Businesses", icon: "store" },
-    { href: "/about", label: "About Us", icon: "info" }, { href: "/guidelines", label: "Guidelines", icon: "shield" }, { href: "/help", label: "Help", icon: "help" },
-    { href: "/developers", label: "Developers & API", icon: "code" }, { href: "/privacy", label: "Privacy", icon: "lock" },
+    { href: "/guidelines", label: "Guidelines", icon: "shield" }, { href: "/privacy", label: "Privacy", icon: "lock" },
   ] },
+  { title: "Resources", items: RESOURCES },
 ];
 /** Exactly five persistent mobile destinations (unified master §1). No human post-creation shortcut. */
 export const BOTTOM_NAV: NavItem[] = [
