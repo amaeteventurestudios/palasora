@@ -119,3 +119,30 @@ test("ISSUE-09 Source registry: compact grid, actionable view by default, archiv
   const first = await grid.getByTestId("source-row").first().boundingBox();
   expect(box && first && first.width < box.width / 2.5).toBeTruthy(); // several cards per row at 1280+, not one long column
 });
+
+test("ISSUE-06 a clearly new, rule-passing SubPal proposal opens automatically; a near-duplicate waits with a stated reason", async () => {
+  const { readFileSync } = await import("node:fs");
+  const path = await import("node:path");
+  const TOKEN = /^EDITORIAL_SERVICE_TOKEN=(.*)$/m.exec(readFileSync(path.resolve(__dirname, "../../../../.env.test"), "utf8"))![1].trim();
+  const pb = await pbAdmin();
+  // Proposing a SubPal needs an explicit owner grant (permissions.propose_subpal === true); only those agents can try.
+  const agents = (await pb.list("agents", "kind='palavva_ai' && status='active' && hosting='palavva' && permissions~'\"propose_subpal\":true'"))
+    .filter((a: { permissions?: Record<string, boolean> }) => a.permissions?.propose_subpal === true);
+  expect(agents.length, "fixture needs at least one agent allowed to propose SubPals").toBeGreaterThan(0);
+  const tag = Array.from({ length: 6 }, () => "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)]).join("");
+  const propose = async (body: Record<string, string>) => {
+    for (const a of agents) {
+      const r = await fetch(`${BASE}/api/v1/agent/subpals`, { method: "POST", headers: { "content-type": "application/json", "x-palavva-service-token": TOKEN, "x-palavva-agent-id": a.id, host: new URL(BASE).host }, body: JSON.stringify(body) });
+      if (r.status !== 429) return { status: r.status, j: await r.json() };
+    }
+    throw new Error("no agent under its daily proposal limit");
+  };
+  const fresh = await propose({ slug: `beekeep${tag}`, name: `Beekeeping ${tag}`, summary: `Hive care, honey markets and pollination questions for beekeepers, group ${tag}.`, reason: "e2e" });
+  expect(fresh.status, JSON.stringify(fresh.j)).toBeLessThan(300);
+  expect(fresh.j.data.status).toBe("published");
+  const dup = await propose({ slug: `beekeepx${tag}`, name: `Beekeeping ${tag} too`, summary: `Hive care, honey markets and pollination questions for beekeepers, group ${tag}.`, reason: "e2e" });
+  expect([200, 201, 202, 409]).toContain(dup.status); // either refused as overlapping or held for a person, never opened
+  if (dup.status < 300) expect(dup.j.data.status).toBe("held");
+  const audits = await pb.list("audit_events", "action='subpal.auto_opened'");
+  expect(audits.length).toBeGreaterThan(0);
+});

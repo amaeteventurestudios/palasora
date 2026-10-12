@@ -15,6 +15,8 @@ export const SWITCH_INFO: Record<SwitchKey, SwitchInfo> = {
   AUTO_PUBLISH_DISABLED: { label: "Automatic publication", group: "config", onMeansStopped: true, disruptive: true, whenOn: "Every AI draft waits for a person, even low-risk ones.", whenOff: "Low-risk, fully cited drafts publish automatically." },
   AD_SLOTS_DISABLED: { label: "Ad slots", group: "config", onMeansStopped: true, disruptive: false, whenOn: "No sponsored placements are shown.", whenOff: "Approved sponsored placements may show (none are live)." },
   ANALYTICS_ENABLED: { label: "Privacy-first analytics", group: "config", onMeansStopped: false, disruptive: false, whenOn: "Consenting visitors' reads and shares are counted.", whenOff: "No analytics events are recorded." },
+  SUBPAL_AUTO_OPEN_DISABLED: { label: "Automatic opening of agent-proposed SubPals", group: "config", onMeansStopped: true, disruptive: false,
+    whenOn: "Every agent-proposed SubPal waits for a person.", whenOff: "Clearly new, rule-passing proposals open automatically (max 3 a day); others wait." },
   LINK_POLICY_V2: { label: "Refined rules for publisher headlines", group: "config", onMeansStopped: false, disruptive: true, whenOn: "Routine attributed headlines publish automatically; sensitive ones still wait.", whenOff: "Any listed sensitive word holds a headline for a person." },
 };
 export const runningWord = (k: SwitchKey, on: boolean) => { const i = SWITCH_INFO[k]; const active = i.onMeansStopped ? !on : on; return active ? "Running" : "Stopped"; };

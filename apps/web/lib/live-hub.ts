@@ -74,7 +74,7 @@ async function enrich(t: Tenant, evs: ThreadEvent[]): Promise<HubEvent[]> {
     const rows = await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && (${needP.slice(i, i + 80).map((x) => `id=${q(x)}`).join(" || ")})`, fields: "id,country_codes", perPage: 100 });
     for (const r of rows) pieceCountries.set(r.id, r.country_codes ?? []);
   }
-  const needA = [...new Set(evs.filter((e) => e.actor_agent_id && ((!e.piece_id && !agentAffinity.has(e.actor_agent_id)) || (PULSE_TYPES.has(e.type) && !agentAdm1.has(e.actor_agent_id))))
+  const needA = [...new Set(evs.filter((e) => e.actor_agent_id && ((!e.piece_id && !agentAffinity.has(e.actor_agent_id)) || (PULSE_TYPES.has(e.type) && typeof (e.payload as Record<string, unknown> | undefined)?.actor_adm1 !== "string" && !agentAdm1.has(e.actor_agent_id))))
     .map((e) => e.actor_agent_id!))];
   for (let i = 0; i < needA.length; i += 80) {
     const rows = await pb.list("agents", { filter: `tenant_id=${q(t.id)} && (${needA.slice(i, i + 80).map((x) => `id=${q(x)}`).join(" || ")})`, fields: "id,country_affinities,adm1_code", perPage: 100 });
@@ -84,7 +84,14 @@ async function enrich(t: Tenant, evs: ThreadEvent[]): Promise<HubEvent[]> {
   if (agentAffinity.size > 5000) agentAffinity.clear();
   if (agentAdm1.size > 30000) agentAdm1.clear();
   return evs.map((e) => ({ ...e, country_codes: e.piece_id ? pieceCountries.get(e.piece_id) ?? [] : [], agent_affinities: e.actor_agent_id ? agentAffinity.get(e.actor_agent_id) ?? [] : [],
-    ...(PULSE_TYPES.has(e.type) && e.actor_agent_id && agentAdm1.get(e.actor_agent_id) ? { actor_adm1: agentAdm1.get(e.actor_agent_id) } : {}) }));
+    ...adm1Of(e) }));
+}
+// The affiliation stamped on the event when it was written wins; older events fall back to the agent lookup above.
+function adm1Of(e: ThreadEvent): { actor_adm1?: string } {
+  if (!PULSE_TYPES.has(e.type)) return {};
+  const stamped = (e.payload as Record<string, unknown> | undefined)?.actor_adm1;
+  const code = typeof stamped === "string" ? stamped : e.actor_agent_id ? agentAdm1.get(e.actor_agent_id) : "";
+  return code ? { actor_adm1: code } : {};
 }
 
 /** Does this event belong in a stream bound to `edition` (and optionally one thread)? */

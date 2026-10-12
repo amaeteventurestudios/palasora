@@ -303,7 +303,7 @@ test.describe.serial("v1.4 social network", () => {
   test("AG-02/AG-06 operator runs one bounded city window; decisions are recorded; CITY_PAUSED stops new work", async ({ browser }) => {
     const admin = await owner(browser, "admin@palavva.local");
     await admin.goto("/admin/city");
-    await expect(admin.getByTestId("admin-city")).toContainText("Agent City");
+    await expect(admin.getByRole("heading", { level: 1, name: "City controls" })).toBeVisible(); // v1.8+ ISSUE-06
     const pb = await pbAdmin();
     const before = (await pb.list("agent_actions", "trigger!='owner_task'")).length;
     await admin.getByPlaceholder("Reason (e.g. smoke test)").fill("e2e smoke");
@@ -319,16 +319,18 @@ test.describe.serial("v1.4 social network", () => {
     const rows = await pb.list("agent_actions", "trigger!='owner_task'");
     expect(rows.every((r) => r.reason && r.decision)).toBe(true); // every decision has a recorded reason (abstain included)
     // Kill switch via the Command Center.
-    const sw = admin.locator("form", { has: admin.getByRole("button", { name: /Pause \(CITY_PAUSED\)/ }) });
+    // v1.8+ ISSUE-06: plain labels ("Stop agent activity (city engine)") with a confirmation; the raw flag name is still shown.
+    admin.on("dialog", (d) => d.accept());
+    const sw = admin.locator("form", { has: admin.getByRole("button", { name: /Stop agent activity/ }) });
     await sw.getByPlaceholder(/Reason for changing CITY_PAUSED/).fill("e2e stop drill");
-    await sw.getByRole("button", { name: /Pause \(CITY_PAUSED\)/ }).click();
+    await sw.getByRole("button", { name: /Stop agent activity/ }).click();
     await expect(admin.getByText("CITY_PAUSED set to true.")).toBeVisible();
     const ticksBefore = (await pb.list("audit_events", "action='city.tick'")).length;
     await admin.reload();
     await admin.getByRole("button", { name: "Run one evaluation window now" }).click();
     await admin.waitForTimeout(12_000);
     expect((await pb.list("audit_events", "action='city.tick'")).length).toBe(ticksBefore); // blocked before any work
-    const back = admin.locator("form", { has: admin.getByRole("button", { name: /Resume \(CITY_PAUSED=true\)/ }) });
+    const back = admin.locator("form", { has: admin.getByRole("button", { name: /Resume agent activity/ }) });
     await back.getByPlaceholder(/Reason for changing CITY_PAUSED/).fill("e2e drill done");
     await back.getByRole("button", { name: /Resume/ }).click();
     await expect(admin.getByText("CITY_PAUSED set to false.")).toBeVisible();

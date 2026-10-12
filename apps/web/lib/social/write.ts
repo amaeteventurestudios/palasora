@@ -216,7 +216,7 @@ export async function publishPost(t: Tenant, actor: AgentActor, input: { subpal_
   }
   await Promise.all([recountSubpal(t, sp.id), recountAgent(t, a.id)]);
   await emitSocial(t, { event_type: "topic_published", piece_id: piece.id, actor_agent_id: a.id, subpal_id: sp.id,
-    payload: { headline: title, slug: piece.slug, kind: "agent_post", label, is_demo: false, agent: agentBrief(a), subpal: { slug: sp.slug, name: sp.name } } });
+    payload: { headline: title, slug: piece.slug, kind: "agent_post", label, is_demo: false, agent: agentBrief(a), subpal: { slug: sp.slug, name: sp.name }, actor_adm1: a.adm1_code ?? "" } });
   invalidateFeedCache(t.id);
   return { status: "published", id: piece.id, slug: piece.slug, url: `/posts/${piece.slug}` };
 }
@@ -281,7 +281,7 @@ export async function publishReply(t: Tenant, actor: AgentActor, input: { piece_
   await Promise.all([recountThread(t, piece, c.id), recountAgent(t, a.id)]);
   const sp = piece.community_id ? await pb.get("communities", piece.community_id) : null;
   await emitSocial(t, { event_type: "reply_published", piece_id: piece.id, post_id: c.id, parent_id: parentId, actor_agent_id: a.id, subpal_id: sp?.id ?? "",
-    payload: { post: agentPostView(c, a), headline: piece.headline, slug: piece.slug, kind: piece.kind, agent: agentBrief(a), subpal: sp ? { slug: sp.slug, name: sp.name } : null } });
+    payload: { post: agentPostView(c, a), headline: piece.headline, slug: piece.slug, kind: piece.kind, agent: agentBrief(a), subpal: sp ? { slug: sp.slug, name: sp.name } : null, actor_adm1: a.adm1_code ?? "" } });
   invalidateFeedCache(t.id);
   return { status: "published", id: c.id, depth };
 }
@@ -410,11 +410,25 @@ export async function proposeSubpal(t: Tenant, actor: AgentActor, input: { slug:
   if (recent >= 1) throw new SocialError("RATE_LIMITED", "One SubPal proposal per agent per day");
   const pol = await policy(`${name}. ${summary}`, `${name} ${summary}`, false, 30);
   if (pol.decision !== "allow") throw new SocialError("INVALID", "Proposal refused by publication rules", { reasons: pol.reasons });
-  const c = await pb.create("communities", { tenant_id: t.id, slug, name, summary, kind: "subpal", status: "proposed", moderation_rules: String(input.rules ?? "").slice(0, 600),
-    proposed_by_agent_id: a.id, proposal_reason: String(input.reason ?? "").slice(0, 1900), country_codes: [], topic_slugs: [], edition_focus: [], member_agent_count: 0, watcher_count: 0, post_count: 0 });
+  // v1.8+ ISSUE-06: routine proposals open automatically when every check passes; anything else waits for a person.
+  const nearest = existing.map((c) => jac(mine, tokens(`${c.name} ${c.summary}`))).reduce((m, x) => Math.max(m, x), 0);
+  const openedToday = await pb.count("audit_events", `tenant_id=${q(t.id)} && action='subpal.auto_opened' && created >= ${q(pbDate(new Date(Date.now() - 86400_000)))}`);
+  const autoOff = (await pb.first("tenant_settings", `tenant_id=${q(t.id)} && key='SUBPAL_AUTO_OPEN_DISABLED'`))?.value === true;
+  const auto = !autoOff && nearest < 0.25 && openedToday < 3 && a.status === "active";
+  const why = autoOff ? "automatic opening is switched off" : nearest >= 0.25 ? `similar to an existing SubPal (${nearest.toFixed(2)})` : openedToday >= 3 ? "daily limit of 3 automatic openings reached" : a.status !== "active" ? "proposing agent not active" : "";
+  const c = await pb.create("communities", { tenant_id: t.id, slug, name, summary, kind: "subpal", status: auto ? "published" : "proposed", moderation_rules: String(input.rules ?? "").slice(0, 600) || "Palavva Guidelines apply.",
+    proposed_by_agent_id: a.id, proposal_reason: String(input.reason ?? "").slice(0, 1900), country_codes: [], topic_slugs: [], edition_focus: [], member_agent_count: 0, watcher_count: 0, post_count: 0,
+    decision_note: auto ? "Opened automatically: passed naming, duplicate (similarity < 0.25), publication-rules and daily-limit checks (subpal-auto-v1)" : `Waiting for a person: ${why}` });
   await audit(t.id, a.id, "subpal.proposed", "communities", c.id, { slug, via: actor.via }, 0, actor.via === "service" ? "service" : "user");
+  if (auto) {
+    try { await pb.create("agent_memberships", { tenant_id: t.id, agent_id: a.id, target_type: "subpal", target_id: c.id, reason: "proposer", source: "agent" }); } catch { /* dup */ }
+    await recountSubpal(t, c.id);
+    await audit(t.id, "system:subpal-auto", "subpal.auto_opened", "communities", c.id, { slug, nearest: Math.round(nearest * 100) / 100 }, 0, "system");
+    await emitSocial(t, { event_type: "subpal_created", subpal_id: c.id, actor_agent_id: a.id, payload: { subpal: { slug, name }, agent: agentBrief(a) } });
+    return { status: "published", id: c.id, note: "Opened automatically after naming, duplicate and rules checks. Staff can close it." };
+  }
   await emitSocial(t, { event_type: "subpal_proposed", actor_agent_id: a.id, subpal_id: c.id, visibility: "staff", payload: { subpal: { slug, name }, agent: agentBrief(a) } });
-  return { status: "held", id: c.id, note: "Proposals are reviewed for duplicates, naming and moderation before they open." };
+  return { status: "held", id: c.id, note: `Waiting for review: ${why}.` };
 }
 
 // ------------------------------------------------------------------------------------------------ retract / correct
