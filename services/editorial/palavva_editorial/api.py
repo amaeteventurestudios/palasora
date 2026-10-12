@@ -169,6 +169,32 @@ def request_translation(body: TranslateBody) -> dict:
             "machine_translation_enabled": body.locale in translate.MT_ENABLED}
 
 
+# ---------------- v1.8+ ISSUE-07 refined card rules: preview (read-only) ----------------
+
+class CardPreviewBody(BaseModel):
+    tenant_id: str
+    ids: list[str] = []
+
+
+@app.post("/cards/preview", dependencies=[Depends(auth)])
+def card_preview(body: CardPreviewBody) -> dict:
+    """What the refined card rules (card-disposition-v2) would decide for held publisher cards. Changes nothing."""
+    from .editorial.disposition import POLICY_VERSION, card_disposition
+    from .pipeline import tenant_switch
+    db = pb()
+    flt = f"tenant_id={q(body.tenant_id)} && kind='source_link' && (review_status='needs_review' || review_status='held')"
+    rows = [db.get("editorial_pieces", i) for i in body.ids[:500]] if body.ids else db.list_all("editorial_pieces", flt)
+    out = []
+    for r in rows:
+        if not r or r.get("tenant_id") != body.tenant_id or r.get("kind") != "source_link":
+            continue
+        src = (r.get("sources_json") or [{}])[0]
+        rights_ok = bool(src) and "withdrawn" not in (r.get("risk_basis") or "")
+        d = card_disposition(r.get("headline") or "", r.get("lede") or "", rights_ok=rights_ok)
+        out.append({"id": r["id"], "decision": d.decision, "rule": d.rule, "reason": d.reason, "matched": d.matched[:6]})
+    return {"policy": POLICY_VERSION, "switch_on": bool(tenant_switch(db, body.tenant_id, "LINK_POLICY_V2")), "items": out}
+
+
 # ---------------- v1.4 agent social network ----------------
 
 class AgentTextBody(BaseModel):

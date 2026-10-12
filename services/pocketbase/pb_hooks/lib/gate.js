@@ -24,8 +24,21 @@
 //     - that row's source is source_class=discovery, usage_policy=link_only, rights_status pending or approved
 //       (restricted/revoked = the publisher opted out or an operator withdrew it: never shown)
 //     - PUBLISHING_PAUSED, SOURCE_CARDS_PAUSED and LINK_SIGNALS_PAUSED are not true
+//  4b/5b. REFINED CARD RULES (v1.8+ ISSUE-07): a source card or link signal ABOVE its v1 risk threshold may publish only
+//     when the tenant switch LINK_POLICY_V2 is true AND a moderation_decisions row (scope=card, decision=allow,
+//     ruleset_version=card-disposition-v2, target_id = this card) exists. All other conditions above still apply.
 // JSON field values are not plain JS booleans inside the JSVM (`get("value") === true` was never true, so before v1.4
 // the DB-level PUBLISHING_PAUSED check silently did nothing). Read the raw JSON text and parse it.
+// v1.8+ ISSUE-07: refined card rules are on for this tenant and the engine recorded a named allow decision for THIS card.
+function refinedAllow(app, tenantId, rec) {
+  if (setting(app, tenantId, "LINK_POLICY_V2") !== true) return false;
+  try {
+    app.findFirstRecordByFilter("moderation_decisions", "tenant_id = {:t} && scope = 'card' && decision = 'allow' && ruleset_version = 'card-disposition-v2' && target_id = {:id}",
+      { t: tenantId, id: rec.id });
+    return true;
+  } catch (_) { return false; }
+}
+
 function setting(app, tenantId, key) {
   try {
     const r = app.findFirstRecordByFilter("tenant_settings", "tenant_id = {:t} && key = {:k}", { t: tenantId, k: key });
@@ -65,7 +78,7 @@ function assertApproved(app, rec) {
   if (reviewer === "system:source-card-validator") {
     if (rec.get("kind") !== "source_link" || rec.get("publish_path") !== "source_card") throw new BadRequestError("publish gate: source-card path is only for source cards");
     const risk = rec.get("risk_tier");
-    if (risk !== "low" && risk !== "medium") throw new BadRequestError("publish gate: source cards above medium risk need an editor");
+    if (risk !== "low" && risk !== "medium" && !refinedAllow(app, tenant, rec)) throw new BadRequestError("publish gate: source cards above medium risk need an editor");
     if (setting(app, tenant, "SOURCE_CARDS_PAUSED") === true) throw new BadRequestError("publish gate: source cards paused for tenant");
     let item = null, src = null;
     try { item = app.findRecordById("source_items", rec.get("source_item_id")); src = app.findRecordById("sources", item.get("source_id")); } catch (_) { item = null; }
@@ -79,7 +92,7 @@ function assertApproved(app, rec) {
 
   if (reviewer === "system:link-signal-validator") {
     if (rec.get("kind") !== "source_link" || rec.get("publish_path") !== "link_signal") throw new BadRequestError("publish gate: link-signal path is only for link signals");
-    if (rec.get("risk_tier") !== "low") throw new BadRequestError("publish gate: link signals above low risk need an editor");
+    if (rec.get("risk_tier") !== "low" && !refinedAllow(app, tenant, rec)) throw new BadRequestError("publish gate: link signals above low risk need an editor");
     if (setting(app, tenant, "SOURCE_CARDS_PAUSED") === true || setting(app, tenant, "LINK_SIGNALS_PAUSED") === true) throw new BadRequestError("publish gate: link signals paused for tenant");
     if (String(rec.get("lede") || "").trim() !== "") throw new BadRequestError("publish gate: a link signal carries no excerpt");
     let item = null, src = null;

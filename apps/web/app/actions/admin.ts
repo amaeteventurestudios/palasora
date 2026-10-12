@@ -435,3 +435,34 @@ export async function geoDecision(_: ActionState, f: FormData): Promise<ActionSt
   revalidatePath("/", "layout");
   return { ok: true, message: `Geography ${action}ed.` };
 }
+
+/** v1.8+ ISSUE-07: an editor releases a small batch (max 25) of held PUBLISHER cards that the refined card rules would
+ *  publish. Never automatic: the editor sees the preview, gives a reason, and each card is approved through the normal
+ *  human approval path (recorded, audited, reversible with Unpublish). Re-checks the preview server-side. */
+export async function releaseCards(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await staff("editor");
+  const ids = f.getAll("id").map((x) => String(x).slice(0, 30)).filter(Boolean).slice(0, 25);
+  const reason = s(f, "reason", 500);
+  if (!ids.length) return fail("Nothing selected.");
+  if (reason.length < 10) return fail("Write a short reason (10+ characters) for this batch.");
+  if (await getSwitch(tenant.id, "PUBLISHING_PAUSED")) return fail("Publishing is paused for this tenant.");
+  const prev = await editorialFetch<{ items: { id: string; decision: string; rule: string; reason: string }[] }>("/cards/preview", { method: "POST", body: JSON.stringify({ tenant_id: tenant.id, ids }) }, 8000);
+  if (!prev) return fail("Rules service unavailable; nothing was released.");
+  const ok = new Map(prev.items.filter((x) => x.decision === "publish").map((x) => [x.id, x]));
+  const batch = `batch-${Date.now().toString(36)}`;
+  let n = 0;
+  for (const id of ids) {
+    const piece = await ownPiece(tenant, id);
+    const p = ok.get(id);
+    if (!piece || !p || piece.kind !== "source_link" || !["needs_review", "held"].includes(piece.review_status)) continue;
+    await pb.create("editorial_reviews", { tenant_id: tenant.id, piece_id: piece.id, decision: "approve", reviewer_id: session.user.id,
+      reason: `${batch} card-disposition-v2 ${p.rule}: ${reason}`.slice(0, 3000), risk_tier: piece.risk_tier || "low", claims_check_hash: piece.claim_check_status, expected_revision: piece.revision ?? 1 });
+    const now = pbDate();
+    await pb.update("editorial_pieces", piece.id, { review_status: "published", reviewer_id: session.user.id, published_at: piece.published_at || now, first_published_at: piece.first_published_at || now });
+    await audit(tenant.id, session.user.id, "piece.batch_released", "editorial_pieces", piece.id, { batch, rule: p.rule, reason: reason.slice(0, 200) }, piece.revision ?? 1);
+    n++;
+  }
+  revalidatePath("/", "layout");
+  invalidateFeedCache(tenant.id);
+  return { ok: true, message: `Released ${n} of ${ids.length} card(s) (${batch}). Each can be unpublished from its page.` };
+}

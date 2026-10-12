@@ -22,6 +22,7 @@ import re
 from datetime import datetime, timezone
 
 from .pb import PB, PBError, q
+from .editorial.disposition import card_disposition
 
 log = logging.getLogger("palavva.sourcecards")
 CARD_VERSION = "source-card-v1"
@@ -68,7 +69,9 @@ def upsert_source_card(pb: PB, source: dict, item: dict, countries: list[str], t
             existing = pb.update("editorial_pieces", existing["id"], {"country_codes": merged, "sources_json": srcs,
                                                                      "origin_country": existing.get("origin_country") or (merged[0] if merged else "")})
         return existing
-    review = "needs_review" if risk == "high" else "published"  # the row is created unpublished, then passes the DB gate
+    ok, why, v2 = _decide(pb, tid, item.get("title") or "", item.get("permitted_excerpt") or "", risk, True, v1_publish=risk != "high")  # v1: source cards held only at HIGH
+    review = "published" if ok else "needs_review"
+    # the row is created unpublished, then passes the DB gate
     data = {
         "tenant_id": tid, "slug": _slug(item.get("title") or "", url), "kind": "source_link", "headline": (item.get("title") or "")[:300],
         "lede": _excerpt(item.get("permitted_excerpt") or ""), "body_blocks_json": {"card": CARD_VERSION}, "author_type": "source",
@@ -78,7 +81,7 @@ def upsert_source_card(pb: PB, source: dict, item: dict, countries: list[str], t
         "human_comment_count": 0, "ai_contribution_count": 0, "vote_score": 0, "save_count": 0, "still_developing": False,
         "thread_state": "active", "publish_path": "source_card", "post_label": "sourced_news", "source_url": url, "source_item_id": item["id"],
         "origin_country": subject[0] if subject else "", "published_at": _pbdate(published), "first_published_at": _pbdate(published),
-        "last_activity_at": _pbdate(published), "risk_basis": "" if review == "published" else "classifier risk tier high: needs editor review",
+        "last_activity_at": _pbdate(published), "risk_basis": "" if review == "published" else why,
     }
     try:
         card = pb.create("editorial_pieces", data)
@@ -91,6 +94,7 @@ def upsert_source_card(pb: PB, source: dict, item: dict, countries: list[str], t
     pb.create("discussions", {"tenant_id": tid, "piece_id": card["id"], "status": "open", "human_comment_count": 0, "ai_comment_count": 0})
     if review == "published":
         try:
+            _record_card_decision(pb, tid, card, v2)
             card = pb.update("editorial_pieces", card["id"], {"review_status": "published", "reviewer_id": "system:source-card-validator"})
             _enqueue_news_event(pb, tid, card)
         except PBError as e:  # gate refused (paused, rights changed): stays in the editor queue, reason recorded
@@ -110,7 +114,7 @@ def upsert_link_card(pb: PB, source: dict, item: dict, countries: list[str], top
     if existing:
         return existing
     subject = sorted({c for c in countries if re.fullmatch(r"[A-Z]{2}", c or "")})
-    publish = risk == "low"
+    publish, why, v2 = _decide(pb, tid, item.get("title") or "", "", risk, source.get("rights_status") in ("pending", "approved"), v1_publish=risk == "low")  # v1: links only at LOW
     att = {**_attribution(source, item), "license": "Link only: the publisher's headline and a link to the original", "via": "discovered via the GDELT Project",
            "basis": basis}
     data = {
@@ -122,7 +126,7 @@ def upsert_link_card(pb: PB, source: dict, item: dict, countries: list[str], top
         "still_developing": False, "thread_state": "active", "publish_path": "link_signal", "post_label": "sourced_news", "source_url": url,
         "source_item_id": item["id"], "origin_country": (source.get("countries") or [""])[0], "published_at": _pbdate(published),
         "first_published_at": _pbdate(published), "last_activity_at": _pbdate(published),
-        "risk_basis": "" if publish else f"classifier risk tier {risk}: needs editor review",
+        "risk_basis": "" if publish else why,
     }
     try:
         card = pb.create("editorial_pieces", data)
@@ -135,6 +139,7 @@ def upsert_link_card(pb: PB, source: dict, item: dict, countries: list[str], top
     pb.create("discussions", {"tenant_id": tid, "piece_id": card["id"], "status": "open", "human_comment_count": 0, "ai_comment_count": 0})
     if publish:
         try:
+            _record_card_decision(pb, tid, card, v2)
             card = pb.update("editorial_pieces", card["id"], {"review_status": "published", "reviewer_id": "system:link-signal-validator"})
             _enqueue_news_event(pb, tid, card)
         except PBError as e:
@@ -142,6 +147,26 @@ def upsert_link_card(pb: PB, source: dict, item: dict, countries: list[str], top
     pb.audit(tid, "link_signal.created", "editorial_pieces", card["id"], {"source_id": source["id"], "published": card.get("review_status") == "published",
                                                                           "countries": subject, "basis": basis}, actor_type="system", actor_id="intel")
     return card
+
+
+def _decide(pb: PB, tid: str, title: str, excerpt: str, risk: str, rights_ok: bool, v1_publish: bool) -> tuple[bool, str, object]:
+    """v1.8+ ISSUE-07: v1 publishes only LOW classifier risk. With the tenant switch LINK_POLICY_V2 on, the rule-level
+    disposition decides (verbatim attributed routine news flows; incitement/violence/conflict/health/kidnapping holds).
+    With it off, the v2 verdict is still recorded in risk_basis so editors can see what would change."""
+    from .pipeline import tenant_switch
+    v2 = card_disposition(title, excerpt, rights_ok=rights_ok)
+    if tenant_switch(pb, tid, "LINK_POLICY_V2"):
+        return v2.decision == "publish", ("" if v2.decision == "publish" else v2.basis), v2
+    return v1_publish, ("" if v1_publish else f"classifier risk tier {risk}: needs editor review | if refined rules were on: {v2.decision} ({v2.basis})"), None
+
+
+def _record_card_decision(pb: PB, tid: str, card: dict, v2) -> None:
+    """The named allow decision the publish gate re-checks before a card above its v1 risk threshold goes public."""
+    if v2 is None:
+        return
+    pb.create("moderation_decisions", {"tenant_id": tid, "scope": "card", "target_id": card["id"], "piece_id": card["id"], "decision": "allow", "tier": {"high": "sensitive", "medium": "uncertain"}.get(card.get("risk_tier") or "", "low"),
+                                       "ruleset_version": "card-disposition-v2", "rules": {"rule": v2.rule, "matched": v2.matched[:10]}, "reasons": v2.basis[:2900],
+                                       "trace_id": "", "text_hash": "", "actor": "system:card-disposition", "overridden": False})
 
 
 def _enqueue_news_event(pb: PB, tid: str, card: dict) -> None:
