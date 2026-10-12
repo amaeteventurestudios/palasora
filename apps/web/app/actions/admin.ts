@@ -13,6 +13,7 @@ import { editorialFetch } from "@/lib/editorial-client";
 import { forwardInquiry } from "@/lib/crm";
 import type { ActionState } from "./member";
 import { emitEvent } from "@/lib/repo/thread";
+import { STATE_LABEL, checkDecision } from "@/lib/business/rules";
 
 const s = (f: FormData, k: string, max = 4000) => String(f.get(k) ?? "").slice(0, max).trim();
 const fail = (message: string): ActionState => ({ ok: false, message });
@@ -292,17 +293,23 @@ export async function markInquiryManual(_: ActionState, f: FormData): Promise<Ac
   return { ok: true, message: "Marked for manual follow-up." };
 }
 
-export async function verifyBusiness(_: ActionState, f: FormData): Promise<ActionState> {
+/** ISSUE-19 one staff decision on a business: verify / request information / reject / suspend / reopen. Rules in lib/business/rules.ts:
+ *  right role, a note, evidence links for verification, demo businesses never verified. Every decision is kept with its evidence. */
+export async function businessDecision(_: ActionState, f: FormData): Promise<ActionState> {
   const { tenant, session } = await staff("editor");
   const b = await pb.first("businesses", `tenant_id=${q(tenant.id)} && id=${q(s(f, "id", 30))}`);
   if (!b) return fail("Not found.");
-  const state = s(f, "state", 20);
-  if (!["verified", "rejected", "pending"].includes(state)) return fail("Unknown state.");
-  await pb.update("businesses", b.id, { verification_state: state });
-  await audit(tenant.id, session.user.id, `business.${state}`, "businesses", b.id);
+  const evidence = [1, 2, 3].map((i) => ({ url: s(f, `evidence_url_${i}`, 500), note: s(f, `evidence_note_${i}`, 500) })).filter((e) => e.url || e.note);
+  const note = s(f, "note", 2000), action = s(f, "action", 20), from = String(b.verification_state || "unverified");
+  const d = checkDecision({ action, state: from, isDemo: !!b.is_demo, note, evidence, can: (role) => hasRole(session, role) });
+  if (!d.ok) return fail(d.message);
+  await pb.update("businesses", b.id, { verification_state: d.to, ...(d.to === "verified" ? { verified_at: pbDate(), verified_by: session.user.id } : {}),
+    ...(d.to === "suspended" || d.to === "rejected" ? { verified_at: "", verified_by: "" } : {}) });
+  await pb.create("business_verifications", { tenant_id: tenant.id, business_id: b.id, action, from_state: from, to_state: d.to, evidence, note, actor_user_id: session.user.id });
+  await audit(tenant.id, session.user.id, `business.${action}`, "businesses", b.id, { from, to: d.to, evidence: evidence.length });
   revalidatePath("/", "layout");
   invalidateFeedCache(tenant.id);
-  return { ok: true, message: `Business marked ${state}.` };
+  return { ok: true, message: `${b.name}: ${STATE_LABEL[d.to].toLowerCase()}.` };
 }
 
 // ---------------- Tenancy (platform admin only) ----------------

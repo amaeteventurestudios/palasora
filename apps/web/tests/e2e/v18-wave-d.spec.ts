@@ -185,3 +185,67 @@ test("ISSUE-15 Exchange: all 54 markets and a full listings directory, IPO-only 
   await request.post(`${ED}/markets/GH/halt`, { headers: H, data: { halted: false, reason: "" } });
   expect((await request.post(`${ED}/reconcile`, { headers: H, data: {} }).then((r) => r.json())).ok).toBe(true);
 });
+
+test("ISSUE-19 Businesses: demo never verifiable, evidence-based verify by a tenant admin, editor can only request information, verified ranks first, paid placement never lifts an unverified business, suspend withdraws the profile", async ({ page, browser }) => {
+  test.setTimeout(120_000);
+  const pb = await pbAdmin();
+  const tag = Math.random().toString(36).slice(2, 7);
+  const tid = (await pb.list("tenants", "slug='palavva'"))[0]?.id ?? (await pb.list("businesses", "is_demo=true"))[0].tenant_id;
+  const mk = (name: string) => pb.create("businesses", { tenant_id: tid, name, slug: `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, country_code: "KE", sector: "agriculture", about: "A test business created by the end-to-end suite.",
+    profile_status: "published", is_demo: false, verification_state: "unverified", founder_bio: "Founded by the test suite.", products: ["Seed storage", "Training"] });
+  const real = await mk(`Fixture Co-op ${tag}`);
+  const payer = await mk(`Aaa Paid Fixture ${tag}`); // alphabetically and newest: would come first if payment or recency could lift it
+  await pb.create("spotlights", { tenant_id: tid, business_id: payer.id, placement_type: "sponsored", disclosure_text: "Paid", approval_status: "approved" });
+  await noConsentBanner(page);
+  // Editor: can request information, cannot verify.
+  const ectx = await browser.newContext(); const ed = await ectx.newPage();
+  await signIn(ed, "editor@palavva.local", BASE, `/admin/businesses?id=${real.id}`);
+  await expect(ed.getByTestId("biz-actions").locator('[data-action="verify"]')).toContainText("(not your role)");
+  await ed.getByTestId("biz-actions").locator('[data-action="request_info"] summary').click();
+  await ed.getByLabel("Request information note").fill("Please send your county registration number");
+  await ed.getByRole("button", { name: "Request information" }).click();
+  await expect(ed.getByText(`Fixture Co-op ${tag}: information requested.`)).toBeVisible();
+  await ectx.close();
+  // Admin: the demo business offers no Verify; the real one needs evidence, then verifies.
+  await signIn(page, "admin@palavva.local", BASE, "/admin/businesses");
+  await expect(page.getByTestId("admin-page")).toContainText("Demo businesses are labelled everywhere and can never be verified");
+  const demo = (await pb.list("businesses", "is_demo=true"))[0];
+  await page.goto(`${BASE}/admin/businesses?id=${demo.id}`);
+  await expect(page.getByTestId("biz-actions")).toContainText("never verified");
+  await expect(page.getByTestId("biz-actions").locator('[data-action="verify"]')).toHaveCount(0);
+  await page.goto(`${BASE}/admin/businesses`);
+  await page.getByTestId("biz-table-search").fill(`Fixture Co-op ${tag}`);
+  await page.getByTestId("biz-table").locator("[data-row]").first().click();
+  await expect(page.getByTestId("biz-state")).toHaveText("Information requested");
+  const verify = page.getByTestId("biz-actions").locator('[data-action="verify"]');
+  await verify.locator("summary").click();
+  await verify.getByLabel("Verify note").fill("Checked the county registry entry and the founder's ID record");
+  await verify.getByRole("button", { name: "Verify" }).click();
+  await expect(page.getByText("Add at least one https link")).toBeVisible();
+  await verify.getByLabel("Evidence link 1").fill(`https://registry.go.ke/entity/E2E-${tag}`);
+  await verify.getByLabel("Evidence note 1").fill("name, county and owner match");
+  await verify.getByLabel("Verify note").fill("Checked the county registry entry and the founder's ID record");
+  await verify.getByRole("button", { name: "Verify" }).click();
+  // The form unmounts once the state changes (Verify no longer applies), so assert the recorded state.
+  await expect(page.getByTestId("biz-state")).toHaveText("Verified by Palavva staff");
+  await expect(page.getByTestId("biz-history")).toContainText(`registry.go.ke/entity/E2E-${tag}`);
+  // Public: verified first and labelled; the unverified payer is not lifted and not in the sponsored strip.
+  await page.goto(`${BASE}/businesses`);
+  await page.getByTestId("biz-directory-search").fill(tag);
+  const rows = page.getByTestId("biz-directory").locator("[data-row]");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText(`Fixture Co-op ${tag}`);
+  await expect(rows.first().locator('[data-label="verified"]')).toBeVisible();
+  await expect(rows.nth(1).locator('[data-label="unverified"]')).toBeVisible();
+  await expect(page.getByTestId("biz-sponsored")).toHaveCount(0);
+  await page.goto(`${BASE}/business/${real.slug}`);
+  await expect(page.getByTestId("biz-verified")).toBeVisible();
+  // Suspend: profile withdrawn.
+  await page.goto(`${BASE}/admin/businesses?id=${real.id}`);
+  const sus = page.getByTestId("biz-actions").locator('[data-action="suspend"]');
+  await sus.locator("summary").click();
+  await sus.getByLabel("Suspend note").fill("Complaint under review about misleading claims");
+  await sus.getByRole("button", { name: "Suspend" }).click();
+  await expect(page.getByTestId("biz-state")).toHaveText("Suspended");
+  expect((await page.request.get(`${BASE}/business/${real.slug}`)).status()).toBe(404);
+});
