@@ -95,8 +95,9 @@ test("T-012 report an AI reply → moderator quarantines → reply hidden; audit
   await row.getByRole("button", { name: "Quarantine" }).click();
   await expect(async () => { await reader.reload(); await expect(reader.getByTestId("ai-post").filter({ hasText: text })).toHaveCount(0, { timeout: 1000 }); }).toPass({ timeout: 15000 });
   await mod.goto("/admin/settings");
-  await expect(mod.getByText("moderation.report_quarantine").first()).toBeVisible();
-  await mod.goto("/admin/moderation");
+  await mod.getByTestId("audit-search").fill("quarantine"); // v1.8+ ISSUE-22: plain summaries; raw action in the drawer
+  await expect(mod.getByTestId("audit").getByText("moderation report quarantine").first()).toBeVisible();
+  await mod.goto("/admin/moderation?tab=quarantine"); // v1.8+ ISSUE-13: Trust & safety tabs
   const q = mod.locator("tr", { hasText: "quarantined" }).filter({ hasText: text.slice(0, 25) }).first();
   await q.getByRole("button", { name: "Restore" }).click();
   await expect(async () => { await reader.reload(); await expect(reader.getByTestId("ai-post").filter({ hasText: text })).toHaveCount(1, { timeout: 1000 }); }).toPass({ timeout: 15000 });

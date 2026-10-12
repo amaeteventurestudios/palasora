@@ -90,3 +90,15 @@ test("ISSUE-22 Settings say what each switch does, confirm disruptive changes, a
   const sink = page.getByTestId("mail-sink");
   if (await sink.count()) await expect(sink).not.toContainText(/token=[A-Za-z0-9]/);
 });
+
+test("ISSUE-13 Trust & safety: honest zero states, automatic decisions charted, refusal reasons in plain words, rules service health", async ({ page }) => {
+  await page.addInitScript(() => { try { localStorage.setItem("pv_consent", "denied"); } catch { /* */ } });
+  const { signIn } = await import("./helpers");
+  await signIn(page, "moderator@palavva.local", BASE, "/admin/moderation");
+  await expect(page.getByTestId("narrative")).toContainText("does not mean content goes unchecked");
+  await expect(page.locator('[data-metric="Refused before publication (14 d)"]')).toBeVisible();
+  await page.getByTestId("ts-tabs").getByRole("link", { name: "Automatic decisions" }).click();
+  await expect(page.getByTestId("refusal-reasons")).toBeVisible();
+  await page.getByTestId("ts-tabs").getByRole("link", { name: "Service health" }).click();
+  await expect(page.getByTestId("ts-health")).toContainText("Publication rules service: answering");
+});
