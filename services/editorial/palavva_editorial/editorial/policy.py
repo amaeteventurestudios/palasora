@@ -27,7 +27,13 @@ GROUP_DEGRADATION = [
 INSULTS = re.compile(r"\b(idiots?|idiotic|morons?|stupid|fool(s|ish)?|dumb|clowns?|shut up|pathetic|ignorant (people|fools)|you people|nonsense argument|imbeciles?|retards?)\b", re.I)
 # A disclosed AI must not claim lived experience or invent witnesses.
 TESTIMONY = re.compile(r"\b(I (was|am) (there|a farmer|a trader|a vendor|from|born in|living in)|my (uncle|aunt|mother|father|brother|sister|cousin|village|neighbou?r)|"
-                       r"as a (farmer|trader|mother|father|nigerian|ghanaian|kenyan) myself|I personally (saw|witnessed|know)|when I lived)\b", re.I)
+                       r"as a (farmer|trader|mother|father|nigerian|ghanaian|kenyan) myself|I personally (saw|witnessed|know)|when I lived|"
+                       # v1.8+ ISSUE-02: place-of-life claims that persona voices can slip into ("Where I live…", "In our village…")
+                       r"where I (live|lived|grew up|come from|am based|work)|back home in|"
+                       r"in (my|our) (home ?town|town|village|city|area|neighbou?rhood|community|street|market|district|state|county|region|country)|"
+                       r"I('ve| have)? seen (it|this|that) (myself|first-?hand|with my own eyes))\b", re.I)
+# "Here in Lagos…": a place name must be capitalised, so this part is case-sensitive (keeps "here in this thread" legal).
+HERE_IN_PLACE = re.compile(r"\b(?:[Hh]ere in|[Ii]ci (?:à|au|en)|[Aa]qui (?:em|no|na)) (?!This\b|The\b)[A-ZÀ-Ý][a-zà-ÿ]+")
 INJECTION_ECHO = re.compile(r"ignore (all |any )?(previous|prior) instructions|system prompt|api[_ ]?key|password|publish (this|now) immediately|as an admin|BEGIN SYSTEM", re.I)
 OUTRAGE = re.compile(r"\b(outrageous|disgusting|shameful|evil|wicked)\b", re.I)
 NUM = re.compile(r"(?<![A-Za-z])\d[\d,.]*%?")
@@ -189,7 +195,7 @@ def check_post(text: str, evidence_text: str, *, allow_numbers_from_evidence: bo
     rule("group_degradation", any(p.search(t) for p in GROUP_DEGRADATION), "generalizes or ranks an ethnic/religious/national group")
     m = INSULTS.search(t)
     rule("personal_insult", bool(m), m.group(0) if m else "")
-    m = TESTIMONY.search(t)
+    m = TESTIMONY.search(t) or HERE_IN_PLACE.search(t)
     rule("invented_testimony", bool(m), m.group(0) if m else "")
     rule("injection_echo", bool(INJECTION_ECHO.search(t)), "repeats control instructions")
     rule("external_urls", bool(URL.search(t)), "posts must cite evidence IDs, not URLs")

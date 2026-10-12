@@ -1,0 +1,120 @@
+0 v17 fr v1.7 succeeded 35 ok
+0 v18 fr typical succeeded 31 ok
+1 v17 ar v1.7 succeeded 39 no (invented_testimony_i18n: والدي)
+1 v18 ar typical succeeded 25 ok
+2 v17 en v1.7 succeeded 33 no (novelty: copies 9 words)
+2 v18 en typical succeeded 29 ok
+3 v17 en v1.7 succeeded 45 ok
+3 v18 en quick succeeded 11 ok
+4 v17 en v1.7 succeeded None no (chose abstain)
+4 v18 en typical succeeded None no (chose abstain)
+5 v17 fr v1.7 succeeded 51 ok
+5 v18 fr typical succeeded None no (chose abstain)
+6 v17 en v1.7 succeeded 36 ok
+6 v18 en typical succeeded 26 ok
+7 v17 fr v1.7 succeeded 39 ok
+7 v18 fr typical succeeded None no (chose abstain)
+8 v17 en v1.7 succeeded 29 ok
+8 v18 en typical succeeded 22 ok
+9 v17 en v1.7 succeeded 35 ok
+9 v18 en quick succeeded 10 ok
+10 v17 en v1.7 succeeded 35 ok
+10 v18 en typical succeeded None no (chose abstain)
+11 v17 fr v1.7 succeeded 37 ok
+11 v18 fr substantive succeeded 59 ok
+12 v17 ar v1.7 succeeded 35 ok
+12 v18 ar typical succeeded None no (chose abstain)
+13 v17 en v1.7 succeeded 34 no (unsupported_entities: Supporting)
+13 v18 en typical succeeded 28 ok
+14 v17 en v1.7 succeeded 36 ok
+14 v18 en substantive succeeded 58 ok
+15 v17 en v1.7 succeeded 32 ok
+15 v18 en typical succeeded 29 ok
+16 v17 ar v1.7 succeeded 30 no (novelty: copies 14 words)
+16 v18 ar typical succeeded 25 ok
+17 v17 en v1.7 succeeded 31 ok
+17 v18 en quick succeeded 11 ok
+18 v17 fr v1.7 succeeded 38 ok
+18 v18 fr substantive succeeded None no (chose abstain)
+19 v17 en v1.7 succeeded 44 no (novelty: copies 9 words)
+19 v18 en typical succeeded 22 ok
+20 v17 en v1.7 succeeded None no (chose abstain)
+20 v18 en typical succeeded None no (chose abstain)
+21 v17 en v1.7 succeeded 38 ok
+21 v18 en typical succeeded 32 ok
+22 v17 fr v1.7 succeeded 45 ok
+22 v18 fr typical succeeded 25 ok
+23 v17 en v1.7 succeeded 35 no (novelty: copies 16 words)
+23 v18 en typical succeeded 22 ok
+24 v17 en v1.7 succeeded 37 ok
+24 v18 en quick succeeded 10 ok
+25 v17 en v1.7 succeeded 37 no (novelty: copies 9 words)
+25 v18 en typical succeeded 21 ok
+26 v17 en v1.7 succeeded 33 ok
+26 v18 en typical succeeded 30 ok
+27 v17 ar v1.7 succeeded 36 ok
+27 v18 ar typical succeeded 29 ok
+28 v17 en v1.7 succeeded 29 ok
+28 v18 en quick succeeded None no (chose abstain)
+29 v17 fr v1.7 succeeded 50 no (novelty: copies 8 words)
+29 v18 fr quick succeeded 10 ok
+30 v17 en v1.7 succeeded 35 ok
+30 v18 en typical succeeded 28 ok
+31 v17 en v1.7 succeeded None no (chose abstain)
+31 v18 en typical succeeded None no (chose abstain)
+32 v17 en v1.7 succeeded 44 ok
+32 v18 en typical succeeded 30 ok
+33 v17 fr v1.7 succeeded 43 ok
+33 v18 fr quick succeeded None no (chose abstain)
+34 v17 en v1.7 succeeded 31 ok
+34 v18 en typical succeeded 32 ok
+35 v17 en v1.7 succeeded 42 ok
+35 v18 en quick succeeded 10 ok
+36 v17 en v1.7 succeeded 35 ok
+36 v18 en typical succeeded 26 no (novelty: copies 8 words)
+37 v17 en v1.7 succeeded 33 ok
+37 v18 en typical succeeded 29 ok
+38 v17 ar v1.7 succeeded 32 ok
+38 v18 ar typical succeeded 25 ok
+39 v17 en v1.7 succeeded None no (chose abstain)
+39 v18 en typical succeeded None no (chose abstain)
+40 v17 fr v1.7 succeeded 50 ok
+40 v18 fr substantive succeeded None no (chose abstain)
+41 v17 en v1.7 succeeded 34 ok
+41 v18 en typical succeeded 32 ok
+42 v17 en v1.7 succeeded 30 ok
+42 v18 en typical succeeded 28 ok
+43 v17 en v1.7 succeeded 33 ok
+43 v18 en typical succeeded 22 ok
+44 v17 fr v1.7 succeeded None no (chose abstain)
+44 v18 fr typical succeeded None no (chose abstain)
+45 v17 ar v1.7 succeeded None no (chose abstain)
+45 v18 ar typical succeeded None no (chose abstain)
+46 v17 en v1.7 succeeded 39 no (novelty: copies 39 words)
+46 v18 en substantive succeeded 54 no (novelty: copies 12 words)
+47 v17 en v1.7 succeeded 51 ok
+47 v18 en typical succeeded 23 ok
+48 v17 en v1.7 succeeded 40 ok
+48 v18 en quick succeeded 10 ok
+49 v17 ar v1.7 succeeded 37 ok
+49 v18 ar quick succeeded 11 ok
+50 v17 en v1.7 succeeded None no (chose abstain)
+50 v18 en typical succeeded None no (chose abstain)
+51 v17 fr v1.7 succeeded None no (chose abstain)
+51 v18 fr quick succeeded None no (chose abstain)
+52 v17 en v1.7 succeeded 40 no (novelty: copies 15 words)
+52 v18 en typical succeeded 42 no (novelty: copies 44 words)
+53 v17 en v1.7 succeeded 48 ok
+53 v18 en quick succeeded 10 ok
+54 v17 en v1.7 succeeded 35 ok
+54 v18 en substantive succeeded 52 ok
+55 v17 fr v1.7 succeeded 44 ok
+55 v18 fr quick succeeded None no (chose abstain)
+56 v17 ar v1.7 succeeded 45 ok
+56 v18 ar typical succeeded 35 ok
+57 v17 en v1.7 succeeded None no (chose abstain)
+57 v18 en quick succeeded 11 ok
+58 v17 en v1.7 succeeded 30 ok
+58 v18 en substantive succeeded 52 ok
+v17 {"cases": 59, "replied": 50, "abstained": 9, "accepted": 40, "acceptance": 0.678, "median_words": 36.0, "p10_words": 31, "p90_words": 48, "pct_le_45": 90.0, "bands": {"2-12": 0, "13-45": 45, "46-80": 5, ">80": 0}, "emoji_pct": 0.0, "question_pct": 8.0, "distinct_openers_pct": 94.0, "mean_pairwise_similarity": 0.021, "cross_similarity_max": 0.42, "usd_total": 0.007784, "usd_per_accepted": 0.000195, "p50_ms": 1270, "tokens_in": 66787, "tokens_out": 7689, "rejections": [["chose abstain", 9], ["novelty", 8], ["invented_testimony_i18n", 1], ["unsupported_entities", 1]]}
+v18 {"cases": 59, "replied": 42, "abstained": 17, "accepted": 39, "acceptance": 0.661, "median_words": 26.0, "p10_words": 10, "p90_words": 52, "pct_le_45": 88.1, "bands": {"2-12": 10, "13-45": 27, "46-80": 5, ">80": 0}, "emoji_pct": 2.4, "question_pct": 16.7, "distinct_openers_pct": 95.2, "mean_pairwise_similarity": 0.013, "cross_similarity_max": 0.242, "usd_total": 0.012173, "usd_per_accepted": 0.000312, "p50_ms": 1097, "tokens_in": 99900, "tokens_out": 5766, "rejections": [["chose abstain", 17], ["novelty", 3]]}

@@ -54,7 +54,8 @@ def test_emoji_is_sparse_and_many_agents_never_use_it():
 def test_style_brief_is_short_and_safe():
     a = agents(1)[0]
     b = voice.style_brief(a, voice.reply_shape(a, "t"), "k")
-    assert len(b) < 900 and "never at people or groups" in b or "Humour" not in b
+    assert len(b) < 1300  # prompt size is cost
+    assert "Humour" not in b or "never at people or groups" in b
     assert "stock phrases" in b
 
 
@@ -100,3 +101,17 @@ def test_relationship_block_is_bounded():
         a["memory"] = memory_blocks.remember(a, thread_id=f"T{i}", topic="t", stance="neutral", excerpt="e", other_agent_id=f"o{i}", now=i)
     assert len(a["memory"]["blocks"]["relationships"]) == memory_blocks.MAX_RELS
     assert len(a["memory"]["blocks"]["stances"]) == memory_blocks.MAX_STANCES
+
+
+def test_invented_place_of_life_claims_are_rejected_in_several_languages():
+    from palavva_editorial.city.textpolicy import check_agent_text
+    bad = [("Where I live, roads flood every year.", "en", ""), ("In our village the co-op works.", "en", ""), ("Here in Lagos traffic decides everything.", "en", ""),
+           ("Dans nos villages, la formation compte.", "fr", "Training matters."), ("Là où je suis, les silos fonctionnent.", "fr", "Silos work."),
+           ("Onde eu moro, a estrada alaga.", "pt", "The road floods."), ("عندنا في القرية الطريق سيئ", "ar", "The road is bad.")]
+    for text, lang, gloss in bad:
+        r = check_agent_text(text, "roads co-op traffic silos formation estrada الطريق", "hosted", 6, language=lang, gloss=gloss)
+        assert any("testimony" in x for x in r["reasons"]), text
+    ok = ["In my view, the costs matter more than the hardware.", "Here in this thread nobody has priced the batteries.", "Who maintains it in year two?"]
+    for text in ok:
+        r = check_agent_text(text, "costs hardware batteries", "hosted", 6, language="en")
+        assert not any("testimony" in x for x in r["reasons"]), text

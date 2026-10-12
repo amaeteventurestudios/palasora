@@ -27,7 +27,13 @@ META_ECHO = re.compile(r"\b(named entities|the prompt|my instructions|these inst
 INSULTS_I18N = re.compile(r"\b(idiots?|imb[ée]ciles?|cr[ée]tins?|abruti[se]?|connard\w*|tais[- ]toi|ferme[- ]la|est[úu]pid[oa]s?|burr[oa]s?|cala a boca|ot[áa]ri[oa]s?|"
                           r"imbecis|palha[çc]os?)\b|(غبي|أغبياء|حمار|حمير|اخرس|تافه|أحمق|حقير)", re.I)
 TESTIMONY_I18N = re.compile(r"\b(j'[ée]tais l[àa]|je l'ai vu|mon (oncle|p[èe]re|fr[èe]re|village)|ma (m[èe]re|tante|s[œo]eur)|quand j'habitais|eu estava l[áa]|"
-                            r"meu (tio|pai|irm[ãa]o)|minha (m[ãa]e|tia|aldeia)|quando eu morava)\b|(كنت هناك|رأيت بنفسي|عمي|والدي|قريتي|عندما كنت أعيش)", re.I)
+                            r"meu (tio|pai|irm[ãa]o)|minha (m[ãa]e|tia|aldeia)|quando eu morava|"
+                            # v1.8+ ISSUE-02: "where I live / in our village / here in <Place>" in French, Portuguese, Swahili
+                            r"l[àa] o[ùu] je (suis|vis|vivais|travaille)|chez nous|dans (nos|notre) (villages?|ville|quartier|communaut[ée]|r[ée]gion|march[ée])|"
+                            r"j'ai vu (de mes (propres )?yeux|moi-m[êe]me)|"
+                            r"onde eu (moro|vivo)|na minha (cidade|terra|comunidade|regi[ãa]o)|eu vi com (os )?meus|"
+                            r"kijijini kwetu|mtaani kwetu|huku kwetu|ninapoishi|niliona kwa macho yangu)\b|"
+                            r"(كنت هناك|رأيت بنفسي|عمي|والدي|قريتي|عندما كنت أعيش|في مدينتي|في حيّنا|في حينا|عندنا في|في منطقتنا|رأيت بعيني)", re.I)
 SPAM_I18N = re.compile(r"\b(contactez[- ]moi|[ée]crivez[- ]moi sur whatsapp|achetez maintenant|offre limit[ée]e|compre agora|oferta limitada|chame no whatsapp)\b|"
                        r"(تواصل معي|اشتر الآن|عرض محدود)", re.I)
 PHONE = re.compile(r"(?<!\d)(\+?\d[\d\s-]{8,}\d)(?!\d)")
@@ -74,7 +80,7 @@ def check_agent_text(text: str, grounding: str, mode: str = "hosted", min_len: i
         label = "und"
     m = INSULTS_I18N.search(t)
     rule("personal_insult_i18n", bool(m), m.group(0) if m else "")
-    m = TESTIMONY_I18N.search(t)
+    m = TESTIMONY_I18N.search(t) or policy.HERE_IN_PLACE.search(t)
     rule("invented_testimony_i18n", bool(m), m.group(0) if m else "")
     m = SPAM_I18N.search(t)
     rule("unsolicited_selling_i18n", bool(m), m.group(0) if m else "")

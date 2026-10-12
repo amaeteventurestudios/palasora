@@ -32,6 +32,20 @@ VERBOSITY = ("terse", "brief", "moderate", "expansive")
 EMOJI_SETS = {"warm": "🙂 🙏 👏", "enthusiastic": "🔥 🙌 😄", "wry": "😅 🙃 🤔", "dry": "🤔 🙃", "curious": "🤔 👀",
               "optimistic": "🙌 🌱 👍", "skeptical": "🤨 🤔", "blunt": "👀", "measured": "🤔", "impatient": "🙄 😤"}
 
+# Concrete behaviour per temperament (the label alone barely changes small models' writing).
+TEMPERAMENT_CUES = {
+    "warm": "be generous to the other person while still adding something of your own",
+    "skeptical": "doubt the easy answer; ask what evidence or condition would make it true",
+    "blunt": "say it straight, e.g. that something won't work and the one reason why; no hedging",
+    "curious": "ask about the part nobody has explained yet",
+    "enthusiastic": "show real excitement about one specific detail, not about everything",
+    "dry": "understate; a flat, wry observation lands better than a lecture",
+    "measured": "weigh one upside against one downside in plain words",
+    "wry": "notice the irony or the obvious catch, lightly",
+    "optimistic": "point to what could go right and what it would take",
+    "impatient": "cut to the practical problem; skip the pleasantries",
+}
+
 # Existing v1.7 persona tones bias the draw so a resident's new voice matches how it already wrote.
 TONE_BIAS = {"warm": ("warm", "optimistic"), "upbeat": ("enthusiastic", "optimistic"), "dry and precise": ("dry", "skeptical"),
              "data-led": ("skeptical", "measured"), "plain-spoken": ("blunt", "impatient"), "patient": ("measured", "warm"),
@@ -42,7 +56,7 @@ STYLE_DEBATE = {"asks a sharp follow-up question": "questioner", "tests a claim 
 
 # Reply shapes: word band and the instruction given to the writer. Bands follow the founder's length contract.
 REPLY_SHAPES = {
-    "quick": {"min_chars": 6, "min": 2, "max": 12, "label": "quick reaction", "ask": "a quick reaction of 2-12 words: one short line, a question or a single sharp point"},
+    "quick": {"min_chars": 6, "min": 2, "max": 12, "label": "quick reaction", "ask": "a quick reaction: AT MOST 12 words. One short line: a reaction, a pointed question or a single sharp point (think: \"Who pays for the batteries?\")"},
     "typical": {"min_chars": 30, "min": 10, "max": 45, "label": "typical reply", "ask": "an ordinary reply of about 15-35 words (one to three sentences)"},
     "substantive": {"min_chars": 120, "min": 40, "max": 80, "label": "substantive reply", "ask": "a fuller reply of 40-80 words, only because it adds real context or answers a real question"},
 }
@@ -151,7 +165,7 @@ def style_brief(agent: dict, shape: dict, key: str) -> str:
     if shape.get("kind") == "legacy":
         return f"LENGTH: {shape['ask']}."
     d = dna(agent)
-    bits = [f"VOICE: {d['temperament']}; {CADENCES[d['cadence']]}; {REGISTERS[d['register']]}. In debate this persona {DEBATE[d['debate']]}."]
+    bits = [f"VOICE: {d['temperament']} ({TEMPERAMENT_CUES[d['temperament']]}); {CADENCES[d['cadence']]}; {REGISTERS[d['register']]}. In debate this persona {DEBATE[d['debate']]}."]
     if d["humor"] != "none":
         bits.append(f"Humour: {HUMOR[d['humor']]} ({['', 'a light touch', 'when it fits', 'often'][d['humor_intensity']]}), aimed at ideas or situations, never at people or groups.")
     if d["sarcasm"]:
@@ -159,6 +173,9 @@ def style_brief(agent: dict, shape: dict, key: str) -> str:
                     "You can be sarcastic about weak arguments (never about people, groups or identities).")
     if d["jargon"] == "plain":
         bits.append("Avoid jargon.")
+    bits.append("REGISTER: this is a comment in a social thread, typed by someone with a point of view, not a report. Avoid report phrasing "
+                "(\"could enhance\", \"it is important to\", \"ensure\", \"stakeholders\", \"leverage\", \"in conclusion\") and empty "
+                "verdicts (\"is key\", \"can really make a difference\", \"promising\", \"crucial\"): make a concrete point instead.")
     bits.append(f"LENGTH: write {shape['ask']}. Say only what is needed; do not pad.")
     asks = _rng(VERSION, "question", agent.get("id", ""), key).random() < d["question_rate"]
     bits.append("A genuine question fits here." if asks else "No need to end with a question; a statement, reaction or counterpoint is fine.")
@@ -183,5 +200,5 @@ def length_ok(text: str, shape: dict) -> tuple[bool, str]:
     n = word_count(text)
     if shape.get("kind") == "legacy":
         return True, f"{n} words (v1.7 brief, not length-checked)"
-    lo, hi = max(1, int(shape["min"] * 0.5)), int(shape["max"] * 1.6) + 4
+    lo, hi = max(1, int(shape["min"] * 0.5)), int(shape["max"] * (1.5 if shape["max"] <= 12 else 1.6)) + (2 if shape["max"] <= 12 else 4)
     return (lo <= n <= hi), f"{n} words for a {shape['label']} ({shape['min']}-{shape['max']})"

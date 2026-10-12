@@ -1,0 +1,60 @@
+0 v18 fr typical succeeded 32 no (unsupported_entities: Bas-Sassandra; gloss: unsupported_enti)
+1 v18 ar typical succeeded 37 no (gloss: unsupported_entities: Beheira)
+2 v18 en typical succeeded 36 ok
+3 v18 en quick succeeded 13 ok
+4 v18 en typical succeeded 36 no (unsupported_entities: Baringo)
+5 v18 fr typical succeeded 46 ok
+6 v18 en typical succeeded 41 no (unsupported_entities: Bayelsa)
+7 v18 fr typical succeeded 35 no (unsupported_entities: Tambacounda; gloss: unsupported_entiti)
+8 v18 en typical succeeded 34 ok
+9 v18 en quick succeeded 13 ok
+10 v18 en typical succeeded 43 no (unsupported_entities: Masvingo)
+11 v18 fr substantive succeeded 70 ok
+12 v18 ar typical succeeded 32 ok
+13 v18 en typical succeeded 36 ok
+14 v18 en substantive succeeded 62 ok
+15 v18 en typical succeeded 31 no (unsupported_entities: Lamu)
+16 v18 ar typical succeeded 35 no (gloss: unsupported_entities: Dakhla-Oued, Ed-Dahab)
+17 v18 en quick succeeded 12 ok
+18 v18 fr substantive succeeded 45 ok
+19 v18 en typical succeeded 37 ok
+20 v18 en typical succeeded 37 ok
+21 v18 en typical succeeded 38 no (unsupported_entities: Matabeleland)
+22 v18 fr typical succeeded 28 no (gloss: unsupported_entities: Ivorian)
+23 v18 en typical succeeded 24 ok
+24 v18 en quick succeeded 19 ok
+25 v18 en typical succeeded 36 ok
+26 v18 en typical succeeded 30 ok
+27 v18 ar typical succeeded 25 ok
+28 v18 en quick succeeded None no (chose abstain)
+29 v18 fr quick succeeded 27 no (unsupported_entities: Diourbel; gloss: unsupported_entities:)
+30 v18 en typical succeeded 33 ok
+31 v18 en typical succeeded 26 no (unsupported_entities: Mpumalanga)
+32 v18 en typical succeeded 30 no (unsupported_entities: Mashonaland)
+33 v18 fr quick succeeded 14 ok
+34 v18 en typical succeeded 36 no (unsupported_entities: Suez, Governorate)
+35 v18 en quick succeeded 14 ok
+36 v18 en typical succeeded 36 ok
+37 v18 en typical succeeded 33 no (unsupported_entities: Samburu)
+38 v18 ar typical succeeded None no (chose vote_only)
+39 v18 en typical succeeded 42 ok
+40 v18 fr substantive succeeded 62 ok
+41 v18 en typical succeeded 29 ok
+42 v18 en typical succeeded 40 ok
+43 v18 en typical succeeded 32 no (unsupported_entities: Masvingo)
+44 v18 fr typical succeeded None no (chose abstain)
+45 v18 ar typical succeeded 32 no (gloss: unsupported_entities: Monufia)
+46 v18 en substantive succeeded 48 no (unsupported_entities: Hareri)
+47 v18 en typical succeeded 29 no (unsupported_entities: Region)
+48 v18 en quick succeeded 11 ok
+49 v18 ar quick succeeded 12 ok
+50 v18 en typical succeeded 32 ok
+51 v18 fr quick succeeded 15 ok
+52 v18 en typical succeeded 35 ok
+53 v18 en quick succeeded 11 no (unsupported_entities: Limpopo)
+54 v18 en substantive succeeded 67 ok
+55 v18 fr quick succeeded 22 no (length: 22 words for a quick reaction (2-12))
+56 v18 ar typical succeeded 39 ok
+57 v18 en quick succeeded 11 ok
+58 v18 en substantive succeeded 78 no (unsupported_entities: Kajiado)
+v18 {"cases": 59, "replied": 56, "abstained": 3, "accepted": 34, "acceptance": 0.576, "median_words": 33.0, "p10_words": 13, "p90_words": 48, "pct_le_45": 87.5, "bands": {"2-12": 5, "13-45": 44, "46-80": 7, ">80": 0}, "emoji_pct": 0.0, "question_pct": 37.5, "distinct_openers_pct": 100.0, "mean_pairwise_similarity": 0.012, "cross_similarity_max": 0.183, "usd_total": 0.050522, "usd_per_accepted": 0.001486, "p50_ms": 1355, "tokens_in": 99900, "tokens_out": 6920, "rejections": [["unsupported_entities", 17], ["gloss", 4], ["chose abstain", 2], ["chose vote_only", 1], ["length", 1]]}
