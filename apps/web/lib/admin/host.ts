@@ -15,7 +15,7 @@ export async function hostFacts() {
   let drills: { name: string; at: number }[] = [];
   try { const ev = path.join(root, "docs", "evidence"); drills = (await Promise.all((await readdir(ev)).filter((f) => /restore-drill/.test(f)).map(async (f) => ({ name: f, at: (await stat(path.join(ev, f))).mtimeMs })))).sort((a, b) => b.at - a.at); } catch { /* none */ }
   const procs: { name: string; pid: number | null; running: boolean }[] = [];
-  for (const n of ["pocketbase", "editorial", "worker", "fast", "web"]) {
+  for (const n of ["pocketbase", "editorial", "worker", "fast", "writers", "intel", "population", "web"]) { // v1.8+: all 8 (v1.7 watched 5)
     let pid: number | null = null, running = false;
     try { pid = Number((await readFile(path.join(dataRoot(), "run", `${n}.pid`), "utf8")).trim()); process.kill(pid, 0); running = true; } catch { running = false; }
     procs.push({ name: n, pid, running });

@@ -44,3 +44,22 @@ test("ISSUE-20 Markdown exists for Palavva-original posts only, with canonical l
   if (draft) expect((await request.get(`${BASE}/md/${draft.slug}`)).status()).toBe(404);
   expect((await request.get(`${BASE}/md/..%2Fadmin`)).status()).toBe(404);
 });
+
+test("ISSUE-21 Infrastructure & services: all 8 processes, running vs healthy, packages with licences, impact view, jobs without [object Object]", async ({ page }) => {
+  await page.addInitScript(() => { try { localStorage.setItem("pv_consent", "denied"); } catch { /* */ } });
+  const { signIn } = await import("./helpers");
+  await signIn(page, "admin@palavva.local", BASE, "/admin/infrastructure");
+  const svc = page.getByTestId("infra-services");
+  for (const n of ["pocketbase", "editorial", "worker", "fast", "writers", "intel", "population", "web"]) await expect(svc.locator(`[data-row="${n}"]`)).toBeVisible();
+  await expect(svc.locator('[data-row="espocrm"]')).toContainText("Not configured");
+  await page.getByRole("button", { name: "Installed software" }).click();
+  await page.getByTestId("infra-packages-size-100").click();
+  await expect(page.getByTestId("infra-packages").locator('[data-row="npm:next"]')).toContainText("MIT");
+  await page.getByRole("button", { name: "Dependencies" }).click();
+  await page.getByTestId("impact-select").selectOption("pocketbase");
+  await expect(page.getByTestId("impact-result")).toContainText("web");
+  await page.getByRole("button", { name: "Jobs" }).click();
+  await expect(page.locator("body")).not.toContainText("[object Object]");
+  await page.goto(`${BASE}/admin/ops`);
+  await expect(page.locator("body")).not.toContainText("[object Object]");
+});

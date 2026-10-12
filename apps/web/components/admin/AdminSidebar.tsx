@@ -16,7 +16,7 @@ const GROUPS: { title: string; items: [string, string, React.ComponentType<{ cla
   { title: "Economy", items: [["/admin/pals", "Pals economy", Coins], ["/admin/exchange", "Virtual Exchange", CandlestickChart]] },
   { title: "Commerce", items: [["/admin/revenue", "Revenue & business", Wallet], ["/admin/sponsors", "Sponsors & inquiries", Megaphone], ["/admin/businesses", "Businesses", Building2],
     ["/admin/distribution", "Distribution & search", Share2]] },
-  { title: "Operations", items: [["/admin/ops", "Reliability & security", HeartPulse], ["/admin/health", "System health", Activity], ["/admin/settings", "Settings & audit", Settings]] },
+  { title: "Operations", items: [["/admin/ops", "Reliability & security", HeartPulse], ["/admin/infrastructure", "Infrastructure & services", HeartPulse], ["/admin/health", "System health", Activity], ["/admin/settings", "Settings & audit", Settings]] },
 ];
 
 export function AdminSidebar({ tenantName, user, role }: { tenantName: string; user: string; role: string }) {

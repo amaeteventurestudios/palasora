@@ -8,7 +8,7 @@ OUT="$ROOT/backups"; mkdir -p "$OUT"
 TMP=$(mktemp -d "${TMPDIR:-/tmp}/palavva-backup.XXXXXX"); trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$TMP/pb_data"
 for db in data.db auxiliary.db; do sqlite3 "$PALAVVA_DATA_DIR/pb_data/$db" ".backup '$TMP/pb_data/$db'"; done
-for db in jobs.db search.db economy.db; do [ -f "$PALAVVA_DATA_DIR/$db" ] && sqlite3 "$PALAVVA_DATA_DIR/$db" ".backup '$TMP/$db'"; done
+for db in jobs.db search.db economy.db spend.db; do [ -f "$PALAVVA_DATA_DIR/$db" ] && sqlite3 "$PALAVVA_DATA_DIR/$db" ".backup '$TMP/$db'"; done  # v1.8+: spend ledger included
 [ -d "$PALAVVA_DATA_DIR/pb_data/storage" ] && cp -R "$PALAVVA_DATA_DIR/pb_data/storage" "$TMP/pb_data/storage"
 [ -d "$PALAVVA_DATA_DIR/analytics" ] && cp -R "$PALAVVA_DATA_DIR/analytics" "$TMP/analytics"
 for db in "$TMP"/pb_data/*.db "$TMP"/*.db; do [ -f "$db" ] && [ "$(sqlite3 "$db" 'pragma integrity_check')" = "ok" ] || { [ -f "$db" ] && { echo "integrity check failed: $db"; exit 1; }; }; done

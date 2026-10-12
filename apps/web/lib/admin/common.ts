@@ -25,10 +25,12 @@ export async function sourceHealth(t: Tenant): Promise<SourceHealth[]> {
   });
 }
 
-export type Services = { pocketbase: boolean; editorial: boolean; economy: boolean; model: { reachable: boolean; latency_ms?: number } | null; queue: Record<string, number> | null };
+export type Services = { pocketbase: boolean; editorial: boolean; economy: boolean; model: { reachable: boolean; latency_ms?: number } | null; queue: QueueStatus | null };
+/** Editorial /status queue shape (nested; v1.7 typed it flat, which printed [object Object]). */
+export type QueueStatus = { by_state?: Record<string, number>; by_type?: Record<string, number>; oldest_queued_age_s?: number | null; dead_letters?: unknown[]; recent?: unknown[] };
 export async function services(): Promise<Services> {
   const [st, econ] = await Promise.all([
-    editorialFetch<{ provider: { reachable: boolean; latency_ms?: number }; queue: Record<string, number>; pocketbase: boolean }>("/status", {}, 4000),
+    editorialFetch<{ provider: { reachable: boolean; latency_ms?: number }; queue: QueueStatus; pocketbase: boolean }>("/status", {}, 4000),
     editorialFetch<{ markets_configured: number }>("/economy/summary?market=ALL", {}, 3000),
   ]);
   return { pocketbase: await pb.health(), editorial: !!st, economy: !!econ, model: st?.provider ?? null, queue: st?.queue ?? null };

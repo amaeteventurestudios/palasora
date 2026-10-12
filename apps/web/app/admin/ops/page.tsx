@@ -1,6 +1,7 @@
 // A11 Reliability, security & backups (docs/specs/25 §A11). Gauges show measured values with their baseline; nothing is
 // simulated. Restart/rollback stay behind scripts and authorisation; this page never writes to production.
 import Link from "next/link";
+import type { QueueStatus } from "@/lib/admin/common";
 import { getTenant } from "@/lib/tenant";
 import { q } from "@/lib/pb";
 import { listAll } from "@/lib/admin/fetchall";
@@ -24,7 +25,7 @@ export default async function Ops() {
   const memUsed = h.memTotal - h.memFree, diskUsed = h.disk ? h.disk.total - h.disk.free : 0;
   const lastBackup = h.backups[0], backupAgeH = lastBackup ? (Date.now() - lastBackup.at) / 3600_000 : Infinity;
   const lastDrill = h.drills[0];
-  const q2 = svc.queue ?? {};
+  const q2: QueueStatus = svc.queue ?? {};
   const switches = Object.entries(settings).filter(([k, v]) => /PAUSED|DISABLED|HALTED/.test(k) && v === true).map(([k]) => k);
   const exc: Exception[] = [];
   for (const p of h.procs) if (!p.running) exc.push({ severity: p.name === "fast" || p.name === "worker" ? "serious" : "critical", title: `${p.name} process not running`, detail: "Start with scripts/dev-up.sh or scripts/worker-restart.sh" });
@@ -42,7 +43,8 @@ export default async function Ops() {
         <MetricCard label="Load (1 min)" value={h.load[0].toFixed(2)} definition={`OS load average; baseline is CPU count (${h.cpus}).`} source="node:os" sub={`5m ${h.load[1].toFixed(2)} · 15m ${h.load[2].toFixed(2)}`} />
         <MetricCard label="Memory used" value={gb(memUsed)} definition="Host memory in use (all processes, not only Palavva)." source="node:os" slot={2} sub={`of ${gb(h.memTotal)}`} />
         <MetricCard label="Disk free" value={h.disk ? gb(h.disk.free) : "unknown"} definition="Free space on the volume holding the project." source="statfs" slot={3} />
-        <MetricCard label="Queue" value={String(q2.queued ?? q2.pending ?? 0)} definition="Editorial/agent jobs waiting in jobs.db (writer, ingest, drafts)." source="editorial /status" slot={4} sub={Object.entries(q2).map(([k, v]) => `${k} ${v}`).join(" · ")} />
+        <MetricCard label="Queue" value={String((q2.by_state ?? {}).queued ?? 0)} definition="Editorial/agent jobs waiting in jobs.db (writer, ingest, drafts). Details on Infrastructure & services → Jobs." source="editorial /status" slot={4}
+          sub={Object.entries(q2.by_state ?? {}).map(([k, v]) => `${k} ${Number(v).toLocaleString("en")}`).join(" · ") || "no jobs"} />
         <MetricCard label="SSE subscribers" value={String(hubStats().reduce((a, x) => a + x.subscribers, 0))} definition="Live streams connected to the shared per-tenant event hub (one poller per tenant)." source="live-hub (this web process)" slot={5} />
       </section>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
