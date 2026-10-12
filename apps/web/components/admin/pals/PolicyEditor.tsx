@@ -87,7 +87,7 @@ export function PolicyEditor({ rules, budget, revision, csrf, canEdit, changes }
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" variant="outline" disabled={!dirty || busy} onClick={doPreview} data-testid="policy-preview">Preview the last 7 days</Button>
         {dirty && <Button type="button" variant="ghost" disabled={busy} onClick={() => { setDraft({}); setBudgetDraft(""); setPreview(null); setMsg(null); }}>Discard edits</Button>}
-        {!canEdit && <span className="text-xs text-muted-foreground">Only tenant admins can change reward rules; you can read them.</span>}
+        {!canEdit && <span className="text-xs text-muted-foreground">Only roles with the Pals & Exchange → administer permission can change reward rules; you can read them.</span>}
       </div>
 
       {preview && (

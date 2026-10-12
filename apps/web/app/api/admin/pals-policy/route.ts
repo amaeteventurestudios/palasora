@@ -30,8 +30,8 @@ export async function POST(req: Request) {
   const b = (await readJson(req)) as Record<string, unknown> | null;
   if (!b) return fail("INVALID", "JSON body required");
   const action = String(b.action ?? "");
-  const role = action === "apply" || action === "rollback" ? "tenant_admin" : "moderator";
-  const c = await adminApi(req, role, { mutate: action !== "preview", limit: 30 });
+  const need = action === "apply" || action === "rollback" ? "administer" : "approve";
+  const c = await adminApi(req, "economy", need, { mutate: action !== "preview", limit: 30 });
   if (isResponse(c)) return c;
   const post = <T,>(path: string, body: unknown) => editorialCall<T>(`/economy${path}`, { method: "POST", body: JSON.stringify(body) }, 15000);
   if (action === "preview") {

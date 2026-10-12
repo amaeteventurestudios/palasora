@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { totp } from "../../lib/access/totp";
 import path from "node:path";
 import { expect, type Page } from "@playwright/test";
 
@@ -11,11 +12,44 @@ export async function noConsentBanner(page: Page) {
   await page.addInitScript(() => { try { localStorage.setItem("pv_consent", "denied"); } catch { /* */ } });
 }
 
+// ISSUE-23: staff roles that need MFA land on /auth/mfa after the password. The helper completes it like a person with an
+// authenticator app would: on first visit it reads the setup key from the page and keeps it in data-test/ (disposable, reset with
+// the test stack); later visits compute the current code from that key. Codes are never reused within a 30-second step.
+const MFA_FILE = path.resolve(__dirname, "../../../../data-test/e2e-mfa.json");
+const mfaKeys = (): Record<string, string> => (existsSync(MFA_FILE) ? JSON.parse(readFileSync(MFA_FILE, "utf8")) : {});
+const usedStep: Record<string, number> = {};
+export async function completeMfa(page: Page, email: string) {
+  const key = `${new URL(page.url()).host}|${email}`;
+  if (await page.getByTestId("mfa-start").isVisible().catch(() => false)) {
+    await page.getByTestId("mfa-start").click();
+    const secret = (await page.getByTestId("mfa-secret").innerText()).trim();
+    writeFileSync(MFA_FILE, JSON.stringify({ ...mfaKeys(), [key]: secret }));
+  }
+  const secret = mfaKeys()[key];
+  if (!secret) throw new Error(`no stored MFA key for ${key}; reset the test stack`);
+  let step = Math.floor(Date.now() / 30_000);
+  if (usedStep[key] === step) { await page.waitForTimeout(30_000 - (Date.now() % 30_000) + 200); step = Math.floor(Date.now() / 30_000); }
+  usedStep[key] = step;
+  await page.getByTestId("mfa-code").fill(totp(secret));
+  await page.getByTestId("mfa-trust").check();
+  await page.getByTestId("mfa-submit").click();
+  const codes = page.getByTestId("mfa-continue");
+  await page.waitForURL((u) => !u.pathname.startsWith("/auth/mfa") || false, { timeout: 4000 }).catch(async () => { if (await codes.isVisible()) await codes.click(); });
+  await page.waitForURL((u) => !u.pathname.startsWith("/auth/"));
+  const trust = (await page.context().cookies()).find((c) => c.name === "pv_mfa_trust");
+  if (trust) writeFileSync(MFA_FILE, JSON.stringify({ ...mfaKeys(), [`trust|${key}`]: trust.value }));
+}
+
 export async function signIn(page: Page, email: string, base = BASE, next = "/") {
+  const trusted = mfaKeys()[`trust|${new URL(base).host}|${email}`];
+  if (trusted) await page.context().addCookies([{ name: "pv_mfa_trust", value: trusted, url: base, httpOnly: true, sameSite: "Strict" }]);
   await page.goto(`${base}/auth/sign-in?next=${encodeURIComponent(next)}`);
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: "Continue with email" }).click();
+  await page.waitForURL((u) => !u.pathname.startsWith("/auth/sign-in"));
+  await page.waitForLoadState("networkidle").catch(() => {});
+  if (new URL(page.url()).pathname.startsWith("/auth/mfa")) await completeMfa(page, email);
   await page.waitForURL((u) => !u.pathname.startsWith("/auth/"));
 }
 

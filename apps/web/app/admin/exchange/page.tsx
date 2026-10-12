@@ -5,7 +5,7 @@ import Link from "next/link";
 import { parseScope } from "@/lib/admin/scope";
 import { econStats, exchangeIntel, integritySignals } from "@/lib/admin/econ";
 import { getTenant } from "@/lib/tenant";
-import { getSession, hasRole } from "@/lib/session";
+import { getSession, can } from "@/lib/session";
 import { agentsByIds } from "@/lib/social/agents";
 import { marketHalt } from "@/app/actions/city";
 import { AdminForm } from "@/components/admin/AdminForm";
@@ -114,7 +114,7 @@ export default async function ExchangeOps({ searchParams }: { searchParams: Prom
         </ChartCard>
       </div>}
       {tab === "integrity" && (integ ? <section className="flex flex-col gap-3"><p className="text-sm text-muted-foreground">{integ.note}</p>
-        <IntegrityList signals={integ.signals.filter((x) => x.kind === "exchange" || x.key === "reconciliation" || x.key === "double_issuance")} names={{}} csrf={session?.csrf ?? ""} canReview={!!session && hasRole(session, "moderator")} /></section>
+        <IntegrityList signals={integ.signals.filter((x) => x.kind === "exchange" || x.key === "reconciliation" || x.key === "double_issuance")} names={{}} csrf={session?.csrf ?? ""} canReview={can(session, "economy", "approve")} /></section>
         : <p role="alert" className="rounded-xl border p-3 text-sm">The economy service did not answer.</p>)}
       {tab === "settings" && <section className="flex flex-col gap-4" data-testid="ex-settings">
         <div className="overflow-x-auto rounded-xl border"><table className="w-full min-w-[720px] text-sm"><thead className="bg-card text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">Control</th><th className="px-3 py-2">What stops</th><th className="px-3 py-2">What keeps working</th><th className="px-3 py-2">Orders already waiting</th><th className="px-3 py-2">Now</th></tr></thead>
@@ -127,7 +127,7 @@ export default async function ExchangeOps({ searchParams }: { searchParams: Prom
         <p className="text-sm text-muted-foreground">Every change asks for confirmation and is written to the audit history. Halting never cancels orders or moves balances; reconciliation keeps passing. Price discovery (trading rules v2) is switched in the Engine Control Room → Exchange.</p>
         <div className="flex flex-wrap gap-2">
           <ConfirmAction action={economySwitch} fields={{ key: "LISTINGS_PAUSED", on: sw("LISTINGS_PAUSED") ? "0" : "1" }} label={sw("LISTINGS_PAUSED") ? "Resume listings" : "Pause listings"} title="Change new listings?" body="Pausing stops new companies from listing. Trading in existing companies continues." /></div>
-        {intel && session && hasRole(session, "tenant_admin") && <div className="rounded-xl border p-4"><h3 className="font-bold">Halt or reopen one market</h3>
+        {intel && session && can(session, "economy", "administer") && <div className="rounded-xl border p-4"><h3 className="font-bold">Halt or reopen one market</h3>
           <AdminForm action={marketHalt} submit="Apply to this market"><div className="flex flex-wrap items-end gap-2">
             <label className="text-sm">Market <select name="code" className="ms-1 h-9 rounded-md border bg-background px-2" data-testid="market-select">{intel.markets.map((m) => <option key={m.code} value={m.code}>{m.name} ({m.code}){m.status === "halted" ? " · halted" : ""}</option>)}</select></label>
             <label className="text-sm">Action <select name="halted" className="ms-1 h-9 rounded-md border bg-background px-2"><option value="1">Halt</option><option value="0">Reopen</option></select></label>

@@ -4,18 +4,20 @@
 // PocketBase or editorial-service credentials; these handlers call those services server-side.
 import { fail } from "@/lib/api";
 import { tenantFromRequest, type Tenant } from "@/lib/tenant";
-import { getSession, hasRole, type Role, type Session } from "@/lib/session";
+import { can, getSession, type Session } from "@/lib/session";
+import type { Action } from "@/lib/access/permissions";
 import { sameOrigin } from "@/lib/api";
 import { clientKey, rateLimit } from "@/lib/ratelimit";
 
 export type AdminCtx = { tenant: Tenant; session: Session; actor: { id: string; name: string } };
 
-export async function adminApi(req: Request, min: Role, opts: { mutate?: boolean; limit?: number } = {}): Promise<AdminCtx | Response> {
+export async function adminApi(req: Request, module: string, action: Action, opts: { mutate?: boolean; limit?: number } = {}): Promise<AdminCtx | Response> {
   const tenant = await tenantFromRequest(req);
   if (!tenant) return fail("NOT_FOUND", "Unknown site");
   const session = await getSession(tenant);
   if (!session) return fail("UNAUTHENTICATED", "Sign in as Palavva staff");
-  if (!hasRole(session, min)) return fail("FORBIDDEN", `Requires the ${min.replace("_", " ")} role`);
+  if (session.access.mfaRequired && !session.access.mfaOk) return fail("FORBIDDEN", "Finish the second sign-in step (MFA) first");
+  if (!can(session, module, action)) return fail("FORBIDDEN", `Your role does not have the ${module} → ${action} permission`);
   if (opts.mutate) {
     if (!sameOrigin(req)) return fail("FORBIDDEN", "Cross-site request refused");
     if (req.headers.get("x-csrf-token") !== session.csrf) return fail("FORBIDDEN", "Missing or stale CSRF token; reload the page");

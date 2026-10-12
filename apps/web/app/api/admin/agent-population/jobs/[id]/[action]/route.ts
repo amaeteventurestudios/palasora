@@ -13,7 +13,7 @@ const NEXT: Record<string, { from: string[]; to: string; phase: string }> = {
 };
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string; action: string }> }) {
-  const c = await adminApi(req, "tenant_admin", { mutate: true });
+  const c = await adminApi(req, "agents", "administer", { mutate: true });
   if (isResponse(c)) return c;
   const { id, action } = await params;
   const rule = NEXT[action];

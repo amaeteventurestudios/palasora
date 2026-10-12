@@ -27,15 +27,19 @@ test("T-029 Overview shows real, labeled metrics and integration states; screens
   // v1.5 visual Command Center (docs/specs/25): the same honest states, now on the workspace that owns them.
   await expect(page.locator('[data-metric="Real revenue"]')).toContainText("no processor connected");
   await expect(page.locator('[data-metric="Paid model spend"]')).toContainText("$0.00");
-  await page.goto("/admin/revenue");
-  await expect(page.getByText("EspoCRM: NOT_CONFIGURED")).toBeVisible();
-  await expect(page.getByText("Revive Adserver: NOT_CONFIGURED")).toBeVisible();
-  await page.goto("/admin");
+  // ISSUE-23 least privilege: an Editorial Manager cannot open money, settings, sponsor or operations workspaces.
+  for (const p of ["/admin/revenue", "/admin/settings", "/admin/sponsors", "/admin/health", "/admin/users"]) { await page.goto(p); await expect(page).toHaveURL(/\/forbidden/); }
+  const ctx = await page.context().browser()!.newContext(); const sa = await ctx.newPage();
+  await signIn(sa, "admin@palavva.local", BASE, "/admin/revenue");
+  await expect(sa.getByText("EspoCRM: NOT_CONFIGURED")).toBeVisible();
+  await expect(sa.getByText("Revive Adserver: NOT_CONFIGURED")).toBeVisible();
+  const page2 = sa;
   for (const [p, name] of [["/admin", "overview"], ["/admin/editorial", "editorial"], ["/admin/sources", "sources"], ["/admin/ai", "ai"], ["/admin/analytics", "analytics"], ["/admin/health", "health"], ["/admin/settings", "settings"], ["/admin/sponsors", "sponsors"]]) {
-    await page.goto(p);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await page.screenshot({ path: `${shotDir}/admin-${name}-1440.png`, fullPage: false });
+    await page2.goto(p);
+    await expect(page2.getByRole("heading", { level: 1 })).toBeVisible();
+    await page2.screenshot({ path: `${shotDir}/admin-${name}-1440.png`, fullPage: false });
   }
+  await ctx.close();
 });
 
 test("T-021 revision conflict (409-style) and publishing kill switch", async ({ browser }) => {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTenant } from "@/lib/tenant";
-import { getSession, hasRole } from "@/lib/session";
+import { getSession, can } from "@/lib/session";
 import { pb, q } from "@/lib/pb";
 import { decidePiece, editPiece } from "@/app/actions/admin";
 import { AdminForm } from "@/components/admin/AdminForm";
@@ -31,7 +31,7 @@ export default async function Review({ params }: { params: Promise<{ id: string 
   const srcs = await Promise.all([...new Set(items.filter(Boolean).map((i) => i!.source_id))].map((sid) => pb.get("sources", sid)));
   const body = (p.body_blocks_json ?? {}) as { what_happened?: Block[]; why_it_matters?: Block[]; unknowns?: string[]; questions?: string[]; validation?: { verdict: string; flags: string[] } };
   const flags = body.validation?.flags ?? [];
-  const isEditor = hasRole(session, "editor");
+  const isEditor = can(session, "content", "approve");
   const canApprove = ["needs_review", "changes_requested", "held"].includes(p.review_status) && p.claim_check_status !== "FAIL" && (p.risk_tier === "low" || isEditor);
   return (
     <div className="w-full min-w-0">

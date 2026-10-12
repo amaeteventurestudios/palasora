@@ -5,7 +5,7 @@ import { job } from "@/lib/admin/population";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const c = await adminApi(req, "editor");
+  const c = await adminApi(req, "agents", "view");
   if (isResponse(c)) return c;
   const { id } = await params;
   const j = /^[a-z0-9]{15}$/.test(id) ? await job(c.tenant, id) : null;

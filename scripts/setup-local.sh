@@ -9,10 +9,13 @@ if [ ! -f "$TARGET" ]; then
       -e "s/^PB_WORKER_PASSWORD=.*/PB_WORKER_PASSWORD=$(rnd)/" \
       -e "s/^EDITORIAL_SERVICE_TOKEN=.*/EDITORIAL_SERVICE_TOKEN=$(rnd)/" \
       -e "s/^LOCAL_DEMO_PASSWORD=.*/LOCAL_DEMO_PASSWORD=pv-$(openssl rand -hex 8)/" \
+      -e "s/^ACCESS_ENCRYPTION_KEY=.*/ACCESS_ENCRYPTION_KEY=$(openssl rand -hex 32)/" \
       "$ROOT/.env.example" > "$TARGET"
   chmod 600 "$TARGET"
   echo "Created $TARGET with generated secrets (values not printed)."
 fi
+# v1.8+ ISSUE-23: older .env.local files predate the MFA secret key; add one (value never printed).
+grep -q '^ACCESS_ENCRYPTION_KEY=' "$TARGET" || printf 'ACCESS_ENCRYPTION_KEY=%s\n' "$(openssl rand -hex 32)" >> "$TARGET"
 ENV_FILE="$TARGET"; load_env
 mkdir -p "$PALAVVA_DATA_DIR"/{pb_data,analytics,mail-sink,logs,run} "$ROOT/backups"
 "$PB_BIN" migrate up --dir="$PALAVVA_DATA_DIR/pb_data" --migrationsDir="$ROOT/services/pocketbase/pb_migrations" >/dev/null

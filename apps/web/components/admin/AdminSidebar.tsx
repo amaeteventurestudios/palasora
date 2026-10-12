@@ -3,7 +3,8 @@
 // Economy / Commerce / Operations. Primary workspaces A01-A12 first in each group; existing tools remain as drilldowns.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, Bot, Building2, CandlestickChart, Coins, Cpu, FileBarChart, Globe2, Inbox, Languages, LayoutDashboard, MapPin, Megaphone, MessagesSquare, Rss, Settings, Share2, Shield, ShieldAlert, SlidersHorizontal, TrendingUp, Users, Wallet, HeartPulse, ArrowLeft, UsersRound, Gauge } from "lucide-react";
+import { Activity, BarChart3, Bot, Building2, CandlestickChart, Coins, Cpu, FileBarChart, Globe2, Inbox, Languages, LayoutDashboard, MapPin, Megaphone, MessagesSquare, Rss, Settings, Share2, Shield, ShieldAlert, SlidersHorizontal, TrendingUp, Users, Wallet, HeartPulse, ArrowLeft, UsersRound, Gauge, UserCog } from "lucide-react";
+import { moduleForPath } from "@/lib/access/permissions";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail } from "@/components/ui/sidebar";
 
 const GROUPS: { title: string; items: [string, string, React.ComponentType<{ className?: string }>][] }[] = [
@@ -16,10 +17,12 @@ const GROUPS: { title: string; items: [string, string, React.ComponentType<{ cla
   { title: "Economy", items: [["/admin/pals", "Pals economy", Coins], ["/admin/exchange", "Virtual Exchange", CandlestickChart]] },
   { title: "Commerce", items: [["/admin/revenue", "Revenue & business", Wallet], ["/admin/sponsors", "Sponsors & inquiries", Megaphone], ["/admin/businesses", "Businesses", Building2],
     ["/admin/distribution", "Distribution & search", Share2]] },
-  { title: "Operations", items: [["/admin/ops", "Reliability & security", HeartPulse], ["/admin/infrastructure", "Infrastructure & services", HeartPulse], ["/admin/health", "System health", Activity], ["/admin/settings", "Settings & audit", Settings]] },
+  { title: "Operations", items: [["/admin/ops", "Reliability & security", HeartPulse], ["/admin/infrastructure", "Infrastructure & services", HeartPulse], ["/admin/health", "System health", Activity], ["/admin/settings", "Settings & audit", Settings], ["/admin/users", "Users & access", UserCog]] },
 ];
 
-export function AdminSidebar({ tenantName, user, role }: { tenantName: string; user: string; role: string }) {
+// ISSUE-23: only links the person's role may open are shown (the server refuses the rest anyway).
+export function AdminSidebar({ tenantName, user, role, viewable }: { tenantName: string; user: string; role: string; viewable: string[] }) {
+  const allowed = new Set(viewable);
   const path = usePathname();
   const active = (href: string) => (href === "/admin" || href === "/admin/engine" ? path === href : path === href || path.startsWith(href + "/"));
   return (
@@ -28,11 +31,11 @@ export function AdminSidebar({ tenantName, user, role }: { tenantName: string; u
         <div className="px-2 py-1 group-data-[collapsible=icon]:hidden">
           <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Command Center</p>
           <p className="truncate font-bold">{tenantName}</p>
-          <p className="truncate text-xs text-muted-foreground">{user} · {role.replace("_", " ")}</p>
+          <p className="truncate text-xs text-muted-foreground" data-testid="admin-role">{user} · {role}</p>
         </div>
       </SidebarHeader>
       <SidebarContent>
-        {GROUPS.map((g) => (
+        {GROUPS.map((g) => ({ ...g, items: g.items.filter(([href]) => allowed.has(moduleForPath(href) ?? "")) })).filter((g) => g.items.length > 0).map((g) => (
           <SidebarGroup key={g.title}>
             <SidebarGroupLabel>{g.title}</SidebarGroupLabel>
             <SidebarGroupContent><SidebarMenu>

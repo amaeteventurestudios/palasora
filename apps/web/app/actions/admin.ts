@@ -4,7 +4,8 @@ import { invalidateFeedCache } from "@/lib/repo/pieces";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTenant, type Tenant } from "@/lib/tenant";
-import { getSession, hasRole, type Role, type Session } from "@/lib/session";
+import { can, getSession, type Session } from "@/lib/session";
+import type { Action } from "@/lib/access/permissions";
 import { pb, pbDate, q, type Rec } from "@/lib/pb";
 import { audit } from "@/lib/audit";
 import { SWITCHES, getSwitch, type SwitchKey } from "@/lib/settings";
@@ -18,11 +19,12 @@ import { STATE_LABEL, checkDecision } from "@/lib/business/rules";
 const s = (f: FormData, k: string, max = 4000) => String(f.get(k) ?? "").slice(0, max).trim();
 const fail = (message: string): ActionState => ({ ok: false, message });
 
-async function staff(min: Role): Promise<{ tenant: Tenant; session: Session }> {
+/** ISSUE-23: every action names the module permission it needs (deny by default, MFA where the role requires it). */
+async function staff(module: string, action: Action): Promise<{ tenant: Tenant; session: Session }> {
   const tenant = await getTenant();
   const session = await getSession(tenant);
   if (!session) redirect("/auth/sign-in?next=/admin");
-  if (!hasRole(session, min)) throw new Error("FORBIDDEN");
+  if (!can(session, module, action)) throw new Error("FORBIDDEN");
   return { tenant, session };
 }
 
@@ -38,7 +40,7 @@ function snapshot(p: Rec) {
 // ---------------- Editorial decisions ----------------
 
 export async function decidePiece(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("reviewer");
+  const { tenant, session } = await staff("content", "approve");
   const piece = await ownPiece(tenant, s(f, "piece_id", 30));
   if (!piece) return fail("Not found.");
   const decision = s(f, "decision", 20);
@@ -46,7 +48,7 @@ export async function decidePiece(_: ActionState, f: FormData): Promise<ActionSt
   const expected = Number(s(f, "expected_revision", 10));
   if (expected !== (piece.revision ?? 1)) return fail("This draft changed since you opened it (revision conflict). Reload to review the latest version.");
   const risk = piece.risk_tier || "low";
-  const isEditor = hasRole(session, "editor");
+  const isEditor = can(session, "content", "approve");
 
   if (decision === "approve") {
     if (!["needs_review", "changes_requested", "held"].includes(piece.review_status)) return fail("Only drafts in review can be approved.");
@@ -104,7 +106,7 @@ export async function decidePiece(_: ActionState, f: FormData): Promise<ActionSt
 
 /** Edit draft text (before publication) or publish a correction (after). Both bump the revision. */
 export async function editPiece(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("editor");
+  const { tenant, session } = await staff("content", "edit");
   const piece = await ownPiece(tenant, s(f, "piece_id", 30));
   if (!piece) return fail("Not found.");
   const expected = Number(s(f, "expected_revision", 10));
@@ -140,7 +142,7 @@ export async function editPiece(_: ActionState, f: FormData): Promise<ActionStat
 // ---------------- Kill switches ----------------
 
 export async function setSwitch(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("tenant_admin");
+  const { tenant, session } = await staff("operations", "administer");
   const key = s(f, "key", 40) as SwitchKey;
   if (!SWITCHES.includes(key)) return fail("Unknown switch.");
   const value = s(f, "value", 5) === "true";
@@ -157,7 +159,7 @@ export async function setSwitch(_: ActionState, f: FormData): Promise<ActionStat
 // ---------------- Sources ----------------
 
 export async function sourceAction(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("editor");
+  const { tenant, session } = await staff("content", "edit");
   const id = s(f, "source_id", 30);
   const src = await pb.first("sources", `tenant_id=${q(tenant.id)} && id=${q(id)}`);
   if (!src) return fail("Not found.");
@@ -179,7 +181,7 @@ export async function sourceAction(_: ActionState, f: FormData): Promise<ActionS
     await pb.update("sources", src.id, { enabled: action === "resume" });
     await audit(tenant.id, session.user.id, `source.${action}`, "sources", src.id);
   } else if (action === "approve_rights") {
-    if (!hasRole(session, "tenant_admin")) return fail("Rights approval needs a tenant or platform admin.");
+    if (!can(session, "content", "administer")) return fail("Rights approval needs the Editorial & sources → administer permission (Administrator or Super Administrator by default).");
     const notes = s(f, "notes", 3000), license = s(f, "license_url", 500), policy = s(f, "usage_policy", 30);
     if (notes.length < 20 || !/^https:\/\//.test(license)) return fail("Record the evidence: a license/terms URL (https) and notes of at least 20 characters.");
     if (!["link_only", "metadata_only", "permitted_excerpt", "licensed_full"].includes(policy)) return fail("Choose a usage policy.");
@@ -232,7 +234,7 @@ export async function sourceAction(_: ActionState, f: FormData): Promise<ActionS
 // ---------------- Moderation ----------------
 
 export async function moderate(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("moderator");
+  const { tenant, session } = await staff("moderation", "approve");
   const kind = s(f, "kind", 20), id = s(f, "id", 30), action = s(f, "action", 20), note = s(f, "note", 1000);
   if (kind === "report") {
     const r = await pb.first("moderation_reports", `tenant_id=${q(tenant.id)} && id=${q(id)}`);
@@ -274,7 +276,7 @@ export async function moderate(_: ActionState, f: FormData): Promise<ActionState
 // ---------------- Commerce / businesses ----------------
 
 export async function retryInquiry(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("tenant_admin");
+  const { tenant, session } = await staff("advertising", "edit");
   const inq = await pb.first("sponsor_inquiries", `tenant_id=${q(tenant.id)} && id=${q(s(f, "id", 30))}`);
   if (!inq) return fail("Not found.");
   const r = await forwardInquiry(inq);
@@ -284,7 +286,7 @@ export async function retryInquiry(_: ActionState, f: FormData): Promise<ActionS
 }
 
 export async function markInquiryManual(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("tenant_admin");
+  const { tenant, session } = await staff("advertising", "edit");
   const inq = await pb.first("sponsor_inquiries", `tenant_id=${q(tenant.id)} && id=${q(s(f, "id", 30))}`);
   if (!inq) return fail("Not found.");
   await pb.update("sponsor_inquiries", inq.id, { forward_state: "MANUAL" });
@@ -296,12 +298,12 @@ export async function markInquiryManual(_: ActionState, f: FormData): Promise<Ac
 /** ISSUE-19 one staff decision on a business: verify / request information / reject / suspend / reopen. Rules in lib/business/rules.ts:
  *  right role, a note, evidence links for verification, demo businesses never verified. Every decision is kept with its evidence. */
 export async function businessDecision(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("editor");
+  const { tenant, session } = await staff("businesses", "edit");
   const b = await pb.first("businesses", `tenant_id=${q(tenant.id)} && id=${q(s(f, "id", 30))}`);
   if (!b) return fail("Not found.");
   const evidence = [1, 2, 3].map((i) => ({ url: s(f, `evidence_url_${i}`, 500), note: s(f, `evidence_note_${i}`, 500) })).filter((e) => e.url || e.note);
   const note = s(f, "note", 2000), action = s(f, "action", 20), from = String(b.verification_state || "unverified");
-  const d = checkDecision({ action, state: from, isDemo: !!b.is_demo, note, evidence, can: (role) => hasRole(session, role) });
+  const d = checkDecision({ action, state: from, isDemo: !!b.is_demo, note, evidence, can: (role) => can(session, "businesses", role === "tenant_admin" ? "approve" : "edit") });
   if (!d.ok) return fail(d.message);
   await pb.update("businesses", b.id, { verification_state: d.to, ...(d.to === "verified" ? { verified_at: pbDate(), verified_by: session.user.id } : {}),
     ...(d.to === "suspended" || d.to === "rejected" ? { verified_at: "", verified_by: "" } : {}) });
@@ -315,7 +317,7 @@ export async function businessDecision(_: ActionState, f: FormData): Promise<Act
 // ---------------- Tenancy (platform admin only) ----------------
 
 export async function updateBranding(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("tenant_admin");
+  const { tenant, session } = await staff("settings", "administer");
   // Tenant admins may edit only their own tenant; the tenant is resolved from Host, never from the form.
   const hex = /^#[0-9a-fA-F]{6}$/;
   const wordmark = s(f, "wordmark_text", 60), masthead = s(f, "masthead_color", 7), accent = s(f, "accent_color", 7), primary = s(f, "primary_color", 7);
@@ -333,7 +335,7 @@ export async function updateBranding(_: ActionState, f: FormData): Promise<Actio
 }
 
 export async function opsAction(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("tenant_admin");
+  const { tenant, session } = await staff("operations", "administer");
   const action = s(f, "action", 30);
   if (action === "etl") {
     const r = await editorialFetch<Record<string, number>>("/analytics/etl", { method: "POST" }, 60000);
@@ -360,7 +362,7 @@ export async function opsAction(_: ActionState, f: FormData): Promise<ActionStat
 // ---------------- v1.3 conversations ----------------
 
 export async function runDemoConversation(_: ActionState): Promise<ActionState> {
-  const { tenant, session } = await staff("editor");
+  const { tenant, session } = await staff("agents", "edit");
   const r = await editorialFetch<{ piece_id: string; slug: string; published: boolean; info: string }>("/conversations/demo", { method: "POST", body: JSON.stringify({ tenant_id: tenant.id }) }, 30000);
   await audit(tenant.id, session.user.id, "conversation.demo_started", "editorial_pieces", r?.piece_id ?? "", { published: r?.published ?? false });
   if (!r) return fail("Editorial service unavailable.");
@@ -369,7 +371,7 @@ export async function runDemoConversation(_: ActionState): Promise<ActionState> 
 }
 
 export async function pauseThread(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("editor");
+  const { tenant, session } = await staff("agents", "edit");
   const id = s(f, "piece_id", 30);
   const paused = s(f, "paused", 5) === "true";
   const piece = await ownPiece(tenant, id);
@@ -381,7 +383,7 @@ export async function pauseThread(_: ActionState, f: FormData): Promise<ActionSt
 }
 
 export async function unpublishPiece(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("editor");
+  const { tenant, session } = await staff("content", "delete");
   const piece = await ownPiece(tenant, s(f, "piece_id", 30));
   const reason = s(f, "reason", 500);
   if (!piece || piece.review_status !== "published") return fail("Only published topics can be unpublished.");
@@ -399,7 +401,7 @@ export async function unpublishPiece(_: ActionState, f: FormData): Promise<Actio
 // ---------------- v1.3 translation QA & geography QA ----------------
 
 export async function translationDecision(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("editor");
+  const { tenant, session } = await staff("content", "approve");
   const loc = await pb.first("localizations", `tenant_id=${q(tenant.id)} && id=${q(s(f, "id", 30))}`);
   if (!loc) return fail("Not found.");
   const action = s(f, "action", 20);
@@ -419,7 +421,7 @@ export async function translationDecision(_: ActionState, f: FormData): Promise<
 }
 
 export async function geoDecision(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("editor");
+  const { tenant, session } = await staff("content", "approve");
   const ev = await pb.first("story_geo_evidence", `tenant_id=${q(tenant.id)} && id=${q(s(f, "id", 30))}`);
   if (!ev) return fail("Not found.");
   const action = s(f, "action", 20);
@@ -447,7 +449,7 @@ export async function geoDecision(_: ActionState, f: FormData): Promise<ActionSt
  *  publish. Never automatic: the editor sees the preview, gives a reason, and each card is approved through the normal
  *  human approval path (recorded, audited, reversible with Unpublish). Re-checks the preview server-side. */
 export async function releaseCards(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("editor");
+  const { tenant, session } = await staff("content", "approve");
   const ids = f.getAll("id").map((x) => String(x).slice(0, 30)).filter(Boolean).slice(0, 25);
   const reason = s(f, "reason", 500);
   if (!ids.length) return fail("Nothing selected.");

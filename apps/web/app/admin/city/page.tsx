@@ -1,6 +1,6 @@
 // Command Center: Agent City and social integrity (master §19.2, §19.5, §20.4). Every figure is read from durable records.
 import Link from "next/link";
-import { requireRole } from "@/lib/guard";
+import { requirePerm } from "@/lib/guard";
 import { pb, q } from "@/lib/pb";
 import { editorialFetch } from "@/lib/editorial-client";
 import { getSettings } from "@/lib/settings";
@@ -28,7 +28,7 @@ const pct = (xs: number[], p: number) => { if (!xs.length) return 0; const a = [
 const ROSTER_SORT: Record<string, string> = { recent: "-last_action_at", posts: "-post_count", replies: "-reply_count", handle: "handle_key" };
 
 export default async function City({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
-  const { tenant } = await requireRole("moderator");
+  const { tenant } = await requirePerm("agents", "view");
   const sp = await searchParams;
   // ISSUE-06: the roster is searched and paged on the server (27,060 agents). v1.7 loaded the first 300 sorted by
   // seed_group, which made it look as if everyone was "agriculture / resting / 0 posts".

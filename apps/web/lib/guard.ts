@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { getTenant } from "./tenant";
-import { getSession, hasRole, type Role } from "./session";
+import { can, getSession } from "./session";
+import type { Action } from "./access/permissions";
 
 export async function requireMember(path: string) {
   const tenant = await getTenant();
@@ -10,12 +11,13 @@ export async function requireMember(path: string) {
   return { tenant, session };
 }
 
-/** Staff gate for /admin: 401 → sign-in, 403 → explicit forbidden page (never a silent redirect home). */
-export async function requireRole(min: Role) {
+/** Staff gate for /admin: 401 → sign-in, 403 → explicit forbidden page (never a silent redirect home). ISSUE-23: module permission. */
+export async function requirePerm(module: string, action: Action) {
   const tenant = await getTenant();
   const session = await getSession(tenant);
   const h = await headers();
-  if (!session) redirect(`/auth/sign-in?next=${encodeURIComponent(h.get("x-invoke-path") ?? "/admin")}`);
-  if (!hasRole(session, min)) redirect("/forbidden");
+  if (!session) redirect(`/auth/sign-in?next=${encodeURIComponent(h.get("x-pv-path") ?? "/admin")}`);
+  if (session.access.mfaRequired && !session.access.mfaOk) redirect(`/auth/mfa?next=${encodeURIComponent(h.get("x-pv-path") ?? "/admin")}`);
+  if (!can(session, module, action)) redirect("/forbidden");
   return { tenant, session };
 }

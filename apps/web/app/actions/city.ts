@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTenant, type Tenant } from "@/lib/tenant";
-import { getSession, hasRole, type Role, type Session } from "@/lib/session";
+import { can, getSession, type Session } from "@/lib/session";
+import type { Action } from "@/lib/access/permissions";
 import { pb, pbDate, q } from "@/lib/pb";
 import { audit } from "@/lib/audit";
 import { editorialFetch } from "@/lib/editorial-client";
@@ -12,16 +13,16 @@ import type { ActionState } from "./member";
 
 const fail = (message: string): ActionState => ({ ok: false, message });
 const s = (f: FormData, k: string, max = 500) => String(f.get(k) ?? "").slice(0, max).trim();
-async function staff(min: Role): Promise<{ tenant: Tenant; session: Session }> {
+async function staff(module: string, action: Action): Promise<{ tenant: Tenant; session: Session }> {
   const tenant = await getTenant();
   const session = await getSession(tenant);
   if (!session) redirect("/auth/sign-in?next=/admin/city");
-  if (!hasRole(session, min)) redirect("/forbidden");
+  if (!can(session, module, action)) redirect("/forbidden");
   return { tenant, session };
 }
 
 export async function cityTick(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("tenant_admin");
+  const { tenant, session } = await staff("agents", "administer");
   const r = await editorialFetch<{ job_id: string; window: number }>("/city/tick", { method: "POST", body: JSON.stringify({ tenant_id: tenant.id, reason: `operator: ${s(f, "reason", 60) || "manual"}` }) });
   if (!r) return fail("Editorial service unavailable.");
   await audit(tenant.id, session.user.id, "city.tick_requested", "agents", "", { job: r.job_id });
@@ -29,7 +30,7 @@ export async function cityTick(_: ActionState, f: FormData): Promise<ActionState
 }
 
 export async function setAgentStatus(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("moderator");
+  const { tenant, session } = await staff("agents", "edit");
   const a = await pb.get("agents", s(f, "agent_id", 30));
   if (!a || a.tenant_id !== tenant.id) return fail("Unknown agent.");
   const status = s(f, "status", 10);
@@ -45,7 +46,7 @@ export async function setAgentStatus(_: ActionState, f: FormData): Promise<Actio
 }
 
 export async function decideProposal(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("moderator");
+  const { tenant, session } = await staff("moderation", "approve");
   const c = await pb.get("communities", s(f, "id", 30));
   if (!c || c.tenant_id !== tenant.id || c.kind !== "subpal" || c.status !== "proposed") return fail("Not a pending proposal.");
   const approve = s(f, "decision", 10) === "approve";
@@ -62,7 +63,7 @@ export async function decideProposal(_: ActionState, f: FormData): Promise<Actio
 }
 
 export async function moderateAvatar(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("moderator");
+  const { tenant, session } = await staff("moderation", "approve");
   const a = await pb.get("agents", s(f, "agent_id", 30));
   if (!a || a.tenant_id !== tenant.id || a.avatar_status !== "pending") return fail("No pending avatar.");
   const ok = s(f, "decision", 10) === "approve";
@@ -73,7 +74,7 @@ export async function moderateAvatar(_: ActionState, f: FormData): Promise<Actio
 }
 
 export async function verifyBusinessAgent(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("tenant_admin");
+  const { tenant, session } = await staff("businesses", "approve");
   const a = await pb.get("agents", s(f, "agent_id", 30));
   if (!a || a.tenant_id !== tenant.id || a.kind !== "business") return fail("Not a business agent.");
   const evidence = s(f, "evidence", 500);
@@ -87,7 +88,7 @@ export async function verifyBusinessAgent(_: ActionState, f: FormData): Promise<
 /** W18: activate or rest one cohort of Palavva-operated identities. Operator decision, audited; never touches user-owned agents
  *  or agents an operator paused/held individually. */
 export async function setCohort(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("tenant_admin");
+  const { tenant, session } = await staff("agents", "administer");
   const cohort = Number(s(f, "cohort", 3));
   const to = s(f, "to", 8);
   if (!Number.isInteger(cohort) || cohort < 1 || cohort > 10 || !["active", "resting"].includes(to)) return fail("Bad cohort request.");
@@ -106,7 +107,7 @@ export async function setCohort(_: ActionState, f: FormData): Promise<ActionStat
 
 /** Economy kill switches (W59): halt the Exchange, pause listings, pause Pals issuance or the trading engine. Audited. */
 export async function economySwitch(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("tenant_admin");
+  const { tenant, session } = await staff("economy", "administer");
   const key = s(f, "key", 40);
   const on = s(f, "on", 5) === "1";
   if (!["EXCHANGE_HALTED", "LISTINGS_PAUSED", "PALS_ISSUANCE_PAUSED", "TRADING_ENGINE_PAUSED"].includes(key)) return fail("Unknown switch.");
@@ -119,7 +120,7 @@ export async function economySwitch(_: ActionState, f: FormData): Promise<Action
 
 /** ISSUE-15: halt or reopen ONE country market (other markets keep trading). Needs a reason; audited. Resting orders stay on the book. */
 export async function marketHalt(_: ActionState, f: FormData): Promise<ActionState> {
-  const { tenant, session } = await staff("tenant_admin");
+  const { tenant, session } = await staff("economy", "administer");
   const code = s(f, "code", 2).toUpperCase(), halted = s(f, "halted", 1) === "1", reason = s(f, "reason", 200);
   if (!/^[A-Z]{2}$/.test(code)) return fail("Choose a market.");
   if (halted && reason.length < 10) return fail("Say why the market is halted (at least 10 characters); readers of the Exchange see this reason.");
@@ -132,7 +133,7 @@ export async function marketHalt(_: ActionState, f: FormData): Promise<ActionSta
 
 /** Run a reconciliation now (read-only checks; mismatches are recorded, never auto-fixed). */
 export async function runReconcile(_: ActionState): Promise<ActionState> {
-  const { tenant, session } = await staff("moderator");
+  const { tenant, session } = await staff("economy", "view");
   const r = await editorialFetch<{ ok: boolean; mismatches: unknown[] }>("/economy/reconcile", { method: "POST", body: "{}" }, 15000);
   if (!r) return fail("Economy service unavailable.");
   await audit(tenant.id, session.user.id, "economy.reconciled", "economy", "", { ok: r.ok, mismatches: r.mismatches.length });

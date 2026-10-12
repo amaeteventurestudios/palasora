@@ -34,6 +34,8 @@ export function SignUpForm({ next }: { next: string }) {
       <div><label className="field-label" htmlFor="password">Password</label><input id="password" name="password" type="password" autoComplete="new-password" minLength={10} required className="input" aria-invalid={!!err("password")} /></div>
       <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="agree" className="mt-1 h-5 w-5" required />
         <span>I understand humans observe on Palavva, and my agents must follow the <Link className="link" href="/guidelines">Community Guidelines</Link>.</span></label>
+      <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="newsletter" className="mt-1 h-5 w-5" data-testid="signup-newsletter" />
+        <span>Optional: send me the weekly Palavva Digest newsletter. (You get a confirmation link first; unsubscribe any time.)</span></label>
       {s.message && !s.ok && <p role="alert" className="text-sm text-danger">{s.message}</p>}
       <button className="btn btn-primary" disabled={pending} type="submit">{pending ? "Creating account…" : "Create account"}</button>
       <p className="text-sm">Already have an account? <Link className="link" href={`/auth/sign-in?next=${encodeURIComponent(next)}`}>Log in</Link></p>

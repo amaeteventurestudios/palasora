@@ -3,7 +3,7 @@
 // with evidence; demo businesses are examples and can never be verified. Fictional Exchange companies are a different thing.
 import Link from "next/link";
 import { getTenant } from "@/lib/tenant";
-import { getSession, hasRole } from "@/lib/session";
+import { getSession, can } from "@/lib/session";
 import { pb, q, type Rec } from "@/lib/pb";
 import { listAll } from "@/lib/admin/fetchall";
 import { businessDecision } from "@/app/actions/admin";
@@ -33,7 +33,7 @@ export default async function Businesses({ searchParams }: { searchParams: Promi
   const history = sel ? await pb.list("business_verifications", { filter: `${T} && business_id=${q(sel.id)}`, sort: "-created", perPage: 50 }) : [];
   const agents = sel && Array.isArray(sel.agent_ids) && sel.agent_ids.length
     ? await pb.list("agents", { filter: `${T} && (${(sel.agent_ids as string[]).slice(0, 20).map((id) => `id=${q(id)}`).join(" || ")})`, perPage: 20, fields: "id,display_name,handle,verification_level,kind" }) : [];
-  const can = (r: "editor" | "tenant_admin") => !!session && hasRole(session, r);
+  const allowed = (r: "editor" | "tenant_admin") => can(session, "businesses", r === "tenant_admin" ? "approve" : "edit");
   return (
     <AdminPage title="Businesses & Founders"
       narrative={`${real.length.toLocaleString("en")} real business ${real.length === 1 ? "profile" : "profiles"} (${count("verified")} verified by staff, ${count("pending") + count("unverified")} not yet reviewed, ${count("needs_info")} waiting for information) and ${(biz.length - real.length).toLocaleString("en")} demo ${biz.length - real.length === 1 ? "example" : "examples"}. Demo businesses are labelled everywhere and can never be verified. Fictional Exchange companies are separate and never listed here.`}
@@ -68,7 +68,7 @@ export default async function Businesses({ searchParams }: { searchParams: Promi
           {sel.is_demo && <p className="mt-1 text-sm text-muted-foreground">This is a demo example: it can be asked for information or rejected, but never verified.</p>}
           {actionsFor(st(sel), !!sel.is_demo).length === 0 && <p className="text-sm text-muted-foreground">No decision applies in this state.</p>}
           {actionsFor(st(sel), !!sel.is_demo).map((a) => { const r = actionRule(a); return (
-            <details key={a} className="mt-2 rounded-lg border p-3" open={a === "verify" ? false : undefined} data-action={a}><summary className="cursor-pointer font-semibold">{ACTION_LABEL[a]} <span className="text-xs font-normal text-muted-foreground">→ {STATE_LABEL[r.to]} · {r.role === "tenant_admin" ? "tenant admins" : "editors and above"}{!can(r.role) ? " (not your role)" : ""}</span></summary>
+            <details key={a} className="mt-2 rounded-lg border p-3" open={a === "verify" ? false : undefined} data-action={a}><summary className="cursor-pointer font-semibold">{ACTION_LABEL[a]} <span className="text-xs font-normal text-muted-foreground">→ {STATE_LABEL[r.to]} · {r.role === "tenant_admin" ? "tenant admins" : "editors and above"}{!allowed(r.role) ? " (not your role)" : ""}</span></summary>
               <AdminForm action={businessDecision} submit={ACTION_LABEL[a]}><input type="hidden" name="id" value={sel.id} /><input type="hidden" name="action" value={a} />
                 {r.evidence && [1, 2].map((i) => <div key={i} className="mt-2 grid gap-1 sm:grid-cols-2"><input name={`evidence_url_${i}`} placeholder="https:// link to evidence (registry entry, official site)" className="h-9 rounded-md border bg-background px-2 text-sm" aria-label={`Evidence link ${i}`} />
                   <input name={`evidence_note_${i}`} placeholder="What this link shows" className="h-9 rounded-md border bg-background px-2 text-sm" aria-label={`Evidence note ${i}`} /></div>)}

@@ -7,6 +7,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { MODULES, type Perm } from "@/lib/access/permissions";
 
 export const metadata = { title: { default: "Command Center", template: "%s | Command Center" }, robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -16,11 +17,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await getSession(tenant);
   if (!session) redirect("/auth/sign-in?next=/admin");
   if (!isStaff(session)) redirect("/forbidden");
+  if (session.access.mfaRequired && !session.access.mfaOk) redirect("/auth/mfa?next=/admin");
   const [paused, jar] = await Promise.all([getSwitch(tenant.id, "PUBLISHING_PAUSED"), cookies()]);
   const open = jar.get("sidebar_state")?.value !== "false";
   return (
     <SidebarProvider defaultOpen={open}>
-      <AdminSidebar tenantName={`${tenant.name}${tenant.isDemo ? " (demo tenant)" : ""}`} user={session.user.display_name} role={session.role} />
+      <AdminSidebar tenantName={`${tenant.name}${tenant.isDemo ? " (demo tenant)" : ""}`} user={session.user.display_name} role={session.access.roleName}
+        viewable={MODULES.filter((m) => session.access.perms.has(`${m.key}.view` as Perm)).map((m) => m.key)} />
       <SidebarInset className="min-w-0">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur sm:px-4">
           <SidebarTrigger aria-label="Toggle Command Center navigation" />

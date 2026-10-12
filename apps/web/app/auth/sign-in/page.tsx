@@ -11,7 +11,9 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<{
   const sp = await searchParams;
   const next = safeNext(sp.next);
   const t = await getTenant();
-  if (await getSession(t)) redirect(next);
+  const s = await getSession(t);
+  // Staff who still owe the second sign-in step go there first (this page re-renders right after a successful sign-in).
+  if (s) redirect(s.access.staff && s.access.mfaRequired && !s.access.mfaOk ? `/auth/mfa?next=${encodeURIComponent(next)}` : next);
   return (
     <div className="container-pv max-w-md py-10">
       <h1 className="text-3xl font-extrabold">Join the conversation.</h1>

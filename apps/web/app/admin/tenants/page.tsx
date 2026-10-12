@@ -1,5 +1,5 @@
-import { getTenant } from "@/lib/tenant";
-import { getSession, hasRole } from "@/lib/session";
+import { requirePerm } from "@/lib/guard";
+import { can } from "@/lib/session";
 import { pb, q } from "@/lib/pb";
 import { env } from "@/lib/env";
 import { updateBranding } from "@/app/actions/admin";
@@ -9,9 +9,9 @@ import { H1, Table, Pill } from "@/components/admin/ui";
 export const metadata = { title: "Tenants" };
 
 export default async function Tenants() {
-  const t = await getTenant();
-  const session = (await getSession(t))!;
-  const platform = hasRole(session, "platform_admin");
+  // ISSUE-23: tenant and branding configuration is platform administration, not read-only settings.
+  const { tenant: t, session } = await requirePerm("settings", "administer");
+  const platform = session.access.roleKey === "super_admin" && can(session, "settings", "administer");
   // Tenant admins only ever see their own tenant; platform admins see the list (read-only here, audited switches are host-based).
   const rows = platform ? await pb.list("tenants", { perPage: 50 }) : await pb.list("tenants", { filter: `id=${q(t.id)}`, perPage: 1 });
   const own = rows.find((r) => r.id === t.id)!;
@@ -26,7 +26,7 @@ export default async function Tenants() {
           <td className="px-3 py-2"><Pill tone="good">{r.status}</Pill></td><td className="px-3 py-2 text-xs">{Object.entries(r.enabled_features ?? {}).filter(([, v]) => v).map(([k]) => k).join(", ")}</td>
           <td className="px-3 py-2">{r.quotas_json?.daily_ai_requests ?? "–"}</td><td className="px-3 py-2">Not enabled</td></tr>)}
       </Table>
-      {hasRole(session, "tenant_admin") && (
+      {can(session, "settings", "administer") && (
         <section className="card mt-6 max-w-xl p-5" aria-labelledby="br">
           <h2 id="br" className="text-lg font-bold">Branding for {t.name}</h2>
           <p className="meta">Only plain hex colors are accepted; the masthead must keep white text at 4.5:1 contrast.</p>

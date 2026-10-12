@@ -4,7 +4,7 @@ import Link from "next/link";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { getTenant } from "@/lib/tenant";
-import { getSession, hasRole } from "@/lib/session";
+import { getSession, can } from "@/lib/session";
 import { pb, q } from "@/lib/pb";
 import { env } from "@/lib/env";
 import { getSettings, SWITCHES, type SwitchKey } from "@/lib/settings";
@@ -43,7 +43,7 @@ export default async function Settings() {
   const t = await getTenant();
   const session = (await getSession(t))!;
   const [settings, auditRows, mail] = await Promise.all([getSettings(t.id), pb.list("audit_events", { filter: `tenant_id=${q(t.id)}`, sort: "-created", perPage: 1000 }), mailSink(t.slug)]);
-  const admin = hasRole(session, "tenant_admin");
+  const admin = can(session, "operations", "administer");
   const sw = (group: "emergency" | "config") => SWITCHES.filter((k) => SWITCH_INFO[k].group === group);
   const audit: AuditRow[] = auditRows.map((a) => { const meta = { ...(a.metadata_safe ?? {}), key: a.object_id } as Record<string, unknown>;
     return { id: a.id, at: String(a.created), actor: a.actor_type === "user" ? `person ${String(a.actor_id).slice(0, 6)}…` : String(a.actor_id || a.actor_type), actorType: String(a.actor_type),

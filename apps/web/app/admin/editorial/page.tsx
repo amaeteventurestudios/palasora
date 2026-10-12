@@ -2,7 +2,7 @@
 // batch release for routine publisher headlines. Nothing old is released automatically.
 import Link from "next/link";
 import { getTenant } from "@/lib/tenant";
-import { getSession, hasRole } from "@/lib/session";
+import { getSession, can } from "@/lib/session";
 import { pb, q, type Rec } from "@/lib/pb";
 import { getSwitch } from "@/lib/settings";
 import { editorialFetch } from "@/lib/editorial-client";
@@ -60,7 +60,7 @@ export default async function Queue({ searchParams }: { searchParams: Promise<{ 
     return { id: p.id, headline: p.headline, kind: p.kind, publisher: (p.sources_json ?? [])[0]?.name ?? (p.kind === "agent_post" ? "agent" : "Palavva editorial AI"), countries: (p.country_codes ?? []).join(", "),
       age: age(p.created), created: p.created, risk: p.risk_tier, check: p.claim_check_status, why: w, whyClass: c, preview: pm.get(p.id) }; });
   const history = tab === "history" ? await pb.list("editorial_reviews", { filter: T, sort: "-created", perPage: 200 }) : [];
-  const isAdmin = hasRole(session, "tenant_admin");
+  const isAdmin = can(session, "content", "administer");
   return (
     <AdminPage title="Editorial queue" narrative={`${counts[0]} items need attention, ${counts[1]} are held. In the last 7 days ${counts[2]} items were published automatically by named rules and ${counts[3]} were approved by people. Low-risk, rights-cleared items publish automatically; sensitive or unsupported ones wait here. Nothing old is released without a person.`}
       actions={<HelpTip label="Why things wait here" what="Each item shows the exact rule that stopped automatic publication, in plain words. 'Publisher headline' items are the publisher's own words with a link; Palavva adds nothing. AI-written items must also pass a claim check."
@@ -86,7 +86,7 @@ export default async function Queue({ searchParams }: { searchParams: Promise<{ 
           <tbody className="divide-y">{history.map((h) => <tr key={h.id}><td className="whitespace-nowrap px-3 py-2">{String(h.created).slice(0, 16)}</td><td className="px-3 py-2">{h.decision}</td>
             <td className="px-3 py-2 text-xs">{String(h.reviewer_id).startsWith("system:") ? h.reviewer_id.replace("system:", "automatic: ") : "person"}</td><td className="max-w-[60ch] px-3 py-2 text-xs">{h.reason}</td>
             <td className="px-3 py-2"><Link className="link text-xs" href={`/admin/editorial/${h.piece_id}`}>open</Link></td></tr>)}</tbody></table></div>
-      ) : <QueueWorkspace rows={qrows} canRelease={hasRole(session, "editor") && (tab === "attention" || tab === "held")} switchOn={switchOn} />}
+      ) : <QueueWorkspace rows={qrows} canRelease={can(session, "content", "approve") && (tab === "attention" || tab === "held")} switchOn={switchOn} />}
     </AdminPage>
   );
 }

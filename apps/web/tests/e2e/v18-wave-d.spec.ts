@@ -107,7 +107,7 @@ test("ISSUE-14 Pals: plain definitions, denials explained, a previewed + reasone
   const mctx = await browser.newContext();
   const mod = await mctx.newPage();
   await signIn(mod, "moderator@palavva.local", BASE, "/admin/pals?tab=rules");
-  await expect(mod.getByTestId("policy-editor")).toContainText("Only tenant admins can change reward rules");
+  await expect(mod.getByTestId("policy-editor")).toContainText("Only roles with the Pals & Exchange → administer permission can change reward rules");
   await expect(mod.getByTestId("amount-accepted_reply")).toBeDisabled();
   // The role check comes before anything else, so the moderator is refused even with a well-formed request.
   const r = await mod.request.post(`${BASE}/api/admin/pals-policy`, { data: { action: "apply", budget: 21000, reason: "moderator must not be able to do this", expected_revision: 0 }, headers: { origin: BASE } });

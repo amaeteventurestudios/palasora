@@ -8,7 +8,7 @@ import { audit } from "@/lib/audit";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const c = await adminApi(req, "tenant_admin", { mutate: true });
+  const c = await adminApi(req, "agents", "administer", { mutate: true });
   if (isResponse(c)) return c;
   const b = await readJson(req);
   if (!b) return fail("INVALID", "JSON body required");

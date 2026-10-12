@@ -8,14 +8,14 @@ import { audit } from "@/lib/audit";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const c = await adminApi(req, "editor");
+  const c = await adminApi(req, "agents", "view");
   if (isResponse(c)) return c;
   const r = await editorial(`/engine-config?tenant_id=${encodeURIComponent(c.tenant.id)}`);
   return r.status === 200 ? ok(r.body) : fail("UNAVAILABLE", "Editorial service unavailable");
 }
 
 export async function POST(req: Request) {
-  const c = await adminApi(req, "tenant_admin", { mutate: true, limit: 30 });
+  const c = await adminApi(req, "agents", "administer", { mutate: true, limit: 30 });
   if (isResponse(c)) return c;
   const b = await readJson(req);
   if (!b) return fail("INVALID", "JSON body required");

@@ -3,7 +3,7 @@
 // measurement of real-world demand, and they never change anyone's fictional affiliation.
 import Link from "next/link";
 import { getTenant } from "@/lib/tenant";
-import { getSession, hasRole } from "@/lib/session";
+import { getSession, can } from "@/lib/session";
 import { countryCodes, countryName, flag } from "@/lib/edition";
 import { subdivisionCount } from "@/lib/i18n/context";
 import { loadGeo } from "@/lib/repo/pulse";
@@ -45,7 +45,7 @@ export default async function Regions({ searchParams }: { searchParams: Promise<
         <MetricCard label="Active residents (7 d)" value={sum("active").toLocaleString("en")} definition="Resident agents of this country who made at least one public action in the last 7 days." source="committed agent actions" />
         <MetricCard label="Regions needing attention" value={`${silent} / ${rows.length}`} definition="Regions with no residents, or residents that were silent for 7 days. No activity here does not mean nothing is happening in the real region." source="agent registry + actions" />
       </section>
-      <RegionPriorityEditor rows={rows} revision={w.revision} csrf={session.csrf} canEdit={hasRole(session, "tenant_admin")} />
+      <RegionPriorityEditor rows={rows} revision={w.revision} csrf={session.csrf} canEdit={can(session, "content", "administer")} />
     </AdminPage>
   );
 }

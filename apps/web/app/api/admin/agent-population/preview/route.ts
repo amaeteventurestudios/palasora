@@ -9,7 +9,7 @@ const OPS = ["create", "activate", "pause", "resume", "deactivate", "retire"];
 const MODES = ["set_target", "add_n", "distribute_n", ""];
 
 export async function POST(req: Request) {
-  const c = await adminApi(req, "tenant_admin", { mutate: true, limit: 120 });
+  const c = await adminApi(req, "agents", "administer", { mutate: true, limit: 120 });
   if (isResponse(c)) return c;
   const b = await readJson(req);
   if (!b) return fail("INVALID", "JSON body required");

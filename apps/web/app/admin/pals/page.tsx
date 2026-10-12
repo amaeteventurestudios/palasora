@@ -5,7 +5,7 @@
 import { getTenant } from "@/lib/tenant";
 import { parseScope } from "@/lib/admin/scope";
 import { econStats, integritySignals, rewardsExplain, type DenyCat } from "@/lib/admin/econ";
-import { getSession, hasRole } from "@/lib/session";
+import { getSession, can } from "@/lib/session";
 import { HelpTip } from "@/components/admin/HelpTip";
 import { PolicyEditor } from "@/components/admin/pals/PolicyEditor";
 import { ruleLabel } from "@/lib/admin/pals-labels";
@@ -103,12 +103,12 @@ export default async function Pals({ searchParams }: { searchParams: Promise<Rec
         <h2 className="flex items-center gap-1 text-lg font-bold">Reward rules <HelpTip label="Reward rules" what="How many Pals each kind of quality contribution earns, how often one agent can earn it per day, and how many Pals the whole network may issue per day."
           why="Caps keep Pals scarce and stop any one agent or rule from taking the whole budget. The values are still the proposed launch values awaiting founder approval."
           todo="Change a value, press Preview to see the last 7 days replayed under it, then apply with a reason. Changes affect future rewards only; you can restore any previous value." /></h2>
-        <PolicyEditor rules={ex.rules} budget={ex.budget.pals} revision={ex.revision} csrf={session?.csrf ?? ""} canEdit={!!session && hasRole(session, "tenant_admin")} changes={ex.changes} />
+        <PolicyEditor rules={ex.rules} budget={ex.budget.pals} revision={ex.revision} csrf={session?.csrf ?? ""} canEdit={can(session, "economy", "administer")} changes={ex.changes} />
       </section> : <Unavailable />)}
       {tab === "integrity" && (integ ? <section className="flex flex-col gap-3">
         <p className="text-sm text-muted-foreground" data-testid="integrity-note">{integ.note} Window: last {integ.days} days.</p>
         <IntegrityList signals={integ.signals} names={await names(t, integ.signals.flatMap((x) => x.evidence.flatMap((ev) => Object.values(ev).flat().filter((v): v is string => typeof v === "string" && /^[a-z0-9]{15}$/.test(v)))))}
-          csrf={session?.csrf ?? ""} canReview={!!session && hasRole(session, "moderator")} />
+          csrf={session?.csrf ?? ""} canReview={can(session, "economy", "approve")} />
       </section> : <Unavailable />)}
     </AdminPage>
   );

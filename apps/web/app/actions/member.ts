@@ -7,8 +7,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createHash, randomBytes } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { getTenant, type Tenant } from "@/lib/tenant";
 import { createSession, getSession, type Session } from "@/lib/session";
 import { pb, pbDate, q, PBError } from "@/lib/pb";
@@ -16,10 +14,12 @@ import { env } from "@/lib/env";
 import { rateLimit, clientKey } from "@/lib/ratelimit";
 import { safeNext } from "@/lib/format";
 import { audit } from "@/lib/audit";
-import { writeEvent, dataRoot } from "@/lib/analytics-server";
+import { writeEvent } from "@/lib/analytics-server";
 import { getPublishedPieceById } from "@/lib/repo/pieces";
 import { emitEvent } from "@/lib/repo/thread";
 import { editorialFetch } from "@/lib/editorial-client";
+import { TEMPLATES, originOf, sendMail } from "@/lib/mail";
+import { newsletterOptIn } from "@/lib/account";
 
 export type ActionState = { ok: boolean; message: string; field?: string; data?: Record<string, string> };
 const fail = (message: string, field?: string): ActionState => ({ ok: false, message, field });
@@ -53,14 +53,37 @@ export async function signIn(_: ActionState, f: FormData): Promise<ActionState> 
   if (!rateLimit(`signin:${ip}:${email}`, 6, 60_000).ok || !rateLimit(`signin:${ip}`, 20, 60_000).ok)
     return fail("Too many requests for now. Please try again shortly.");
   if (!email || !password) return fail("Enter your email and password.");
+  // ISSUE-23 hardening: seeded local development accounts (*.local) never sign in on a production deployment, and an account is
+  // locked for 15 minutes after 10 wrong passwords in a row (same generic message, so the lock does not reveal the account exists).
+  if (process.env.PALAVVA_ENV === "production" && /\.local$/.test(email)) return fail("Email or password is incorrect.");
+  const known = await pb.first("users", `tenant_id=${q(tenant.id)} && email=${q(email)}`);
+  if (known?.locked_until && new Date(String(known.locked_until).replace(" ", "T")) > new Date()) return fail("Email or password is incorrect.");
   const user = await pb.verifyPassword(email, password);
   // Same generic message for wrong password, wrong tenant or suspended account (no account enumeration).
-  if (!user || user.tenant_id !== tenant.id || user.account_status !== "active") return fail("Email or password is incorrect.");
+  if (!user || user.tenant_id !== tenant.id || user.account_status !== "active") {
+    if (known && !user) {
+      const n = (known.failed_logins ?? 0) + 1;
+      await pb.update("users", known.id, { failed_logins: n, ...(n >= 10 ? { locked_until: pbDate(new Date(Date.now() + 15 * 60_000)), failed_logins: 0 } : {}) });
+      if (n >= 10) await audit(tenant.id, known.id, "auth.locked", "users", known.id, { minutes: 15 }, 0, "system");
+    }
+    return fail("Email or password is incorrect.");
+  }
   const m = await pb.first("memberships", `tenant_id=${q(tenant.id)} && user_id=${q(user.id)} && status='active'`);
   if (!m) return fail("Email or password is incorrect.");
   const h = await headers();
-  await createSession(tenant, user.id, isSecure(h));
+  const sid = await createSession(tenant, user.id, isSecure(h));
+  await pb.update("users", user.id, { last_login_at: pbDate(), failed_logins: 0, locked_until: "" });
   await audit(tenant.id, user.id, "auth.sign_in", "users", user.id);
+  // Staff whose role needs a second step finish it before the Command Center opens (middleware enforces it as well).
+  const { accessFor } = await import("@/lib/access/server");
+  const a = await accessFor(tenant.id, m, null);
+  if (a.staff && a.mfaRequired) {
+    const { trustedDevice } = await import("@/lib/access/device");
+    if (await trustedDevice(tenant.id, user.id)) {
+      await pb.update("sessions", sid, { mfa_at: pbDate() });
+      await audit(tenant.id, user.id, "auth.mfa_trusted_device", "sessions", sid);
+    } else return navigate(f, `/auth/mfa?next=${encodeURIComponent(next)}`);
+  }
   return navigate(f, next);
 }
 
@@ -70,12 +93,8 @@ async function sendVerification(tenant: Tenant, user: { id: string; email: strin
     verify_token_hash: createHash("sha256").update(token).digest("hex"),
     verify_expires_at: pbDate(new Date(Date.now() + 48 * 3600_000)),
   });
-  // Local mail sink (ADR-006): no real email is sent from the Mac build.
-  const dir = path.join(dataRoot(), "mail-sink");
-  await mkdir(dir, { recursive: true });
-  const link = `http://${tenant.host}/auth/verify?token=${token}`;
-  await writeFile(path.join(dir, `${Date.now()}-verify-${user.id}.eml`),
-    `To: ${user.email}\nSubject: Confirm your ${tenant.name} account\nX-Palavva-Tenant: ${tenant.slug}\n\nConfirm your email to join the conversation:\n${link}\n\nThis link expires in 48 hours.\n`, { mode: 0o600 });
+  // ISSUE-24: one mail path (lib/mail.ts); development mail sink only, nothing leaves this machine.
+  await sendMail(tenant, { to: user.email, userId: user.id, kind: "verify_email", category: "transactional", ...TEMPLATES.verify_email(tenant, `${originOf(tenant)}/auth/verify?token=${token}`) });
 }
 
 export async function signUp(_: ActionState, f: FormData): Promise<ActionState> {
@@ -104,6 +123,10 @@ export async function signUp(_: ActionState, f: FormData): Promise<ActionState> 
   }
   await pb.create("memberships", { tenant_id: tenant.id, user_id: user.id, role: "member", status: "active" });
   await sendVerification(tenant, { id: user.id, email });
+  await sendMail(tenant, { to: email, userId: user.id, kind: "welcome", category: "transactional", ...TEMPLATES.welcome(tenant, name) });
+  await pb.update("users", user.id, { welcome_sent_at: pbDate() });
+  // Newsletter is opt-in only (unticked by default) and still needs the confirmation link (double opt-in).
+  if (f.get("newsletter") === "on") await newsletterOptIn(tenant, email, user.id, "sign_up");
   const h = await headers();
   await createSession(tenant, user.id, isSecure(h));
   await audit(tenant.id, user.id, "auth.sign_up", "users", user.id);
@@ -124,10 +147,7 @@ export async function requestPasswordReset(_: ActionState, f: FormData): Promise
   if (!user) return generic;
   const token = randomBytes(24).toString("base64url");
   await pb.update("users", user.id, { reset_token_hash: createHash("sha256").update(token).digest("hex"), reset_expires_at: pbDate(new Date(Date.now() + 3600_000)) });
-  const dir = path.join(dataRoot(), "mail-sink");
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, `${Date.now()}-reset-${user.id}.eml`),
-    `To: ${email}\nSubject: Reset your ${tenant.name} password\nX-Palavva-Tenant: ${tenant.slug}\n\nChoose a new password:\nhttp://${tenant.host}/auth/reset?token=${token}\n\nThis link expires in one hour. If you did not ask for it, ignore this email.\n`, { mode: 0o600 });
+  await sendMail(tenant, { to: email, userId: user.id, kind: "password_reset", category: "transactional", ...TEMPLATES.password_reset(tenant, `${originOf(tenant)}/auth/reset?token=${token}`) });
   await audit(tenant.id, user.id, "auth.password_reset_requested", "users", user.id);
   return generic;
 }
@@ -141,9 +161,10 @@ export async function resetPassword(_: ActionState, f: FormData): Promise<Action
   const user = await pb.first("users", `tenant_id=${q(tenant.id)} && reset_token_hash=${q(createHash("sha256").update(token).digest("hex"))}`);
   const exp = user?.reset_expires_at ? new Date(String(user.reset_expires_at).replace(" ", "T")) : null;
   if (!user || !exp || exp < new Date()) return fail("This reset link has expired or was already used. Request a new one.");
-  await pb.update("users", user.id, { password, passwordConfirm: password, reset_token_hash: "", reset_expires_at: "" });
+  await pb.update("users", user.id, { password, passwordConfirm: password, reset_token_hash: "", reset_expires_at: "", password_changed_at: pbDate(), failed_logins: 0, locked_until: "" });
   for (const s of await pb.list("sessions", { filter: `user_id=${q(user.id)}`, perPage: 200 })) await pb.remove("sessions", s.id);
   await audit(tenant.id, user.id, "auth.password_reset", "users", user.id);
+  await sendMail(tenant, { to: user.email, userId: user.id, kind: "password_changed", category: "transactional", ...TEMPLATES.password_changed(tenant) });
   redirect("/auth/sign-in?reset=1");
 }
 

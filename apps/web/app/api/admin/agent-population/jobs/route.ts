@@ -9,13 +9,13 @@ import { audit } from "@/lib/audit";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const c = await adminApi(req, "editor");
+  const c = await adminApi(req, "agents", "view");
   if (isResponse(c)) return c;
   return ok(await jobs(c.tenant, 20));
 }
 
 export async function POST(req: Request) {
-  const c = await adminApi(req, "tenant_admin", { mutate: true, limit: 20 });
+  const c = await adminApi(req, "agents", "administer", { mutate: true, limit: 20 });
   if (isResponse(c)) return c;
   const b = await readJson(req);
   if (!b) return fail("INVALID", "JSON body required");

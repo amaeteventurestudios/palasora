@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import registry from "./lib/i18n/registry.json";
+import { tenantBySlug } from "./lib/tenant";
+import { accessFromToken } from "./lib/access/server";
+import { MODULES, moduleForPath } from "./lib/access/permissions";
 
 // v1.5: `?edition=XX|ALL` on any page views that country edition (shareable link). It sets the session-only view
 // cookie for this request and later ones; it never changes the saved home edition.
@@ -22,7 +25,35 @@ const list = (v: string | undefined) => (v ?? "").split(",").map((x) => x.trim()
 const ADMIN_PATHS = /^\/(admin|api\/admin|auth|forbidden|_next|icon\.svg|favicon\.ico)(\/|$)/;
 const notFound = () => new NextResponse("Not found", { status: 404, headers: { "content-type": "text/plain", "cache-control": "no-store" } });
 
-export function middleware(req: NextRequest) {
+// ISSUE-23: server-side permission gate for every Command Center request (pages, client-side navigations, server-action POSTs and
+// /api/admin JSON). Pages, actions and APIs still check their own finer permission; this layer makes the checkbox matrix impossible
+// to bypass by typing a URL. Paths not mapped to a module are refused to everyone except Super Administrators (fail closed).
+const ADMIN_GATED = /^\/(admin|api\/admin|api\/v1\/admin)(\/|$)/;
+async function adminGate(req: NextRequest, host: string, path: string): Promise<NextResponse | null> {
+  const isApi = path.startsWith("/api/");
+  const deny = (status: number, code: string, message: string) => NextResponse.json({ error: { code, message } }, { status, headers: { "cache-control": "no-store" } });
+  const tenant = await tenantBySlug(allow()[host], host).catch(() => null);
+  if (!tenant) return notFound();
+  const who = await accessFromToken(tenant.id, req.cookies.get("pv_session")?.value).catch(() => null);
+  const back = encodeURIComponent(path + req.nextUrl.search);
+  // Rewrite (not redirect) to /auth/gate, which redirects with a relative URL: a Location header written here would have its loopback
+  // host rewritten by Next (127.0.0.1 -> localhost) and the session cookie would not follow in local development.
+  const to = (p: string) => { const u = req.nextUrl.clone(); u.pathname = "/auth/gate"; u.search = `?to=${encodeURIComponent(p)}`; return NextResponse.rewrite(u, { headers: { "cache-control": "no-store" } }); };
+  if (!who) return isApi ? deny(401, "UNAUTHENTICATED", "Sign in as Palavva staff") : to(`/auth/sign-in?next=${back}`);
+  const { access } = who;
+  if (!access.staff) return isApi ? deny(403, "FORBIDDEN", "Not permitted") : to("/forbidden");
+  if (access.mfaRequired && !access.mfaOk) return isApi ? deny(403, "MFA_REQUIRED", "Finish the second sign-in step (MFA) first") : to(`/auth/mfa?next=${back}`);
+  const mod = path.startsWith("/api/v1/admin") ? (path.includes("/health") ? "operations" : "overview") : moduleForPath(path);
+  const ok = mod === "unmapped" ? access.roleKey === "super_admin" : !!mod && access.perms.has(`${mod}.view` as never);
+  if (ok) return null;
+  if (path === "/admin") { // land on the first workspace this role may open instead of a dead end
+    const first = MODULES.find((m) => access.perms.has(`${m.key}.view` as never));
+    if (first) return to(first.routes.find((r) => r.startsWith("/admin")) ?? "/forbidden");
+  }
+  return isApi ? deny(403, "FORBIDDEN", `Your role does not have the ${mod} → view permission`) : to("/forbidden");
+}
+
+export async function middleware(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").toLowerCase();
   if (!allow()[host]) return notFound();
   const path = req.nextUrl.pathname;
@@ -39,6 +70,7 @@ export function middleware(req: NextRequest) {
   } else if (process.env.ADMIN_HOST_ONLY === "true" && /^\/(admin|api\/admin)(\/|$)/.test(path)) {
     return notFound();
   }
+  if (ADMIN_GATED.test(path)) { const r = await adminGate(req, host, path); if (r) return r; }
   const ed = req.nextUrl.searchParams.get("edition")?.toUpperCase();
   const h = new Headers(req.headers);
   h.set("x-pv-path", req.nextUrl.pathname); // lets the root layout give /admin its own full-screen shell
@@ -52,4 +84,4 @@ export function middleware(req: NextRequest) {
   return NextResponse.next({ request: { headers: h } });
 }
 
-export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"] };
+export const config = { runtime: "nodejs", matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"] };
