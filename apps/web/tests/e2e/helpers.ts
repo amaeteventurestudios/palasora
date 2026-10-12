@@ -31,6 +31,7 @@ export async function pbAdmin() {
   return {
     list: async (coll: string, filter: string) => (await (await fetch(`${url}/api/collections/${coll}/records?perPage=50&sort=-created&filter=${encodeURIComponent(filter)}`, { headers: h })).json()).items as Record<string, any>[],
     update: async (coll: string, id: string, data: Record<string, unknown>) => (await fetch(`${url}/api/collections/${coll}/records/${id}`, { method: "PATCH", headers: h, body: JSON.stringify(data) })).json(),
+    create: async (coll: string, data: Record<string, unknown>) => (await fetch(`${url}/api/collections/${coll}/records`, { method: "POST", headers: h, body: JSON.stringify(data) })).json(),
   };
 }
 

@@ -1,6 +1,9 @@
 // Feed card (master §8.7). Identity and provenance first; text-first by default (no stock imagery); agent-only score shown
 // read-only to humans; latest reply preview updates from committed events without moving the page.
 import Link from "next/link";
+import { Translatable } from "./Translatable";
+import { localeInfo } from "@/lib/i18n/context";
+import type { Localized, TranslationState } from "@/lib/repo/localize";
 import { MessageSquare } from "lucide-react";
 import type { CardData } from "@/lib/social/feed";
 import { pieceHref } from "../StoryCard";
@@ -30,6 +33,8 @@ const activeLater = (pub: string, last?: string) => { const a = Date.parse((pub 
 
 export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = false, showWhy = false }: { c: CardData; headingLevel?: 2 | 3; signedIn?: boolean; saved?: boolean; showWhy?: boolean }) {
   const { p, agent, subpal } = c;
+  const lp = p as Localized;
+  const tr = lp.translation as TranslationState | undefined;
   const href = pieceHref(p);
   const H = headingLevel === 2 ? "h2" : "h3";
   const editorial = p.kind !== "agent_post";
@@ -58,13 +63,14 @@ export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = f
         <div className="mb-1 flex flex-wrap items-center gap-2 sm:hidden"><span className="label-pill label-status">{statusLabel(c)}</span></div>
         {p.is_demo && <div className="mb-1"><DemoBadge /></div>}
         {c.scopeLabel && <p className="mb-1 text-[12px] font-semibold uppercase tracking-wide text-muted-foreground" data-testid="card-scope">{c.scopeLabel}</p>}
-        <H className="text-[19px] font-bold leading-snug tracking-tight sm:text-[20px]"><Link href={href} className="hover:underline" dir="auto">{p.headline}</Link></H>
-        {p.lede && <p className="mt-1.5 line-clamp-3 text-[15px] leading-relaxed text-muted-foreground" dir="auto">{p.lede}</p>}
+        <Translatable href={href} level={headingLevel} headline={p.headline} lede={p.lede || undefined} status={tr?.status ?? "original"}
+          original={lp.original_headline !== undefined ? { headline: lp.original_headline, lede: lp.original_lede || undefined } : undefined}
+          fromName={localeInfo(tr?.from ?? "")?.native ?? tr?.from ?? ""} toName={localeInfo(tr?.to ?? "")?.native ?? tr?.to ?? ""} fromDir={localeInfo(tr?.from ?? "")?.dir === "rtl" ? "rtl" : "ltr"} />
         {p.kind === "source_link" && p.sources[0] ? (
           <p className="meta mt-1.5" data-testid="card-attribution">
             Source: <a href={p.sources[0].url} rel="noopener nofollow" target="_blank" className="link">{p.sources[0].name}</a>
             {(p.sources[0] as { author?: string }).author ? ` · ${(p.sources[0] as { author?: string }).author}` : ""}
-            {(p.sources[0] as { license?: string }).license ? ` · ${(p.sources[0] as { license?: string }).license}` : ""} · {p.lede ? "publisher\u2019s headline and excerpt, unchanged" : "publisher\u2019s headline, unchanged"}
+            {(p.sources[0] as { license?: string }).license ? ` · ${(p.sources[0] as { license?: string }).license}` : ""} · {tr && (tr.status === "machine" || tr.status === "reviewed") ? "translation of the publisher\u2019s headline; the original is one click away" : p.lede ? "publisher\u2019s headline and excerpt, unchanged" : "publisher\u2019s headline, unchanged"}
             {p.sources.length > 1 ? ` · also in ${p.sources.length - 1} more feed${p.sources.length > 2 ? "s" : ""}` : ""}
           </p>
         ) : editorial && p.sources[0] && <p className="meta mt-1.5">Source: {p.sources.map((s) => s.name).join(", ")}{p.publish_path === "auto_low_risk" ? " · auto-published (low risk, sourced)" : ""}</p>}

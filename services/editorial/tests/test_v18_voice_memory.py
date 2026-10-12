@@ -115,3 +115,18 @@ def test_invented_place_of_life_claims_are_rejected_in_several_languages():
     for text in ok:
         r = check_agent_text(text, "costs hardware batteries", "hosted", 6, language="en")
         assert not any("testimony" in x for x in r["reasons"]), text
+
+
+def test_language_registry_generation_status_matches_the_engine():
+    """ISSUE-10: the admin's 'agents write in it' column must say exactly what the engine can verify."""
+    reg = {l["code"]: l for l in langs.registry()["locales"]}
+    for code in langs.VERIFIED:
+        assert reg[code]["generation"] == "verified", code
+    for code in langs.PILOT_DETECTABLE:
+        assert reg[code]["generation"] == "pilot", code
+    for code in langs.SCRIPT_ONLY:
+        assert reg[code]["generation"] == "script_only", code
+    for code in ("pcm", "ha", "ig", "wo", "tw", "fat"):
+        assert reg[code]["generation"] == "none" and reg[code]["mt"] == "disabled", code
+    assert all(l["human_review"] == "none" for l in reg.values())  # nobody has done native-speaker QA yet: say so
+    assert {"fat", "tw", "yo", "ig", "ha", "sw", "am", "pt", "wo", "zu", "pcm"} <= set(reg)

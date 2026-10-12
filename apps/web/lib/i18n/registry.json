@@ -1,5 +1,5 @@
 {
- "version": "locales-v1",
+ "version": "locales-v1+v18-languages",
  "locales": [
   {
    "code": "en",
@@ -8,7 +8,10 @@
    "dir": "ltr",
    "ui": "ready",
    "mt": "enabled",
-   "note": "Source language for most current coverage."
+   "note": "Source language for most current coverage.",
+   "bcp47": "en",
+   "generation": "verified",
+   "human_review": "none"
   },
   {
    "code": "fr",
@@ -17,7 +20,10 @@
    "dir": "ltr",
    "ui": "beta",
    "mt": "enabled",
-   "note": "Interface written by the build agent; pending native review. Content translations are machine output (Qwen), labeled unreviewed until an editor reviews them."
+   "note": "Interface written by the build agent; pending native review. Content translations are machine output (Qwen), labeled unreviewed until an editor reviews them.",
+   "bcp47": "fr",
+   "generation": "verified",
+   "human_review": "none"
   },
   {
    "code": "ar",
@@ -26,7 +32,10 @@
    "dir": "rtl",
    "ui": "beta",
    "mt": "enabled",
-   "note": "Right-to-left interface written by the build agent; pending native review. Machine translations labeled unreviewed."
+   "note": "Right-to-left interface written by the build agent; pending native review. Machine translations labeled unreviewed.",
+   "bcp47": "ar",
+   "generation": "verified",
+   "human_review": "none"
   },
   {
    "code": "pcm",
@@ -35,7 +44,10 @@
    "dir": "ltr",
    "ui": "beta",
    "mt": "disabled",
-   "note": "Interface strings written by the build agent, pending native review. Machine translation disabled until native-speaker QA."
+   "note": "Interface strings written by the build agent, pending native review. Agents do not write Naijá yet: no reliable automatic check exists. Machine translation disabled until native-speaker QA.",
+   "bcp47": "pcm",
+   "generation": "none",
+   "human_review": "none"
   },
   {
    "code": "yo",
@@ -44,7 +56,10 @@
    "dir": "ltr",
    "ui": "planned",
    "mt": "disabled",
-   "note": "Planned. Needs native-speaker QA before release."
+   "note": "Planned interface. Agent writing is a pilot (detector can identify Yoruba; quality unreviewed, off unless AGENT_PILOT_LANGS lists it). Needs native-speaker QA.",
+   "bcp47": "yo",
+   "generation": "pilot",
+   "human_review": "none"
   },
   {
    "code": "ig",
@@ -53,7 +68,10 @@
    "dir": "ltr",
    "ui": "planned",
    "mt": "disabled",
-   "note": "Planned. Needs native-speaker QA before release."
+   "note": "Planned. Needs native-speaker QA before release.",
+   "bcp47": "ig",
+   "generation": "none",
+   "human_review": "none"
   },
   {
    "code": "ha",
@@ -62,7 +80,10 @@
    "dir": "ltr",
    "ui": "planned",
    "mt": "disabled",
-   "note": "Planned. Needs native-speaker QA before release."
+   "note": "Planned. Needs native-speaker QA before release.",
+   "bcp47": "ha",
+   "generation": "none",
+   "human_review": "none"
   },
   {
    "code": "sw",
@@ -71,7 +92,10 @@
    "dir": "ltr",
    "ui": "planned",
    "mt": "disabled",
-   "note": "Planned for Kenya/Tanzania editions."
+   "note": "Agents can write verified Swahili (detector-checked). Interface and machine translation of stories are planned for the Kenya/Tanzania editions.",
+   "bcp47": "sw",
+   "generation": "verified",
+   "human_review": "none"
   },
   {
    "code": "am",
@@ -80,7 +104,10 @@
    "dir": "ltr",
    "ui": "planned",
    "mt": "disabled",
-   "note": "Planned for the Ethiopia edition."
+   "note": "Planned for the Ethiopia edition. Only the Ge'ez script can be checked automatically, so agent writing stays a disabled pilot.",
+   "bcp47": "am",
+   "generation": "script_only",
+   "human_review": "none"
   },
   {
    "code": "pt",
@@ -89,7 +116,10 @@
    "dir": "ltr",
    "ui": "planned",
    "mt": "disabled",
-   "note": "Planned for Angola/Mozambique editions."
+   "note": "Agents can write verified Portuguese (detector-checked). Interface and machine translation of stories are planned for Angola/Mozambique.",
+   "bcp47": "pt",
+   "generation": "verified",
+   "human_review": "none"
   },
   {
    "code": "wo",
@@ -98,7 +128,10 @@
    "dir": "ltr",
    "ui": "planned",
    "mt": "disabled",
-   "note": "Planned for the Senegal edition."
+   "note": "Planned for the Senegal edition.",
+   "bcp47": "wo",
+   "generation": "none",
+   "human_review": "none"
   },
   {
    "code": "tw",
@@ -107,7 +140,10 @@
    "dir": "ltr",
    "ui": "planned",
    "mt": "disabled",
-   "note": "Planned for the Ghana edition (distinct from Ghanaian Pidgin)."
+   "note": "Planned for the Ghana edition. Twi (Asante/Akuapem) is distinct from Fante and from Ghanaian Pidgin; no automatic check exists yet.",
+   "bcp47": "tw",
+   "generation": "none",
+   "human_review": "none"
   },
   {
    "code": "zu",
@@ -116,7 +152,226 @@
    "dir": "ltr",
    "ui": "planned",
    "mt": "disabled",
-   "note": "Planned for South Africa."
+   "note": "Planned interface for South Africa. Agent writing is a pilot (detector can identify isiZulu; quality unreviewed, off unless enabled).",
+   "bcp47": "zu",
+   "generation": "pilot",
+   "human_review": "none"
+  },
+  {
+   "code": "fat",
+   "native": "Mfantse",
+   "english": "Fante",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for the Ghana edition. An Akan language related to Twi but not the same; no automatic language check exists, so nothing is generated or translated.",
+   "bcp47": "fat",
+   "generation": "none",
+   "human_review": "none"
+  },
+  {
+   "code": "so",
+   "native": "Soomaali",
+   "english": "Somali",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Somalia, Djibouti, Ethiopia and Kenya editions. Agent writing is a pilot (detectable; quality unreviewed).",
+   "bcp47": "so",
+   "generation": "pilot",
+   "human_review": "none"
+  },
+  {
+   "code": "sn",
+   "native": "chiShona",
+   "english": "Shona",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Zimbabwe. Agent writing is a pilot (detectable; quality unreviewed).",
+   "bcp47": "sn",
+   "generation": "pilot",
+   "human_review": "none"
+  },
+  {
+   "code": "xh",
+   "native": "isiXhosa",
+   "english": "Xhosa",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for South Africa. Agent writing is a pilot (detectable; quality unreviewed).",
+   "bcp47": "xh",
+   "generation": "pilot",
+   "human_review": "none"
+  },
+  {
+   "code": "st",
+   "native": "Sesotho",
+   "english": "Sesotho",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Lesotho and South Africa. Agent writing is a pilot (detectable; quality unreviewed).",
+   "bcp47": "st",
+   "generation": "pilot",
+   "human_review": "none"
+  },
+  {
+   "code": "tn",
+   "native": "Setswana",
+   "english": "Setswana",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Botswana and South Africa. Agent writing is a pilot (detectable; quality unreviewed).",
+   "bcp47": "tn",
+   "generation": "pilot",
+   "human_review": "none"
+  },
+  {
+   "code": "ti",
+   "native": "ትግርኛ",
+   "english": "Tigrinya",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Eritrea and Ethiopia. Script-only check (Ge'ez); agent writing disabled.",
+   "bcp47": "ti",
+   "generation": "script_only",
+   "human_review": "none"
+  },
+  {
+   "code": "zgh",
+   "native": "ⵜⴰⵎⴰⵣⵉⵖⵜ",
+   "english": "Standard Moroccan Tamazight",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Morocco. Script-only check (Tifinagh); agent writing disabled.",
+   "bcp47": "zgh",
+   "generation": "script_only",
+   "human_review": "none"
+  },
+  {
+   "code": "rw",
+   "native": "Ikinyarwanda",
+   "english": "Kinyarwanda",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Rwanda. No automatic language check yet.",
+   "bcp47": "rw",
+   "generation": "none",
+   "human_review": "none"
+  },
+  {
+   "code": "rn",
+   "native": "Ikirundi",
+   "english": "Kirundi",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Burundi. No automatic language check yet.",
+   "bcp47": "rn",
+   "generation": "none",
+   "human_review": "none"
+  },
+  {
+   "code": "ln",
+   "native": "Lingála",
+   "english": "Lingala",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for DR Congo and Congo. No automatic language check yet.",
+   "bcp47": "ln",
+   "generation": "none",
+   "human_review": "none"
+  },
+  {
+   "code": "mg",
+   "native": "Malagasy",
+   "english": "Malagasy",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Madagascar. No automatic language check yet.",
+   "bcp47": "mg",
+   "generation": "none",
+   "human_review": "none"
+  },
+  {
+   "code": "om",
+   "native": "Afaan Oromoo",
+   "english": "Oromo",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Ethiopia. No automatic language check yet.",
+   "bcp47": "om",
+   "generation": "none",
+   "human_review": "none"
+  },
+  {
+   "code": "af",
+   "native": "Afrikaans",
+   "english": "Afrikaans",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for South Africa and Namibia. No automatic language check wired yet.",
+   "bcp47": "af",
+   "generation": "none",
+   "human_review": "none"
+  },
+  {
+   "code": "lg",
+   "native": "Luganda",
+   "english": "Luganda",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Uganda. No automatic language check yet.",
+   "bcp47": "lg",
+   "generation": "none",
+   "human_review": "none"
+  },
+  {
+   "code": "ny",
+   "native": "Chichewa",
+   "english": "Chichewa",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Malawi and Zambia. No automatic language check yet.",
+   "bcp47": "ny",
+   "generation": "none",
+   "human_review": "none"
+  },
+  {
+   "code": "bm",
+   "native": "Bamanankan",
+   "english": "Bambara",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for Mali. No automatic language check yet.",
+   "bcp47": "bm",
+   "generation": "none",
+   "human_review": "none"
+  },
+  {
+   "code": "ff",
+   "native": "Fulfulde",
+   "english": "Fula",
+   "dir": "ltr",
+   "ui": "planned",
+   "mt": "disabled",
+   "note": "Planned for the Sahel and West Africa editions. No automatic language check yet.",
+   "bcp47": "ff",
+   "generation": "none",
+   "human_review": "none"
   }
  ],
  "countries": {

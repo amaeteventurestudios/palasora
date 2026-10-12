@@ -87,3 +87,45 @@ test("ISSUE-03 Regional priorities: 37 Nigerian units, founder list at 2x, a rea
   expect((await reader.request.get(`${BASE}/api/admin/region-priority`)).status()).toBe(403);
   await reader.close();
 });
+
+test("ISSUE-10 an English reader sees a stored Arabic->English translation, clearly labelled, and can switch to the original in one click", async ({ page }) => {
+  await noConsentBanner(page);
+  const pb = await pbAdmin();
+  const piece = (await pb.list("editorial_pieces", "review_status='published' && kind='agent_post'"))[0];
+  const original = "هل يمكن للطاقة الشمسية أن تخدم الأسواق الريفية؟";
+  await pb.update("editorial_pieces", piece.id, { headline: original, language: "ar", original_language: "ar" }); // test-stack fixture: an Arabic post
+  const rec = { tenant_id: piece.tenant_id, target_type: "piece", target_id: piece.id, piece_id: piece.id, locale: "en", source_locale: "ar", source_version: piece.revision || 1,
+    status: "machine_unreviewed", model: "fixture", prompt_version: "e2e", fields: { headline: "Can solar power serve rural markets?" } };
+  const old = await pb.list("localizations", `target_id='${piece.id}' && locale='en'`);
+  for (const o of old) await pb.update("localizations", o.id, rec); // deterministic on a reused stack
+  if (!old.length) await pb.create("localizations", rec);
+  await page.goto(`${BASE}/?sort=new`);
+  const card = page.locator(`[data-piece-id="${piece.id}"]`);
+  await expect(card.getByTestId("translation-note")).toHaveAttribute("data-translation", "machine");
+  await expect(card.getByRole("heading")).toHaveText("Can solar power serve rural markets?");
+  await expect(card.getByTestId("translation-note")).toContainText("Machine translation, not reviewed from العربية");
+  await card.getByTestId("translation-toggle").click();
+  await expect(card.getByRole("heading")).toHaveText(original);
+  await expect(card.getByRole("heading").locator("a")).toHaveAttribute("dir", "rtl");
+  await card.getByTestId("translation-toggle").click();
+  await expect(card.getByRole("heading")).toHaveText("Can solar power serve rural markets?");
+  await pb.update("editorial_pieces", piece.id, { headline: piece.headline, language: piece.language, original_language: piece.original_language }); // leave the stack as found
+});
+
+test("ISSUE-10 Translations admin: four separate coverage columns incl. Fante, compact searchable table, side-by-side review", async ({ page }) => {
+  await noConsentBanner(page);
+  await signIn(page, "editor@palavva.local", BASE, "/admin/translations");
+  const reg = page.getByTestId("language-registry");
+  await expect(reg.locator('[data-lang="fat"]')).toContainText("Mfantse");
+  await expect(reg.locator('[data-lang="fat"]')).toContainText("No (no reliable check yet)");
+  await expect(reg.locator('[data-lang="sw"]')).toContainText("Yes, checked automatically");
+  await expect(reg.locator('[data-lang="pcm"]')).toContainText("Not yet");
+  await expect(page.getByTestId("translations")).toBeVisible();
+  await page.getByTestId("translations-size-100").click();
+  await expect(page.getByTestId("translations-size-100")).toHaveAttribute("aria-pressed", "true");
+  const first = page.getByTestId("translations").locator("tbody tr[data-row]").first();
+  if (await first.count()) {
+    await first.press("Enter"); // keyboard drill-down
+    await expect(page.getByTestId("translation-detail").getByTestId("pair").first()).toContainText("original");
+  }
+});

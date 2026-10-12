@@ -202,12 +202,20 @@ test("L-08/L-09/L-17 French reading: honest pending → machine label with origi
 test("L-08/L-23 editor can see, correct and block translations; geography evidence and coverage gaps are inspectable", async ({ page }) => {
   await signIn(page, "editor@palavva.local", BASE, "/admin/translations");
   await expect(page.getByRole("heading", { level: 1, name: "Translations" })).toBeVisible();
-  await expect(page.getByRole("table").first()).toContainText("Naijá");
-  const blockable = page.getByTestId("localization-row").filter({ has: page.getByRole("button", { name: "Block" }) });
-  if (await blockable.count()) {
-    const blockedBefore = await page.getByTestId("localization-row").filter({ hasNot: page.getByRole("button", { name: "Block" }) }).count();
-    await blockable.first().getByRole("button", { name: "Block" }).click();
-    await expect(page.getByTestId("localization-row").filter({ hasNot: page.getByRole("button", { name: "Block" }) })).toHaveCount(blockedBefore + 1);
+  await expect(page.getByTestId("language-registry")).toContainText("Naijá");
+  // v1.8+ ISSUE-10: compact table; a row opens the original and the translation side by side with Block / Approve / Correct.
+  await page.getByTestId("translations-filter-status-machine_unreviewed").click();
+  const row = page.getByTestId("translations").locator("tbody tr[data-row]").first();
+  if (await row.count()) {
+    const id = await row.getAttribute("data-row");
+    await row.click();
+    await expect(page.getByTestId("translation-detail").getByTestId("pair").first()).toBeVisible();
+    page.once("dialog", (d) => d.accept());
+    await page.getByTestId("translation-detail").getByRole("button", { name: /^Block/ }).click();
+    await expect(page.getByTestId("translation-detail")).toContainText("blocked (readers see the original)");
+    await page.reload();
+    await page.getByTestId("translations-filter-status-blocked").click();
+    await expect(page.locator(`[data-row="${id}"]`)).toBeVisible();
   }
   await page.screenshot({ path: `${shotDir}/v13-admin-translations-1440.png`, fullPage: true });
   await page.goto("/admin/geo");

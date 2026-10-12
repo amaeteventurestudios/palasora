@@ -40,9 +40,13 @@ export function stateFor(loc: Rec | undefined, sourceLocale: string, reading: st
   return { status: mtEnabled ? "pending" : "unavailable", from: sourceLocale, to: reading };
 }
 
-export async function localizeSummaries(t: Tenant, items: PieceSummary[], reading: string, revisions: Map<string, number> = new Map()): Promise<(PieceSummary & { translation: TranslationState })[]> {
+export type Localized = PieceSummary & { translation: TranslationState; original_headline?: string; original_lede?: string };
+export async function localizeSummaries(t: Tenant, items: PieceSummary[], reading: string, revisions: Map<string, number> = new Map()): Promise<Localized[]> {
   const mt = localeInfo(reading)?.mt === "enabled";
-  const locs = reading === "en" ? new Map() : await localizationsFor(t, "piece", items.map((p) => p.id), reading);
+  // ISSUE-10: look up translations for every item not already in the reading language. (v1.7 skipped the lookup for
+  // English readers, so stored Arabic/French/Portuguese -> English translations were requested but never shown.)
+  const foreign = items.filter((p) => (p.original_language || "en") !== reading).map((p) => p.id);
+  const locs = foreign.length ? await localizationsFor(t, "piece", foreign, reading) : new Map<string, Rec>();
   return items.map((p) => {
     const src = p.original_language || "en";
     const ver = revisions.get(p.id) ?? (p as unknown as { revision?: number }).revision ?? 1;
@@ -51,7 +55,8 @@ export async function localizeSummaries(t: Tenant, items: PieceSummary[], readin
     if (st.status === "pending") requestOnce(t, "piece", p.id, reading, ver);
     if (st.status === "machine" || st.status === "reviewed") {
       const f = loc!.fields ?? {};
-      return { ...p, headline: f.headline || p.headline, lede: f.lede || p.lede, translation: st };
+      // The original travels with the translation so the reader can switch back in one click (never a silent swap).
+      return { ...p, headline: f.headline || p.headline, lede: f.lede || p.lede, translation: st, original_headline: p.headline, original_lede: p.lede };
     }
     return { ...p, translation: st };
   });
