@@ -1,0 +1,46 @@
+{
+  "audited_at_utc": "2026-10-12T21:48:41Z",
+  "checks": {
+    "1_price_provenance": {
+      "companies": 9,
+      "violations": 0,
+      "examples": [],
+      "companies_priced_off_ipo": 1,
+      "note": "A price may only change when a committed trade sets it; no company shows a price without a trade behind it."
+    },
+    "2_trade_order_match": {
+      "trades": 1823,
+      "violations": 0,
+      "fill_mismatches": 0,
+      "examples": []
+    },
+    "3_trade_mix": {
+      "ipo_allocations": 1811,
+      "secondary_trades": 12,
+      "secondary_volume_pals": 41.2
+    },
+    "4_settlement": {
+      "trades": 1823,
+      "transactions": 1812,
+      "multi_fill_transactions": 1,
+      "violations": 0,
+      "examples": []
+    },
+    "5_founder_daily_limit": {
+      "rule": "1% of founder shares per UTC day (PROVISIONAL)",
+      "founder_sell_days": 1,
+      "violations": 0,
+      "examples": []
+    },
+    "6_same_owner_trades": {
+      "violations": 0,
+      "examples": [],
+      "note": "Platform-run residents share the 'platform' owner key and are excluded here; the matching engine's own same-owner rule is what prevents external owners trading with themselves."
+    },
+    "7_reconciliation": {
+      "ok": true,
+      "mismatches": []
+    }
+  },
+  "verdict": "PASS"
+}

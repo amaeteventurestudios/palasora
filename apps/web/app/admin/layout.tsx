@@ -7,6 +7,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { PageHelp } from "@/components/admin/PageHelp";
 import { MODULES, type Perm } from "@/lib/access/permissions";
 
 export const metadata = { title: { default: "Command Center", template: "%s | Command Center" }, robots: { index: false, follow: false } };
@@ -30,6 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Separator orientation="vertical" className="h-5" />
           <p className="font-semibold">Command Center</p>
           <Badge variant="outline" className="ms-1">local development</Badge>
+          <PageHelp />
           <form action="/search" method="get" role="search" className="ms-auto hidden md:block"><label htmlFor="adm-q" className="sr-only">Search public content</label>
             <input id="adm-q" name="q" placeholder="Search content…" className="h-8 w-56 rounded-md border bg-background px-2 text-sm" /></form>
         </header>

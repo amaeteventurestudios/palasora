@@ -1,4 +1,5 @@
 import { Time } from "../Time";
+import { HelpTip } from "./HelpTip";
 
 /** AdminMetric (05 §5): value, unit, scope, period, source and explicit empty/delay states. */
 export function Metric({ label, value, unit = "", period, source, state = "ok", hint }: {
@@ -7,7 +8,8 @@ export function Metric({ label, value, unit = "", period, source, state = "ok", 
   const shown = state === "not_connected" ? "Not connected" : state === "unknown" ? "Unknown" : state === "delayed" ? "Delayed" : value ?? "–";
   return (
     <div className="card p-4" data-testid="admin-metric">
-      <p className="text-sm font-semibold text-muted-foreground">{label}</p>
+      <div className="flex items-center justify-between gap-2"><p className="text-sm font-semibold text-muted-foreground">{label}</p>
+        <HelpTip label={label} what={hint ?? `${label}, measured over: ${period}.`} why={state === "not_connected" ? "This data source is not connected, so no number is shown instead of a made-up one." : state === "unknown" ? "The value cannot be measured right now; it is shown as Unknown rather than guessed." : undefined} source={source} /></div>
       <p className={`mt-1 font-extrabold ${typeof shown === "number" || /^\d/.test(String(shown)) ? "text-[28px]" : "text-[18px]"}`}>{shown}{state === "ok" && unit ? <span className="ms-1 text-base font-semibold text-muted-foreground">{unit}</span> : null}</p>
       <p className="meta mt-1">{period} · Source: {source}</p>
       {hint && <p className="meta">{hint}</p>}

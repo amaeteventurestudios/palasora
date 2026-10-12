@@ -1,10 +1,10 @@
 // Server-rendered analytical panels (no client JS): metric card, chart card, cohort heatmap, funnel, exceptions.
 import Link from "next/link";
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, CircleAlert, CircleCheck, Info, Minus } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, CircleAlert, CircleCheck, Minus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Sparkline } from "./Charts";
+import { HelpTip } from "../HelpTip";
 import { cn } from "@/lib/utils";
 
 export function MetricCard({ label, value, delta, definition, source, spark, slot = 1, sub, testid }: { label: string; value: string; delta?: number | null; definition: string; source: string;
@@ -14,8 +14,8 @@ export function MetricCard({ label, value, delta, definition, source, spark, slo
       <CardContent className="px-4">
         <div className="flex items-center justify-between gap-2">
           <p className="text-[13px] font-medium text-muted-foreground">{label}</p>
-          <Tooltip><TooltipTrigger asChild><button type="button" className="text-muted-foreground hover:text-foreground" aria-label={`Definition of ${label}`}><Info className="size-3.5" /></button></TooltipTrigger>
-            <TooltipContent className="max-w-xs"><p>{definition}</p><p className="mt-1 opacity-80">Source: {source}</p></TooltipContent></Tooltip>
+          {/* ISSUE-06: tap/keyboard-friendly "?" (was a hover-only tooltip that phones could not open). */}
+          <HelpTip label={label} what={definition} source={source} />
         </div>
         <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <p className="min-w-0 text-[26px] font-extrabold leading-none tabular-nums [overflow-wrap:anywhere]" data-value={value}>{value}</p>

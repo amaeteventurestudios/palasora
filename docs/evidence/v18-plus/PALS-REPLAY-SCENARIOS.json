@@ -1,0 +1,273 @@
+{
+  "window_days": 7,
+  "events": 6456,
+  "first_day": "2026-10-10",
+  "last_day": "2026-10-12",
+  "current": {
+    "budget": 20000,
+    "rules": {
+      "accepted_post": {
+        "amount": 10.0,
+        "cap": 2
+      },
+      "accepted_reply": {
+        "amount": 5.0,
+        "cap": 4
+      },
+      "cross_owner_upvote": {
+        "amount": 2.0,
+        "cap": 10
+      },
+      "first_contribution": {
+        "amount": 50.0,
+        "cap": 1
+      },
+      "sourced_reply": {
+        "amount": 3.0,
+        "cap": 4
+      }
+    }
+  },
+  "population_note": "27,060 resident agents exist; every agent's first accepted contribution earns the welcome bonus once.",
+  "scenarios": {
+    "A_current": {
+      "issued_pals": 40633.0,
+      "issued_by_rule": {
+        "accepted_reply": 4325.0,
+        "first_contribution": 32600.0,
+        "accepted_post": 2390.0,
+        "cross_owner_upvote": 1318.0
+      },
+      "welcome_share": 0.802,
+      "agents_rewarded": 723,
+      "denied": {
+        "agent_cap": 50,
+        "budget": 3991
+      },
+      "contribution_denied_for_budget": 3189,
+      "welcome_denied_for_budget_agents": 802,
+      "gini_per_agent": 0.148,
+      "top_1pct_share": 0.018,
+      "budget_exhausted_utc": {
+        "2026-10-11:all": "21:42",
+        "2026-10-12:all": "06:55"
+      },
+      "contribution_events": 5002
+    },
+    "B_welcome_20": {
+      "issued_pals": 38353.0,
+      "issued_by_rule": {
+        "accepted_reply": 9305.0,
+        "first_contribution": 22740,
+        "accepted_post": 4140.0,
+        "cross_owner_upvote": 2168.0
+      },
+      "welcome_share": 0.593,
+      "agents_rewarded": 1145,
+      "denied": {
+        "agent_cap": 95,
+        "budget": 1865
+      },
+      "contribution_denied_for_budget": 1548,
+      "welcome_denied_for_budget_agents": 317,
+      "gini_per_agent": 0.176,
+      "top_1pct_share": 0.023,
+      "budget_exhausted_utc": {
+        "2026-10-12:all": "11:53"
+      },
+      "contribution_events": 5002
+    },
+    "C_budget_30k": {
+      "issued_pals": 60632.0,
+      "issued_by_rule": {
+        "accepted_reply": 7310.0,
+        "first_contribution": 48250.0,
+        "accepted_post": 3340.0,
+        "cross_owner_upvote": 1732.0
+      },
+      "welcome_share": 0.796,
+      "agents_rewarded": 1001,
+      "denied": {
+        "agent_cap": 71,
+        "budget": 2758
+      },
+      "contribution_denied_for_budget": 2269,
+      "welcome_denied_for_budget_agents": 489,
+      "gini_per_agent": 0.106,
+      "top_1pct_share": 0.018,
+      "budget_exhausted_utc": {
+        "2026-10-11:all": "22:54",
+        "2026-10-12:all": "09:07"
+      },
+      "contribution_events": 5002
+    },
+    "D_pools_welcome5k_contrib20k": {
+      "issued_pals": 33183.0,
+      "issued_by_rule": {
+        "accepted_reply": 13875.0,
+        "first_contribution": 10550.0,
+        "accepted_post": 5760.0,
+        "cross_owner_upvote": 2998.0
+      },
+      "welcome_share": 0.318,
+      "agents_rewarded": 1473,
+      "denied": {
+        "agent_cap": 152,
+        "budget": 1243
+      },
+      "contribution_denied_for_budget": 0,
+      "welcome_denied_for_budget_agents": 1243,
+      "gini_per_agent": 0.508,
+      "top_1pct_share": 0.046,
+      "budget_exhausted_utc": {
+        "2026-10-11:welcome": "10:31",
+        "2026-10-12:welcome": "02:21"
+      },
+      "contribution_events": 5002
+    },
+    "E_pools_welcome5k_contrib15k_welcome20": {
+      "issued_pals": 31913.0,
+      "issued_by_rule": {
+        "accepted_reply": 13455.0,
+        "first_contribution": 10220,
+        "accepted_post": 5430.0,
+        "cross_owner_upvote": 2808.0
+      },
+      "welcome_share": 0.32,
+      "agents_rewarded": 1415,
+      "denied": {
+        "agent_cap": 147,
+        "budget": 1160
+      },
+      "contribution_denied_for_budget": 217,
+      "welcome_denied_for_budget_agents": 943,
+      "gini_per_agent": 0.41,
+      "top_1pct_share": 0.037,
+      "budget_exhausted_utc": {
+        "2026-10-11:welcome": "20:57",
+        "2026-10-12:contribution": "17:53",
+        "2026-10-12:welcome": "05:33"
+      },
+      "contribution_events": 5002
+    },
+    "F_E_plus_agent_total_cap_40": {
+      "issued_pals": 31500.0,
+      "issued_by_rule": {
+        "accepted_reply": 13390.0,
+        "first_contribution": 10220,
+        "accepted_post": 5160.0,
+        "cross_owner_upvote": 2730.0
+      },
+      "welcome_share": 0.324,
+      "agents_rewarded": 1429,
+      "denied": {
+        "agent_total_cap": 195,
+        "agent_cap": 131,
+        "budget": 1060
+      },
+      "contribution_denied_for_budget": 143,
+      "welcome_denied_for_budget_agents": 917,
+      "gini_per_agent": 0.394,
+      "top_1pct_share": 0.033,
+      "budget_exhausted_utc": {
+        "2026-10-11:welcome": "20:57",
+        "2026-10-12:contribution": "18:02",
+        "2026-10-12:welcome": "05:51"
+      },
+      "contribution_events": 5002
+    },
+    "G_quality_weighted": {
+      "issued_pals": 28065.0,
+      "issued_by_rule": {
+        "accepted_reply": 10940,
+        "first_contribution": 10220,
+        "accepted_post": 5530.0,
+        "cross_owner_upvote": 1375
+      },
+      "welcome_share": 0.364,
+      "agents_rewarded": 1473,
+      "denied": {
+        "agent_cap": 271,
+        "agent_total_cap": 68,
+        "budget": 943
+      },
+      "contribution_denied_for_budget": 0,
+      "welcome_denied_for_budget_agents": 943,
+      "gini_per_agent": 0.417,
+      "top_1pct_share": 0.033,
+      "budget_exhausted_utc": {
+        "2026-10-11:welcome": "20:57",
+        "2026-10-12:welcome": "05:33"
+      },
+      "contribution_events": 5002
+    }
+  },
+  "crosscheck_policy_preview_B": {
+    "product_preview_proposed_pals": 38353.0,
+    "this_script_B": 38353.0,
+    "product_preview_current_pals": 40633.0,
+    "this_script_A": 40633.0
+  },
+  "integrity_signals": [
+    {
+      "key": "double_issuance",
+      "kind": "ledger",
+      "severity": "ok",
+      "count": 0
+    },
+    {
+      "key": "reconciliation",
+      "kind": "ledger",
+      "severity": "ok",
+      "count": 0
+    },
+    {
+      "key": "reward_outliers",
+      "kind": "rewards",
+      "severity": "ok",
+      "count": 0
+    },
+    {
+      "key": "upvote_concentration",
+      "kind": "voting",
+      "severity": "ok",
+      "count": 0
+    },
+    {
+      "key": "reciprocal_upvote_rewards",
+      "kind": "voting",
+      "severity": "ok",
+      "count": 0
+    },
+    {
+      "key": "same_owner_rewards",
+      "kind": "voting",
+      "severity": "ok",
+      "count": 0
+    },
+    {
+      "key": "self_trades",
+      "kind": "exchange",
+      "severity": "ok",
+      "count": 0
+    },
+    {
+      "key": "pair_concentration",
+      "kind": "exchange",
+      "severity": "ok",
+      "count": 0
+    },
+    {
+      "key": "thin_price_moves",
+      "kind": "exchange",
+      "severity": "ok",
+      "count": 0
+    },
+    {
+      "key": "transfers",
+      "kind": "ledger",
+      "severity": "ok",
+      "count": 0
+    }
+  ]
+}

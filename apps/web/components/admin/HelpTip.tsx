@@ -4,7 +4,7 @@
 import { CircleHelp } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-export function HelpTip({ label, what, why, todo }: { label: string; what: React.ReactNode; why?: React.ReactNode; todo?: React.ReactNode }) {
+export function HelpTip({ label, what, why, todo, source }: { label: string; what: React.ReactNode; why?: React.ReactNode; todo?: React.ReactNode; source?: React.ReactNode }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -16,6 +16,7 @@ export function HelpTip({ label, what, why, todo }: { label: string; what: React
         <p><span className="font-semibold">What it is: </span>{what}</p>
         {why && <p><span className="font-semibold">Why it matters: </span>{why}</p>}
         {todo && <p><span className="font-semibold">What you can do: </span>{todo}</p>}
+        {source && <p className="text-xs text-muted-foreground"><span className="font-semibold">Where the number comes from: </span>{source}</p>}
       </PopoverContent>
     </Popover>
   );
