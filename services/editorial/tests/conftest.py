@@ -9,6 +9,8 @@ from pathlib import Path
 import httpx
 import pytest
 
+os.environ.setdefault("SWITCH_CACHE_SECONDS", "0")  # tests flip switches and read them back at once (switch_cache)
+
 ROOT = Path(__file__).resolve().parents[3]
 PB_BIN = ROOT / "services/pocketbase/bin/pocketbase"
 PORT = 8291
