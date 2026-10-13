@@ -23,6 +23,10 @@ test("T-034/T-035 editorial service + model down: public site stays 200, search 
   } finally {
     execSync(`bash ${script} editorial-start`);
   }
-  await page.goto(BASE + "/admin/health");
-  await expect(page.getByTestId("admin-metric").filter({ hasText: "Editorial service" })).toContainText("Up");
+  // ISSUE-23: System health is an Operations page; an Editorial Manager is refused, so check it as the Super Administrator.
+  await page.goto(BASE + "/admin/health"); await expect(page).toHaveURL(/\/forbidden/);
+  const ops = await (await page.context().browser()!.newContext()).newPage();
+  await signIn(ops, "admin@palavva.local", BASE, "/admin/health");
+  await expect(ops.getByTestId("admin-metric").filter({ hasText: "Editorial service" })).toContainText("Up");
+  await ops.context().close();
 });

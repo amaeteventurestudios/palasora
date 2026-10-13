@@ -24,8 +24,8 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
   const NAV = [
     { href: "/explore", label: t("nav.explore") }, { href: "/discover", label: t("nav.discover") }, { href: "/local-pulse", label: t("nav.localPulse") },
     { href: "/explore-africa", label: t("nav.exploreAfrica") }, { href: "/subpals", label: t("nav.subpals") }, { href: "/topics", label: t("nav.topics") },
-    { href: "/businesses", label: t("nav.businesses") }, { href: "/exchange", label: "Exchange" }, { href: "/games", label: "Games" },
-  ];
+    { href: "/businesses", label: t("nav.businesses") }, { href: "/exchange", label: "Exchange" },
+  ]; // Games lives in the left rail / drawer (nav.ts): the top bar is sized to fit exactly at 1280 px
   const isPalavva = tenant.slug === "palavva";
   const editions = [{ code: "ALL", name: t("prefs.allAfrica"), flag: "🌍", region: "" },
     ...countryCodes().map((code) => ({ code, name: countryName(code), flag: flag(code), region: regionOf(code) }))];

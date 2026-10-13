@@ -86,12 +86,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 33182,
+                  "duration": 48336,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:44:07.738Z",
+                  "startTime": "2026-10-13T00:09:29.804Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -120,12 +120,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 32017,
+                  "duration": 37411,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:44:41.257Z",
+                  "startTime": "2026-10-13T00:10:18.629Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -154,12 +154,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 8729,
+                  "duration": 13105,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:13.287Z",
+                  "startTime": "2026-10-13T00:10:56.060Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -188,12 +188,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 683,
+                  "duration": 985,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:22.027Z",
+                  "startTime": "2026-10-13T00:11:09.183Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -222,12 +222,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 554,
+                  "duration": 1008,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:22.726Z",
+                  "startTime": "2026-10-13T00:11:10.182Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -264,12 +264,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1015,
+                  "duration": 3533,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:23.301Z",
+                  "startTime": "2026-10-13T00:11:11.213Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -298,12 +298,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3727,
+                  "duration": 13200,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:24.330Z",
+                  "startTime": "2026-10-13T00:11:14.759Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -332,12 +332,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3255,
+                  "duration": 10111,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:28.070Z",
+                  "startTime": "2026-10-13T00:11:27.979Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -347,7 +347,7 @@
           ],
           "id": "d4043a9dd1ab94463227-1bcd6df1750d6d972614",
           "file": "admin.spec.ts",
-          "line": 41,
+          "line": 45,
           "column": 5
         },
         {
@@ -366,12 +366,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1686,
+                  "duration": 5149,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:31.337Z",
+                  "startTime": "2026-10-13T00:11:38.105Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -381,7 +381,7 @@
           ],
           "id": "d4043a9dd1ab94463227-29f15a9c2d8220f31afe",
           "file": "admin.spec.ts",
-          "line": 73,
+          "line": 78,
           "column": 5
         },
         {
@@ -400,12 +400,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1610,
+                  "duration": 4932,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:33.035Z",
+                  "startTime": "2026-10-13T00:11:43.273Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -415,7 +415,7 @@
           ],
           "id": "d4043a9dd1ab94463227-f6184e5163aa893d374b",
           "file": "admin.spec.ts",
-          "line": 101,
+          "line": 106,
           "column": 5
         },
         {
@@ -434,12 +434,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1188,
+                  "duration": 3773,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:34.659Z",
+                  "startTime": "2026-10-13T00:11:48.223Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -449,7 +449,7 @@
           ],
           "id": "d4043a9dd1ab94463227-0f894723b6cf90de1036",
           "file": "admin.spec.ts",
-          "line": 118,
+          "line": 123,
           "column": 5
         },
         {
@@ -468,12 +468,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1136,
+                  "duration": 4611,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:35.863Z",
+                  "startTime": "2026-10-13T00:11:52.014Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -483,7 +483,7 @@
           ],
           "id": "d4043a9dd1ab94463227-500d90c0c5662d35724d",
           "file": "admin.spec.ts",
-          "line": 126,
+          "line": 131,
           "column": 5
         },
         {
@@ -502,12 +502,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 8336,
+                  "duration": 12115,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:37.012Z",
+                  "startTime": "2026-10-13T00:11:56.640Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -517,7 +517,7 @@
           ],
           "id": "d4043a9dd1ab94463227-58c316c198c6783ea66a",
           "file": "admin.spec.ts",
-          "line": 145,
+          "line": 152,
           "column": 5
         }
       ]
@@ -544,12 +544,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1068,
+                  "duration": 4566,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:45.366Z",
+                  "startTime": "2026-10-13T00:12:08.778Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -578,12 +578,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 894,
+                  "duration": 3349,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:46.449Z",
+                  "startTime": "2026-10-13T00:12:13.361Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -612,12 +612,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2384,
+                  "duration": 5838,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:47.359Z",
+                  "startTime": "2026-10-13T00:12:16.729Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -646,12 +646,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1151,
+                  "duration": 1242,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:49.760Z",
+                  "startTime": "2026-10-13T00:12:22.584Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -666,7 +666,7 @@
         },
         {
           "title": "T-012 report an AI reply → moderator quarantines → reply hidden; audit recorded; restore works",
-          "ok": true,
+          "ok": false,
           "tags": [],
           "tests": [
             {
@@ -679,18 +679,95 @@
                 {
                   "workerIndex": 0,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 5892,
-                  "errors": [],
+                  "status": "timedOut",
+                  "duration": 61236,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/member.spec.ts",
+                        "column": 41,
+                        "line": 98
+                      },
+                      "message": "Error: locator.fill: Test ended.\nCall log:\n\u001b[2m  - waiting for getByTestId('audit-search')\u001b[22m\n\n\n   96 |   await expect(async () => { await reader.reload(); await expect(reader.getByTestId(\"ai-post\").filter({ hasText: text })).toHaveCount(0, { timeout: 1000 }); }).toPass({ timeout: 15000 });\n   97 |   await mod.goto(\"/admin/settings\");\n>  98 |   await mod.getByTestId(\"audit-search\").fill(\"quarantine\"); // v1.8+ ISSUE-22: plain summaries; raw action in the drawer\n      |                                         ^\n   99 |   await expect(mod.getByTestId(\"audit\").getByText(\"moderation report quarantine\").first()).toBeVisible();\n  100 |   await mod.goto(\"/admin/moderation?tab=quarantine\"); // v1.8+ ISSUE-13: Trust & safety tabs\n  101 |   const q = mod.locator(\"tr\", { hasText: \"quarantined\" }).filter({ hasText: text.slice(0, 25) }).first();\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/member.spec.ts:98:41"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:50.927Z",
+                  "startTime": "2026-10-13T00:12:23.843Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/member-T-012-report-an-AI--0f698-udit-recorded-restore-works/test-failed-3.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/member-T-012-report-an-AI--0f698-udit-recorded-restore-works/test-failed-4.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/member-T-012-report-an-AI--0f698-udit-recorded-restore-works/test-failed-6.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/member-T-012-report-an-AI--0f698-udit-recorded-restore-works/test-failed-5.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/member-T-012-report-an-AI--0f698-udit-recorded-restore-works/test-failed-8.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/member-T-012-report-an-AI--0f698-udit-recorded-restore-works/test-failed-10.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/member-T-012-report-an-AI--0f698-udit-recorded-restore-works/test-failed-11.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/member-T-012-report-an-AI--0f698-udit-recorded-restore-works/test-failed-1.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/member-T-012-report-an-AI--0f698-udit-recorded-restore-works/test-failed-7.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/member-T-012-report-an-AI--0f698-udit-recorded-restore-works/test-failed-9.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/member-T-012-report-an-AI--0f698-udit-recorded-restore-works/test-failed-2.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/member-T-012-report-an-AI--0f698-udit-recorded-restore-works/error-context.md"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "unexpected"
             }
           ],
           "id": "1ea34e5b635e4790e803-b06aaf00397a260ac150",
@@ -719,10 +796,10 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6682,
+                  "duration": 12564,
                   "errors": [],
                   "stdout": [],
                   "stderr": [
@@ -734,7 +811,7 @@
                     }
                   ],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:45:56.838Z",
+                  "startTime": "2026-10-13T00:13:27.091Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -768,15 +845,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 989,
+                  "duration": 580,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:03.543Z",
+                  "startTime": "2026-10-13T00:13:39.949Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -790,7 +867,7 @@
           "column": 5
         },
         {
-          "title": "S01 first conversation above the fold at 1440x900 and 390x844; live counters still on the page",
+          "title": "S01 desktop shows intro + counters + Exchange before the feed; first conversation above the fold at 390x844",
           "ok": true,
           "tags": [],
           "tests": [
@@ -802,15 +879,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1452,
+                  "duration": 1461,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:04.548Z",
+                  "startTime": "2026-10-13T00:13:40.545Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -818,7 +895,7 @@
               "status": "expected"
             }
           ],
-          "id": "349fc90c6061c792a808-294dde5de12f081241f0",
+          "id": "349fc90c6061c792a808-8e399547b2fa4fd6c778",
           "file": "public.spec.ts",
           "line": 22,
           "column": 5
@@ -836,15 +913,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6241,
+                  "duration": 4115,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:06.016Z",
+                  "startTime": "2026-10-13T00:13:42.024Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -854,7 +931,7 @@
           ],
           "id": "349fc90c6061c792a808-4ab8a19043b9e2aeb5fb",
           "file": "public.spec.ts",
-          "line": 33,
+          "line": 34,
           "column": 5
         },
         {
@@ -870,15 +947,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2807,
+                  "duration": 1639,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:12.275Z",
+                  "startTime": "2026-10-13T00:13:46.154Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -888,7 +965,7 @@
           ],
           "id": "349fc90c6061c792a808-7866def22d7c2ab5b499",
           "file": "public.spec.ts",
-          "line": 44,
+          "line": 45,
           "column": 5
         },
         {
@@ -904,15 +981,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1184,
+                  "duration": 827,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:15.097Z",
+                  "startTime": "2026-10-13T00:13:47.807Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -922,7 +999,7 @@
           ],
           "id": "349fc90c6061c792a808-1221f0aa6466e45c5ecf",
           "file": "public.spec.ts",
-          "line": 59,
+          "line": 60,
           "column": 5
         },
         {
@@ -938,15 +1015,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 891,
+                  "duration": 1204,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:16.297Z",
+                  "startTime": "2026-10-13T00:13:48.644Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -956,7 +1033,7 @@
           ],
           "id": "349fc90c6061c792a808-e8ade27255336bbb9510",
           "file": "public.spec.ts",
-          "line": 74,
+          "line": 75,
           "column": 5
         },
         {
@@ -972,15 +1049,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 557,
+                  "duration": 870,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:17.203Z",
+                  "startTime": "2026-10-13T00:13:49.860Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -990,7 +1067,7 @@
           ],
           "id": "349fc90c6061c792a808-6a78c944ab1c473a0c7c",
           "file": "public.spec.ts",
-          "line": 92,
+          "line": 93,
           "column": 5
         },
         {
@@ -1006,15 +1083,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 683,
+                  "duration": 989,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:17.778Z",
+                  "startTime": "2026-10-13T00:13:50.751Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1024,7 +1101,7 @@
           ],
           "id": "349fc90c6061c792a808-dd1199b54c8b4cb3d70e",
           "file": "public.spec.ts",
-          "line": 107,
+          "line": 108,
           "column": 5
         },
         {
@@ -1040,15 +1117,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7081,
+                  "duration": 10399,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:18.478Z",
+                  "startTime": "2026-10-13T00:13:51.754Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1058,7 +1135,7 @@
           ],
           "id": "349fc90c6061c792a808-c169e176e141b516ef81",
           "file": "public.spec.ts",
-          "line": 127,
+          "line": 128,
           "column": 5
         },
         {
@@ -1074,15 +1151,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 165,
+                  "duration": 153,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:25.577Z",
+                  "startTime": "2026-10-13T00:14:02.164Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1092,7 +1169,7 @@
           ],
           "id": "349fc90c6061c792a808-b36afb2bd3320fc31151",
           "file": "public.spec.ts",
-          "line": 142,
+          "line": 143,
           "column": 5
         }
       ]
@@ -1116,15 +1193,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 793,
+                  "duration": 766,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:25.761Z",
+                  "startTime": "2026-10-13T00:14:02.332Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1150,15 +1227,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2657,
+                  "duration": 5711,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:26.571Z",
+                  "startTime": "2026-10-13T00:14:03.109Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1184,15 +1261,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 963,
+                  "duration": 3380,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:29.245Z",
+                  "startTime": "2026-10-13T00:14:08.832Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1226,15 +1303,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 11410,
+                  "duration": 9920,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:30.235Z",
+                  "startTime": "2026-10-13T00:14:12.248Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1260,15 +1337,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1276,
+                  "duration": 3824,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:41.671Z",
+                  "startTime": "2026-10-13T00:14:22.190Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1294,15 +1371,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 919,
+                  "duration": 3689,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:42.975Z",
+                  "startTime": "2026-10-13T00:14:26.038Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1328,15 +1405,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 870,
+                  "duration": 3476,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:43.919Z",
+                  "startTime": "2026-10-13T00:14:29.758Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1346,7 +1423,7 @@
           ],
           "id": "9c01516a488a74e58f17-235c280cce48f742c2a6",
           "file": "v13.spec.ts",
-          "line": 86,
+          "line": 87,
           "column": 5
         },
         {
@@ -1362,15 +1439,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1095,
+                  "duration": 1662,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:44.817Z",
+                  "startTime": "2026-10-13T00:14:33.257Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1380,7 +1457,7 @@
           ],
           "id": "9c01516a488a74e58f17-002b3a22bf0c8620b15c",
           "file": "v13.spec.ts",
-          "line": 103,
+          "line": 104,
           "column": 5
         },
         {
@@ -1396,15 +1473,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 701,
+                  "duration": 1412,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:45.951Z",
+                  "startTime": "2026-10-13T00:14:34.939Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1414,7 +1491,7 @@
           ],
           "id": "9c01516a488a74e58f17-5c9162a072c2c8cf02fb",
           "file": "v13.spec.ts",
-          "line": 115,
+          "line": 116,
           "column": 5
         },
         {
@@ -1430,15 +1507,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1564,
+                  "duration": 3068,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:46.683Z",
+                  "startTime": "2026-10-13T00:14:36.372Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1448,7 +1525,7 @@
           ],
           "id": "9c01516a488a74e58f17-5fe8eba646453fbf1bcd",
           "file": "v13.spec.ts",
-          "line": 124,
+          "line": 125,
           "column": 5
         },
         {
@@ -1464,15 +1541,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 825,
+                  "duration": 1849,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:48.279Z",
+                  "startTime": "2026-10-13T00:14:39.464Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1482,7 +1559,7 @@
           ],
           "id": "9c01516a488a74e58f17-d0648b3b5f64fbde929e",
           "file": "v13.spec.ts",
-          "line": 145,
+          "line": 146,
           "column": 5
         },
         {
@@ -1498,15 +1575,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3173,
+                  "duration": 6649,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:49.124Z",
+                  "startTime": "2026-10-13T00:14:41.344Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1516,7 +1593,7 @@
           ],
           "id": "9c01516a488a74e58f17-c1f34232c4c9d1d7501f",
           "file": "v13.spec.ts",
-          "line": 156,
+          "line": 157,
           "column": 5
         },
         {
@@ -1532,15 +1609,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1249,
+                  "duration": 1454,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:52.319Z",
+                  "startTime": "2026-10-13T00:14:48.017Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1550,7 +1627,7 @@
           ],
           "id": "9c01516a488a74e58f17-657c7db8ef29728c1c23",
           "file": "v13.spec.ts",
-          "line": 175,
+          "line": 176,
           "column": 5
         },
         {
@@ -1566,15 +1643,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1806,
+                  "duration": 6066,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:53.595Z",
+                  "startTime": "2026-10-13T00:14:49.503Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1584,7 +1661,7 @@
           ],
           "id": "9c01516a488a74e58f17-ff7876e92214dae2ace1",
           "file": "v13.spec.ts",
-          "line": 202,
+          "line": 203,
           "column": 5
         },
         {
@@ -1600,15 +1677,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1449,
+                  "duration": 1348,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:55.425Z",
+                  "startTime": "2026-10-13T00:14:55.589Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1618,7 +1695,7 @@
           ],
           "id": "9c01516a488a74e58f17-8c1211e62e48eac1766d",
           "file": "v13.spec.ts",
-          "line": 222,
+          "line": 233,
           "column": 5
         },
         {
@@ -1634,15 +1711,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 746,
+                  "duration": 562,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:56.896Z",
+                  "startTime": "2026-10-13T00:14:56.955Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1652,7 +1729,7 @@
           ],
           "id": "9c01516a488a74e58f17-bc534acbbefa36973b18",
           "file": "v13.spec.ts",
-          "line": 240,
+          "line": 251,
           "column": 5
         },
         {
@@ -1668,15 +1745,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 739,
+                  "duration": 790,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:57.665Z",
+                  "startTime": "2026-10-13T00:14:57.535Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1686,7 +1763,7 @@
           ],
           "id": "9c01516a488a74e58f17-85f88639d38ccf7b0661",
           "file": "v13.spec.ts",
-          "line": 252,
+          "line": 263,
           "column": 5
         },
         {
@@ -1702,15 +1779,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2796,
+                  "duration": 3078,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:46:58.426Z",
+                  "startTime": "2026-10-13T00:14:58.341Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1720,7 +1797,7 @@
           ],
           "id": "9c01516a488a74e58f17-88b9a1477794f2c9fa23",
           "file": "v13.spec.ts",
-          "line": 272,
+          "line": 283,
           "column": 5
         },
         {
@@ -1736,15 +1813,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 718,
+                  "duration": 883,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:47:01.243Z",
+                  "startTime": "2026-10-13T00:15:01.437Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1754,7 +1831,7 @@
           ],
           "id": "9c01516a488a74e58f17-8068ae0105f1a5f9aece",
           "file": "v13.spec.ts",
-          "line": 288,
+          "line": 299,
           "column": 5
         },
         {
@@ -1770,19 +1847,19 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6921,
+                  "duration": 6711,
                   "errors": [],
                   "stdout": [
                     {
-                      "text": "L-22 {\"/ visible_ms\":2197,\"/ fcp_ms\":1932,\"/ cls\":0,\"/local-pulse?country=NG visible_ms\":1112,\"/local-pulse?country=NG fcp_ms\":468,\"/local-pulse?country=NG cls\":0}\n"
+                      "text": "L-22 {\"/ visible_ms\":2317,\"/ fcp_ms\":2024,\"/ cls\":0,\"/local-pulse?country=NG visible_ms\":592,\"/local-pulse?country=NG fcp_ms\":360,\"/local-pulse?country=NG cls\":0}\n"
                     }
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:47:01.985Z",
+                  "startTime": "2026-10-13T00:15:02.335Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1792,7 +1869,7 @@
           ],
           "id": "9c01516a488a74e58f17-325d21602b799e3a80af",
           "file": "v13.spec.ts",
-          "line": 299,
+          "line": 310,
           "column": 5
         },
         {
@@ -1808,15 +1885,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1394,
+                  "duration": 853,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:47:08.956Z",
+                  "startTime": "2026-10-13T00:15:09.067Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1826,7 +1903,7 @@
           ],
           "id": "9c01516a488a74e58f17-192ede6a63f499d4890c",
           "file": "v13.spec.ts",
-          "line": 328,
+          "line": 339,
           "column": 5
         },
         {
@@ -1842,15 +1919,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 19484,
+                  "duration": 20891,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:47:10.406Z",
+                  "startTime": "2026-10-13T00:15:09.956Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1860,7 +1937,7 @@
           ],
           "id": "9c01516a488a74e58f17-85d13e359e9aa04c14f4",
           "file": "v13.spec.ts",
-          "line": 336,
+          "line": 347,
           "column": 5
         },
         {
@@ -1876,15 +1953,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3186,
+                  "duration": 4764,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:47:29.920Z",
+                  "startTime": "2026-10-13T00:15:30.871Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1894,7 +1971,7 @@
           ],
           "id": "9c01516a488a74e58f17-5fea454b60a008e17628",
           "file": "v13.spec.ts",
-          "line": 354,
+          "line": 365,
           "column": 5
         },
         {
@@ -1910,15 +1987,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4952,
+                  "duration": 3961,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:47:33.130Z",
+                  "startTime": "2026-10-13T00:15:35.657Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1928,7 +2005,7 @@
           ],
           "id": "9c01516a488a74e58f17-029ce0b5aaefcb26ced5",
           "file": "v13.spec.ts",
-          "line": 376,
+          "line": 387,
           "column": 5
         }
       ]
@@ -1952,15 +2029,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 18056,
+                  "duration": 20724,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:47:38.114Z",
+                  "startTime": "2026-10-13T00:15:39.646Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1986,15 +2063,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 53,
+                  "duration": 26,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:47:56.211Z",
+                  "startTime": "2026-10-13T00:16:00.387Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2020,15 +2097,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1671,
+                  "duration": 3842,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:47:56.298Z",
+                  "startTime": "2026-10-13T00:16:00.435Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2054,15 +2131,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 934,
+                  "duration": 3163,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:47:57.999Z",
+                  "startTime": "2026-10-13T00:16:04.296Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2091,7 +2168,7 @@
           "column": 15,
           "specs": [
             {
-              "title": "UI-01/UI-05/UI-07 locked hero copy (now on /about, v1.7 feed-first), observer rule, real counters, nav, no chip wall",
+              "title": "UI-01/UI-05/UI-07 locked hero copy (on /about and, since ISSUE-01, the home page), observer rule, real counters, nav, no chip wall",
               "ok": true,
               "tags": [],
               "tests": [
@@ -2103,15 +2180,15 @@
                   "projectName": "",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1459,
+                      "duration": 1139,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-11T21:47:58.969Z",
+                      "startTime": "2026-10-13T00:16:07.487Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2119,7 +2196,7 @@
                   "status": "expected"
                 }
               ],
-              "id": "6cf49b50ce6efb29797b-0a246c0cf58a22140a55",
+              "id": "6cf49b50ce6efb29797b-d56ba575b5b9b7de66b2",
               "file": "v14.spec.ts",
               "line": 38,
               "column": 7
@@ -2137,15 +2214,15 @@
                   "projectName": "",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 139,
+                      "duration": 78,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-11T21:48:00.449Z",
+                      "startTime": "2026-10-13T00:16:08.640Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2171,15 +2248,15 @@
                   "projectName": "",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 941,
+                      "duration": 3157,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-11T21:48:00.623Z",
+                      "startTime": "2026-10-13T00:16:08.732Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2205,15 +2282,15 @@
                   "projectName": "",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 569,
+                      "duration": 420,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-11T21:48:01.586Z",
+                      "startTime": "2026-10-13T00:16:11.903Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2239,15 +2316,15 @@
                   "projectName": "",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5370,
+                      "duration": 3540,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-11T21:48:02.177Z",
+                      "startTime": "2026-10-13T00:16:12.338Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2273,15 +2350,15 @@
                   "projectName": "",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5090,
+                      "duration": 5061,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-11T21:48:07.580Z",
+                      "startTime": "2026-10-13T00:16:15.898Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2307,15 +2384,15 @@
                   "projectName": "",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 329,
+                      "duration": 406,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-11T21:48:12.721Z",
+                      "startTime": "2026-10-13T00:16:20.976Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2341,15 +2418,15 @@
                   "projectName": "",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1468,
+                      "duration": 4276,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-11T21:48:13.074Z",
+                      "startTime": "2026-10-13T00:16:21.399Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2375,15 +2452,15 @@
                   "projectName": "",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 59116,
+                      "duration": 5144,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-11T21:48:14.568Z",
+                      "startTime": "2026-10-13T00:16:25.692Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2409,15 +2486,15 @@
                   "projectName": "",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2972,
+                      "duration": 3924,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-11T21:49:13.711Z",
+                      "startTime": "2026-10-13T00:16:30.854Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2443,15 +2520,15 @@
                   "projectName": "",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 21865,
+                      "duration": 24551,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-11T21:49:16.707Z",
+                      "startTime": "2026-10-13T00:16:34.796Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2477,15 +2554,15 @@
                   "projectName": "",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 13291,
+                      "duration": 18545,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-11T21:49:38.597Z",
+                      "startTime": "2026-10-13T00:16:59.372Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2495,7 +2572,7 @@
               ],
               "id": "6cf49b50ce6efb29797b-2b8b74d48ad54ea180d3",
               "file": "v14.spec.ts",
-              "line": 338,
+              "line": 340,
               "column": 7
             }
           ]
@@ -2521,15 +2598,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1433,
+                  "duration": 1352,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:49:51.928Z",
+                  "startTime": "2026-10-13T00:17:17.960Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2555,15 +2632,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2243,
+                  "duration": 2662,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:49:53.392Z",
+                  "startTime": "2026-10-13T00:17:19.333Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2589,15 +2666,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2705,
+                  "duration": 4806,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:49:55.666Z",
+                  "startTime": "2026-10-13T00:17:22.018Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2623,15 +2700,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 12037,
+                  "duration": 12039,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:49:58.420Z",
+                  "startTime": "2026-10-13T00:17:26.855Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2657,15 +2734,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1073,
+                  "duration": 1448,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:10.486Z",
+                  "startTime": "2026-10-13T00:17:38.934Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2691,15 +2768,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1585,
+                  "duration": 1893,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:11.585Z",
+                  "startTime": "2026-10-13T00:17:40.404Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2725,15 +2802,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1075,
+                  "duration": 1513,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:13.201Z",
+                  "startTime": "2026-10-13T00:17:42.334Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2759,15 +2836,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1671,
+                  "duration": 1399,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:14.300Z",
+                  "startTime": "2026-10-13T00:17:43.872Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2793,15 +2870,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1753,
+                  "duration": 1833,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:15.996Z",
+                  "startTime": "2026-10-13T00:17:45.295Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2827,15 +2904,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1296,
+                  "duration": 1435,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:17.772Z",
+                  "startTime": "2026-10-13T00:17:47.151Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2861,15 +2938,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7458,
+                  "duration": 9707,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:19.093Z",
+                  "startTime": "2026-10-13T00:17:48.606Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2895,15 +2972,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6027,
+                  "duration": 6042,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:26.590Z",
+                  "startTime": "2026-10-13T00:17:58.336Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2929,15 +3006,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 741,
+                  "duration": 3341,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:32.649Z",
+                  "startTime": "2026-10-13T00:18:04.400Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2963,15 +3040,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 785,
+                  "duration": 913,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:33.414Z",
+                  "startTime": "2026-10-13T00:18:07.765Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3005,15 +3082,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 686,
+                  "duration": 1048,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:34.228Z",
+                  "startTime": "2026-10-13T00:18:08.704Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3039,15 +3116,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 133,
+                  "duration": 147,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:34.936Z",
+                  "startTime": "2026-10-13T00:18:09.773Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3073,15 +3150,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2432,
+                  "duration": 5391,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:35.099Z",
+                  "startTime": "2026-10-13T00:18:09.946Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3107,15 +3184,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 162,
+                  "duration": 198,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:37.566Z",
+                  "startTime": "2026-10-13T00:18:15.362Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3137,7 +3214,7 @@
       "line": 0,
       "specs": [
         {
-          "title": "V17-01 anonymous home is feed-first: a real post above the fold at 1440 and 390, no hero band",
+          "title": "V17-01 home: restored intro, counters and Exchange above the feed; phone keeps a real post above the fold",
           "ok": true,
           "tags": [],
           "tests": [
@@ -3149,15 +3226,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4250,
+                  "duration": 1876,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:37.763Z",
+                  "startTime": "2026-10-13T00:18:15.602Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3165,9 +3242,9 @@
               "status": "expected"
             }
           ],
-          "id": "c7e08a9f767eaf7a1916-1f43ebe0e88e79f14e14",
+          "id": "c7e08a9f767eaf7a1916-9759172f73cbc0a95c4f",
           "file": "v17.spec.ts",
-          "line": 21,
+          "line": 23,
           "column": 5
         },
         {
@@ -3183,15 +3260,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3464,
+                  "duration": 4630,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:42.044Z",
+                  "startTime": "2026-10-13T00:18:17.502Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3201,7 +3278,7 @@
           ],
           "id": "c7e08a9f767eaf7a1916-887c3ddce1f48000bdbd",
           "file": "v17.spec.ts",
-          "line": 38,
+          "line": 35,
           "column": 5
         },
         {
@@ -3217,15 +3294,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2101,
+                  "duration": 2155,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:45.541Z",
+                  "startTime": "2026-10-13T00:18:22.157Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3235,7 +3312,7 @@
           ],
           "id": "c7e08a9f767eaf7a1916-c09a7203f63512b073cb",
           "file": "v17.spec.ts",
-          "line": 56,
+          "line": 53,
           "column": 5
         },
         {
@@ -3251,15 +3328,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1777,
+                  "duration": 6447,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:47.673Z",
+                  "startTime": "2026-10-13T00:18:24.343Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3269,7 +3346,7 @@
           ],
           "id": "c7e08a9f767eaf7a1916-56315c118a635e0108fe",
           "file": "v17.spec.ts",
-          "line": 65,
+          "line": 62,
           "column": 5
         },
         {
@@ -3285,15 +3362,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7032,
+                  "duration": 8269,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:49.479Z",
+                  "startTime": "2026-10-13T00:18:30.811Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3303,7 +3380,7 @@
           ],
           "id": "c7e08a9f767eaf7a1916-2d8f3b1b22ed934310e4",
           "file": "v17.spec.ts",
-          "line": 79,
+          "line": 76,
           "column": 5
         },
         {
@@ -3319,15 +3396,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3682,
+                  "duration": 6890,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:50:56.539Z",
+                  "startTime": "2026-10-13T00:18:39.168Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3337,7 +3414,7 @@
           ],
           "id": "c7e08a9f767eaf7a1916-6b5e0279371c1a9e2704",
           "file": "v17.spec.ts",
-          "line": 114,
+          "line": 111,
           "column": 5
         },
         {
@@ -3353,15 +3430,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2107,
+                  "duration": 2449,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:51:00.261Z",
+                  "startTime": "2026-10-13T00:18:46.087Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3371,7 +3448,7 @@
           ],
           "id": "c7e08a9f767eaf7a1916-147173e03d2447336e6f",
           "file": "v17.spec.ts",
-          "line": 145,
+          "line": 142,
           "column": 5
         },
         {
@@ -3387,15 +3464,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1820,
+                  "duration": 1934,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:51:02.403Z",
+                  "startTime": "2026-10-13T00:18:48.561Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3405,7 +3482,7 @@
           ],
           "id": "c7e08a9f767eaf7a1916-1246abe28c29a1eb49c4",
           "file": "v17.spec.ts",
-          "line": 161,
+          "line": 158,
           "column": 5
         },
         {
@@ -3421,15 +3498,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2467,
+                  "duration": 2616,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:51:04.255Z",
+                  "startTime": "2026-10-13T00:18:50.516Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3439,11 +3516,431 @@
           ],
           "id": "c7e08a9f767eaf7a1916-bb6b6cbb23f60442674a",
           "file": "v17.spec.ts",
-          "line": 173,
+          "line": 170,
           "column": 5
         },
         {
           "title": "V17-10 password reset: generic answer, single-use emailed link, old sessions revoked, new password works",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 2097,
+                  "error": {
+                    "message": "Error: locator.check: Error: strict mode violation: getByRole('checkbox') resolved to 2 elements:\n    1) <input required=\"\" name=\"agree\" type=\"checkbox\" class=\"mt-1 h-5 w-5\"/> aka getByRole('checkbox', { name: 'I understand humans observe' })\n    2) <input type=\"checkbox\" name=\"newsletter\" class=\"mt-1 h-5 w-5\" data-testid=\"signup-newsletter\"/> aka getByTestId('signup-newsletter')\n\nCall log:\n\u001b[2m  - waiting for getByRole('checkbox')\u001b[22m\n",
+                    "stack": "Error: locator.check: Error: strict mode violation: getByRole('checkbox') resolved to 2 elements:\n    1) <input required=\"\" name=\"agree\" type=\"checkbox\" class=\"mt-1 h-5 w-5\"/> aka getByRole('checkbox', { name: 'I understand humans observe' })\n    2) <input type=\"checkbox\" name=\"newsletter\" class=\"mt-1 h-5 w-5\" data-testid=\"signup-newsletter\"/> aka getByTestId('signup-newsletter')\n\nCall log:\n\u001b[2m  - waiting for getByRole('checkbox')\u001b[22m\n\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v17.spec.ts:204:36",
+                    "location": {
+                      "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v17.spec.ts",
+                      "column": 36,
+                      "line": 204
+                    },
+                    "snippet": "  202 |   await page.getByLabel(\"Email\").fill(email);\n  203 |   await page.getByLabel(\"Password\").fill(first);\n> 204 |   await page.getByRole(\"checkbox\").check();\n      |                                    ^\n  205 |   await page.getByRole(\"button\", { name: \"Create account\" }).click();\n  206 |   await page.waitForURL((u) => !u.pathname.startsWith(\"/auth/\"));\n  207 |   const other = await browser.newPage(); // a second, unrelated session that must be revoked"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v17.spec.ts",
+                        "column": 36,
+                        "line": 204
+                      },
+                      "message": "Error: locator.check: Error: strict mode violation: getByRole('checkbox') resolved to 2 elements:\n    1) <input required=\"\" name=\"agree\" type=\"checkbox\" class=\"mt-1 h-5 w-5\"/> aka getByRole('checkbox', { name: 'I understand humans observe' })\n    2) <input type=\"checkbox\" name=\"newsletter\" class=\"mt-1 h-5 w-5\" data-testid=\"signup-newsletter\"/> aka getByTestId('signup-newsletter')\n\nCall log:\n\u001b[2m  - waiting for getByRole('checkbox')\u001b[22m\n\n\n  202 |   await page.getByLabel(\"Email\").fill(email);\n  203 |   await page.getByLabel(\"Password\").fill(first);\n> 204 |   await page.getByRole(\"checkbox\").check();\n      |                                    ^\n  205 |   await page.getByRole(\"button\", { name: \"Create account\" }).click();\n  206 |   await page.waitForURL((u) => !u.pathname.startsWith(\"/auth/\"));\n  207 |   const other = await browser.newPage(); // a second, unrelated session that must be revoked\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v17.spec.ts:204:36"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:18:53.155Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-2.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-1.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-8.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-3.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-4.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-19.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-21.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-18.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-12.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-5.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-10.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-6.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-13.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-16.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-15.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-7.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-20.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-9.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-11.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-14.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-17.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/test-failed-22.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v17-V17-10-password-reset--904b9--revoked-new-password-works/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v17.spec.ts",
+                    "column": 36,
+                    "line": 204
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c7e08a9f767eaf7a1916-f5d54b6581c9482c669e",
+          "file": "v17.spec.ts",
+          "line": 193,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "v18-access.spec.ts",
+      "file": "v18-access.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ISSUE-23 Super Administrator: MFA before the Command Center (pages and APIs), wrong code refused, recovery codes once",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4655,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:18:56.470Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "45f8768b61c024d77293-947e67ae11f7e7e6821a",
+          "file": "v18-access.spec.ts",
+          "line": 21,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-23 invite → accept → least privilege: Operations cannot open revenue, users, Pals or sponsors, cannot change economy rules, sees only its links",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6314,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:19:01.387Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "45f8768b61c024d77293-6258c6f917a50129e5b6",
+          "file": "v18-access.spec.ts",
+          "line": 46,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-23 matrix: Super Admin ticks a permission with a reason, it takes effect on the server, is audited and restorable; Super Admin row is locked",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9284,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:19:07.718Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "45f8768b61c024d77293-bacbd8d2eb2f83ab268b",
+          "file": "v18-access.spec.ts",
+          "line": 85,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-23 role change needs a reason, suspension signs the person out everywhere and blocks sign-in, reactivation restores it",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5824,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:19:17.013Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "45f8768b61c024d77293-1d8d840c0bbfbaf0aec9",
+          "file": "v18-access.spec.ts",
+          "line": 117,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-24 sign-up: verification + welcome are transactional, newsletter only after double opt-in; unsubscribe in one click",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1502,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:19:22.849Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "45f8768b61c024d77293-ab29d5b2ef9fade0f7ea",
+          "file": "v18-access.spec.ts",
+          "line": 162,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-24 change password (old one checked, other devices signed out) and change email (new address must confirm, old address told)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3520,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:19:24.359Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "45f8768b61c024d77293-a6daf0bae9670863d6f5",
+          "file": "v18-access.spec.ts",
+          "line": 195,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-24 forgotten password: same answer for unknown emails, expired link refused, used link single-use; ten wrong passwords lock the account",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5736,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:19:27.894Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "45f8768b61c024d77293-18d6d0d9bdeddf37dd00",
+          "file": "v18-access.spec.ts",
+          "line": 237,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-23 external agent ownership: a key cannot claim with a wrong code, cannot act as another agent; platform agents are never 'verified human'",
           "ok": true,
           "tags": [],
           "tests": [
@@ -3455,15 +3952,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3087,
+                  "duration": 126,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-11T21:51:06.761Z",
+                  "startTime": "2026-10-13T00:19:33.639Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3471,9 +3968,1653 @@
               "status": "expected"
             }
           ],
-          "id": "c7e08a9f767eaf7a1916-f5d54b6581c9482c669e",
-          "file": "v17.spec.ts",
-          "line": 196,
+          "id": "45f8768b61c024d77293-4c5ff440c0c369711294",
+          "file": "v18-access.spec.ts",
+          "line": 269,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "v18-admin-layout.spec.ts",
+      "file": "v18-admin-layout.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ISSUE-04 route discovery found the Command Center",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:19:33.784Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f0c88b781468de78ad6f-80eafab5915674af8008",
+          "file": "v18-admin-layout.spec.ts",
+          "line": 24,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-04 every admin route at 390px: full width, no sideways scroll, 9-digit values fit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 720000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13614,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:19:33.794Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f0c88b781468de78ad6f-ee75f730c7b057dbb59d",
+          "file": "v18-admin-layout.spec.ts",
+          "line": 30,
+          "column": 7
+        },
+        {
+          "title": "ISSUE-04 every admin route at 1440px: full width, no sideways scroll, 9-digit values fit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 720000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 16298,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:19:47.420Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f0c88b781468de78ad6f-43be8b028497dfee0d29",
+          "file": "v18-admin-layout.spec.ts",
+          "line": 30,
+          "column": 7
+        },
+        {
+          "title": "ISSUE-04 every admin route at 2560px: full width, no sideways scroll, 9-digit values fit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 720000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 20707,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:20:03.729Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f0c88b781468de78ad6f-2f8b8b49b51ed04f945d",
+          "file": "v18-admin-layout.spec.ts",
+          "line": 30,
+          "column": 7
+        }
+      ]
+    },
+    {
+      "title": "v18-admin-standards.spec.ts",
+      "file": "v18-admin-standards.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Phase 8 Command Center standards audit (all routes)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 1080000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 89788,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:20:24.495Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8d104f86ddf519a553b4-d488af54af911dca31dd",
+          "file": "v18-admin-standards.spec.ts",
+          "line": 21,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "v18-commerce.spec.ts",
+      "file": "v18-commerce.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ISSUE-18 inquiries are stored once, a repeat from the same address is linked (not re-sent), stages move with notes and stay local while the CRM is not configured",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5415,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:21:54.303Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8155a8e6061b79e92265-b16ed9d0033b3b1b2241",
+          "file": "v18-commerce.spec.ts",
+          "line": 22,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-16 a non-billable test creative shows only on its approved placement and edition, labelled; bots get nothing; clicks redirect safely; the kill switch hides it",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6893,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:21:59.727Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8155a8e6061b79e92265-2ee0b73d1c246eccb7f3",
+          "file": "v18-commerce.spec.ts",
+          "line": 50,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "v18-games.spec.ts",
+      "file": "v18-games.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ISSUE-28 landing: three games, honest no-betting copy, live AI-vs-AI matches started from real agents",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 5481,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('link', { name: 'Games' }).first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('link', { name: 'Games' }).first()\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('link', { name: 'Games' }).first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('link', { name: 'Games' }).first()\u001b[22m\n\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-games.spec.ts:27:64",
+                    "location": {
+                      "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-games.spec.ts",
+                      "column": 64,
+                      "line": 27
+                    },
+                    "snippet": "  25 |   await expect(p.getByTestId(\"games-page\")).toContainText(\"No betting, no prizes, no Pals\");\n  26 |   await expect(p.getByTestId(\"live-matches\").locator(\"li\").first()).toContainText(\"AI vs AI\");\n> 27 |   await expect(p.getByRole(\"link\", { name: \"Games\" }).first()).toBeVisible(); // public navigation\n     |                                                                ^\n  28 |   await p.context().close();\n  29 | });\n  30 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-games.spec.ts",
+                        "column": 64,
+                        "line": 27
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('link', { name: 'Games' }).first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('link', { name: 'Games' }).first()\u001b[22m\n\n\n  25 |   await expect(p.getByTestId(\"games-page\")).toContainText(\"No betting, no prizes, no Pals\");\n  26 |   await expect(p.getByTestId(\"live-matches\").locator(\"li\").first()).toContainText(\"AI vs AI\");\n> 27 |   await expect(p.getByRole(\"link\", { name: \"Games\" }).first()).toBeVisible(); // public navigation\n     |                                                                ^\n  28 |   await p.context().close();\n  29 | });\n  30 |\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-games.spec.ts:27:64"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:06.634Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v18-games-ISSUE-28-landing-d0238-es-started-from-real-agents/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v18-games-ISSUE-28-landing-d0238-es-started-from-real-agents/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-games.spec.ts",
+                    "column": 64,
+                    "line": 27
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "3c7af83d9aaed6d71d4a-210d689583c6bb86a041",
+          "file": "v18-games.spec.ts",
+          "line": 21,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-28 Human vs AI (Oware): play on the board, the agent answers at once; the server refuses illegal, out-of-turn, outsider and anonymous moves",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:12.169Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "3c7af83d9aaed6d71d4a-8f067c77a08aba641cd6",
+          "file": "v18-games.spec.ts",
+          "line": 31,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-28 Human vs AI to the end: result from the rules, only the human's rating moves, replay and persistence from the move log",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:12.170Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "3c7af83d9aaed6d71d4a-8bea4e9a848a8a526b4c",
+          "file": "v18-games.spec.ts",
+          "line": 63,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-28 AI vs AI: a match that nobody watched catches up deterministically to a finished result with commentary and a rules-checked result post",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:12.170Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "3c7af83d9aaed6d71d4a-748ccac81c6a7ed0fa0a",
+          "file": "v18-games.spec.ts",
+          "line": 87,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-28 Human vs Human (trivia): challenge, accept, both answer; the other answer stays hidden until both have answered",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:12.170Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "3c7af83d9aaed6d71d4a-562f9341d54580bce17a",
+          "file": "v18-games.spec.ts",
+          "line": 112,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-28 staff: Games workspace, pause switch freezes play, a live match can be cancelled with a reason",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:12.170Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "3c7af83d9aaed6d71d4a-9b5768d53c260b5d225e",
+          "file": "v18-games.spec.ts",
+          "line": 138,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "v18-shots.spec.ts",
+      "file": "v18-shots.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "after: admin workspaces (users & access, games, advertising, sponsors, page help)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "set SHOTS=1 to capture evidence screenshots",
+                  "location": {
+                    "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-shots.spec.ts",
+                    "line": 7,
+                    "column": 6
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:12.170Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "set SHOTS=1 to capture evidence screenshots",
+                      "location": {
+                        "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-shots.spec.ts",
+                        "line": 7,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "62d0e7ced0e397e48a8d-40fa2fa4c6d32548e815",
+          "file": "v18-shots.spec.ts",
+          "line": 11,
+          "column": 5
+        },
+        {
+          "title": "after: public games, match board, leaderboard, account security (desktop + phone)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "set SHOTS=1 to capture evidence screenshots",
+                  "location": {
+                    "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-shots.spec.ts",
+                    "line": 7,
+                    "column": 6
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:12.170Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "set SHOTS=1 to capture evidence screenshots",
+                      "location": {
+                        "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-shots.spec.ts",
+                        "line": 7,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "62d0e7ced0e397e48a8d-e3eb55170cdb5cfc3b6b",
+          "file": "v18-shots.spec.ts",
+          "line": 25,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "v18-wave-a.spec.ts",
+      "file": "v18-wave-a.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ISSUE-27 desktop rail Resources: all seven links, stage labels, no Careers/Press, all resolve",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1512,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:12.831Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b3f82797f0cbcc2f6d0d-cf0f4786107cc07442d0",
+          "file": "v18-wave-a.spec.ts",
+          "line": 12,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-27 mobile drawer has the same Resources group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 980,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:14.577Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b3f82797f0cbcc2f6d0d-fe77e1e79d4e126de354",
+          "file": "v18-wave-a.spec.ts",
+          "line": 27,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-27 staged pages say so; Best of Palavva filters by period and SubPal",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1223,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:15.571Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b3f82797f0cbcc2f6d0d-15c23fe0e7b04aded600",
+          "file": "v18-wave-a.spec.ts",
+          "line": 37,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-25 tabs: Realtime (with connection dot), Hot, Random are real distinct sorts; live status is honest",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1268,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:16.808Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b3f82797f0cbcc2f6d0d-654f623c2618607674ed",
+          "file": "v18-wave-a.spec.ts",
+          "line": 56,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-25 a failed live connection is shown as not live (no fake heartbeat)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1243,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:18.090Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b3f82797f0cbcc2f6d0d-0f87af672ad6effd5882",
+          "file": "v18-wave-a.spec.ts",
+          "line": 71,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-25 Hot right now reacts to genuine committed agent votes from different agents, without reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3742,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:19.421Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b3f82797f0cbcc2f6d0d-820c2fbd09a96911371a",
+          "file": "v18-wave-a.spec.ts",
+          "line": 80,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "v18-wave-b.spec.ts",
+      "file": "v18-wave-b.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ISSUE-02 a quick reaction from an agent is published; empty or abusive text is still refused",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 259,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:23.187Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78fe20f0479395c8e4b3-a80f247257592c748a14",
+          "file": "v18-wave-b.spec.ts",
+          "line": 28,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-03 Nigeria copy is 36 states + FCT, and a committed reply lights its region once, links to the thread, then fades",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 2879,
+                  "error": {
+                    "message": "Error: {\"data\":null,\"error\":{\"code\":\"INVALID\",\"message\":\"Reply refused by publication rules\",\"detail\":{\"rules\":{\"length\":\"PASS\",\"group_degradation\":\"PASS\",\"personal_insult\":\"PASS\",\"invented_testimony\":\"PASS\",\"injection_echo\":\"PASS\",\"external_urls\":\"PASS\",\"outrage_language\":\"PASS\",\"unsupported_numbers\":\"PASS\",\"unsupported_entities\":\"PASS\",\"language_label\":\"FAIL\",\"personal_insult_i18n\":\"PASS\",\"invented_testimony_i18n\":\"PASS\",\"unsolicited_selling_i18n\":\"PASS\",\"family_friendly\":\"PASS\",\"unsolicited_selling\":\"PASS\",\"personal_contact_data\":\"PASS\",\"meta_echo\":\"PASS\",\"sensitive_subject\":\"PASS\"},\"reasons\":[\"language_label: claimed en, detected fr (0.373)\"],\"ruleset\":\"agent-rules-v1.2\"}},\"meta\":{\"request_id\":\"f205d734-e198-4e92-9940-c0d717847d3f\"}}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m300\u001b[39m\nReceived:   \u001b[31m422\u001b[39m",
+                    "stack": "Error: {\"data\":null,\"error\":{\"code\":\"INVALID\",\"message\":\"Reply refused by publication rules\",\"detail\":{\"rules\":{\"length\":\"PASS\",\"group_degradation\":\"PASS\",\"personal_insult\":\"PASS\",\"invented_testimony\":\"PASS\",\"injection_echo\":\"PASS\",\"external_urls\":\"PASS\",\"outrage_language\":\"PASS\",\"unsupported_numbers\":\"PASS\",\"unsupported_entities\":\"PASS\",\"language_label\":\"FAIL\",\"personal_insult_i18n\":\"PASS\",\"invented_testimony_i18n\":\"PASS\",\"unsolicited_selling_i18n\":\"PASS\",\"family_friendly\":\"PASS\",\"unsolicited_selling\":\"PASS\",\"personal_contact_data\":\"PASS\",\"meta_echo\":\"PASS\",\"sensitive_subject\":\"PASS\"},\"reasons\":[\"language_label: claimed en, detected fr (0.373)\"],\"ruleset\":\"agent-rules-v1.2\"}},\"meta\":{\"request_id\":\"f205d734-e198-4e92-9940-c0d717847d3f\"}}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m300\u001b[39m\nReceived:   \u001b[31m422\u001b[39m\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-wave-b.spec.ts:69:46",
+                    "location": {
+                      "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-wave-b.spec.ts",
+                      "column": 46,
+                      "line": 69
+                    },
+                    "snippet": "  67 |     if (r.status !== 429) break; // re-runnable: skip agents that used today's contribution cap\n  68 |   }\n> 69 |   expect(r!.status, await r!.clone().text()).toBeLessThan(300);\n     |                                              ^\n  70 |   expect((await r!.json()).data.status, \"the reply must be published to create a committed event\").toBe(\"published\");\n  71 |   const dot = page.locator('[data-testid=\"pulse-dot\"][data-area=\"NG-LA\"]');\n  72 |   await expect(dot).toBeVisible({ timeout: 10_000 });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-wave-b.spec.ts",
+                        "column": 46,
+                        "line": 69
+                      },
+                      "message": "Error: {\"data\":null,\"error\":{\"code\":\"INVALID\",\"message\":\"Reply refused by publication rules\",\"detail\":{\"rules\":{\"length\":\"PASS\",\"group_degradation\":\"PASS\",\"personal_insult\":\"PASS\",\"invented_testimony\":\"PASS\",\"injection_echo\":\"PASS\",\"external_urls\":\"PASS\",\"outrage_language\":\"PASS\",\"unsupported_numbers\":\"PASS\",\"unsupported_entities\":\"PASS\",\"language_label\":\"FAIL\",\"personal_insult_i18n\":\"PASS\",\"invented_testimony_i18n\":\"PASS\",\"unsolicited_selling_i18n\":\"PASS\",\"family_friendly\":\"PASS\",\"unsolicited_selling\":\"PASS\",\"personal_contact_data\":\"PASS\",\"meta_echo\":\"PASS\",\"sensitive_subject\":\"PASS\"},\"reasons\":[\"language_label: claimed en, detected fr (0.373)\"],\"ruleset\":\"agent-rules-v1.2\"}},\"meta\":{\"request_id\":\"f205d734-e198-4e92-9940-c0d717847d3f\"}}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m300\u001b[39m\nReceived:   \u001b[31m422\u001b[39m\n\n  67 |     if (r.status !== 429) break; // re-runnable: skip agents that used today's contribution cap\n  68 |   }\n> 69 |   expect(r!.status, await r!.clone().text()).toBeLessThan(300);\n     |                                              ^\n  70 |   expect((await r!.json()).data.status, \"the reply must be published to create a committed event\").toBe(\"published\");\n  71 |   const dot = page.locator('[data-testid=\"pulse-dot\"][data-area=\"NG-LA\"]');\n  72 |   await expect(dot).toBeVisible({ timeout: 10_000 });\n    at /Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-wave-b.spec.ts:69:46"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:23.456Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/amaeteumanah/Projects/palavva/docs/evidence/e2e/artifacts/v18-wave-b-ISSUE-03-Nigeri-a841b-ks-to-the-thread-then-fades/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/amaeteumanah/Projects/palavva/apps/web/tests/e2e/v18-wave-b.spec.ts",
+                    "column": 46,
+                    "line": 69
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "78fe20f0479395c8e4b3-f109ba0061255db09ee8",
+          "file": "v18-wave-b.spec.ts",
+          "line": 52,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-03 Regional priorities: 37 Nigerian units, founder list at 2x, a reasoned change is saved and audited; readers are refused",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8357,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:27.942Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78fe20f0479395c8e4b3-3815e86c61b6929355b5",
+          "file": "v18-wave-b.spec.ts",
+          "line": 79,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-10 an English reader sees a stored Arabic->English translation, clearly labelled, and can switch to the original in one click",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3235,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:36.524Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78fe20f0479395c8e4b3-b1191843d5b44f2b1e18",
+          "file": "v18-wave-b.spec.ts",
+          "line": 109,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-10 Translations admin: four separate coverage columns incl. Fante, compact searchable table, side-by-side review",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3786,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:39.780Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78fe20f0479395c8e4b3-d64f9b8e44e46b484f8f",
+          "file": "v18-wave-b.spec.ts",
+          "line": 137,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-12 Trend audit separates humans from agents, explains the score, and history is de-duplicated",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4320,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:43.583Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78fe20f0479395c8e4b3-9586c2dd058387abb81e",
+          "file": "v18-wave-b.spec.ts",
+          "line": 155,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-11 Geography & coverage: publisher location never counts as the story's place; evidence opens with review actions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3602,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:47.918Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78fe20f0479395c8e4b3-a9be5b21ce292097db6a",
+          "file": "v18-wave-b.spec.ts",
+          "line": 173,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-26 owner performance is owner-only (empty state, own agent analytics, no cross-owner view) and the leaderboard explains its anti-gaming rules",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3838,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:51.534Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78fe20f0479395c8e4b3-b3c18081b96f480ead75",
+          "file": "v18-wave-b.spec.ts",
+          "line": 187,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-07 Editorial queue explains holds, previews the refined rules, and releases a checked batch through human approval only",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3916,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:55.389Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78fe20f0479395c8e4b3-27bbfdeae587af790bc1",
+          "file": "v18-wave-b.spec.ts",
+          "line": 216,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "v18-wave-c.spec.ts",
+      "file": "v18-wave-c.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ISSUE-20 llms.txt / llms-full.txt: public links only, honest status, no private paths",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 948,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:22:59.336Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3168e2bef09db04c195f-5105d322b25774f35c4e",
+          "file": "v18-wave-c.spec.ts",
+          "line": 5,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-20 robots blocks crawling before launch; sitemap lists only resolvable public pages",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1590,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:23:00.297Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3168e2bef09db04c195f-d99467a4c9665ed9fe2d",
+          "file": "v18-wave-c.spec.ts",
+          "line": 20,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-20 Markdown exists for Palavva-original posts only, with canonical link; publisher cards and drafts are refused",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 101,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:23:01.899Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3168e2bef09db04c195f-9c4c3f66894fc89471fd",
+          "file": "v18-wave-c.spec.ts",
+          "line": 31,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-21 Infrastructure & services: all 8 processes, running vs healthy, packages with licences, impact view, jobs without [object Object]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4298,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:23:02.015Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3168e2bef09db04c195f-e0cb4355c71fdc030c22",
+          "file": "v18-wave-c.spec.ts",
+          "line": 48,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-22 Settings say what each switch does, confirm disruptive changes, audit is searchable and redacted, mail previews hide links",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4432,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:23:06.331Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3168e2bef09db04c195f-6fa68d5fac19f69c42e3",
+          "file": "v18-wave-c.spec.ts",
+          "line": 67,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-13 Trust & safety: honest zero states, automatic decisions charted, refusal reasons in plain words, rules service health",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4019,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:23:10.779Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3168e2bef09db04c195f-2008d532b6a48d76510c",
+          "file": "v18-wave-c.spec.ts",
+          "line": 94,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-09 Source registry: compact grid, actionable view by default, archived discoveries kept but hidden, details drawer with rights evidence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3680,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:23:14.815Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3168e2bef09db04c195f-acedfefa7a0546ba93fe",
+          "file": "v18-wave-c.spec.ts",
+          "line": 106,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-06 a clearly new, rule-passing SubPal proposal opens automatically; a near-duplicate waits with a stated reason",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 157,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:23:18.509Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3168e2bef09db04c195f-fe664eb7a630deb1e877",
+          "file": "v18-wave-c.spec.ts",
+          "line": 123,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-08 AI operations: status cards, roles explained as writing perspectives, every run shows what happened next, filters narrow the table",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3814,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:23:18.677Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3168e2bef09db04c195f-bc6dc7b7c415d8476046",
+          "file": "v18-wave-c.spec.ts",
+          "line": 150,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "v18-wave-d.spec.ts",
+      "file": "v18-wave-d.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ISSUE-17 sandbox purchase grants credits once; replay is ignored; refund reverses; tampering, live provider and anonymous checkout are refused",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4484,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:23:22.521Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ad37f8eb39be5945cc36-c5f0a2e57d1f49b5eaed",
+          "file": "v18-wave-d.spec.ts",
+          "line": 14,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-14 Pals: plain definitions, denials explained, a previewed + reasoned rule change applies to future rewards, is audited and can be restored; integrity review; roles enforced",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12774,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:23:27.015Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ad37f8eb39be5945cc36-89225b54800f6cbd2339",
+          "file": "v18-wave-d.spec.ts",
+          "line": 52,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-15 Exchange: all 54 markets and a full listings directory, IPO-only prices explained, one trade's trail with settlement, halt with a pending order, market halt with a reason",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9107,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:23:39.805Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ad37f8eb39be5945cc36-9ec15bffe4e160fd4ae2",
+          "file": "v18-wave-d.spec.ts",
+          "line": 123,
+          "column": 5
+        },
+        {
+          "title": "ISSUE-19 Businesses: demo never verifiable, evidence-based verify by a tenant admin, editor can only request information, verified ranks first, paid placement never lifts an unverified business, suspend withdraws the profile",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11082,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-13T00:23:48.931Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ad37f8eb39be5945cc36-286fe44cfdece2969c17",
+          "file": "v18-wave-d.spec.ts",
+          "line": 189,
           "column": 5
         }
       ]
@@ -3481,11 +5622,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-11T21:44:05.802Z",
-    "duration": 424556.614,
-    "expected": 97,
-    "skipped": 0,
-    "unexpected": 0,
+    "startTime": "2026-10-13T00:09:28.433Z",
+    "duration": 872081.159,
+    "expected": 137,
+    "skipped": 7,
+    "unexpected": 4,
     "flaky": 0
   }
 }

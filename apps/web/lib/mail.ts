@@ -44,7 +44,9 @@ export async function sendMail(tenant: Tenant, m: { to: string; userId?: string;
       ...(m.unsubscribeUrl ? [`List-Unsubscribe: <${m.unsubscribeUrl}>`, "List-Unsubscribe-Post: List-Unsubscribe=One-Click"] : [])];
     const footer = m.category === "marketing" ? `\n\n--\nYou receive this because you opted in. Unsubscribe in one click: ${m.unsubscribeUrl}\n`
       : `\n\n--\nThis is a service message about your ${tenant.name} account. It is sent even if you are not subscribed to newsletters.\n`;
-    await writeFile(path.join(dir, `${Date.now()}-${m.kind}-${(m.userId || sha(m.to).slice(0, 10)).slice(0, 20)}.eml`), `${headers.join("\n")}\n\n${m.text}${footer}`, { mode: 0o600 });
+    // File names keep the v1.3–v1.7 short tags ("verify", "reset") in front of the kind so existing tools and tests still find them.
+    const legacy = ({ verify_email: "verify-", password_reset: "reset-" } as Record<string, string>)[m.kind] ?? "";
+    await writeFile(path.join(dir, `${Date.now()}-${legacy}${m.kind}-${(m.userId || sha(m.to).slice(0, 10)).slice(0, 20)}.eml`), `${headers.join("\n")}\n\n${m.text}${footer}`, { mode: 0o600 });
     res = { status: "captured", detail: "saved to the development mail sink" };
   } else {
     res = { status: "refused", detail: t.reason };

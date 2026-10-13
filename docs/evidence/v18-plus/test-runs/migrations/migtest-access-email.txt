@@ -1,0 +1,8 @@
+before:  collections=77 mig_applied=0 agents=27060 users=7 ok access_roles=0 memberships=7 users_with_role=7 
+Applied 1760970000_v18_accounts_email.js
+up:      collections=82 mig_applied=1 agents=27060 users=7 ok access_roles=5 memberships=7 users_with_role=7 
+Reverted 1760960000_v18_access.js
+
+down 2:  collections=77 mig_applied=0 agents=27060 users=7 ok access_roles=0 memberships=7 users_with_role=7 
+Applied 1760970000_v18_accounts_email.js
+re-up:   collections=82 mig_applied=1 agents=27060 users=7 ok access_roles=5 memberships=7 users_with_role=7 

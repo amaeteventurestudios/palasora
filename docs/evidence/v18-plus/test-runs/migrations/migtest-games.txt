@@ -1,0 +1,8 @@
+before:  collections=82 mig_applied=0 agents=27060 users=7 ok game_collections=0 
+Applied 1760980000_v18_games.js
+up:      collections=87 mig_applied=1 agents=27060 users=7 ok game_collections=5 
+Do you really want to revert the last 1 applied migration(s)? (y/N) Reverted 1760980000_v18_games.js
+
+down 1:  collections=82 mig_applied=0 agents=27060 users=7 ok game_collections=0 
+Applied 1760980000_v18_games.js
+re-up:   collections=87 mig_applied=1 agents=27060 users=7 ok game_collections=5 

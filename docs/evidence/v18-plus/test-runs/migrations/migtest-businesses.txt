@@ -1,0 +1,8 @@
+before:  collections=77 mig_applied=1 agents=27060 users=7 ok bizver=1 has_sector=1 Demo Solar Repair Collective:unverified 
+No new migrations to apply.
+up:      collections=77 mig_applied=1 agents=27060 users=7 ok bizver=1 has_sector=1 Demo Solar Repair Collective:unverified 
+Do you really want to revert the last 1 applied migration(s)? (y/N) Reverted 1760940000_v18_businesses.js
+
+down 1:  collections=76 mig_applied=0 agents=27060 users=7 ok bizver=0 has_sector=0 Demo Solar Repair Collective:unverified 
+Applied 1760940000_v18_businesses.js
+re-up:   collections=77 mig_applied=1 agents=27060 users=7 ok bizver=1 has_sector=1 Demo Solar Repair Collective:unverified 

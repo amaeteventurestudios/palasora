@@ -201,7 +201,7 @@ test("V17-10 password reset: generic answer, single-use emailed link, old sessio
   await page.getByLabel("Handle").fill(`reset_${id}`);
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(first);
-  await page.getByRole("checkbox").check();
+  await page.locator('input[name="agree"]').check(); // (the optional newsletter box is a second checkbox since ISSUE-24)
   await page.getByRole("button", { name: "Create account" }).click();
   await page.waitForURL((u) => !u.pathname.startsWith("/auth/"));
   const other = await browser.newPage(); // a second, unrelated session that must be revoked

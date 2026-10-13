@@ -9,8 +9,9 @@ import { H1, Table, Pill } from "@/components/admin/ui";
 export const metadata = { title: "Tenants" };
 
 export default async function Tenants() {
-  // ISSUE-23: tenant and branding configuration is platform administration, not read-only settings.
-  const { tenant: t, session } = await requirePerm("settings", "administer");
+  // ISSUE-23: a tenant's staff with Settings → view see their own tenant; the platform list is Super Administrator only;
+  // changing branding needs Settings → administer (checked again in the action).
+  const { tenant: t, session } = await requirePerm("settings", "view");
   const platform = session.access.roleKey === "super_admin" && can(session, "settings", "administer");
   // Tenant admins only ever see their own tenant; platform admins see the list (read-only here, audited switches are host-based).
   const rows = platform ? await pb.list("tenants", { perPage: 50 }) : await pb.list("tenants", { filter: `id=${q(t.id)}`, perPage: 1 });

@@ -122,3 +122,44 @@ provider, the merchant account is approved and webhooks are verified end to end 
 Paymob and Peach all run partner or startup programmes publicly; terms unknown), telco wallets for local top-ups, and
 pan-African advertisers via the Sponsors pipeline. Unanswered: legal entity and country of incorporation for merchant accounts,
 VAT/GST handling per country, refund and chargeback policy for AI credits, minimum top-up per currency.
+
+---
+
+## boardgame.io and OpenSpiel (ISSUE-28, audited 12 Oct 2026)
+
+| | boardgame.io | OpenSpiel |
+| --- | --- | --- |
+| Source / licence | github.com/boardgameio/boardgame.io, **MIT** | github.com/google-deepmind/open_spiel, **Apache-2.0** |
+| Latest release (registry) | npm `0.50.2`, published **2022-11-10** (repo still receives commits; 67 open issues) | PyPI `open_spiel 2.0.2`, uploaded 2026-08-12 (repo active) |
+| What it brings | JS game state machine (moves, turns, phases) plus its own server: Koa, koa-socket-2, socket.io, redux, immer, svelte debug panel | C++ engine with Python bindings; implements `oware` (abapa rules) and `checkers`; research-grade search and RL algorithms |
+| Fit with Palavva | its server, storage and realtime duplicate PocketBase + SSE; about 20 runtime dependencies for patterns we can express in ~150 lines | no wheel for **macOS x86_64** (this Mac is Intel; wheels exist for macOS arm64 and Linux x86_64/aarch64), so it cannot run here without a C++ source build; heavy for a web request path |
+| Decision | **Not adopted.** Its pattern (pure, deterministic move functions over immutable state, turn ownership, replay from a move log) is followed in `lib/games/*` | **Not adopted for runtime.** It is the rules reference: Palavva's Oware uses the same abapa rules. A cross-check of Palavva's Oware/checkers move generation against OpenSpiel on an ARM64 Linux box (e.g. the Oracle VM once authorised) is recommended as a future verification step |
+
+What Palavva runs instead (all in-repo, no new dependency): `lib/games/oware.ts`, `checkers.ts`, `trivia.ts`, `engine.ts`. These cover legal moves, alpha-beta bots sized by agent personality, Elo, and template banter from communication DNA. 18 unit tests cover rules, illegal moves, deterministic AI-vs-AI completion and replay; 6 browser tests cover the three player combinations.
+
+## Revive Adserver and EspoCRM on Hetzner (ISSUE-16/18, read-only audit 12 Oct 2026)
+
+Method: SSH as the existing `hetzner-usg` host entry with BatchMode (no passwords). Only container names, images, status, ports, the nginx site list, `/opt/revive` file names and the compose file (with secret lines filtered out) were read. The `.env` files were **not** read. Nothing was started, stopped or edited.
+
+| Service | Finding |
+| --- | --- |
+| EspoCRM | `espocrm/espocrm:9.3.4` with daemon and websocket containers plus `mariadb:12.2.2`, up 11 days, bound to 127.0.0.1:8083/8084 behind nginx as **crm.umanahsystems.com**. API reachable: `GET /api/v1/App/user` → 401 without a key. It is shared with other Umanah/USG businesses. |
+| Revive Adserver | **6.0.8** in `/opt/revive` (php:8.3-apache image built locally + `mysql:8.4`), would bind 127.0.0.1:8082, **no nginx site / public hostname**. Containers `revive-app` and `revive-db` **exited 7 days ago** (clean exit, restart policy `unless-stopped`, so someone stopped them deliberately). Whether the Revive installer was ever completed is unknown. |
+| Palavva credentials | none: `ESPOCRM_URL`, `ESPOCRM_API_KEY` and `REVIVE_DELIVERY_URL` are empty in `.env.local`. |
+
+What was built and tested without them:
+* **EspoCRM adapter:** `lib/crm/espo.ts` (Lead/Account/Contact/Opportunity, duplicate prevention by e-mail, stage mapping, classified errors) and `lib/crm.ts` (local-first storage, local duplicate linking, backoff retries, health check, View-in-EspoCRM links). Tested against a local fixture of the EspoCRM REST API (`tests/fixtures/espo-fixture.ts`). This is **not** a test of the live CRM.
+* **Revive:** `lib/ads/inventory.ts` (placements, targeting, density, and a parser for Revive 6 `ajs.php` output that keeps only a Revive-host link, an https image and the beacon) and `lib/ads/serve.ts` (gates, people-only accounting). The parser was tested on output modelled on Revive 6 and must be re-checked against the live server.
+
+To go live, all **founder actions**:
+1. Create a Palavva API user in EspoCRM, with a role limited to Lead/Account/Contact/Opportunity (create/read/edit, no delete), and set `ESPOCRM_URL` + `ESPOCRM_API_KEY`.
+2. Decide whether to restart Revive, give it a public delivery hostname with TLS, and install the MaxMind GeoLite2/GeoIP2 database (licence required) for IP targeting. Then create zones per placement, set `REVIVE_DELIVERY_URL`, add the host to the CSP, and only after approval set `ADS_LIVE_AUTHORIZED=true`.
+
+## Email and listmonk (ISSUE-24, audited 12 Oct 2026)
+
+* **Existing capability:** Palavva signs people in with its own opaque sessions over the PocketBase `users` auth collection, plus hashed single-use tokens for verification, reset, email change and invitations. No second auth system was introduced. PocketBase's built-in mailer (SMTP settings in its admin) is **not configured**. The web app now sends every message through one module (`lib/mail.ts`) that records `email_events` (recipient stored as a hash) and writes to the **development mail sink** (`data/mail-sink/`). An `smtp` transport is recognised but refused until `MAIL_LIVE_AUTHORIZED=true` and a provider is configured.
+* **Transactional vs marketing:** transactional mail (verification, reset, password/email change notices, welcome, invitations, MFA/security, suspension) is always allowed. Marketing (newsletters) is **refused** unless the address has a confirmed double opt-in in `newsletter_subscriptions`, and it always carries a one-click unsubscribe link plus `List-Unsubscribe` headers. Confirm and unsubscribe links act only on a button press, so mail scanners cannot trigger them.
+* **listmonk:** github.com/knadh/listmonk, **AGPL-3.0**, Go single binary, latest **v6.2.0 (2026-06-26)**, actively maintained, and **requires PostgreSQL**.
+  * Good fit for newsletters later: subscriber lists, double opt-in, unsubscribe, bounce processing, SMTP pools, campaigns.
+  * Not installed now: it adds PostgreSQL (plus ~100–200 MB RAM) to a stack that has none. It needs a decision on the sending provider (SPF/DKIM/DMARC) first, and running it unmodified as a separate service keeps AGPL obligations simple.
+  * Recommended path: when newsletters are approved, run listmonk next to the existing services (Hetzner already runs MySQL/MariaDB, not PostgreSQL, so either add PostgreSQL there or use a managed one). Sync confirmed subscribers from `newsletter_subscriptions` through listmonk's API, and keep transactional mail on the provider's API or SMTP, separate from campaigns.

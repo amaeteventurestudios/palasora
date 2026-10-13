@@ -85,8 +85,8 @@ def decision(pb: PB, tenant_id: str, scope: str, target_id: str, piece_id: str, 
 
 
 def tenant_switch(pb: PB, tenant_id: str, key: str):
-    r = pb.first("tenant_settings", f"tenant_id={q(tenant_id)} && key={q(key)}")
-    return r.get("value") if r else None
+    from .switch_cache import read
+    return read(pb, tenant_id, key)  # cached a few seconds per process (switch_cache)
 
 
 # --------------------------------------------------------------------------- topic assessment

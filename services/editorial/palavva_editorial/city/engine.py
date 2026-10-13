@@ -104,8 +104,9 @@ def ts_of(pb_ts: str) -> float:
 
 
 def tenant_setting(pb: PB, tenant_id: str, key: str):
-    r = pb.first("tenant_settings", f"tenant_id={q(tenant_id)} && key={q(key)}")
-    return r.get("value") if r else None
+    """Switch values only (all callers read *_PAUSED style switches); cached a few seconds per process."""
+    from ..switch_cache import read
+    return read(pb, tenant_id, key)
 
 
 def switches(pb: PB, s: Settings, tenant_id: str) -> dict:

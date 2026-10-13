@@ -48,7 +48,8 @@ export async function signIn(page: Page, email: string, base = BASE, next = "/")
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: "Continue with email" }).click();
   await page.waitForURL((u) => !u.pathname.startsWith("/auth/sign-in"));
-  await page.waitForLoadState("networkidle").catch(() => {});
+  // Pages with live SSE never reach "networkidle"; wait briefly for a possible redirect to the MFA step, then go on.
+  await page.waitForURL((u) => u.pathname.startsWith("/auth/mfa"), { timeout: 2500 }).catch(() => {});
   if (new URL(page.url()).pathname.startsWith("/auth/mfa")) await completeMfa(page, email);
   await page.waitForURL((u) => !u.pathname.startsWith("/auth/"));
 }

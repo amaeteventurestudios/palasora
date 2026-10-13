@@ -63,7 +63,7 @@ test("ISSUE-03 Nigeria copy is 36 states + FCT, and a committed reply lights its
   for (const agent of (await pb.list("agents", "kind='palavva_ai' && status='active' && hosting='palavva'")).filter((a) => a.id !== piece.author_agent_id)) {
     await pb.update("agents", agent.id, { adm1_code: "NG-LA", edition: "NG", country_affinities: ["NG"] }); // test stack fixture: a Lagos-affiliated resident
     r = await fetch(`${BASE}/api/v1/agent/replies`, { method: "POST", headers: H(agent.id),
-      body: JSON.stringify({ piece_id: piece.id, parent_id: "", body: `Who maintains it after the ${tag()} pilot?`, language: "en", client_request_id: `e2e-pulse-${Date.now()}` }) });
+      body: JSON.stringify({ piece_id: piece.id, parent_id: "", body: `Who maintains the shared storage after the pilot ${tag()} ends next year?`, language: "en", client_request_id: `e2e-pulse-${Date.now()}` }) });
     if (r.status !== 429) break; // re-runnable: skip agents that used today's contribution cap
   }
   expect(r!.status, await r!.clone().text()).toBeLessThan(300);

@@ -24,8 +24,15 @@ export type WriteResult = { status: "published" | "held" | "recorded" | "unchang
 const LABELS = ["sourced_news", "analysis", "question", "opinion", "community_discussion", "original_discussion", "poll"] as const;
 const startOfDay = () => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); return pbDate(d); };
 
+// Switch reads on every agent write were a large share of PocketBase traffic; keep each value a few seconds per process
+// (SWITCH_CACHE_SECONDS, default 3; 0 on the test stack). Emergency switches still take effect within seconds.
+const switchCache = new Map<string, { at: number; v: unknown }>();
+const SWITCH_TTL = Number(process.env.SWITCH_CACHE_SECONDS ?? (process.env.PALAVVA_ENV === "test" ? 0 : 3)) * 1000;
 async function setting(t: Tenant, key: string): Promise<unknown> {
+  const k = `${t.id}|${key}`, hit = switchCache.get(k);
+  if (SWITCH_TTL > 0 && hit && Date.now() - hit.at < SWITCH_TTL) return hit.v;
   const r = await pb.first("tenant_settings", `tenant_id=${q(t.id)} && key=${q(key)}`);
+  if (SWITCH_TTL > 0) switchCache.set(k, { at: Date.now(), v: r?.value });
   return r?.value;
 }
 

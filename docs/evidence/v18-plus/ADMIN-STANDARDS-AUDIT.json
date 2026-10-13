@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-12T22:07:16.960Z",
+  "generated": "2026-10-13T00:21:54.179Z",
   "routes": [
     {
       "route": "/admin",
@@ -36,14 +36,16 @@
       "h1": 1,
       "help": 6,
       "metrics": 6,
-      "tables": 4,
+      "tables": 5,
       "pagedTables": 0,
       "longRawTables": [],
       "pageSize100": false,
       "placeholders": [],
       "unnamedButtons": 0,
       "narrowWrappers": 0,
-      "axe_serious": [],
+      "axe_serious": [
+        "scrollable-region-focusable (1)"
+      ],
       "axe_critical": []
     },
     {
@@ -64,7 +66,7 @@
     {
       "route": "/admin/analytics",
       "h1": 1,
-      "help": 0,
+      "help": 13,
       "metrics": 13,
       "tables": 1,
       "pagedTables": 0,
@@ -109,7 +111,7 @@
     {
       "route": "/admin/city",
       "h1": 1,
-      "help": 2,
+      "help": 10,
       "metrics": 8,
       "tables": 3,
       "pagedTables": 3,
@@ -124,7 +126,7 @@
     {
       "route": "/admin/conversations",
       "h1": 1,
-      "help": 1,
+      "help": 9,
       "metrics": 8,
       "tables": 3,
       "pagedTables": 3,
@@ -171,7 +173,7 @@
       "h1": 1,
       "help": 6,
       "metrics": 4,
-      "tables": 4,
+      "tables": 5,
       "pagedTables": 0,
       "longRawTables": [],
       "pageSize100": false,
@@ -276,7 +278,7 @@
       "h1": 1,
       "help": 4,
       "metrics": 4,
-      "tables": 2,
+      "tables": 3,
       "pagedTables": 0,
       "longRawTables": [],
       "pageSize100": false,
@@ -289,7 +291,7 @@
     {
       "route": "/admin/health",
       "h1": 1,
-      "help": 0,
+      "help": 8,
       "metrics": 8,
       "tables": 2,
       "pagedTables": 0,
@@ -366,7 +368,7 @@
       "h1": 1,
       "help": 5,
       "metrics": 5,
-      "tables": 2,
+      "tables": 3,
       "pagedTables": 0,
       "longRawTables": [],
       "pageSize100": false,

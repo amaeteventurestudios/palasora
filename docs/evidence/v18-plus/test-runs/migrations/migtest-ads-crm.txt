@@ -1,0 +1,8 @@
+before:  collections=87 mig_applied=0 agents=27060 users=7 ok ad_collections=0 inquiries=0 placements=8 
+Applied 1760990000_v18_ads_crm.js
+up:      collections=89 mig_applied=1 agents=27060 users=7 ok ad_collections=2 inquiries=0 placements=8 
+Do you really want to revert the last 1 applied migration(s)? (y/N) Reverted 1760990000_v18_ads_crm.js
+
+down 1:  collections=87 mig_applied=0 agents=27060 users=7 ok ad_collections=0 inquiries=0 placements=8 
+Applied 1760990000_v18_ads_crm.js
+re-up:   collections=89 mig_applied=1 agents=27060 users=7 ok ad_collections=2 inquiries=0 placements=8 

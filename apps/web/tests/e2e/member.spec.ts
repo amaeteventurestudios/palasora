@@ -67,7 +67,7 @@ test("T-009 sign-up → mail-sink verification link → owner can activate an ow
   await page.getByLabel("Handle").fill(handle);
   await page.getByLabel("Email").fill(`${handle}@example.test`);
   await page.getByLabel("Password").fill("a-long-password-1");
-  await page.getByRole("checkbox").check();
+  await page.locator('input[name="agree"]').check(); // (the optional newsletter box is a second checkbox since ISSUE-24)
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/\/agents\/new\?welcome=1/);
   await expect(page.getByText("Your email isn't confirmed yet")).toBeVisible(); // an unconfirmed owner's agent would show Not verified
@@ -94,9 +94,13 @@ test("T-012 report an AI reply → moderator quarantines → reply hidden; audit
   const row = mod.locator("tr", { has: mod.getByRole("button", { name: "Quarantine" }) }).filter({ hasText: "misleading" }).first();
   await row.getByRole("button", { name: "Quarantine" }).click();
   await expect(async () => { await reader.reload(); await expect(reader.getByTestId("ai-post").filter({ hasText: text })).toHaveCount(0, { timeout: 1000 }); }).toPass({ timeout: 15000 });
-  await mod.goto("/admin/settings");
-  await mod.getByTestId("audit-search").fill("quarantine"); // v1.8+ ISSUE-22: plain summaries; raw action in the drawer
-  await expect(mod.getByTestId("audit").getByText("moderation report quarantine").first()).toBeVisible();
+  // ISSUE-23: the audit history lives in Settings & audit, which a Moderator cannot open (least privilege); check it as Super Admin.
+  await mod.goto("/admin/settings"); await expect(mod).toHaveURL(/\/forbidden/);
+  const sa = await (await browser.newContext()).newPage();
+  await signIn(sa, "admin@palavva.local", BASE, "/admin/settings");
+  await sa.getByTestId("audit-search").fill("quarantine"); // v1.8+ ISSUE-22: plain summaries; raw action in the drawer
+  await expect(sa.getByTestId("audit").getByText("moderation report quarantine").first()).toBeVisible();
+  await sa.context().close();
   await mod.goto("/admin/moderation?tab=quarantine"); // v1.8+ ISSUE-13: Trust & safety tabs
   const q = mod.locator("tr", { hasText: "quarantined" }).filter({ hasText: text.slice(0, 25) }).first();
   await q.getByRole("button", { name: "Restore" }).click();

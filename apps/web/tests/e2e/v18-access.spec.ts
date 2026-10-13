@@ -43,7 +43,7 @@ test("ISSUE-23 Super Administrator: MFA before the Command Center (pages and API
   await p2.context().close(); await page.context().close();
 });
 
-test("ISSUE-23 invite → accept → least privilege: Operations cannot open revenue, users or tenants, cannot change economy rules, sees only its links", async ({ browser }) => {
+test("ISSUE-23 invite → accept → least privilege: Operations cannot open revenue, users, Pals or sponsors, cannot change economy rules, sees only its links", async ({ browser }) => {
   test.setTimeout(150_000);
   const t = tag(), email = `ops-${t}@example.test`;
   const sa = await fresh(browser);
@@ -67,7 +67,7 @@ test("ISSUE-23 invite → accept → least privilege: Operations cannot open rev
   const nav = ops.getByTestId("admin-sidebar");
   await expect(nav.getByRole("link", { name: "Infrastructure & services" })).toBeVisible();
   for (const hidden of ["Revenue & business", "Users & access", "Pals economy", "Sponsors & inquiries"]) await expect(nav.getByRole("link", { name: hidden })).toHaveCount(0);
-  for (const p of ["/admin/revenue", "/admin/users", "/admin/pals", "/admin/tenants"]) { await ops.goto(`${BASE}${p}`); await expect(ops).toHaveURL(/\/forbidden/); }
+  for (const p of ["/admin/revenue", "/admin/users", "/admin/pals", "/admin/sponsors"]) { await ops.goto(`${BASE}${p}`); await expect(ops).toHaveURL(/\/forbidden/); }
   // Settings is read-only for Operations: the emergency switches are there (operations → administer), no secrets are ever shown.
   await ops.goto(`${BASE}/admin/infrastructure`); await expect(ops.getByRole("heading", { level: 1 })).toBeVisible();
   // Direct API calls are refused on the server too (URL/API bypass), and unmapped admin paths fail closed.

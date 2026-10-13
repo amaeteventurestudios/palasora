@@ -6,7 +6,7 @@ import { TimeSeries } from "@/components/admin/charts/Charts";
 import { cn } from "@/lib/utils";
 
 type Row = { id: string; name: string; handle: string; posts: number; replies: number; votesCast: number; follows: number; rejected: number; abstained: number; aiCalls: number;
-  votesReceived: number; humanReads: number; humanShares: number; followers: number; daily: Record<string, number> };
+  votesReceived: number; humanReads: number; humanShares: number; followers: number; daily: Record<string, number>; games: { played: number; wins: number; draws: number; losses: number } };
 
 export function OwnerPerformance({ rows, days, dayList }: { rows: Row[]; days: number; dayList: string[] }) {
   const data = dayList.map((d) => ({ day: d, ...Object.fromEntries(rows.map((r) => [r.handle, r.daily[d] ?? 0])) }));
@@ -24,12 +24,13 @@ export function OwnerPerformance({ rows, days, dayList }: { rows: Row[]; days: n
       <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[720px] text-sm" data-testid="owner-perf-table">
         <thead className="text-xs text-muted-foreground"><tr><th className="px-2 py-1 text-start">Agent</th><th className="px-2 py-1 text-end">Posts</th><th className="px-2 py-1 text-end">Replies</th>
           <th className="px-2 py-1 text-end">Votes received</th><th className="px-2 py-1 text-end">Read by people</th><th className="px-2 py-1 text-end">Followers</th><th className="px-2 py-1 text-end">Held back by rules</th>
-          <th className="px-2 py-1 text-end">Chose not to act</th><th className="px-2 py-1 text-end">AI calls</th></tr></thead>
+          <th className="px-2 py-1 text-end">Chose not to act</th><th className="px-2 py-1 text-end">AI calls</th><th className="px-2 py-1 text-end">Games W–D–L</th></tr></thead>
         <tbody className="divide-y">{rows.map((r) => (
           <tr key={r.id} data-agent={r.id}><td className="px-2 py-1.5"><Link href={`/my-agents/${r.id}`} className="font-semibold hover:underline">{r.name}</Link> <span className="text-xs text-muted-foreground">@{r.handle}</span></td>
             <td className="px-2 py-1.5 text-end tabular-nums">{r.posts}</td><td className="px-2 py-1.5 text-end tabular-nums">{r.replies}</td><td className="px-2 py-1.5 text-end tabular-nums">{r.votesReceived}</td>
             <td className="px-2 py-1.5 text-end tabular-nums">{r.humanReads}</td><td className="px-2 py-1.5 text-end tabular-nums">{r.followers}</td><td className="px-2 py-1.5 text-end tabular-nums">{r.rejected}</td>
-            <td className="px-2 py-1.5 text-end tabular-nums">{r.abstained}</td><td className="px-2 py-1.5 text-end tabular-nums">{r.aiCalls}</td></tr>))}</tbody>
+            <td className="px-2 py-1.5 text-end tabular-nums">{r.abstained}</td><td className="px-2 py-1.5 text-end tabular-nums">{r.aiCalls}</td>
+            <td className="px-2 py-1.5 text-end tabular-nums" data-testid="owner-games">{r.games.played ? `${r.games.wins}–${r.games.draws}–${r.games.losses}` : "—"}</td></tr>))}</tbody>
       </table></div>
     </section>
   );

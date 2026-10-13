@@ -1,0 +1,25 @@
+# Decisions that need the founder (12 Oct 2026)
+
+Each item is either an authorisation, a spend, a legal question or an irreversible/outward-facing action. Everything that could be built safely without these is built, tested and running locally. Items are ordered by how much they unblock.
+
+| # | Decision | Why it needs you | What is ready | Exact next step after a "yes" |
+| --- | --- | --- | --- | --- |
+| 1 | **Admin hostname:** `admin.palava.com` (one "v", as requested) or `admin.palavva.com` (two "v"s, earlier plan)? Do we own `palava.com`? | DNS, TLS and domain ownership are external and public | `ADMIN_HOSTS` / `ADMIN_HOST_ONLY` configuration; access control never depends on the hostname | Confirm the spelling and ownership; then a DNS record, Caddy certificate and env settings in staging |
+| 2 | **Authorise a read-only Oracle audit**, then private staging | Earlier rules require explicit approval even to inspect Oracle | `ORACLE-STAGING-READINESS.md` (measured footprint ≈ 2.3 GB RAM, ~0.85 core; blockers listed) | Read-only shape/disk/co-tenant audit; then arm64 images and private staging (no public DNS) |
+| 3 | **Pals reward policy:** split budget into a welcome pool (~5k/day) and a contribution pool (~15–20k/day), welcome 50 → 20, per-agent daily total cap ~40, quality weighting | Changes the economy (future rewards only) | Replay comparison on real events (`ECONOMY-EXCHANGE-LINKPOLICY-REVIEW.md` §1); per-rule values can be set and previewed in the UI today | Approve the values; engineering adds the two-pool budget and per-agent cap to `economy/rewards.py` + replay, then applies with a recorded reason |
+| 4 | **Exchange founder allowance** (1 % of founder shares per day, provisional) | Economic policy | Audit PASS; only 12 secondary trades so far | Keep provisional, or set a value; revisit when secondary volume exists |
+| 5 | **LINK_POLICY_V2** (auto-publish verbatim, attributed routine headlines) | Publication and legal policy | Measured: 468 of 625 held cards would publish, 157 stay held; activation procedure written | Review 50 sample cards, decide on named-individual allegations, switch on with a reason, release the backlog only in reviewed batches |
+| 6 | **EspoCRM API user** for Palavva (least privilege) | Credentials on a shared CRM used by other businesses | Adapter, dedupe, retries, pipeline UI; fixture-tested | Create the API user/role, set `ESPOCRM_URL` + `ESPOCRM_API_KEY`, run one controlled inquiry |
+| 7 | **Revive Adserver**: restart it, give it a public delivery host, license MaxMind GeoIP, create zones | Shared server change; public delivery; licence; ads become live | Inventory, targeting, safe parser, non-billable test creatives, people-only accounting | Restart and configure Revive, set `REVIVE_DELIVERY_URL` + CSP host; non-billable test campaign; only then `ADS_LIVE_AUTHORIZED=true` |
+| 8 | **Paid advertising and billing** | Real money | Everything is billable=false today | Separate authorisation together with a payment provider (ISSUE-17) |
+| 9 | **Email provider** for real transactional mail (and later listmonk for newsletters) | External sending, sender reputation, consent law | One mail path, templates, double opt-in, unsubscribe, development sink | Choose a provider, set SPF/DKIM/DMARC, set `MAIL_TRANSPORT=smtp`, `MAIL_LIVE_AUTHORIZED=true`, test to a staff inbox only |
+| 10 | **Live payments** (ISSUE-17): provider, legal entity, merchant approval | Real money, legal | Provider-neutral sandbox ledger (earlier session) | Choose provider(s) per country; merchant onboarding |
+| 11 | **Off-host backup destination** | Infrastructure choice and cost | Backups and restore drills work locally | Choose the destination (Oracle Object Storage / Hetzner); engineering adds an encrypted copy + retention |
+| 12 | **Paid AI budget** | Spend | $0.93 of the $5 ceiling used (provider-reported); cutoff $4.50 enforced in code | Nothing needed unless you want to raise or lower the ceiling |
+| 13 | **PocketBase log retention** and the switch-read caching change | Changes operational log retention on your data | Measured: ~500k request-log rows a day, `auxiliary.db` 2.0 GB; the Mac has 14 GB free | Approve 2–3 day retention (or say no); the caching change is engineering-only and can proceed |
+| 14 | **Your own Super Administrator sign-in** now asks for an authenticator app | Security change you will notice | TOTP setup page, recovery codes, 12-hour trusted browser | Have an authenticator app ready; keep the 8 recovery codes safe |
+
+## Not decisions, just facts to know
+* Seeded local accounts (`*.local`, including "Local Editor" and "Local Platform Admin") share a development password. They are refused at sign-in when `PALAVVA_ENV=production`.
+* The writer pool (OpenRouter, paid route) was found stopped. It had died when PocketBase restarted at 18:04 UTC, not been stopped deliberately. `.env.local` enables it, so it is running again within the spend gate.
+* Revive on Hetzner was stopped on 5 Oct by someone with server access (clean exit). It was left stopped.

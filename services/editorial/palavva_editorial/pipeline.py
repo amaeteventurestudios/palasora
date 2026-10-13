@@ -48,8 +48,8 @@ def parse_pbdate(s: str | None) -> datetime | None:
 
 
 def tenant_switch(pb: PB, tenant_id: str, key: str) -> bool:
-    r = pb.first("tenant_settings", f"tenant_id={q(tenant_id)} && key={q(key)}")
-    return bool(r and r.get("value") is True)
+    from .switch_cache import read
+    return read(pb, tenant_id, key) is True  # cached a few seconds per process (switch_cache)
 
 
 # --------------------------------------------------------------------------- ingest
