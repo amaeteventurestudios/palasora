@@ -14,12 +14,18 @@ Branch `unified-v1.5`, local commits only: nothing was pushed or force-pushed, a
 | 6 ISSUE-16/18 | Read-only Hetzner audit (Revive 6.0.8 installed but stopped; EspoCRM 9.3.4 running; no Palavva credentials). Ad inventory, targeting, non-billable test creatives and people-only accounting; sponsor pipeline with an EspoCRM adapter, dedupe and retries. **Live delivery and sync blocked** on credentials and decisions. |
 | 7 Economy / Exchange / LINK_POLICY_V2 | Replay scenarios with a recommendation; Exchange audit PASS; v2 impact measured. **No values changed.** |
 | 8 Command Center | Page help on all 36 routes, a ? on every metric card, axe serious/critical 0 on every route; standards sweep added. |
-| 9 Regression | See `QA-REPORT.md` for the exact totals of the final full run. |
+| 9 Regression | **Final full run clean** (`20261013T010243Z`, exit 0): typecheck PASS, vitest 137/137, pytest 182 passed / 3 skipped, Playwright 146 passed / 2 skipped (screenshot-only) / 0 failed. Earlier runs and fixes are in `QA-REPORT.md`. |
 | 10 Oracle | `ORACLE-STAGING-READINESS.md`: do not migrate yet; blockers listed. |
 | 11 Docs | This file plus `COMPLETION-MATRIX.md`, `QA-REPORT.md`, `MIGRATION-REPORT.md`, `REMAINING-DECISIONS.md`, `INTEGRATION-AUDITS.md` (appended), `ECONOMY-EXCHANGE-LINKPOLICY-REVIEW.md`, `BEFORE-AFTER/session-2026-10-12/`. |
 
 ## Commits this session (oldest first)
-COMMITS_PLACEHOLDER
+- `8f48d0f` ISSUE-23/24: Users & access with a server-enforced role/permission matrix (11 roles, view/create/edit/approve/delete/export/administer per module, deny by default, sensitive money/secrets/security never in other templates), middleware gate on every
+- `c00d9fd` ISSUE-28: Palavva Games — deterministic Ayo/Oware (abapa), English checkers and sourced African trivia engines; AI vs AI, Human vs AI and Human vs Human under one destination; append-only moves with a unique (match, ply) index, replay from the move
+- `3d667d5` ISSUE-16/18: Advertising & inventory (8 placements with density rules, All Africa → region → country → admin region + language/SubPal/topic/device targeting from the reader's chosen edition, approved-placement gate, non-billable labelled test creat
+- `0edb234` Phase 7/8: Pals reward-policy replay scenarios (separate welcome/contribution pools, per-agent total cap, quality weighting; cross-checked against the product's own preview) and an independent read-only Exchange audit (price provenance, trade/order
+- `8fb24e3` Regression fixes and performance: E2E sign-in helper no longer waits for "networkidle" (never reached on live SSE pages); Games removed from the 1280px top bar (overflowed) and added to the footer; Editorial Manager and Moderator can pause threads/
+- `1686ebb` pytest: disable the switch-read cache in tests (they flip switches and read them back at once)
+- (this documentation commit follows)
 
 ## How to open it
 * Public site: http://127.0.0.1:3000. Games: `/games`. Account security: `/account`.
