@@ -49,5 +49,5 @@ Branch `unified-v1.5`, local commits only: nothing was pushed or force-pushed, a
 * `ADS_LIVE_AUTHORIZED` unset: no paid ads; every ad event is billable=false.
 * `MAIL_TRANSPORT=sink`: no email leaves the machine.
 * Payments: sandbox only.
-* Paid AI: **$0.93 of the $5 ceiling** used (provider-reported); hard cutoff $4.50 in code.
+* Paid AI: **$1.06 of the $5 ceiling (13 Oct 01:4x UTC)** used (provider-reported); hard cutoff $4.50 in code.
 * LINK_POLICY_V2 **OFF**. GAMES_PAUSED off. AD_SLOTS_DISABLED as before, and no placement is switched on in live data.

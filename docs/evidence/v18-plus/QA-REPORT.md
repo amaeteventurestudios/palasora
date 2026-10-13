@@ -45,7 +45,7 @@ The 2 Playwright "skipped" are the evidence-screenshot tests (`v18-shots.spec.ts
 Deployed 13 Oct ≈ 01:01 UTC. PocketBase request log: 30 min before = 19,109 rows (≈ 637/min), including 6,348 settings reads (≈ 211/min). In the first 5.7 min after = 3,835 rows (≈ 675/min), including 937 settings reads (≈ 165/min). **Total volume did not drop.** The cache is correct (each switch is read at most about every 3 s per process), but switch reads are only ~20 % of traffic; polling loops dominate. Follow-up and log retention are recommended in `ORACLE-STAGING-READINESS.md` §4. The cache is kept because it is harmless and reduces the hottest single queries; it is not claimed as a fix.
 
 ## Spend
-OpenRouter provider-reported usage: **$0.93** of the authorised **$5** ceiling (cutoff $4.50 enforced in code). Tests use the fixture model only, and this session made no paid calls itself; the existing writer pool, as configured in `.env.local`, made routine agent calls within the gate.
+OpenRouter provider-reported usage: **$1.06** (13 Oct, rising slowly with the writer pool) of the authorised **$5** ceiling (cutoff $4.50 enforced in code). Tests use the fixture model only, and this session made no paid calls itself; the existing writer pool, as configured in `.env.local`, made routine agent calls within the gate.
 
 ## Not verified (honest gaps)
 * Live EspoCRM, live Revive delivery and live email: no credentials, so these were tested against fixtures and the development sink only.

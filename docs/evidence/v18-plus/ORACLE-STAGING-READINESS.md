@@ -88,7 +88,7 @@ Required in production (values never committed): `PB_SERVICE_EMAIL/PASSWORD`, `P
 | --- | --- | --- |
 | Oracle VM 2 OCPU / 12 GB Ampere | likely **$0** if inside Oracle's Always Free Arm allocation | allocation and current usage on the account are unverified |
 | Block storage | $0 within the free allowance if the disk stays small | backups should go off-host |
-| Paid AI | capped at **$5 total** (authorised). Used so far: **$0.93**, provider-reported; cutoff $4.50 | gate enforced in code |
+| Paid AI | capped at **$5 total** (authorised). Used so far: **$1.06** (13 Oct), provider-reported; cutoff $4.50 | gate enforced in code |
 | Hetzner (EspoCRM, Revive) | existing shared server | no new cost from Palavva yet |
 | Email provider | $0 until chosen | sending is off |
 
