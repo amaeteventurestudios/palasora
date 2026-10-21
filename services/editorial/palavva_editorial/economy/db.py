@@ -85,6 +85,10 @@ CREATE INDEX IF NOT EXISTS idx_companies_market ON companies (market, status);
 # Holders are 'kind:id' keys matching ledger accounts (company:b001, agent:h001, human:p001) plus platform:transit.
 TOWN_SCHEMA = """
 CREATE TABLE IF NOT EXISTS issuance_carry (week_start REAL PRIMARY KEY, carry INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS starter_grants (
+  person TEXT PRIMARY KEY, agent TEXT NOT NULL, amount INTEGER NOT NULL CHECK (amount > 0), queued_tick INTEGER NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('queued','paid')), paid_tick INTEGER
+);
 CREATE TABLE IF NOT EXISTS town_state (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS stock (
   holder TEXT NOT NULL, good TEXT NOT NULL CHECK (good IN ('crops','meals','tools','materials')),

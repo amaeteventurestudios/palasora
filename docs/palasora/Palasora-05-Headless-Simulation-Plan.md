@@ -1,11 +1,11 @@
 ---
 title: "Palasora · Headless Simulation & Validation Plan"
-subtitle: "Document 05 · Working draft v0.4 · 21 Oct 2026 · Amaete Umanah"
+subtitle: "Document 05 · Working draft v0.5 · 21 Oct 2026 · Amaete Umanah"
 ---
 
 **The answer in one line:** we write the economy once, as plain Python functions with no graphics, inside the existing economy service, run it for thousands of simulated days on a laptop, and only approve it when it passes every gate below. The live service then runs the same functions.
 
-This document turns Documents 02 and 04 into a test we can run. It is the last planning document before code. Numbers come from Document 04 v0.5 and are starting values to tune. Its section 4A balance rules (one payback curve, one money growth target, playing beats sitting) are tested here.
+This document turns Documents 02 and 04 into a test we can run. It is the last planning document before code. Numbers come from Document 04 v0.6 and are starting values to tune. Its section 4A balance rules (one payback curve, one money growth target, playing beats sitting) are tested here.
 
 # 1. What the tests must prove
 
@@ -160,7 +160,7 @@ Each scenario runs for 30 days on 10 seeds: 100 runs, 3,000 simulated days. A lo
 - Every Cheater attempt is refused.
 - Sora per active resident grows within 15 to 25% a year, measured monthly after the first 2 weeks (on the 180-day run, the whole run sits in the band).
 - No two weeks in a row above the band: the issuance thermostat pulls growth back.
-- Every business type's payback sits in its lane, within half a lane either side, unless marked as beside the curve.
+- Every business type's payback sits in its lane, within half a lane either side, unless marked as beside the curve (tight lane 4 to 10 days, so 1 to 13 with the margin; Document 04 v0.6).
 - Playing beats sitting: in the Sitter scenario, and across all runs, holding money or rent earns less per day than the median business with the same money.
 - Price shock: no building, rent or income already owned rises in value by more than the shock itself.
 - Meal price within ±25% of its 7-day average after week 1.
@@ -262,3 +262,11 @@ Applied from the approved amendments, following Document 06 v0.2:
 - **8. Gate A:** money growth within 15 to 25% a year per resident (replacing "population plus 5% a month"), the thermostat holds, every business on its payback lane, playing beats sitting, and no windfall from a price shock.
 - **9. How we run it:** the run report shows the payback curve, growth against the target and a three-way leaderboard; the same charts become the public Economy notes; every later balance change reruns the gates first.
 - **Unchanged:** the Python core inside the economy service, the records, the tick, Gates B to F.
+
+# 16. Changes in v0.5
+
+**Why:** owner decision, 21 Oct 2026, after the first full run of the gates (Phase 3).
+
+- **Gate A:** the tight payback lane is 4 to 10 days (Document 04 v0.6), so with half a lane either side a stall or cart passes between 1 and 13 days. No other gate threshold changed.
+- **Scenarios:** new players also get the starter grant (80 Sora, once per person, paid after 5 days from the Town Hall's weekly budget), and new stalls are placed in the street with the most room (Document 04 v0.6).
+- **Unchanged:** every other gate, scenario and measure.

@@ -78,6 +78,41 @@ def civic_wages(w) -> dict:
     return {"due": total, "paid": paid, "share": share}
 
 
+def queue_starter_grant(w, a) -> bool:
+    """The new player's one-time starter grant (owner decision after the Phase 3 gates): queued once per person (keyed
+    by the person, not the agent, so a second arrival of the same person gets nothing) and paid by the Town Hall from
+    its weekly issuance budget, so unlike the arrival grant it counts against the money growth target."""
+    if a.kind != "player" or w.p.starter_grant <= 0:
+        return False
+    cur = w.con.execute("INSERT OR IGNORE INTO starter_grants(person, agent, amount, queued_tick, status) VALUES (?,?,?,?,'queued')",
+                        (a.owner_key, a.id, w.p.starter_grant, w.tick))
+    return cur.rowcount == 1
+
+
+def starter_grants(w) -> int:
+    """Pay starter grants that have come due (a new player's first five days in town, so the first stall stays about a
+    week of work away, Doc 04 section 3) first come, first served, within the week's budget left. They come before the
+    day's civic wages: a grant turns a civic worker into a stall owner, which frees the civic payroll it would otherwise
+    keep drawing. A grant the budget cannot cover today waits for the next day; it is never paid in part."""
+    left, _ = budget_left_today(w, paced=False)
+    paid = 0
+    due = w.tick - w.p.starter_grant_after_days * 24
+    for r in w.con.execute("""SELECT person, agent, amount FROM starter_grants WHERE status='queued' AND queued_tick <= ?
+                              ORDER BY queued_tick, person""", (due,)).fetchall():
+        if r["amount"] > left or r["agent"] not in w.agents:
+            break
+        a = w.agents[r["agent"]]
+        w.issue(TOWN_HALL, a.acct, r["amount"], rule="starter_grant", ref_type="starter_grant", ref_id=r["person"])
+        w.con.execute("UPDATE starter_grants SET status='paid', paid_tick=? WHERE person=?", (w.tick, r["person"]))
+        w.event("starter_grant", [a.id, "town_hall"], f"The Town Hall paid {a.id} a starter grant of {r['amount'] // C} Sora", visibility="owner",
+                refs={"agent": a.id, "amount": r["amount"]})
+        left -= r["amount"]
+        paid += r["amount"]
+    if w.metrics is not None:
+        w.metrics.count("starter_paid", paid)
+    return paid
+
+
 def floor_price(w, good: str) -> int:
     ref = {"crops": w.p.crop_ref, "tools": w.p.tool_ref}[good]
     return max(1, int(ref * w.p.floor_pct))

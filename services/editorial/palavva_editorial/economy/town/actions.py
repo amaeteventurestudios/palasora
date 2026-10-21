@@ -293,8 +293,29 @@ def h_eat_own(w, a: Agent, business: str) -> dict:
 def _free_plot(w, btype: str, prime: bool | None = None) -> str | None:
     pref = {"farm": "farmland", "workshop": "harbourside", "stall": "market", "delivery": "main"}[btype]
     free = [p for p in w.plots.values() if p["use"] == "business" and not p["owner"]]
-    free.sort(key=lambda p: (p["area"] != pref, -p["prime"] if btype == "stall" else p["prime"], p["id"]))
+    if btype == "stall" and free:
+        return _roomy_stall_plot(w, free, pref)
+    free.sort(key=lambda p: (p["area"] != pref, p["prime"], p["id"]))
     return free[0]["id"] if free else None
+
+
+STREET = 2.5   # plots within this distance share a street's shoppers
+NEAR_HOMES = 4.0
+
+
+def _roomy_stall_plot(w, free: list[dict], pref: str) -> str:
+    """Owner decision after the Phase 3 gates: a new stall goes to the street with the most room, scored as residents
+    living near the plot for each stall already trading in its street (stall choice weighs distance, so shoppers near an
+    uncrowded street spread there). Ties go to the market area, then prime plots, then the plot id."""
+    stalls = [(b.xy) for b in w.open_biz() if b.type == "stall"]
+    homes = [a.home for a in w.agents.values() if a.home]
+    def score(pl):
+        xy = (pl["x"], pl["y"])
+        near = sum(1 for s in stalls if w.dist(s, xy) <= STREET)
+        people = sum(1 for h in homes if w.dist(h, xy) <= NEAR_HOMES)
+        return people / (1 + near)
+    best = max(free, key=lambda pl: (round(score(pl), 3), pl["area"] == pref, pl["prime"], [-ord(c) for c in pl["id"]]))
+    return best["id"]
 
 
 def h_build(w, a: Agent, btype: str, plot: str = "") -> dict:

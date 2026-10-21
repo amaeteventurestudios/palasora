@@ -159,6 +159,7 @@ def arrive_player(w: World, pid: str, *, founder: bool = False, endowment: int =
             w.con.execute("UPDATE plots SET owner=? WHERE id=?", (pid, prime[0]["id"]))
     else:
         civic.population_issue(w, a, p.grant_new_player, "new_player_grant")
+    civic.queue_starter_grant(w, a)
     if endowment:
         civic.population_issue(w, a, endowment, "scenario_endowment")
     w.event("player_arrived", [pid], f"{pid} arrived in town{' with a Founder Pass' if founder else ''}{label}", visibility="public",

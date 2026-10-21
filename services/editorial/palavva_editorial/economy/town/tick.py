@@ -66,6 +66,7 @@ def _steps(w: World) -> None:
     # 8. pay
     if h == 20:
         B.pay_wages_and_upkeep(w)
+        civic.starter_grants(w)
         civic.civic_wages(w)
         civic.harbour_buys(w, w.floor_offers)
         w.floor_offers = []

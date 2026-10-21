@@ -227,6 +227,36 @@ def test_harbour_floor_counts_against_the_budget():
         assert issuance.weekly(w.con)["used"] == used0 + paid
 
 
+def test_starter_grant_once_per_person_after_five_days_within_the_budget():
+    w = make_world()
+    with db.clock(lambda: w.ts()):
+        a = genesis.arrive_player(w, "p900")
+        assert not civic.queue_starter_grant(w, a)  # already queued on arrival: once per person
+        assert civic.starter_grants(w) == 0  # not due before five days in town
+        w.tick += w.p.starter_grant_after_days * 24
+        used0 = issuance.weekly(w.con)["used"]
+        before = w.bal(a.acct)
+        paid = civic.starter_grants(w)
+        assert paid == w.p.starter_grant == 80 * C
+        assert w.bal(a.acct) == before + paid
+        assert issuance.weekly(w.con)["used"] == used0 + paid  # counts against the weekly budget
+        assert civic.starter_grants(w) == 0  # never twice
+        row = w.con.execute("SELECT status FROM starter_grants WHERE person=?", (a.owner_key,)).fetchone()
+        assert row["status"] == "paid"
+
+
+def test_new_stalls_go_to_the_street_with_room():
+    w = make_world()
+    stalls = [b.xy for b in w.open_biz() if b.type == "stall"]
+    free = [p for p in w.plots.values() if p["use"] == "business" and not p["owner"]]
+    pid = actions._free_plot(w, "stall")
+    pl = w.plots[pid]
+    near = lambda q: sum(1 for s in stalls if w.dist(s, (q["x"], q["y"])) <= actions.STREET)
+    homes = lambda q: sum(1 for a in w.agents.values() if a.home and w.dist(a.home, (q["x"], q["y"])) <= actions.NEAR_HOMES)
+    best = max(homes(q) / (1 + near(q)) for q in free)
+    assert homes(pl) / (1 + near(pl)) == pytest.approx(best, abs=1e-3)
+
+
 # ------------------------------------------------------------------------------------------------ reports, AI, gates
 def test_morning_reports_link_real_records(short_runs):
     s, _ = short_runs

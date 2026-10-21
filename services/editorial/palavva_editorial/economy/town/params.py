@@ -19,6 +19,8 @@ GOODS = ("crops", "meals", "tools", "materials")
 class Params:
     # -- Doc 04 section 3: starting values ---------------------------------------------------------------------------
     grant_new_player: int = 200 * C
+    starter_grant: int = 80 * C    # once per person, from the Town Hall's weekly budget (owner decision, Phase 3 review)
+    starter_grant_after_days: int = 5  # paid at the end of a new player's first working week, not on arrival
     meal_ref: int = 5 * C
     crop_ref: int = 150            # 1.50 Sora
     tool_ref: int = 20 * C
@@ -50,7 +52,7 @@ class Params:
     # -- Doc 04 section 4A ---------------------------------------------------------------------------------------------
     growth_target: float = 0.20
     growth_band: tuple = (0.15, 0.25)
-    lanes: dict = field(default_factory=lambda: {"tight": (2.0, 4.0), "shared": (4.0, 10.0), "money": (15.0, 40.0)})
+    lanes: dict = field(default_factory=lambda: {"tight": (4.0, 10.0), "shared": (4.0, 10.0), "money": (15.0, 40.0)})
     lane_of: dict = field(default_factory=lambda: {"stall": "tight", "delivery": "tight", "farm": "shared", "workshop": "shared"})
     savings_interest: float = 0.0  # Rule 3: none in v0.1
     rent: bool = False             # default: no rent yet
