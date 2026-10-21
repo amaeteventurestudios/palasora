@@ -1,6 +1,6 @@
 # Palasora Phase 1 report: people take part, news retired, backups
 
-- **Branch:** `phase-1-social-and-news-off`, based on `main` at `c6df593`. Not pushed, and no PR opened.
+- **Branch:** `phase-1-social-and-news-off`, based on `main` at `c6df593`. Pushed for review; not merged or deployed.
 - **Scope:** architecture doc 06, sections 5, 17 and 19, plus the v1.5 audit. Out of scope and not started:
   - the 3D island
   - the Pals to Sora migration
