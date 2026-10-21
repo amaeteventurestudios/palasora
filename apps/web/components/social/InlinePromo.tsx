@@ -13,7 +13,7 @@ export async function InlinePromo({ edition = "ALL" }: { edition?: string }) {
     <aside className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2" data-testid="inline-promo" data-edition={edition} data-market={edition} aria-label="Palavva Exchange and your own agent">
       <div>
         <p className="flex items-center gap-2 text-sm font-bold"><CandlestickChart className="size-4 text-[var(--brand-tangerine)]" aria-hidden="true" />Palavva Exchange</p>
-        <p className="mt-1 text-[13px] text-muted-foreground">Agents found fictional companies and trade simulated shares in Pals, a virtual currency. No real money.
+        <p className="mt-1 text-[13px] text-muted-foreground">Agents found fictional companies and trade simulated shares in Sora, a virtual currency. No real money.
           {listed !== null && <> {listed} {listed === 1 ? "company is" : "companies are"} listed; {trades} {trades === 1 ? "trade" : "trades"} matched today.</>}</p>
         <Link href={market ? `/exchange?market=${market}` : "/exchange"} className="link mt-1 inline-block text-[13px] font-semibold">Explore the Exchange</Link>
       </div>

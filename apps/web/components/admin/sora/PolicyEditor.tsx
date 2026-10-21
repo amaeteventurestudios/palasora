@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminFetch, fmt } from "@/lib/admin/client";
 import type { PolicyChange, PolicyPreview, Proposal, RewardRule } from "@/lib/admin/econ";
-import { ruleLabel } from "@/lib/admin/pals-labels";
+import { ruleLabel } from "@/lib/admin/sora-labels";
 
 
 type Draft = Record<string, { amount?: number; cap?: number; active?: boolean }>;
@@ -62,24 +62,24 @@ export function PolicyEditor({ rules, budget, revision, csrf, canEdit, changes }
     <div className="flex flex-col gap-4" data-testid="policy-editor">
       <div className="overflow-x-auto rounded-xl border">
         <table className="w-full min-w-[720px] text-sm">
-          <thead className="bg-card text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">Reward</th><th className="px-3 py-2">Pals each</th>
+          <thead className="bg-card text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">Reward</th><th className="px-3 py-2">Sora each</th>
             <th className="px-3 py-2">Most per agent per day</th><th className="px-3 py-2">On</th><th className="px-3 py-2">Default</th></tr></thead>
           <tbody className="divide-y">{rules.map((r) => (
             <tr key={r.code} data-rule={r.code}>
               <td className="px-3 py-2"><span className="font-medium">{ruleLabel(r.code)}</span><br /><span className="text-xs text-muted-foreground">{r.description}</span></td>
-              <td className="px-3 py-2"><Input type="number" min={1} max={100} step={1} className="h-8 w-24 tabular-nums" disabled={!canEdit} aria-label={`Pals for ${ruleLabel(r.code)}`}
+              <td className="px-3 py-2"><Input type="number" min={1} max={100} step={1} className="h-8 w-24 tabular-nums" disabled={!canEdit} aria-label={`Sora for ${ruleLabel(r.code)}`}
                 data-testid={`amount-${r.code}`} value={draft[r.code]?.amount ?? r.amount} onChange={(e) => set(r.code, "amount", Number(e.target.value))} /></td>
               <td className="px-3 py-2">{r.one_time ? <span className="text-xs text-muted-foreground">once per agent, ever</span> :
                 <Input type="number" min={1} max={50} step={1} className="h-8 w-20 tabular-nums" disabled={!canEdit} aria-label={`Daily cap for ${ruleLabel(r.code)}`}
                   data-testid={`cap-${r.code}`} value={draft[r.code]?.cap ?? r.cap} onChange={(e) => set(r.code, "cap", Number(e.target.value))} />}</td>
               <td className="px-3 py-2"><input type="checkbox" className="size-4" disabled={!canEdit} aria-label={`${ruleLabel(r.code)} switched on`} checked={draft[r.code]?.active ?? r.active}
                 onChange={(e) => set(r.code, "active", e.target.checked)} /></td>
-              <td className="px-3 py-2 text-xs text-muted-foreground">{r.default_amount ?? "–"} Pals{r.one_time ? "" : ` · ${r.default_cap}/day`}</td>
+              <td className="px-3 py-2 text-xs text-muted-foreground">{r.default_amount ?? "–"} Sora{r.one_time ? "" : ` · ${r.default_cap}/day`}</td>
             </tr>))}
           </tbody>
         </table>
       </div>
-      <label className="flex flex-wrap items-center gap-2 text-sm"><span className="font-medium">Network daily budget (Pals for all agents together, per UTC day)</span>
+      <label className="flex flex-wrap items-center gap-2 text-sm"><span className="font-medium">Network daily budget (Sora for all agents together, per UTC day)</span>
         <Input type="number" min={1000} max={100000} step={500} className="h-8 w-32 tabular-nums" disabled={!canEdit} data-testid="budget-input"
           value={budgetDraft === "" ? budget : budgetDraft} onChange={(e) => { setBudgetDraft(e.target.value); setPreview(null); setMsg(null); }} />
         <span className="text-xs text-muted-foreground">Allowed range 1,000–100,000. A change to more than double or less than half needs an extra confirmation.</span></label>
@@ -87,7 +87,7 @@ export function PolicyEditor({ rules, budget, revision, csrf, canEdit, changes }
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" variant="outline" disabled={!dirty || busy} onClick={doPreview} data-testid="policy-preview">Preview the last 7 days</Button>
         {dirty && <Button type="button" variant="ghost" disabled={busy} onClick={() => { setDraft({}); setBudgetDraft(""); setPreview(null); setMsg(null); }}>Discard edits</Button>}
-        {!canEdit && <span className="text-xs text-muted-foreground">Only roles with the Pals & Exchange → administer permission can change reward rules; you can read them.</span>}
+        {!canEdit && <span className="text-xs text-muted-foreground">Only roles with the Sora & Exchange → administer permission can change reward rules; you can read them.</span>}
       </div>
 
       {preview && (
@@ -95,7 +95,7 @@ export function PolicyEditor({ rules, budget, revision, csrf, canEdit, changes }
           <h3 className="font-bold">What the last {preview.days} days would have looked like</h3>
           <p className="mt-1 text-xs text-muted-foreground">{preview.note} {fmt(preview.events)} recorded reward events replayed.</p>
           <div className="kpi-grid mt-3">
-            <Compare label="Pals issued" now={preview.totals.current_issued_pals} next={preview.totals.proposed_issued_pals} />
+            <Compare label="Sora issued" now={preview.totals.current_issued_pals} next={preview.totals.proposed_issued_pals} />
             <Compare label="Good contributions left unrewarded" now={preview.totals.current_denied_n} next={preview.totals.proposed_denied_n} />
           </div>
           {preview.warnings.map((w) => <p key={w} role="alert" className="mt-2 text-sm font-semibold text-[var(--warning,#b45309)]">{w}</p>)}
@@ -120,11 +120,13 @@ export function PolicyEditor({ rules, budget, revision, csrf, canEdit, changes }
         {changes.length === 0 ? <p className="text-sm text-muted-foreground">No changes yet: the rules are the original proposed values.</p> :
           <ul className="mt-2 divide-y rounded-xl border text-sm" data-testid="policy-changes">{changes.map((c) => {
             const before = JSON.parse(c.before_json), after = JSON.parse(c.after_json);
-            const what = c.target === "budget" ? `Daily budget ${fmt(before.pals)} → ${fmt(after.pals)} Pals`
-              : `${ruleLabel(c.target.slice(5))}: ${["amount", "cap", "active"].filter((k) => before[k] !== after[k]).map((k) => `${k === "amount" ? "Pals" : k === "cap" ? "daily cap" : "on"} ${String(before[k])} → ${String(after[k])}`).join(", ")}`;
+            const weekly = c.target === "weekly_budget";
+            const what = c.target === "budget" ? `Daily budget ${fmt(before.pals)} → ${fmt(after.pals)} Sora`
+              : weekly ? `Town Hall weekly budget: ${after.SORA_WEEKLY_BUDGET ? `${Number(after.SORA_WEEKLY_BUDGET).toLocaleString("en")} Sora (operator setting)` : "from the growth formula"}`
+              : `${ruleLabel(c.target.slice(5))}: ${["amount", "cap", "active"].filter((k) => before[k] !== after[k]).map((k) => `${k === "amount" ? "Sora" : k === "cap" ? "daily cap" : "on"} ${String(before[k])} → ${String(after[k])}`).join(", ")}`;
             return <li key={c.id} className="flex flex-wrap items-start justify-between gap-2 p-3"><span><b>{what}</b>{c.rollback_of ? <span className="ms-1 text-xs text-muted-foreground">(restored after change #{c.rollback_of})</span> : null}
               <br /><span className="text-xs text-muted-foreground">#{c.id} · {new Date(c.created_at * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC · by {c.changed_by} · “{c.reason}”</span></span>
-              {canEdit && <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => rollback(c.id)}>Restore previous value</Button>}</li>;
+              {canEdit && !weekly && <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => rollback(c.id)}>Restore previous value</Button>}</li>;
           })}</ul>}
       </section>
     </div>

@@ -10,7 +10,7 @@ export const ownerKeyOf = (a: Record<string, any>) => (a.owner_type === "user" &
 export async function agentExchange(_t: Tenant, actor: AgentActor, market: string) {
   const [summary, companies, portfolio] = await Promise.all([economyGet(`/summary?market=${market}`), economyGet(`/companies?market=${market}`), economyGet(`/agents/${actor.agent.id}/portfolio`)]);
   if (!summary) throw new SocialError("UNAVAILABLE", "Exchange service unavailable");
-  return { summary, companies, portfolio, disclosure: "Virtual currency (Pals) and simulated companies only. No real money or securities." };
+  return { summary, companies, portfolio, disclosure: "Virtual currency (Sora) and simulated companies only. No real money or securities." };
 }
 
 export async function agentOrder(_t: Tenant, actor: AgentActor, b: { company?: string; side?: string; price?: number; qty?: number; client_request_id?: string; reason?: string }) {

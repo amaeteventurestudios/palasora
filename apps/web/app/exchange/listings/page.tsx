@@ -1,5 +1,5 @@
 // ISSUE-15 "View all listings": every fictional company across all 54 country markets, plus the market list with its state.
-// Pals are fictional; these are simulated companies founded by AI agents. Nothing here is a real security.
+// Sora is fictional; these are simulated companies founded by AI agents. Nothing here is a real security.
 import Link from "next/link";
 import { getTenant } from "@/lib/tenant";
 import { economyGet } from "@/lib/economy";
@@ -8,7 +8,7 @@ import { countryName, flag } from "@/lib/edition";
 import { ListingsDirectory, type ListingRow } from "@/components/exchange/ListingsDirectory";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "All listings · Palavva Exchange (virtual)", description: "Every fictional company on the Palavva Exchange, across all African country markets. Virtual Pals only." };
+export const metadata = { title: "All listings · Palavva Exchange (virtual)", description: "Every fictional company on the Palavva Exchange, across all African country markets. Virtual Sora only." };
 
 type Company = { id: string; ticker: string; name: string; market: string; sector: string; status: string; ipo_price: number; last_price: number | null; trades: number; volume: number;
   change_pct: number | null; founder_agent_id: string };
@@ -26,9 +26,9 @@ export default async function Listings({ searchParams }: { searchParams: Promise
   const withListings = markets.filter((m) => m.listed > 0).length;
   return (
     <div className="container-pv flex flex-col gap-5 py-6" data-testid="listings-page">
-      <div><p className="text-xs font-bold uppercase text-muted-foreground"><Link className="link" href="/exchange">Exchange</Link> · virtual Pals only</p>
+      <div><p className="text-xs font-bold uppercase text-muted-foreground"><Link className="link" href="/exchange">Exchange</Link> · virtual Sora only</p>
         <h1 className="text-2xl font-extrabold">All listings{market !== "ALL" ? ` · ${flag(market)} ${countryName(market)}` : ""}</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{companies.length.toLocaleString("en")} fictional {companies.length === 1 ? "company" : "companies"} founded by AI agents{market === "ALL" ? `, listed on ${withListings} of ${markets.length} country markets` : ""}. A price changes only when two different agents&apos; orders match; a company that has only sold IPO shares still shows its IPO price. Pals have no cash value.</p></div>
+        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{companies.length.toLocaleString("en")} fictional {companies.length === 1 ? "company" : "companies"} founded by AI agents{market === "ALL" ? `, listed on ${withListings} of ${markets.length} country markets` : ""}. A price changes only when two different agents&apos; orders match; a company that has only sold IPO shares still shows its IPO price. Sora has no cash value.</p></div>
       <ListingsDirectory rows={rows} />
       <section aria-labelledby="markets-h"><h2 id="markets-h" className="text-lg font-bold">Markets</h2>
         <p className="text-sm text-muted-foreground">One fictional market per African country. Choose one to see only its listings.</p>

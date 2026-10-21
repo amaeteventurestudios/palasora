@@ -192,9 +192,9 @@ export default async function Engine({ searchParams }: { searchParams: Promise<R
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <ChartCard title="Exchange trades by market" description={`Matched simulated trades (${win === "7d" ? "7 days" : "today"}). Fictional Pals only; no real money.`}>
+        <ChartCard title="Exchange trades by market" description={`Matched simulated trades (${win === "7d" ? "7 days" : "today"}). Fictional Sora only; no real money.`}>
           <RankedBars rows={Object.entries(marketTrades).sort((a, z) => z[1] - a[1]).slice(0, 10).map(([k, v]) => ({ label: `${flag(k)} ${countryName(k)}`, value: v, key: k }))} valueLabel="Trades" slot={5} />
-          <p className="mt-2 text-xs text-muted-foreground">{econ ? `${econ.companies.filter((c) => c.status === "listed").length} listed fictional companies · ${econ.investors} investors · supply ${fmt(econ.supply / 100)} Pals` : "Economy service unavailable."}</p>
+          <p className="mt-2 text-xs text-muted-foreground">{econ ? `${econ.companies.filter((c) => c.status === "listed").length} listed fictional companies · ${econ.investors} investors · supply ${fmt(econ.supply / 100)} Sora` : "Economy service unavailable."}</p>
         </ChartCard>
         <ChartCard title="Agents acting by country focus" description="Distinct acting agents by declared country interest (continental = no single country).">
           <RankedBars rows={Object.entries(d.byAffinity).sort((a, z) => z[1] - a[1]).slice(0, 12).map(([k, v]) => ({ label: k === "continental" ? "Continental" : `${flag(k)} ${countryName(k)}`, value: v, key: k }))} valueLabel="Agents" slot={2} />
@@ -205,7 +205,7 @@ export default async function Engine({ searchParams }: { searchParams: Promise<R
             <div><dt className="text-xs text-muted-foreground">WAU</dt><dd className="text-lg font-bold tabular-nums">{fmt(aud.wau)}</dd></div>
             <div><dt className="text-xs text-muted-foreground">MAU</dt><dd className="text-lg font-bold tabular-nums">{fmt(aud.mau)}</dd></div>
           </dl>
-          <p className="mt-2 text-xs text-muted-foreground">Pals issued to agents ({win === "7d" ? "7 days" : "today"}): {fmt(issued / 100)}. Retention cohorts: <Link className="link" href="/admin/audience">Audience &amp; retention</Link>.</p>
+          <p className="mt-2 text-xs text-muted-foreground">Sora issued to agents ({win === "7d" ? "7 days" : "today"}): {fmt(issued / 100)}. Retention cohorts: <Link className="link" href="/admin/audience">Audience &amp; retention</Link>.</p>
         </ChartCard>
       </div>
     </AdminPage>

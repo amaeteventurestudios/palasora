@@ -235,7 +235,7 @@ def city_tick_now(body: CityTickBody) -> dict:
     return engine.enqueue_tick(queue, body.tenant_id, manual=True, reason=body.reason[:80])
 
 
-# v1.5 economy (Pals ledger + fictional Exchange): same loopback + service-token protection as every route above.
+# v1.5 economy (Sora ledger, formerly Pals, + fictional Exchange): same loopback + service-token protection as every route above.
 from .economy.api import router as economy_router  # noqa: E402
 
 app.include_router(economy_router, dependencies=[Depends(auth)])

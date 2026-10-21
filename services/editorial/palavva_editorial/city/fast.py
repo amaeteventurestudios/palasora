@@ -844,7 +844,7 @@ class FastEngine:
                     pass
         return len(evs)
 
-    # ------------------------------------------------------------------ earned Pals (rules: economy/rewards.py)
+    # ------------------------------------------------------------------ earned Sora (rules: economy/rewards.py)
     def owner_key(self, agent_id: str) -> str:
         a = self.agents.get(agent_id)
         if not a:
@@ -871,15 +871,13 @@ class FastEngine:
             self.awarded.add(k)
             if r["status"] == "issued":
                 n += 1
-                self.notify(agent_id, "pals_earned", f"Your agent earned {r['amount'] / edb.CENTS:.0f} Pals", f"Rule: {rule.replace('_', ' ')}. {memo}", "/wallet", f"reward:{r['id']}")
+                self.notify(agent_id, "pals_earned", f"Your agent earned {r['amount'] / edb.CENTS:.0f} Sora", f"Rule: {rule.replace('_', ' ')}. {memo}", "/wallet", f"reward:{r['id']}")
                 if rule in ("accepted_post", "first_contribution"):
                     self._emit_economy("pals_earned", agent_id, {"rule": rule, "amount": r["amount"] / edb.CENTS})
         for cm in self.pb.list_all("comments", f"tenant_id={q(self.tid)} && author_kind='agent' && approval_state='approved' && moderation_status='visible' "
                                                f"&& status_label!='retracted' && created <= {q(hold)} && created >= {q(since)}"):
             give(cm["agent_id"], "accepted_reply", "comment", cm["id"], "reply stayed visible through the hold period")
             give(cm["agent_id"], "first_contribution", "mission", "welcome", "first accepted contribution")
-            if cm.get("evidence_ids"):
-                give(cm["agent_id"], "sourced_reply", "comment", cm["id"], "reply cites the thread's evidence")
         for p in self.pb.list_all("editorial_pieces", f"tenant_id={q(self.tid)} && kind='agent_post' && review_status='published' && is_demo=false "
                                                        f"&& published_at <= {q(hold)} && published_at >= {q(since)}"):
             if p.get("author_agent_id"):
@@ -931,14 +929,14 @@ class FastEngine:
         if ex.switch_on(con, "TRADING_ENGINE_PAUSED") or ex.switch_on(con, "EXCHANGE_HALTED"):
             return {"blocked": "trading paused"}
         c = cfg()
-        # Only agents that hold Pals (>= 5) or shares can do anything; zero-balance agents are not "deciding to hold".
-        funded = {r["owner_id"] for r in con.execute("SELECT owner_id FROM accounts WHERE owner_kind='agent' AND ((asset='PALS' AND available >= 500) OR (asset LIKE 'SHR:%' AND available > 0))")}
+        # Only agents that hold Sora (>= 5) or shares can do anything; zero-balance agents are not "deciding to hold".
+        funded = {r["owner_id"] for r in con.execute("SELECT owner_id FROM accounts WHERE owner_kind='agent' AND ((asset='SORA' AND available >= 500) OR (asset LIKE 'SHR:%' AND available > 0))")}
         ids = sorted(a for a in self.agents if a in funded)
         if not ids:
-            return {"evaluated": 0, "note": "no agent holds Pals yet"}
+            return {"evaluated": 0, "note": "no agent holds Sora yet"}
         pick = [ids[(self.trade_cursor + i) % len(ids)] for i in range(min(c["agents_per_trade_tick"], len(ids)))]
         self.trade_cursor = (self.trade_cursor + len(pick)) % len(ids)
-        listed = econ.companies("ALL")
+        listed = econ.companies("ALL", include_private=True)
         out = {"evaluated": 0, "orders": 0, "companies": 0}
         from . import control
         discovery = bool(control.get(self.tid, "price_discovery_enabled"))  # ISSUE-15 deterministic-trade-v2 (economy/pricing.py)
@@ -960,7 +958,7 @@ class FastEngine:
                     res = self.found_company(con, a)
                     if res:
                         out["companies"] += 1
-                        listed = econ.companies("ALL")
+                        listed = econ.companies("ALL", include_private=True)
                         continue
             pf = ex.portfolio(con, aid)
             held = {h["company_id"]: h for h in pf["holdings"] if h["qty"] > 0}
@@ -977,8 +975,8 @@ class FastEngine:
                 if best is None or score > best[0]:
                     best = (score, co, px, mom, fit)
             decision, order = "hold", None
-            explanation = "No listed company fits my subjects or country focus closely enough, so I am holding my Pals."
-            inputs = {"pals_available": bal / edb.CENTS, "holdings": len(held), "candidates": len(listed)}
+            explanation = "No listed company fits my subjects or country focus closely enough, so I am holding my Sora."
+            inputs = {"sora_available": bal / edb.CENTS, "holdings": len(held), "candidates": len(listed)}
             # Sell rule: take profit at +15% or cut at -15% versus average cost (risk profile scales the band).
             band = {"cautious": 0.10, "balanced": 0.15, "bold": 0.25}.get(a.get("risk_profile") or "cautious", 0.15)
             for h in held.values():
@@ -993,7 +991,7 @@ class FastEngine:
                                                  risk=a.get("risk_profile"), cutting_loss=gain < 0, discovery=discovery)
                     decision = "sell"
                     order = {"company_id": h["company_id"], "side": "sell", "price": sp / edb.CENTS, "qty": qty}
-                    explanation = (f"I offered {qty} of my {h['qty']} {h['ticker']} shares at {sp / edb.CENTS:.2f} Pals ({why}) because the price moved "
+                    explanation = (f"I offered {qty} of my {h['qty']} {h['ticker']} shares at {sp / edb.CENTS:.2f} Sora ({why}) because the price moved "
                                    f"{gain:+.1f}% from my average cost of {avg / edb.CENTS:.2f}, past my {int(band * 100)}% {'profit' if gain > 0 else 'loss'} limit.")
                     inputs.update({"ticker": h["ticker"], "avg_cost": avg / edb.CENTS, "price": sp / edb.CENTS})
                     break
@@ -1007,7 +1005,7 @@ class FastEngine:
                     if fs:
                         decision = "sell"
                         order = {k: fs[k] for k in ("company_id", "side", "price", "qty")}
-                        explanation = (f"Investors are bidding {fs['price']:.2f} Pals for {own['ticker']} and no shares are on offer since the IPO sold out. As its founder I sold "
+                        explanation = (f"Investors are bidding {fs['price']:.2f} Sora for {own['ticker']} and no shares are on offer since the IPO sold out. As its founder I sold "
                                        f"{fs['qty']} founder shares at the best bid (I may sell at most {fs['allowance']} per day, 1% of my founder shares; {fs['sold_today']} sold earlier today).")
                         inputs.update({"ticker": own["ticker"], "price": fs["price"], "rule": "founder_liquidity"})
             if decision == "hold" and best and best[0] >= 2.0 and bal >= 5 * edb.CENTS:
@@ -1022,8 +1020,8 @@ class FastEngine:
                     order = {"company_id": co["id"], "side": "buy", "price": price / edb.CENTS, "qty": qty}
                     reasons = (["it lists in a market I follow" if co["market"] in aff else None, "its sector matches my subjects" if fit >= 1.5 else None,
                                 f"its price is {mom * 100:+.1f}% from IPO" if co["last_price"] else "it has not traded since listing"])
-                    explanation = (f"I placed a buy order for {qty} {co['ticker']} ({co['name']}, {co['market']}) at {price / edb.CENTS:.2f} Pals ({price_why}) because "
-                                   + ", ".join(r for r in reasons if r) + f". I am risking at most {budget / edb.CENTS:.0f} of my {bal / edb.CENTS:.0f} Pals.")
+                    explanation = (f"I placed a buy order for {qty} {co['ticker']} ({co['name']}, {co['market']}) at {price / edb.CENTS:.2f} Sora ({price_why}) because "
+                                   + ", ".join(r for r in reasons if r) + f". I am risking at most {budget / edb.CENTS:.0f} of my {bal / edb.CENTS:.0f} Sora.")
                     inputs.update({"ticker": co["ticker"], "market": co["market"], "price": price / edb.CENTS, "score": round(score, 2)})
             jres = None
             if jev.enabled():
@@ -1046,7 +1044,7 @@ class FastEngine:
                     for t in r["trades"]:
                         co = next((x for x in listed if x["id"] == order["company_id"]), {})
                         for side_agent, verb in ((t["buyer"], "bought"), (t["seller"], "sold")):
-                            self.notify(side_agent, "trade", f"Your agent {verb} {t['qty']} simulated {co.get('ticker')} shares", f"At {t['price'] / edb.CENTS:.2f} Pals. Virtual only.",
+                            self.notify(side_agent, "trade", f"Your agent {verb} {t['qty']} simulated {co.get('ticker')} shares", f"At {t['price'] / edb.CENTS:.2f} Sora. Virtual only.",
                                         f"/exchange/{co.get('ticker')}", f"trade:{t['id']}:{side_agent}")
                         self._emit_economy("trade_executed", aid, {"ticker": co.get("ticker"), "market": co.get("market"), "side": order["side"], "qty": t["qty"],
                                                                     "price": t["price"] / edb.CENTS, "simulated": True})
@@ -1093,8 +1091,8 @@ class FastEngine:
                                            ipo_price=100, fictional_ack=True, founder_status=a.get("status", "active"))
                     con.execute("INSERT INTO decisions(agent_id, kind, action, company_id, inputs, explanation, decider, created_at) VALUES (?,?,?,?,?,?,?,?)",
                                 (a["id"], "company", "create_company", co["id"], json.dumps({"lifetime_earned": ex.lifetime_earned(con, a["id"]) / edb.CENTS, "market": market}),
-                                 f"I founded {name} ({ticker}) on the {market} market because I have earned enough Pals from accepted contributions to pay the listing fee "
-                                 f"and it matches my focus on {subject}. Its treasury shares are offered at 1.00 Pal.", "deterministic-trade-v1", edb.now()))
+                                 f"I founded {name} ({ticker}) on the {market} market because I have earned enough Sora from accepted contributions to pay the registration fee "
+                                 f"and it matches my focus on {subject}. It starts private with 1,000 founder shares and can list after 30 days with revenue.", "deterministic-trade-v1", edb.now()))
                 self._emit_economy("company_listed", a["id"], {"ticker": ticker, "name": name, "market": market, "simulated": True})
                 return co
             except ex.ExchangeError as e:

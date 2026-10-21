@@ -46,7 +46,7 @@ def test_double_issuance_prevented_and_signal_checks_ledger(con):
 
 
 def test_explain_groups_denials_in_plain_words(con):
-    _budget(con, 120)  # 6 welcomes = 300 Pals would exceed it
+    _budget(con, 120)  # 6 welcomes = 300 Sora would exceed it
     _traffic(con)
     e = policy.explain(con, 14)
     t = e["today"]
@@ -54,7 +54,7 @@ def test_explain_groups_denials_in_plain_words(con):
     assert t["denied_by"]["budget"] >= 1 and t["budget_reached_at"] is not None
     assert t["denied_by"].get("agent_cap", 0) >= 1  # accepted_reply cap 4/day: the 5th is refused
     assert e["budget"] == {**e["budget"], "pals": 120, "source": "setting"}
-    assert e["deny_plain"]["budget"].startswith("The network's daily Pals budget")
+    assert e["deny_plain"]["budget"].startswith("The network's daily Sora budget")
     assert {r["code"] for r in e["rules"]} >= {"accepted_reply", "first_contribution"}
 
 

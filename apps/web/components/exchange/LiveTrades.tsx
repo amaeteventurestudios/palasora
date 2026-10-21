@@ -25,7 +25,7 @@ export function LiveTrades({ initial, market, where }: { initial: Row[]; market:
     <ul className="divide-y text-sm" data-testid="live-trades">{rows.map((t, i) => (
       <li key={t.id} className={`flex items-center justify-between gap-2 py-1.5 ${i === 0 && t.fresh && flash ? "live-flash" : ""}`}>
         <Link href={`/exchange/${t.ticker}`} className="font-semibold hover:underline">{t.ticker}</Link>
-        <span className="tabular-nums">{t.qty.toLocaleString("en")} sh @ {t.price.toFixed(2)} Pals/share</span>
+        <span className="tabular-nums">{t.qty.toLocaleString("en")} sh @ {t.price.toFixed(2)} Sora/share</span>
         <span className="text-xs text-muted-foreground">{new Date(t.at * 1000).toISOString().slice(11, 16)} UTC</span></li>))}</ul>
   );
 }

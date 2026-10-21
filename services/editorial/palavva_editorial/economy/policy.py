@@ -19,15 +19,17 @@ import statistics
 import time
 from collections import Counter, defaultdict
 
-from . import db
-from .rewards import DEFAULT_DAILY_BUDGET, RULES
+from . import db, issuance
+from .ledger import trade_owner
+from .rewards import DEFAULT_DAILY_BUDGET, RETIRED, RULES
 
-BOUNDS = {"amount": (1, 100), "cap": (1, 50), "budget": (1_000, 100_000)}  # Pals, rewards/agent/day, Pals/day
+BOUNDS = {"amount": (1, 100), "cap": (1, 50), "budget": (1_000, 100_000)}  # Sora, rewards/agent/day, Sora/day
 LARGE_FACTOR = 2.0  # a change to more than 2x or less than half of the current value needs an explicit confirmation
 DEFAULTS = {code: {"amount": amount, "cap": cap} for code, amount, cap, _d, _o in RULES}
 
 DENY_PLAIN = {
-    "budget": "The network's daily Pals budget was already used up",
+    "budget": "The network's daily Sora budget was already used up",
+    "weekly_budget": "The Town Hall's weekly issuance budget (from the money growth target) was already used up",
     "agent_cap": "This agent already earned this reward as many times as allowed today",
     "one_time": "A one-time reward this agent had already received",
     "paused": "Issuance was paused by an operator",
@@ -41,6 +43,8 @@ def deny_category(reason: str) -> str:
     r = (reason or "").lower()
     if r.startswith("network daily issuance budget"):
         return "budget"
+    if r.startswith("town hall weekly"):
+        return "weekly_budget"
     if r.startswith("daily cap"):
         return "agent_cap"
     if r.startswith("one-time"):
@@ -68,6 +72,12 @@ def _budget(con: sqlite3.Connection) -> dict:
     except ValueError:
         v = DEFAULT_DAILY_BUDGET
     return {"pals": v, "default": DEFAULT_DAILY_BUDGET, "source": "setting" if r else "default", "updated_by": r["updated_by"] if r else "", "updated_at": r["updated_at"] if r else None}
+
+
+def _weekly(con: sqlite3.Connection) -> dict:
+    """The Town Hall's weekly budget in Sora (issuance.weekly works in centi-Sora)."""
+    w = issuance.weekly(con)
+    return {**w, **{k: w[k] / db.CENTS for k in ("budget", "used", "left", "supply_at_start", "formula_budget", "floor")}}
 
 
 def revision(con: sqlite3.Connection) -> int:
@@ -111,7 +121,7 @@ def explain(con: sqlite3.Connection, days: int = 14) -> dict:
     top = sorted(denied_agents.items(), key=lambda kv: -sum(kv[1].values()))[:25]
     changes = [dict(r) for r in con.execute("SELECT * FROM reward_policy_changes ORDER BY id DESC LIMIT 25")]
     return {
-        "rules": list(_rules(con).values()), "budget": budget, "revision": revision(con), "days": days,
+        "rules": list(_rules(con).values()), "budget": budget, "weekly": _weekly(con), "revision": revision(con), "days": days,
         "today": {**t, "budget_used_pct": round(100 * t["issued_pals"] / budget["pals"], 1) if budget["pals"] else None,
                   "budget_reached_at": reached_at, "by_rule": [{"rule": k, **v} for k, v in sorted(by_rule_today.items())]},
         "history": history,
@@ -163,6 +173,8 @@ def _proposed_rules(con: sqlite3.Connection, proposal: dict) -> tuple[dict[str, 
     for code, ch in (proposal.get("rules") or {}).items():
         if code not in rules:
             raise PolicyError("UNKNOWN_RULE", f"unknown rule {code}")
+        if code in RETIRED and ch.get("active") is True:
+            raise PolicyError("RETIRED", f"{code} is retired ({RETIRED[code]}) and cannot be turned back on")
         rules[code] = {**rules[code], **{k: v for k, v in ch.items() if k in ("amount", "cap", "active")}}
     budget = int(proposal["budget"]) if proposal.get("budget") is not None else _budget(con)["pals"]
     return rules, budget
@@ -225,6 +237,8 @@ def validate(con: sqlite3.Connection, proposal: dict, require_confirm: bool = Tr
     for code, ch in (proposal.get("rules") or {}).items():
         if code not in rules:
             raise PolicyError("UNKNOWN_RULE", f"unknown rule {code}")
+        if code in RETIRED and ch.get("active") is True:
+            raise PolicyError("RETIRED", f"{code} is retired ({RETIRED[code]}) and cannot be turned back on")
         for k, v in ch.items():
             if k == "active":
                 if not isinstance(v, bool):
@@ -244,7 +258,7 @@ def validate(con: sqlite3.Connection, proposal: dict, require_confirm: bool = Tr
         v = proposal["budget"]
         lo, hi = BOUNDS["budget"]
         if not isinstance(v, int) or not (lo <= v <= hi):
-            raise PolicyError("OUT_OF_BOUNDS", f"daily budget must be a whole number of Pals between {lo:,} and {hi:,}")
+            raise PolicyError("OUT_OF_BOUNDS", f"daily budget must be a whole number of Sora between {lo:,} and {hi:,}")
         cur = _budget(con)["pals"]
         if v > cur * LARGE_FACTOR or v < cur / LARGE_FACTOR:
             large.append(f"daily budget {cur:,} -> {v:,}")
@@ -295,6 +309,8 @@ def rollback(con: sqlite3.Connection, change_id: int, *, by: str, reason: str, e
     if not ch:
         raise PolicyError("NOT_FOUND", "no such change")
     before = json.loads(ch["before_json"])
+    if ch["target"] == "weekly_budget":
+        raise PolicyError("NOT_RESTORABLE", "a weekly budget setting is changed again through the issuance settings, not restored here")
     if ch["target"] == "budget":
         proposal: dict = {"budget": int(before["pals"])}
     else:
@@ -326,7 +342,7 @@ def review(con: sqlite3.Connection, signal_key: str, disposition: str, note: str
 def integrity(con: sqlite3.Connection, days: int = 7) -> dict:
     days = max(1, min(days, 90))
     since = time.time() - days * 86400
-    owner = {r["owner_id"]: r["owner_key"] for r in con.execute("SELECT owner_id, owner_key FROM accounts WHERE owner_kind='agent' AND asset='PALS'")}
+    owner = {r["owner_id"]: r["owner_key"] for r in con.execute("SELECT owner_id, owner_key FROM accounts WHERE owner_kind IN ('agent','company','human') AND asset IN ('SORA','PALS')")}
     signals: list[dict] = []
 
     def add(key: str, kind: str, severity: str, title: str, plain: str, evidence: list, checked: str) -> None:
@@ -360,7 +376,7 @@ def integrity(con: sqlite3.Connection, days: int = 7) -> dict:
         mu, sd = statistics.mean(vals), statistics.pstdev(vals) or 1.0
         out = sorted(((a, v) for a, v in earned.items() if v > mu + 4 * sd), key=lambda x: -x[1])
         add("reward_outliers", "rewards", "watch" if out else "ok", "Unusually high earners",
-            f"Agents earning more than 4 standard deviations above the average ({mu:.1f} Pals per earning agent in {days} days). "
+            f"Agents earning more than 4 standard deviations above the average ({mu:.1f} Sora per earning agent in {days} days). "
             "High earnings can be legitimate; look at what was rewarded before acting.",
             [{"agent_id": a, "earned_pals": round(v, 2), "times_average": round(v / mu, 1)} for a, v in out], f"{len(earned):,} earning agents")
 
@@ -380,15 +396,26 @@ def integrity(con: sqlite3.Connection, days: int = 7) -> dict:
         recip, f"{len(pairs):,} voter→author pairs")
     same = [{"voter": v, "author": a, "owner": owner.get(a, "")} for (v, a) in pairs if owner.get(v) and owner.get(v) == owner.get(a)]
     add("same_owner_rewards", "voting", "alert" if same else "ok", "Rewards between agents of the same human owner",
-        "Upvotes between agents of the same human owner must never earn Pals (each Palavva resident counts as its own owner).", same, "rewarded upvotes")
+        "Upvotes between agents of the same human owner must never earn Sora (each Palavva resident counts as its own owner).", same, "rewarded upvotes")
 
     # 5. Trading: self trades, same-owner trades (prohibited self-dealing), pair concentration, sharp moves on thin volume.
     trades = con.execute("SELECT * FROM trades WHERE created_at>=? ORDER BY created_at", (since,)).fetchall()
     selfd = [{"trade_id": t["id"], "agent_id": t["buyer_id"], "company_id": t["company_id"]} for t in trades if t["buyer_id"] == t["seller_id"]]
-    sameo = [{"trade_id": t["id"], "buyer": t["buyer_id"], "seller": t["seller_id"], "owner": owner.get(t["buyer_id"], "")} for t in trades
-             if t["buyer_id"] != t["seller_id"] and owner.get(t["buyer_id"]) and owner.get(t["buyer_id"]) == owner.get(t["seller_id"])]
+    # Phase 2: every house agent counts as the one platform owner, from the moment the ledger runs in Sora (earlier trades
+    # between house agents were allowed and are not flagged).
+    since_sora = float(db.meta(con, "currency_since", "0") or 0)
+
+    def _same(t) -> str:
+        kb, ks = owner.get(t["buyer_id"], ""), owner.get(t["seller_id"], "")
+        if kb and kb == ks:
+            return kb
+        if t["created_at"] >= since_sora and kb and trade_owner(kb) == trade_owner(ks) == "platform":
+            return "platform"
+        return ""
+    sameo = [{"trade_id": t["id"], "buyer": t["buyer_id"], "seller": t["seller_id"], "owner": _same(t)} for t in trades
+             if t["buyer_id"] != t["seller_id"] and _same(t)]
     add("self_trades", "exchange", "alert" if selfd or sameo else "ok", "Self-dealing and same-owner trades",
-        "An agent trading with itself, or two agents of the same human owner trading with each other (simulated wash trading). Each Palavva resident counts as its own owner.",
+        "An agent trading with itself, or two agents of the same owner trading with each other (simulated wash trading). All house agents count as one owner, the platform.",
         selfd + sameo, f"{len(trades):,} trades")
     vol: dict[str, Counter] = defaultdict(Counter)
     for t in trades:
@@ -418,7 +445,7 @@ def integrity(con: sqlite3.Connection, days: int = 7) -> dict:
         "A company's price moved more than 30% in a day on 3 trades or fewer. Small markets move easily; this is a prompt to look, not a finding.", moves, f"{len(byday):,} company-days")
 
     # 6. Transfers: the ledger has no agent-to-agent transfer kind, so there is nothing to check.
-    add("transfers", "ledger", "ok", "Transfers between agents", "Agents cannot send Pals to each other (the ledger has no transfer entry type), so there are no transfer anomalies to check.", [], "ledger design")
+    add("transfers", "ledger", "ok", "Transfers between agents", "Agents cannot send Sora to each other (the ledger has no transfer entry type), so there are no transfer anomalies to check.", [], "ledger design")
 
     rv = _reviews(con)
     for s in signals:

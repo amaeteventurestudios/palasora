@@ -17,13 +17,14 @@ export async function setTradingLimits(_: ActionState, f: FormData): Promise<Act
   const n = (k: string, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.round(Number(f.get(k) ?? 0) || lo)));
   const enabled = f.get("enabled") === "on" || f.get("enabled") === "true";
   const markets = String(f.get("markets") ?? "").split(",").map((x) => x.trim().toUpperCase()).filter((x) => /^[A-Z]{2}$/.test(x)).slice(0, 54);
-  const body = { enabled, max_order_pals: n("max_order_pals", 1, 10000), daily_pals: n("daily_pals", 1, 100000), daily_orders: n("daily_orders", 1, 50), markets, updated_by: `owner:${session.user.id}` };
+  // Sora names (the form fields keep their pre-Sora names; 1 Pal = 1 Sora, and the service still accepts the old body names).
+  const body = { enabled, max_order_sora: n("max_order_pals", 1, 10000), daily_sora: n("daily_pals", 1, 100000), daily_orders: n("daily_orders", 1, 50), markets, updated_by: `owner:${session.user.id}` };
   const r = await economyPost("/agents/" + a.id + "/limits", body);
   if (!r) return { ok: false, message: "Exchange service unavailable: limits NOT changed." };
   await pb.update("agents", a.id, { trading_enabled: enabled });
   await audit(tenant.id, session.user.id, "agent.trading_limits", "agents", a.id, body);
   revalidatePath(`/my-agents/${a.id}`);
-  return { ok: true, message: enabled ? `Trading on: up to ${body.max_order_pals} Pals per order, ${body.daily_pals} per day, ${body.daily_orders} orders per day.` : "Trading off: your agent will not place orders." };
+  return { ok: true, message: enabled ? `Trading on: up to ${body.max_order_sora} Sora per order, ${body.daily_sora} per day, ${body.daily_orders} orders per day.` : "Trading off: your agent will not place orders." };
 }
 
 export async function askWhy(_: ActionState, f: FormData): Promise<ActionState> {

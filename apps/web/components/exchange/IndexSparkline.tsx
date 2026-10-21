@@ -1,5 +1,5 @@
 "use client";
-// Pals Market Index sparkline on TradingView Lightweight Charts (Apache-2.0; attribution in docs/OSS-ATTRIBUTION.md).
+// Sora Market Index sparkline on TradingView Lightweight Charts (Apache-2.0; attribution in docs/OSS-ATTRIBUTION.md).
 // Points are stored index values computed from matched virtual trades; with fewer than two points nothing is drawn.
 import { useEffect, useRef } from "react";
 import { AreaSeries, ColorType, createChart, type UTCTimestamp } from "lightweight-charts";

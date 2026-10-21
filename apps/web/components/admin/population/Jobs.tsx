@@ -125,7 +125,7 @@ export function JobsPanel({ jobs, csrf, names, onChanged }: { jobs: Job[]; csrf:
       <Dialog open={!!rb} onOpenChange={(o) => !o && setRb(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Roll back job {rb?.id}?</DialogTitle>
-            <DialogDescription>Identities this job created that never did anything (no post, reply, vote, follow, Pals or order) are deleted. Any identity with history is retired instead, so nothing that happened on Palavva disappears.</DialogDescription></DialogHeader>
+            <DialogDescription>Identities this job created that never did anything (no post, reply, vote, follow, Sora or order) are deleted. Any identity with history is retired instead, so nothing that happened on Palavva disappears.</DialogDescription></DialogHeader>
           <div className="space-y-1.5"><Label htmlFor="rb-phrase">Type <code className="rounded bg-muted px-1">ROLLBACK {rb?.id}</code> to confirm</Label>
             <Input id="rb-phrase" value={phrase} onChange={(e) => setPhrase(e.target.value)} autoComplete="off" /></div>
           <DialogFooter><Button variant="outline" onClick={() => setRb(null)}>Cancel</Button>

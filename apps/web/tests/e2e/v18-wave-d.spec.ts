@@ -1,10 +1,10 @@
 // v1.8+ Wave D: ISSUE-17 sandbox payments (no real money): idempotent webhooks, credit grant/reversal, safe refusals.
-// ISSUE-14 Pals: explained denials, previewed/audited/restorable reward-rule changes, integrity review, role checks.
+// ISSUE-14 Sora: explained denials, previewed/audited/restorable reward-rule changes, integrity review, role checks.
 import { expect, test } from "@playwright/test";
 import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { BASE, noConsentBanner, pbAdmin, signIn } from "./helpers";
+import { BASE, noConsentBanner, pbAdmin, personAgent, signIn } from "./helpers";
 
 const envText = readFileSync(path.resolve(__dirname, "../../../../.env.test"), "utf8");
 const val = (k: string) => new RegExp(`^${k}=(.*)$`, "m").exec(envText)?.[1].trim() ?? "";
@@ -49,16 +49,16 @@ test("ISSUE-17 sandbox purchase grants credits once; replay is ignored; refund r
   expect((await request.post(`${BASE}/api/v1/payments/webhook/nope`, { data: "{}" })).status()).toBe(404);
 });
 
-test("ISSUE-14 Pals: plain definitions, denials explained, a previewed + reasoned rule change applies to future rewards, is audited and can be restored; integrity review; roles enforced", async ({ page, browser, request }) => {
+test("ISSUE-14 Sora: plain definitions, denials explained, a previewed + reasoned rule change applies to future rewards, is audited and can be restored; integrity review; roles enforced", async ({ page, browser, request }) => {
   // Today must have reward events so the "by reward" table renders (it is empty on a fresh stack).
   const [ag] = await (await pbAdmin()).list("agents", "kind='palavva_ai' && status='active'");
   await request.post("http://127.0.0.1:8400/economy/rewards", { headers: { "x-service-token": val("EDITORIAL_SERVICE_TOKEN"), "content-type": "application/json" },
     data: { agent_id: ag.id, rule: "accepted_reply", ref_type: "comment", ref_id: `e2e-14-${Date.now()}`, owner_key: `seed:${ag.id}` } });
   await noConsentBanner(page);
-  await signIn(page, "admin@palavva.local", BASE, "/admin/pals");
+  await signIn(page, "admin@palavva.local", BASE, "/admin/sora");
   await expect(page.getByTestId("pals-definitions")).toContainText("It is not a sign of wrongdoing");
-  await expect(page.getByTestId("pals-definitions")).toContainText("Pals never convert to money or credits");
-  await expect(page.getByTestId("pals-today")).toContainText("Pals daily budget issued");
+  await expect(page.getByTestId("pals-definitions")).toContainText("Sora never converts to money or credits");
+  await expect(page.getByTestId("pals-today")).toContainText("Sora daily budget issued");
   await page.getByTestId("pals-tabs").getByRole("link", { name: "Rewards & denials" }).click();
   await expect(page.getByTestId("denied-agents")).toContainText("it is not a finding against the agent");
   await expect(page.getByTestId("rewards-by-rule")).toContainText("Accepted reply");
@@ -75,7 +75,7 @@ test("ISSUE-14 Pals: plain definitions, denials explained, a previewed + reasone
   await expect(page.getByTestId("policy-msg")).toContainText("past rewards and balances are unchanged");
   await expect(page.getByTestId("amount-accepted_reply")).toHaveValue(String(next));
   const first = page.getByTestId("policy-changes").locator("li").first();
-  await expect(first).toContainText(`Accepted reply: Pals ${before} → ${next}`);
+  await expect(first).toContainText(`Accepted reply: Sora ${before} → ${next}`);
   await expect(first).toContainText("e2e: try a slightly higher reply reward");
   // Restore the previous value (prompt asks for a reason).
   page.once("dialog", (d) => d.accept("e2e: restore the reviewed launch value"));
@@ -97,7 +97,7 @@ test("ISSUE-14 Pals: plain definitions, denials explained, a previewed + reasone
   const dbl = page.locator('[data-signal="double_issuance"]');
   await expect(dbl).toContainText("Each reward can be paid once");
   await expect(dbl).toHaveAttribute("data-severity", "ok");
-  await expect(page.locator('[data-signal="transfers"]')).toContainText("Agents cannot send Pals to each other");
+  await expect(page.locator('[data-signal="transfers"]')).toContainText("Agents cannot send Sora to each other");
   await page.getByTestId("review-double_issuance").click();
   await dbl.getByRole("radio", { name: "Looked at: fine" }).check();
   await dbl.getByRole("textbox").fill("e2e: idempotency check reviewed, zero duplicates");
@@ -106,8 +106,8 @@ test("ISSUE-14 Pals: plain definitions, denials explained, a previewed + reasone
   // Roles: a moderator can preview and review but not change rules; a reader gets nothing.
   const mctx = await browser.newContext();
   const mod = await mctx.newPage();
-  await signIn(mod, "moderator@palavva.local", BASE, "/admin/pals?tab=rules");
-  await expect(mod.getByTestId("policy-editor")).toContainText("Only roles with the Pals & Exchange → administer permission can change reward rules");
+  await signIn(mod, "moderator@palavva.local", BASE, "/admin/sora?tab=rules");
+  await expect(mod.getByTestId("policy-editor")).toContainText("Only roles with the Sora & Exchange → administer permission can change reward rules");
   await expect(mod.getByTestId("amount-accepted_reply")).toBeDisabled();
   // The role check comes before anything else, so the moderator is refused even with a well-formed request.
   const r = await mod.request.post(`${BASE}/api/admin/pals-policy`, { data: { action: "apply", budget: 21000, reason: "moderator must not be able to do this", expected_revision: 0 }, headers: { origin: BASE } });
@@ -124,20 +124,17 @@ test("ISSUE-15 Exchange: all 54 markets and a full listings directory, IPO-only 
   test.setTimeout(120_000);
   const ED = "http://127.0.0.1:8400/economy";
   const H = { "x-service-token": val("EDITORIAL_SERVICE_TOKEN"), "content-type": "application/json" };
-  const pb = await pbAdmin();
-  // Re-runnable: one company per founder, so use agents that do not already found one.
-  const founders = new Set(((await (await request.get(`${ED}/companies?market=ALL`, { headers: H })).json()) as { founder_agent_id: string }[]).map((c) => c.founder_agent_id));
-  const [f, b] = (await pb.list("agents", "kind='palavva_ai' && status='active'")).filter((a) => !founders.has(a.id)).slice(0, 2);
+  // Palasora Phase 2: new companies stay private until 30 days of revenue, and house agents never trade with each other,
+  // so the trade is a person's agent buying the founding fixture company's IPO (VHCO, founded by a house agent).
   const tag = Array.from({ length: 4 }, () => "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)]).join("");
-  for (const a of [f, b]) for (const [rule, ref] of [["first_contribution", "welcome"], ["accepted_post", `e2e-${tag}-1`], ["accepted_post", `e2e-${tag}-2`]] as const)
-    await request.post(`${ED}/rewards`, { headers: H, data: { agent_id: a.id, rule, ref_type: rule === "first_contribution" ? "mission" : "piece", ref_id: ref, owner_key: `seed:${a.id}` } });
-  await request.post(`${ED}/agents/${b.id}/limits`, { headers: H, data: { enabled: true, max_order_pals: 500, daily_pals: 5000, daily_orders: 50, markets: [], updated_by: "e2e" } });
-  const co = await request.post(`${ED}/companies`, { headers: H, data: { founder_agent_id: f.id, owner_key: `seed:${f.id}`, name: `Volta ${tag} Haulage`, ticker: `V${tag}`, market: "GH", sector: "logistics",
-    description: "A fictional haulage co-operative used by the end-to-end test.", ipo_price: 1, fictional_ack: true } });
-  expect(co.status(), await co.text()).toBe(200);
-  const company = await co.json();
-  const ticker = `V${tag}`;
-  const buy = await request.post(`${ED}/orders`, { headers: H, data: { agent_id: b.id, owner_key: `seed:${b.id}`, company_id: company.id, side: "buy", price: 1, qty: 5, idem_key: `e2e-${tag}-buy` } });
+  const { agent: b, ownerKey } = await personAgent(`w15${tag}`);
+  for (const [rule, ref] of [["first_contribution", "welcome"], ["accepted_post", `e2e-${tag}-1`], ["accepted_post", `e2e-${tag}-2`]] as const)
+    await request.post(`${ED}/rewards`, { headers: H, data: { agent_id: b.id, rule, ref_type: rule === "first_contribution" ? "mission" : "piece", ref_id: ref, owner_key: ownerKey } });
+  await request.post(`${ED}/agents/${b.id}/limits`, { headers: H, data: { enabled: true, max_order_sora: 500, daily_sora: 5000, daily_orders: 50, markets: [], updated_by: "e2e" } });
+  const company = ((await (await request.get(`${ED}/companies?market=GH`, { headers: H })).json()) as { id: string; ticker: string }[]).find((c) => c.ticker === "VHCO")!;
+  expect(company, "founding fixture company VHCO").toBeTruthy();
+  const ticker = "VHCO";
+  const buy = await request.post(`${ED}/orders`, { headers: H, data: { agent_id: b.id, owner_key: ownerKey, company_id: company.id, side: "buy", price: 1, qty: 5, idem_key: `e2e-${tag}-buy` } });
   expect((await buy.json()).trades).toHaveLength(1);
   // Public directory: 54 markets, the listing is searchable, its page labels the trade as an IPO allocation.
   await noConsentBanner(page);
@@ -159,7 +156,7 @@ test("ISSUE-15 Exchange: all 54 markets and a full listings directory, IPO-only 
   await expect(page.getByTestId("trail-journal")).toContainText("trade shares");
   await expect(page.getByTestId("trail-buy")).toContainText("buy 5 at 1.00");
   // Halt with a pending order: the resting bid keeps its reservation; new orders are refused; resume restores trading.
-  const rest = await (await request.post(`${ED}/orders`, { headers: H, data: { agent_id: b.id, owner_key: `seed:${b.id}`, company_id: company.id, side: "buy", price: 0.9, qty: 2, idem_key: `e2e-${tag}-rest` } })).json();
+  const rest = await (await request.post(`${ED}/orders`, { headers: H, data: { agent_id: b.id, owner_key: ownerKey, company_id: company.id, side: "buy", price: 0.9, qty: 2, idem_key: `e2e-${tag}-rest` } })).json();
   expect(rest.order.status).toBe("open");
   await page.goto(`${BASE}/admin/exchange?tab=settings`);
   await expect(page.getByTestId("ex-settings").locator('[data-control="pause"]')).toContainText("an owner's own agent can still place orders");
@@ -168,7 +165,7 @@ test("ISSUE-15 Exchange: all 54 markets and a full listings directory, IPO-only 
     await page.getByTestId("halt-exchange").click();
     await page.getByRole("button", { name: "Confirm" }).click();
     await expect(page.getByText("EXCHANGE_HALTED is now ON")).toBeVisible();
-    const refused = await request.post(`${ED}/orders`, { headers: H, data: { agent_id: b.id, owner_key: `seed:${b.id}`, company_id: company.id, side: "buy", price: 1, qty: 1, idem_key: `e2e-${tag}-halted` } });
+    const refused = await request.post(`${ED}/orders`, { headers: H, data: { agent_id: b.id, owner_key: ownerKey, company_id: company.id, side: "buy", price: 1, qty: 1, idem_key: `e2e-${tag}-halted` } });
     expect(refused.status()).toBe(409);
     const pf = await (await request.get(`${ED}/agents/${b.id}/portfolio`, { headers: H })).json();
     expect(pf.orders.find((o: { id: number }) => o.id === rest.order.id).status).toBe("open");
@@ -181,7 +178,7 @@ test("ISSUE-15 Exchange: all 54 markets and a full listings directory, IPO-only 
   await page.getByLabel("Reason (shown on the Exchange)").fill("e2e: Ghana market halted for a test");
   await page.getByRole("button", { name: "Apply to this market" }).click();
   await expect(page.getByText("GH market is now halted")).toBeVisible();
-  expect((await request.post(`${ED}/orders`, { headers: H, data: { agent_id: b.id, owner_key: `seed:${b.id}`, company_id: company.id, side: "buy", price: 1, qty: 1, idem_key: `e2e-${tag}-gh` } })).status()).toBe(409);
+  expect((await request.post(`${ED}/orders`, { headers: H, data: { agent_id: b.id, owner_key: ownerKey, company_id: company.id, side: "buy", price: 1, qty: 1, idem_key: `e2e-${tag}-gh` } })).status()).toBe(409);
   await request.post(`${ED}/markets/GH/halt`, { headers: H, data: { halted: false, reason: "" } });
   expect((await request.post(`${ED}/reconcile`, { headers: H, data: {} }).then((r) => r.json())).ok).toBe(true);
 });

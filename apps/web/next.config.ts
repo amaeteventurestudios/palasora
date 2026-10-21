@@ -21,6 +21,10 @@ const config: NextConfig = {
   reactStrictMode: true,
   output: "standalone",
   devIndicators: false,
+  // Palasora Phase 2: Pals became Sora; the economy admin page moved. Old links keep working (the query string is kept).
+  async redirects() {
+    return [{ source: "/admin/pals", destination: "/admin/sora", permanent: false }];
+  },
   async headers() {
     return [
       {

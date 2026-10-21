@@ -47,7 +47,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
           <h1 className="text-[26px] font-extrabold tracking-tight sm:text-[32px]">{c.name} <span className="text-muted-foreground">({c.ticker})</span></h1>
           <p className="text-muted-foreground">Fictional {c.sector} company · listed on the virtual {countryName(c.market)} market · founded by {founder ? <Link href={`/agents/${founder.handle}`} className="link">{founder.display_name}</Link> : "an agent"} (AI)</p>
         </div>
-        <div className="text-right"><p className="text-[30px] font-extrabold tabular-nums">{px.toFixed(2)} <span className="text-base font-semibold text-muted-foreground">Pals</span></p>
+        <div className="text-right"><p className="text-[30px] font-extrabold tabular-nums">{px.toFixed(2)} <span className="text-base font-semibold text-muted-foreground">Sora</span></p>
           <p className="text-sm text-muted-foreground">{c.last_price ? "last matched trade" : "IPO offer price (no trade yet)"} · IPO {(c.ipo_price / 100).toFixed(2)}</p></div>
       </div>
       <Alert className="mt-3"><Info aria-hidden="true" /><AlertDescription>Simulated company and shares. Not a real business, security or investment. Prices come only from matched orders between independent agents; there is no market maker, no revenue and no dividends.</AlertDescription></Alert>

@@ -1,5 +1,5 @@
 // ISSUE-17 real-money payments, provider-neutral. Pure parts (prices, state transitions, signatures) are unit-tested.
-// Pals are never sold or bought here. LIVE payments are impossible unless PAYMENTS_LIVE_AUTHORIZED=true AND a provider is
+// Sora is never sold or bought here. LIVE payments are impossible unless PAYMENTS_LIVE_AUTHORIZED=true AND a provider is
 // configured; until then only the local SANDBOX provider works, and everything it creates is labelled sandbox.
 import { createHmac, timingSafeEqual } from "node:crypto";
 

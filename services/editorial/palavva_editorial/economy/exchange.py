@@ -1,15 +1,19 @@
-"""Palavva Exchange: one matching/settlement core, 54 country-scoped fictional markets (W46-W50).
+"""Sora Exchange: one matching/settlement core, 54 country-scoped fictional markets (W46-W50; Phase 2 rules).
 
 Mechanics (all documented in docs/evidence/v15/EXCHANGE-POLICY.md; values marked PROPOSED need founder approval):
   - Limit orders only, price-time priority, partial fills. Trade price = the resting order's price.
-  - Reservation first: a buy reserves price x qty Pals, a sell reserves the shares. No borrowing, no leverage, no shorting.
-  - Settlement: shares (seller reserved -> buyer available) and Pals (buyer reserved -> seller available) move in the SAME
+  - Reservation first: a buy reserves price x qty Sora, a sell reserves the shares. No borrowing, no leverage, no shorting.
+  - Settlement: shares (seller reserved -> buyer available) and Sora (buyer reserved -> seller available) move in the SAME
     SQLite transaction as the order/trade rows, so a crash leaves either the whole match or none of it.
-  - Self-trade / wash prevention: orders never match another order with the same owner_key (one human owner's agents,
-    or the platform's own seed agents among themselves... see SEED_OWNER_KEY note below).
+  - Self-trade / wash prevention: orders never match another order with the same trade owner (ledger.trade_owner): a
+    person and their own agents share one owner, and ALL house agents share the one platform owner (Doc 04 section 5),
+    so two house agents can never trade with each other.
   - Price band: an order more than BAND away from the reference price (last trade, else IPO price) is rejected.
   - Prices move ONLY through matched orders. There is no market maker, no simulated earnings, no dividends.
-  - Primary offering: a new company's treasury (non-founder) shares are offered as one resting sell order at the IPO price.
+  - Company rules (Doc 04 section 8, Doc 06 section 7.3):
+      * Founding companies (the companies listed before Sora; `founding = 1`) keep their 10,000 shares, holders and listing.
+      * New companies follow Doc 04: the founder holds 1,000 shares, the company is private (no order book, no IPO), and it
+        can list only after 30 days with revenue (`list_company`). The registration fee is destroyed (platform:burn).
 """
 from __future__ import annotations
 
@@ -19,13 +23,15 @@ import sqlite3
 import uuid
 
 from . import db
-from .ledger import LedgerError, account, release, reserve, transfer
+from .ledger import TRADE_OWNER_SQL, LedgerError, account, burn, release, reserve, trade_owner, transfer
 
 BAND = 0.30                       # PROPOSED: +/-30% from the reference price per order
-SHARES_OUTSTANDING = 10_000       # PROPOSED default issuance per fictional company
-FOUNDER_SHARE_PCT = 0.40          # PROPOSED: founder keeps 40%, treasury offers 60% at IPO
-LISTING_FEE = 25 * db.CENTS       # PROPOSED: 25 Pals, paid to the platform fee account (not re-issued)
-MIN_LIFETIME_EARNED = 50 * db.CENTS  # PROPOSED eligibility: founder has earned >= 50 Pals from quality rules
+SHARES_OUTSTANDING = 10_000       # founding companies: 10,000 shares (kept from before Sora)
+FOUNDER_SHARE_PCT = 0.40          # founding companies: founder kept 40%, treasury offered 60% at IPO
+NEW_FOUNDER_SHARES = 1_000        # Doc 04 section 8: a new company's founder holds 1,000 shares
+LISTING_REVENUE_DAYS = 30         # Doc 04 section 8: listing after 30 days of operations with revenue
+LISTING_FEE = 25 * db.CENTS       # PROPOSED: 25 Sora registration fee, destroyed (platform:burn)
+MIN_LIFETIME_EARNED = 50 * db.CENTS  # PROPOSED eligibility: founder has earned >= 50 Sora from quality rules
 ORDER_TTL_SEC = 3 * 86400         # resting orders expire after 3 days (reservation released)
 SECTORS = ["agriculture", "fintech", "logistics", "energy", "media", "education", "health", "retail", "tourism", "manufacturing", "technology", "creative"]
 # Fictional names must not borrow real brands, listed companies or exchanges (no implied affiliation). Not exhaustive:
@@ -67,8 +73,13 @@ def lifetime_earned(con: sqlite3.Connection, agent_id: str) -> int:
 # --------------------------------------------------------------------------- companies
 
 def create_company(con: sqlite3.Connection, *, founder_agent_id: str, owner_key: str, name: str, ticker: str, market: str, sector: str, description: str,
-                   ipo_price: int, fictional_ack: bool, founder_status: str = "active") -> dict:
-    """Eligibility (PROPOSED policy) + listing + primary offering, in one transaction."""
+                   ipo_price: int, fictional_ack: bool, founder_status: str = "active", founding: bool = False) -> dict:
+    """Eligibility (PROPOSED policy) + registration, in one transaction (the caller's).
+
+    A new company (the default; the only kind the API and agents can create) is private: 1,000 founder shares, no order
+    book, listing only after 30 days with revenue. `founding=True` builds a company under the founding rules (10,000
+    shares, listed at once with its treasury offered at the IPO price); it exists for fixtures and tests that need a
+    listed company, because the real founding companies came from before Sora."""
     name = re.sub(r"\s+", " ", name).strip()
     ticker = ticker.strip().upper()
     if not fictional_ack:
@@ -85,7 +96,7 @@ def create_company(con: sqlite3.Connection, *, founder_agent_id: str, owner_key:
     if sector not in SECTORS:
         raise ExchangeError("BAD_SECTOR", f"sector must be one of {', '.join(SECTORS)}")
     if not (50 <= ipo_price <= 500):
-        raise ExchangeError("BAD_PRICE", "IPO price must be between 0.50 and 5.00 Pals")
+        raise ExchangeError("BAD_PRICE", "the share price must be between 0.50 and 5.00 Sora")
     m = con.execute("SELECT * FROM markets WHERE code=?", (market,)).fetchone()
     if not m:
         raise ExchangeError("BAD_MARKET", "unknown market")
@@ -97,36 +108,71 @@ def create_company(con: sqlite3.Connection, *, founder_agent_id: str, owner_key:
         raise ExchangeError("DUPLICATE", "name or ticker already used")
     earned = lifetime_earned(con, founder_agent_id)
     if earned < MIN_LIFETIME_EARNED:
-        raise ExchangeError("NOT_ELIGIBLE", f"founder has earned {earned / db.CENTS:.2f} Pals; {MIN_LIFETIME_EARNED / db.CENTS:.0f} needed from quality contributions")
+        raise ExchangeError("NOT_ELIGIBLE", f"founder has earned {earned / db.CENTS:.2f} Sora; {MIN_LIFETIME_EARNED / db.CENTS:.0f} needed from quality contributions")
     cid = "c" + uuid.uuid4().hex[:14]
     txn = uuid.uuid4().hex
-    founder_pals = account(con, "agent", founder_agent_id, db.PALS, owner_key)
-    fees = account(con, "platform", "fees")
+    founder_cash = account(con, "agent", founder_agent_id, db.SORA, owner_key)
     try:
-        transfer(con, kind="fee", idem_key=f"listing-fee:{cid}", src=founder_pals["id"], src_bucket="available", dst=fees["id"], dst_bucket="available",
-                 asset=db.PALS, amount=LISTING_FEE, txn_id=txn, ref_type="company", ref_id=cid, rule="listing_fee")
+        burn(con, founder_cash["id"], LISTING_FEE, kind="fee", idem_key=f"listing-fee:{cid}", txn_id=txn, ref_type="company", ref_id=cid, rule="registration_fee")
     except LedgerError as e:
-        raise ExchangeError("INSUFFICIENT", f"listing fee of {LISTING_FEE / db.CENTS:.0f} Pals: {e}") from e
-    founder_shares = int(SHARES_OUTSTANDING * FOUNDER_SHARE_PCT)
+        raise ExchangeError("INSUFFICIENT", f"registration fee of {LISTING_FEE / db.CENTS:.0f} Sora: {e}") from e
+    if founding:
+        outstanding, founder_shares, status = SHARES_OUTSTANDING, int(SHARES_OUTSTANDING * FOUNDER_SHARE_PCT), "listed"
+        policy = "founding company (10,000 shares, listed)"
+    else:
+        outstanding, founder_shares, status = NEW_FOUNDER_SHARES, NEW_FOUNDER_SHARES, "private"
+        policy = f"Doc 04 section 8: {NEW_FOUNDER_SHARES:,} founder shares, private until {LISTING_REVENUE_DAYS} days with revenue"
     t = db.now()
     con.execute("""INSERT INTO companies(id, ticker, name, market, founder_agent_id, sector, description, status, shares_outstanding, founder_shares, ipo_price,
-                   eligibility, created_at, listed_at) VALUES (?,?,?,?,?,?,?,'listed',?,?,?,?,?,?)""",
-                (cid, ticker, name, market, founder_agent_id, sector, description[:600], SHARES_OUTSTANDING, founder_shares, ipo_price,
-                 json.dumps({"lifetime_earned": earned, "policy": "eligibility-v0 (PROPOSED)", "fee": LISTING_FEE}), t, t))
+                   eligibility, created_at, listed_at, founding) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (cid, ticker, name, market, founder_agent_id, sector, description[:600], status, outstanding, founder_shares, ipo_price,
+                 json.dumps({"lifetime_earned": earned, "policy": policy, "fee": LISTING_FEE}), t, t if status == "listed" else None, int(founding)))
     asset = f"SHR:{cid}"
     mint = account(con, "platform", f"mint:{cid}", asset)
     founder_shr = account(con, "agent", founder_agent_id, asset, owner_key)
-    treasury_shr = account(con, "company", cid, asset, owner_key)
-    account(con, "company", cid, db.PALS, owner_key)
+    account(con, "company", cid, db.SORA, owner_key)
     transfer(con, kind="ipo_shares", idem_key=f"mint-founder:{cid}", src=mint["id"], src_bucket="available", dst=founder_shr["id"], dst_bucket="available",
              asset=asset, amount=founder_shares, txn_id=txn, ref_type="company", ref_id=cid)
-    transfer(con, kind="ipo_shares", idem_key=f"mint-treasury:{cid}", src=mint["id"], src_bucket="available", dst=treasury_shr["id"], dst_bucket="available",
-             asset=asset, amount=SHARES_OUTSTANDING - founder_shares, txn_id=txn, ref_type="company", ref_id=cid)
     con.execute("INSERT INTO positions(owner_id, company_id, qty, cost) VALUES (?,?,?,0)", (founder_agent_id, cid, founder_shares))
-    # Primary offering: treasury shares rest as one sell order at the IPO price (company-owned, so the founder's owner_key
-    # blocks the founder's own agents from buying their own IPO).
-    _place(con, owner_kind="company", owner_id=cid, owner_key=owner_key, company_id=cid, side="sell", price=ipo_price, qty=SHARES_OUTSTANDING - founder_shares,
-           idem_key=f"ipo:{cid}", reason="primary offering", decision_ref="", check_limits=False)
+    if founding:
+        treasury_shr = account(con, "company", cid, asset, owner_key)
+        transfer(con, kind="ipo_shares", idem_key=f"mint-treasury:{cid}", src=mint["id"], src_bucket="available", dst=treasury_shr["id"], dst_bucket="available",
+                 asset=asset, amount=outstanding - founder_shares, txn_id=txn, ref_type="company", ref_id=cid)
+        # Primary offering: treasury shares rest as one sell order at the IPO price (company-owned, so the founder's owner
+        # blocks the founder's own agents, and every house agent, from buying it).
+        _place(con, owner_kind="company", owner_id=cid, owner_key=owner_key, company_id=cid, side="sell", price=ipo_price, qty=outstanding - founder_shares,
+               idem_key=f"ipo:{cid}", reason="primary offering", decision_ref="", check_limits=False)
+    return dict(con.execute("SELECT * FROM companies WHERE id=?", (cid,)).fetchone())
+
+
+def revenue_days(con: sqlite3.Connection, cid: str) -> int:
+    """Distinct UTC days on which the company's Sora account received revenue (journal kind 'revenue'; Phase 3 sales)."""
+    a = con.execute("SELECT id FROM accounts WHERE owner_kind='company' AND owner_id=? AND asset=?", (cid, db.SORA)).fetchone()
+    if not a:
+        return 0
+    return con.execute("SELECT COUNT(DISTINCT CAST(created_at / 86400 AS INTEGER)) n FROM journal WHERE to_account=? AND kind='revenue'", (a["id"],)).fetchone()["n"]
+
+
+def listing_status(con: sqlite3.Connection, cid: str) -> dict:
+    c = con.execute("SELECT * FROM companies WHERE id=?", (cid,)).fetchone()
+    if not c:
+        raise ExchangeError("UNKNOWN_COMPANY")
+    days = revenue_days(con, cid)
+    return {"company_id": cid, "status": c["status"], "founding": bool(c["founding"]), "revenue_days": days, "needed_days": LISTING_REVENUE_DAYS,
+            "eligible": c["status"] == "private" and days >= LISTING_REVENUE_DAYS,
+            "conditions": f"A new company lists after {LISTING_REVENUE_DAYS} days of operations with revenue (it has {days})."}
+
+
+def list_company(con: sqlite3.Connection, cid: str) -> dict:
+    """Move a private company onto the Exchange once it has 30 days with revenue. Call inside db.tx()."""
+    st = listing_status(con, cid)
+    if st["status"] != "private":
+        raise ExchangeError("NOT_PRIVATE", f"company is {st['status']}")
+    if switch_on(con, "EXCHANGE_HALTED") or switch_on(con, "LISTINGS_PAUSED"):
+        raise ExchangeError("HALTED", "listings are paused")
+    if not st["eligible"]:
+        raise ExchangeError("NOT_ELIGIBLE", st["conditions"])
+    con.execute("UPDATE companies SET status='listed', listed_at=? WHERE id=?", (db.now(), cid))
     return dict(con.execute("SELECT * FROM companies WHERE id=?", (cid,)).fetchone())
 
 
@@ -154,10 +200,14 @@ def _limits_check(con: sqlite3.Connection, agent_id: str, value: int, market: st
 
 
 def place_order(con: sqlite3.Connection, *, agent_id: str, owner_key: str, company_id: str, side: str, price: int, qty: int, idem_key: str,
-                reason: str = "", decision_ref: str = "") -> dict:
+                reason: str = "", decision_ref: str = "", owner_kind: str = "agent") -> dict:
+    """An agent's order (its owner's trading limits apply) or a person's own order (owner_kind 'human': balance only).
+    Both go through the same checks otherwise, and get the same refusals."""
+    if owner_kind not in ("agent", "human"):
+        raise ExchangeError("BAD_ORDER", "orders come from an agent or a person")
     with db.tx(con):
-        return _place(con, owner_kind="agent", owner_id=agent_id, owner_key=owner_key, company_id=company_id, side=side, price=price, qty=qty,
-                      idem_key=idem_key, reason=reason, decision_ref=decision_ref, check_limits=True)
+        return _place(con, owner_kind=owner_kind, owner_id=agent_id, owner_key=owner_key, company_id=company_id, side=side, price=price, qty=qty,
+                      idem_key=idem_key, reason=reason, decision_ref=decision_ref, check_limits=owner_kind == "agent")
 
 
 def _place(con: sqlite3.Connection, *, owner_kind: str, owner_id: str, owner_key: str, company_id: str, side: str, price: int, qty: int, idem_key: str,
@@ -171,18 +221,20 @@ def _place(con: sqlite3.Connection, *, owner_kind: str, owner_id: str, owner_key
     if not c:
         raise ExchangeError("UNKNOWN_COMPANY")
     m = con.execute("SELECT * FROM markets WHERE code=?", (c["market"],)).fetchone()
+    if c["status"] == "private":
+        raise ExchangeError("NOT_LISTED", f"this company is private: it lists after {LISTING_REVENUE_DAYS} days of operations with revenue")
     if c["status"] != "listed" or m["status"] != "open" or switch_on(con, "EXCHANGE_HALTED"):
         raise ExchangeError("HALTED", "trading in this company or market is halted")
     rp = ref_price(c)
     if abs(price - rp) > rp * BAND:
-        raise ExchangeError("PRICE_BAND", f"price must be within {int(BAND * 100)}% of {rp / db.CENTS:.2f} Pals")
+        raise ExchangeError("PRICE_BAND", f"price must be within {int(BAND * 100)}% of {rp / db.CENTS:.2f} Sora")
     if check_limits:
         _limits_check(con, owner_id, price * qty, c["market"])
     t = db.now()
     txn = uuid.uuid4().hex
     asset_shr = f"SHR:{company_id}"
     if side == "buy":
-        acct = account(con, owner_kind, owner_id, db.PALS, owner_key)
+        acct = account(con, owner_kind, owner_id, db.SORA, owner_key)
         need = price * qty
     else:
         acct = account(con, owner_kind, owner_id, asset_shr, owner_key)
@@ -192,9 +244,9 @@ def _place(con: sqlite3.Connection, *, owner_kind: str, owner_id: str, owner_key
                       (idem_key, owner_kind, owner_id, owner_key, company_id, c["market"], side, price, qty, need, reason[:500], decision_ref, t, t))
     oid = int(cur.lastrowid)
     try:
-        reserve(con, acct["id"], db.PALS if side == "buy" else asset_shr, need, idem_key=f"reserve:{oid}", ref_type="order", ref_id=str(oid), txn_id=txn)
+        reserve(con, acct["id"], db.SORA if side == "buy" else asset_shr, need, idem_key=f"reserve:{oid}", ref_type="order", ref_id=str(oid), txn_id=txn)
     except LedgerError as e:
-        raise ExchangeError("INSUFFICIENT", str(e)) from e
+        raise ExchangeError(e.code if e.code in ("MIGRATION_PENDING", "PALS_RETIRED") else "INSUFFICIENT", str(e)) from e
     trades = _match(con, oid, txn)
     return {"order": dict(con.execute("SELECT * FROM orders WHERE id=?", (oid,)).fetchone()), "trades": trades, "replayed": False}
 
@@ -204,12 +256,13 @@ def _match(con: sqlite3.Connection, oid: int, txn: str) -> list[dict]:
     cid = o["company_id"]
     asset_shr = f"SHR:{cid}"
     trades: list[dict] = []
+    me = trade_owner(o["owner_key"])
     if o["side"] == "buy":
-        book = con.execute("""SELECT * FROM orders WHERE company_id=? AND side='sell' AND status IN ('open','partial') AND price<=? AND owner_key != ? AND id != ?
-                              ORDER BY price ASC, id ASC""", (cid, o["price"], o["owner_key"], oid)).fetchall()
+        book = con.execute(f"""SELECT * FROM orders WHERE company_id=? AND side='sell' AND status IN ('open','partial') AND price<=? AND {TRADE_OWNER_SQL} != ? AND id != ?
+                              ORDER BY price ASC, id ASC""", (cid, o["price"], me, oid)).fetchall()
     else:
-        book = con.execute("""SELECT * FROM orders WHERE company_id=? AND side='buy' AND status IN ('open','partial') AND price>=? AND owner_key != ? AND id != ?
-                              ORDER BY price DESC, id ASC""", (cid, o["price"], o["owner_key"], oid)).fetchall()
+        book = con.execute(f"""SELECT * FROM orders WHERE company_id=? AND side='buy' AND status IN ('open','partial') AND price>=? AND {TRADE_OWNER_SQL} != ? AND id != ?
+                              ORDER BY price DESC, id ASC""", (cid, o["price"], me, oid)).fetchall()
     remaining = o["qty"] - o["filled"]
     for r in book:
         if remaining <= 0:
@@ -217,19 +270,19 @@ def _match(con: sqlite3.Connection, oid: int, txn: str) -> list[dict]:
         q = min(remaining, r["qty"] - r["filled"])
         p = r["price"]  # resting order sets the price
         buy, sell = (o, r) if o["side"] == "buy" else (r, o)
-        b_pals = account(con, buy["account_owner_kind"], buy["owner_id"], db.PALS, buy["owner_key"])
+        b_pals = account(con, buy["account_owner_kind"], buy["owner_id"], db.SORA, buy["owner_key"])
         b_shr = account(con, buy["account_owner_kind"], buy["owner_id"], asset_shr, buy["owner_key"])
-        s_pals = account(con, sell["account_owner_kind"], sell["owner_id"], db.PALS, sell["owner_key"])
+        s_pals = account(con, sell["account_owner_kind"], sell["owner_id"], db.SORA, sell["owner_key"])
         s_shr = account(con, sell["account_owner_kind"], sell["owner_id"], asset_shr, sell["owner_key"])
         tag = f"{buy['id']}:{sell['id']}:{buy['filled']}:{sell['filled']}"
         transfer(con, kind="trade_shares", idem_key=f"tshr:{tag}", src=s_shr["id"], src_bucket="reserved", dst=b_shr["id"], dst_bucket="available",
                  asset=asset_shr, amount=q, txn_id=txn, ref_type="order", ref_id=str(oid))
         transfer(con, kind="trade_cash", idem_key=f"tcash:{tag}", src=b_pals["id"], src_bucket="reserved", dst=s_pals["id"], dst_bucket="available",
-                 asset=db.PALS, amount=p * q, txn_id=txn, ref_type="order", ref_id=str(oid))
+                 asset=db.SORA, amount=p * q, txn_id=txn, ref_type="order", ref_id=str(oid))
         # The buyer reserved at its own limit; any improvement is released back at once.
         improve = (buy["price"] - p) * q
         if improve > 0:
-            release(con, b_pals["id"], db.PALS, improve, idem_key=f"improve:{tag}", ref_type="order", ref_id=str(buy["id"]), txn_id=txn)
+            release(con, b_pals["id"], db.SORA, improve, idem_key=f"improve:{tag}", ref_type="order", ref_id=str(buy["id"]), txn_id=txn)
         t = db.now()
         for side_row, consumed in ((buy, buy["price"] * q), (sell, q)):
             filled = side_row["filled"] + q
@@ -269,12 +322,21 @@ def _cancel(con: sqlite3.Connection, oid: int, owner_id: str | None, reason: str
         raise ExchangeError("NOT_FOUND")
     if o["status"] not in ("open", "partial"):
         return dict(o)
-    asset = db.PALS if o["side"] == "buy" else f"SHR:{o['company_id']}"
+    asset = order_asset(con, o)
     acct = account(con, o["account_owner_kind"], o["owner_id"], asset)
     if o["reserved_left"] > 0:
         release(con, acct["id"], asset, o["reserved_left"], idem_key=f"cancel:{oid}", ref_type="order", ref_id=str(oid))
     con.execute("UPDATE orders SET status='cancelled', reserved_left=0, reject_reason=?, updated_at=? WHERE id=?", (reason[:200], db.now(), oid))
     return dict(con.execute("SELECT * FROM orders WHERE id=?", (oid,)).fetchone())
+
+
+def order_asset(con: sqlite3.Connection, o: sqlite3.Row | dict) -> str:
+    """The asset an order reserved: shares for a sell; for a buy, the coin of its reservation (Pals for an order placed
+    before the Sora conversion, which only the migration cancels; Sora otherwise)."""
+    if o["side"] == "sell":
+        return f"SHR:{o['company_id']}"
+    r = con.execute("SELECT asset FROM journal WHERE idem_key=?", (f"reserve:{o['id']}",)).fetchone()
+    return r["asset"] if r else db.SORA
 
 
 def expire_orders(con: sqlite3.Connection) -> int:
@@ -306,7 +368,7 @@ def candles(con: sqlite3.Connection, cid: str, bucket_sec: int = 86400, limit: i
 
 
 def compute_index(con: sqlite3.Connection, market: str | None) -> list[dict]:
-    """Pals Market Index (PMI): 1000 x (sum of last-trade market caps) / (sum of IPO market caps) over listed companies
+    """Sora Market Index (SMI): 1000 x (sum of last-trade market caps) / (sum of IPO market caps) over listed companies
     with at least one trade, evaluated at the end of each UTC day that had trades. Stored and returned as daily points."""
     q = "SELECT id, market, shares_outstanding, ipo_price FROM companies WHERE status != 'delisted'" + (" AND market=?" if market else "")
     comps = {r["id"]: r for r in con.execute(q, (market,) if market else ())}
@@ -328,7 +390,7 @@ def compute_index(con: sqlite3.Connection, market: str | None) -> list[dict]:
     return [{"day": d, "value": v, "constituents": n} for d, (v, n) in sorted(points.items())]
 
 
-def portfolio(con: sqlite3.Connection, owner_id: str) -> dict:
+def portfolio(con: sqlite3.Connection, owner_id: str, owner_kind: str = "agent") -> dict:
     rows = con.execute("""SELECT p.*, c.ticker, c.name, c.market, c.last_price, c.ipo_price, c.founder_agent_id, c.founder_shares FROM positions p
                           JOIN companies c ON c.id=p.company_id WHERE p.owner_id=? AND (p.qty > 0 OR p.realized != 0) ORDER BY c.market, c.ticker""", (owner_id,)).fetchall()
     holdings = []
@@ -343,6 +405,7 @@ def portfolio(con: sqlite3.Connection, owner_id: str) -> dict:
                          "priced_by": "last trade" if r["last_price"] else "IPO price (no trade yet)", "value": value, "cost": r["cost"],
                          "founder_allocation": alloc, "unrealized": (bought_value - r["cost"]) if (r["qty"] - alloc) > 0 else 0, "realized": r["realized"]})
     from .ledger import balance
-    cash = balance(con, "agent", owner_id)
-    return {"holdings": holdings, "pals": cash, "market_value": sum(h["value"] for h in holdings),
+    cash = balance(con, owner_kind, owner_id)
+    # "pals" is the pre-Sora name of the same Sora balance, kept as an alias for older clients.
+    return {"holdings": holdings, "sora": cash, "pals": cash, "currency": db.SORA, "market_value": sum(h["value"] for h in holdings),
             "unrealized": sum(h["unrealized"] for h in holdings), "realized": sum(h["realized"] for h in holdings)}

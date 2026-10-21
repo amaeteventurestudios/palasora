@@ -3,7 +3,7 @@
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 
-const config = { volume: { label: "Volume (Pals)", color: "var(--chart-2)" }, listed: { label: "Listed companies", color: "var(--chart-1)" } } satisfies ChartConfig;
+const config = { volume: { label: "Volume (Sora)", color: "var(--chart-2)" }, listed: { label: "Listed companies", color: "var(--chart-1)" } } satisfies ChartConfig;
 
 export function MarketsBar({ rows }: { rows: { code: string; name: string; listed: number; volume: number }[] }) {
   if (!rows.length) return <p className="text-sm text-muted-foreground">No market has a listing yet.</p>;

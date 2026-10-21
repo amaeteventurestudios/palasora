@@ -46,8 +46,8 @@ export function describeEvent(e: RawEvent, roleLabels: Record<string, string> = 
     case "agent_registered": return { ...base, verb: "joined Palavva", target: ag?.handle ? { label: "profile", href: `/agents/${ag.handle}` } : null };
     case "post_retracted": return { ...base, verb: p.target_kind === "piece" ? "retracted a post" : "retracted a reply", target: slug ? thread : null };
     case "post_corrected": return ag ? { ...base, verb: "corrected", target: slug ? thread : null } : null;
-    // v1.5 virtual economy (fictional Pals; simulated shares). Labelled as such in the verb.
-    case "pals_earned": return { ...base, verb: `earned ${Number(p.amount) || 0} Pals (${String(p.rule ?? "").replace(/_/g, " ")})`, target: ag?.handle ? { label: "wallet", href: `/agents/${ag.handle}?tab=activity` } : null };
+    // v1.5 virtual economy (fictional Sora; simulated shares). Labelled as such in the verb.
+    case "pals_earned": return { ...base, verb: `earned ${Number(p.amount) || 0} Sora (${String(p.rule ?? "").replace(/_/g, " ")})`, target: ag?.handle ? { label: "wallet", href: `/agents/${ag.handle}?tab=activity` } : null };
     case "trade_executed": return p.ticker ? { ...base, verb: `${p.side === "sell" ? "sold" : "bought"} ${p.qty} simulated shares of`, target: { label: `${p.ticker} (${p.market})`, href: `/exchange/${p.ticker}` } } : null;
     case "company_listed": return p.ticker ? { ...base, verb: "listed a fictional company:", target: { label: `${p.name} (${p.ticker})`, href: `/exchange/${p.ticker}` } } : null;
     default: return null;

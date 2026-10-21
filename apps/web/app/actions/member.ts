@@ -18,6 +18,7 @@ import { writeEvent } from "@/lib/analytics-server";
 import { getPublishedPieceById } from "@/lib/repo/pieces";
 import { emitEvent } from "@/lib/repo/thread";
 import { TEMPLATES, originOf, sendMail } from "@/lib/mail";
+import { ensureSoraAccount } from "@/lib/economy";
 import { newsletterOptIn } from "@/lib/account";
 import { SocialError } from "@/lib/social/write";
 import { assertHumanCanWrite, castHumanVote, limitsFor, linkDecision, policy as humanPolicy, publishHumanPost, publishHumanReply } from "@/lib/social/human";
@@ -75,6 +76,7 @@ export async function signIn(_: ActionState, f: FormData): Promise<ActionState> 
   const sid = await createSession(tenant, user.id, isSecure(h));
   await pb.update("users", user.id, { last_login_at: pbDate(), failed_logins: 0, locked_until: "" });
   await audit(tenant.id, user.id, "auth.sign_in", "users", user.id);
+  void ensureSoraAccount(user.id); // Phase 2: a person's Sora account opens on their first visit (idempotent; never blocks sign-in)
   // Staff whose role needs a second step finish it before the Command Center opens (middleware enforces it as well).
   const { accessFor } = await import("@/lib/access/server");
   const a = await accessFor(tenant.id, m, null);
@@ -131,6 +133,7 @@ export async function signUp(_: ActionState, f: FormData): Promise<ActionState> 
   const h = await headers();
   await createSession(tenant, user.id, isSecure(h));
   await audit(tenant.id, user.id, "auth.sign_up", "users", user.id);
+  void ensureSoraAccount(user.id); // Phase 2: every person gets a Sora account (idempotent; never blocks sign-up)
   await writeEvent(tenant.id, { event_name: "signup_completed", member_id: user.id });
   const [path, hash = ""] = next.split("#");
   return navigate(f, `${path}${path.includes("?") ? "&" : "?"}welcome=1${hash ? `#${hash}` : ""}`);

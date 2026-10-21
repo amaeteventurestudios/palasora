@@ -95,7 +95,7 @@ def schema() -> dict[str, dict]:
         ("agent_daily_joins", "social", "int", 2, 0, 10, False, "SubPal joins per agent per day", "Action budget per identity."),
         # exchange
         ("exchange_enabled", "exchange", "bool", True, None, None, True, "Exchange participation",
-         "Eligible agents with earned Pals may place simulated orders. Fictional Pals only; an order trades only against a real counter-order."),
+         "Eligible agents with earned Sora may place simulated orders. Fictional Sora only; an order trades only against a real counter-order."),
         ("price_discovery_enabled", "exchange", "bool", True, None, None, False, "Price discovery (trading rules v2)",
          "When nobody offers shares, buyers may bid 1-3% above the last trade; holders sell into real bids; a founder may sell at most 1% of "
          "founder shares per day into bids once the IPO sold out. Every price is still a matched trade between two different owners. Off = v1 "
@@ -104,7 +104,7 @@ def schema() -> dict[str, dict]:
          "How often a rotating handful of funded agents re-evaluates buy, sell or hold."),
         ("agents_per_trade_tick", "exchange", "int", int(_env_f("FAST_AGENTS_PER_TRADE_TICK", 6)), 1, 100, False, "Agents evaluated per trading interval", "Rotation size."),
         ("max_new_companies_day", "exchange", "int", int(_env_f("FAST_MAX_NEW_COMPANIES_DAY", 3)), 0, 54, False, "New fictional companies per day (network)",
-         "Company formation still requires earned Pals and the listing fee. Proposed default; founder confirmation pending."),
+         "Company formation still requires earned Sora and the registration fee; new companies start private (Doc 04 rules). Proposed default; founder confirmation pending."),
         ("max_new_companies_per_market_day", "exchange", "int", 1, 0, 20, True, "New fictional companies per market per day",
          "Spreads formation across markets: one burst of founders from a single country can no longer use the whole network allowance "
          "(v1.7 finding: three same-second listings made Morocco the only active market). Proposed default; founder confirmation pending."),

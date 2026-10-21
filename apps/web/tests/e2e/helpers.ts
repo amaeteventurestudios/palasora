@@ -43,10 +43,18 @@ export async function completeMfa(page: Page, email: string) {
 export async function signIn(page: Page, email: string, base = BASE, next = "/") {
   const trusted = mfaKeys()[`trust|${new URL(base).host}|${email}`];
   if (trusted) await page.context().addCookies([{ name: "pv_mfa_trust", value: trusted, url: base, httpOnly: true, sameSite: "Strict" }]);
-  await page.goto(`${base}/auth/sign-in?next=${encodeURIComponent(next)}`);
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(PASSWORD);
-  await page.getByRole("button", { name: "Continue with email" }).click();
+  // The sign-in action allows 6 attempts per email per minute; the suite signs the same admin in many times, so when the
+  // limiter answers, wait out its window once and try again rather than hang until the test times out.
+  for (let attempt = 0; ; attempt++) {
+    await page.goto(`${base}/auth/sign-in?next=${encodeURIComponent(next)}`);
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password").fill(PASSWORD);
+    await page.getByRole("button", { name: "Continue with email" }).click();
+    const limited = page.getByText("Too many requests for now");
+    await Promise.race([page.waitForURL((u) => !u.pathname.startsWith("/auth/sign-in"), { timeout: 30_000 }), limited.waitFor({ timeout: 30_000 })]).catch(() => {});
+    if (attempt < 1 && new URL(page.url()).pathname.startsWith("/auth/sign-in") && (await limited.count())) { await page.waitForTimeout(61_000); continue; }
+    break;
+  }
   await page.waitForURL((u) => !u.pathname.startsWith("/auth/sign-in"));
   // Pages with live SSE never reach "networkidle"; wait briefly for a possible redirect to the MFA step, then go on.
   await page.waitForURL((u) => u.pathname.startsWith("/auth/mfa"), { timeout: 2500 }).catch(() => {});
@@ -68,6 +76,20 @@ export async function pbAdmin() {
     update: async (coll: string, id: string, data: Record<string, unknown>) => (await fetch(`${url}/api/collections/${coll}/records/${id}`, { method: "PATCH", headers: h, body: JSON.stringify(data) })).json(),
     create: async (coll: string, data: Record<string, unknown>) => (await fetch(`${url}/api/collections/${coll}/records`, { method: "POST", headers: h, body: JSON.stringify(data) })).json(),
   };
+}
+
+// Palasora Phase 2: house agents (seed:*) share one platform owner and never trade with each other, so a trade needs a
+// person's agent on one side. This creates (or reuses) an agent owned by the reader account, with its economy owner key.
+export async function personAgent(tag: string) {
+  const pb = await pbAdmin();
+  const user = (await pb.list("users", "email='reader@palavva.local'"))[0];
+  const handle = `e2e_person_${tag}`.toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 30); // the public handle pattern: letters, digits, _
+  const found = (await pb.list("agents", `handle_key='${handle}'`))[0];
+  const tenant = user.tenant_id || (await pb.list("tenants", "slug='palavva'"))[0].id;
+  const agent = found ?? (await pb.create("agents", { tenant_id: tenant, handle, handle_key: handle, display_name: `Person agent ${tag}`, kind: "personal", hosting: "palavva",
+    owner_type: "user", owner_user_id: user.id, operator_label: "Personal AI", status: "active", verification_level: "owner_control", is_seed: false }));
+  if (!agent.id) throw new Error(`could not create a person's agent: ${JSON.stringify(agent)}`);
+  return { agent, ownerKey: `user:${user.id}` };
 }
 
 // v1.5 shadcn masthead controls (EditionPicker = Popover + Command; LanguagePicker = Popover + Select).

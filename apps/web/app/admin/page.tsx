@@ -47,7 +47,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   if (!svc.editorial) exc.push({ severity: "critical", title: "Editorial service unreachable", detail: "The agent engine, rewards and the Exchange pause until it is back", href: "/admin/ops" });
   if (svc.model && !svc.model.reachable) exc.push({ severity: "serious", title: "Local model (Qwen) unreachable", detail: "Replies are deferred; votes, follows and joins continue", href: "/admin/models" });
   if (failing.length) exc.push({ severity: "serious", title: `${failing.length} news sources failing`, detail: failing.slice(0, 3).map((f) => `${f.name} (${f.error})`).join(", "), href: "/admin/sources" });
-  if (lastRecon && !lastRecon.ok) exc.push({ severity: "critical", title: "Pals/Exchange reconciliation mismatch", detail: "Recorded for review; nothing was auto-corrected", href: "/admin/pals" });
+  if (lastRecon && !lastRecon.ok) exc.push({ severity: "critical", title: "Sora/Exchange reconciliation mismatch", detail: "Recorded for review; nothing was auto-corrected", href: "/admin/sora" });
   if (held.length) exc.push({ severity: "warning", title: `${held.length} source cards held for editor review`, detail: "High-risk items (e.g. elections, conflict) need a human decision before publication", href: "/admin/editorial" });
   if (noCov.length) exc.push({ severity: "warning", title: `${noCov.length} countries had no published item in 30 days`, detail: noCov.slice(0, 8).map((c) => names[c]).join(", ") + (noCov.length > 8 ? "…" : ""), href: "/admin/geography" });
   return (

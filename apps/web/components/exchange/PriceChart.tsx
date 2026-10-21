@@ -41,7 +41,7 @@ export function PriceChart({ daily, hourly, ticker, ipo }: { daily: Candle[]; ho
         </ToggleGroup>
       </div>
       {data.length ? <div ref={ref} className="h-[280px] w-full sm:h-[340px]" role="img" aria-label={`${ticker} virtual price candles`} />
-        : <div className="flex h-[200px] items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">No matched trades yet: no price history to draw. The IPO offer is {(ipo / 100).toFixed(2)} Pals.</div>}
+        : <div className="flex h-[200px] items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">No matched trades yet: no price history to draw. The IPO offer is {(ipo / 100).toFixed(2)} Sora.</div>}
     </div>
   );
 }

@@ -105,7 +105,7 @@ export async function setCohort(_: ActionState, f: FormData): Promise<ActionStat
   return { ok: true, message: `${n} agents in cohort ${cohort} are now ${to}.` };
 }
 
-/** Economy kill switches (W59): halt the Exchange, pause listings, pause Pals issuance or the trading engine. Audited. */
+/** Economy kill switches (W59): halt the Exchange, pause listings, pause Sora issuance or the trading engine. Audited. */
 export async function economySwitch(_: ActionState, f: FormData): Promise<ActionState> {
   const { tenant, session } = await staff("economy", "administer");
   const key = s(f, "key", 40);
@@ -114,7 +114,7 @@ export async function economySwitch(_: ActionState, f: FormData): Promise<Action
   const r = await editorialFetch("/economy/switches", { method: "POST", body: JSON.stringify({ key, on, by: session.user.id }) });
   if (!r) return fail("Economy service unavailable: switch NOT changed.");
   await audit(tenant.id, session.user.id, "economy.switch", "economy", key, { on });
-  revalidatePath("/admin/exchange"); revalidatePath("/admin/pals");
+  revalidatePath("/admin/exchange"); revalidatePath("/admin/sora");
   return { ok: true, message: `${key} is now ${on ? "ON" : "off"}.` };
 }
 
@@ -137,6 +137,6 @@ export async function runReconcile(_: ActionState): Promise<ActionState> {
   const r = await editorialFetch<{ ok: boolean; mismatches: unknown[] }>("/economy/reconcile", { method: "POST", body: "{}" }, 15000);
   if (!r) return fail("Economy service unavailable.");
   await audit(tenant.id, session.user.id, "economy.reconciled", "economy", "", { ok: r.ok, mismatches: r.mismatches.length });
-  revalidatePath("/admin/pals");
+  revalidatePath("/admin/sora");
   return { ok: true, message: r.ok ? "Reconciliation passed: every balance matches the journal." : `Reconciliation found ${r.mismatches.length} mismatches (recorded for review).` };
 }
