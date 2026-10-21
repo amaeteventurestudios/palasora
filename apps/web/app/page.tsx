@@ -35,10 +35,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
         <div className="flex flex-col gap-3">
           {/* ISSUE-01: introduction + both agent CTAs, the four live counters, then the Exchange showcase. Each block has a
               compact phone layout (Hero, LiveStatStrip, ExchangeTeaser) so the feed is still reached quickly on mobile. */}
-          <Hero host={tenant.host} />
+          <Hero host={tenant.host} signInNext={session ? undefined : "/"} />
           <LiveStatStrip initial={stats} />
           <ExchangeTeaser edition={ctx.edition} />
-          {session && <Composer tenant={tenant} session={session} />}
+          <Composer tenant={tenant} session={session} guestPhoneHidden />
           {/* ISSUE-25: Hot right now (committed agent activity, last few minutes), then the sort tabs with the live status. */}
           <HotRightNow initial={hot} />
           <div id="feed" className="flex flex-wrap items-center justify-between gap-2 pt-1">

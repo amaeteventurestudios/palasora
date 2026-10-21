@@ -2,9 +2,11 @@
 // Palavva worker for hosted agents (service token). Order is always:
 //   authorize (agent status + permission + key scope) -> caps -> deterministic policy -> persist ->
 //   recount from rows (authoritative) -> append the ordered event (persist-before-emit) -> invalidate caches.
-// Humans never reach this module: lib/social/auth.ts refuses browser sessions with the observer rule.
+// People write through lib/social/human.ts (Palasora Phase 1), which reuses this module's SubPal lookup, event log and vote
+// recount, and the same publication-rules service; agents never use a browser session and people never use an agent key.
 import { randomBytes } from "node:crypto";
 import registry from "../i18n/registry.json";
+import { NEWS_POST_LABEL, newsRetired, notNewsFilter } from "../news";
 import { pb, pbDate, q, PBError, type Rec } from "../pb";
 import type { Tenant } from "../tenant";
 import { audit } from "../audit";
@@ -80,13 +82,13 @@ async function decision(t: Tenant, scope: string, targetId: string, pieceId: str
 
 /** Append to the ordered public event log AFTER the write is committed (same log + SSE replay as v1.3). */
 export async function emitSocial(t: Tenant, e: { event_type: string; piece_id?: string; post_id?: string; parent_id?: string; actor_agent_id?: string; subpal_id?: string;
-  visibility?: "public" | "staff"; payload: Record<string, unknown> }) {
+  visibility?: "public" | "staff"; payload: Record<string, unknown>; author_kind?: "agent" | "human" }) {
   for (let i = 0; i < 10; i++) {
     const seq = (await latestSeq(t)) + 1;
     try {
       invalidateStatsCache();
       const ev = await pb.create("thread_events", { tenant_id: t.id, seq, event_type: e.event_type, piece_id: e.piece_id ?? "", post_id: e.post_id ?? "", parent_id: e.parent_id ?? "",
-        author_kind: "agent", role_id: "", visibility: e.visibility ?? "public", actor_agent_id: e.actor_agent_id ?? "", subpal_id: e.subpal_id ?? "", payload: e.payload });
+        author_kind: e.author_kind ?? "agent", role_id: "", visibility: e.visibility ?? "public", actor_agent_id: e.actor_agent_id ?? "", subpal_id: e.subpal_id ?? "", payload: e.payload });
       invalidateStatsCache();
       return ev;
     } catch (err) {
@@ -107,7 +109,7 @@ function slugFor(title: string): string {
   return `${base || "post"}-${randomBytes(4).toString("hex").slice(0, 6)}`;
 }
 
-async function subpalByRef(t: Tenant, ref: { subpal_id?: string; subpal?: string }): Promise<Rec> {
+export async function subpalByRef(t: Tenant, ref: { subpal_id?: string; subpal?: string }): Promise<Rec> {
   let sp: Rec | null = null;
   if (ref.subpal_id && /^[a-z0-9]{10,20}$/.test(ref.subpal_id)) { sp = await pb.get("communities", ref.subpal_id); if (sp && sp.tenant_id !== t.id) sp = null; }
   else if (ref.subpal) {
@@ -123,7 +125,7 @@ export async function recountSubpal(t: Tenant, spId: string) {
   const sp = await pb.get("communities", spId);
   if (!sp || sp.tenant_id !== t.id) return;
   const [posts, members, watchers] = await Promise.all([
-    pb.count("editorial_pieces", `tenant_id=${q(t.id)} && community_id=${q(spId)} && review_status='published'`),
+    pb.count("editorial_pieces", `tenant_id=${q(t.id)} && community_id=${q(spId)} && review_status='published'${notNewsFilter()}`),
     pb.count("agent_memberships", `tenant_id=${q(t.id)} && target_type='subpal' && target_id=${q(spId)}`),
     // Human watchers: follows(target_type='community', target_id=<slug>) - personal reading, never public contribution.
     pb.count("follows", `tenant_id=${q(t.id)} && target_type='community' && target_id=${q(sp.slug)}`),
@@ -133,7 +135,7 @@ export async function recountSubpal(t: Tenant, spId: string) {
 
 async function recountAgent(t: Tenant, agentId: string) {
   const [posts, replies, votes] = await Promise.all([
-    pb.count("editorial_pieces", `tenant_id=${q(t.id)} && author_agent_id=${q(agentId)} && review_status='published'`),
+    pb.count("editorial_pieces", `tenant_id=${q(t.id)} && author_agent_id=${q(agentId)} && review_status='published'${notNewsFilter()}`),
     pb.count("comments", `tenant_id=${q(t.id)} && agent_id=${q(agentId)} && approval_state='approved' && moderation_status='visible' && status_label!='retracted'`),
     pb.count("agent_votes", `tenant_id=${q(t.id)} && agent_id=${q(agentId)} && direction!=0`),
   ]);
@@ -170,6 +172,8 @@ export async function publishPost(t: Tenant, actor: AgentActor, input: { subpal_
   // v1.8+ ISSUE-02: short question posts are normal (the title carries the question), so the body floor is 10 characters.
   if (body.length < 10 || body.length > 4000) throw new SocialError("INVALID", "body must be 10-4000 characters");
   const label = (LABELS as readonly string[]).includes(input.label ?? "") ? input.label! : "community_discussion";
+  // Palasora Phase 1 (doc 06 section 17): news-focused automated posting is retired with the news product.
+  if (label === NEWS_POST_LABEL && newsRetired()) throw new SocialError("INVALID", "Sourced news posts are retired on Palasora. Post it as analysis, a question or an opinion instead.");
   const crid = String(input.client_request_id ?? "").replace(/[^A-Za-z0-9:_-]/g, "").slice(0, 64);
   if (crid) {
     const dup = await pb.first("editorial_pieces", `tenant_id=${q(t.id)} && author_agent_id=${q(a.id)} && client_request_id=${q(crid)}`);
@@ -260,9 +264,14 @@ export async function publishReply(t: Tenant, actor: AgentActor, input: { piece_
     const parent = await pb.first("comments", `tenant_id=${q(t.id)} && id=${q(parentId)} && piece_id=${q(piece.id)} && approval_state='approved' && moderation_status='visible'`);
     if (!parent) throw new SocialError("NOT_FOUND", "The reply being answered is not visible in this thread");
     if (parent.agent_id === a.id) throw new SocialError("INVALID", "An agent does not reply to itself");
+    // Palasora Phase 1: a person who blocked this agent does not get replies from it.
+    if (parent.author_kind === "human" && parent.author_id && await pb.first("blocks", `tenant_id=${q(t.id)} && user_id=${q(parent.author_id)} && agent_id=${q(a.id)}`))
+      throw new SocialError("FORBIDDEN", "The author of that reply has blocked this agent");
     depth = (parent.depth || 1) + 1;
     if (depth > 8) throw new SocialError("INVALID", "Maximum reply depth reached");
   }
+  if (!parentId && piece.kind === "human_post" && piece.author_user_id && await pb.first("blocks", `tenant_id=${q(t.id)} && user_id=${q(piece.author_user_id)} && agent_id=${q(a.id)}`))
+    throw new SocialError("FORBIDDEN", "The author of this post has blocked this agent");
   const mine = await pb.count("comments", `tenant_id=${q(t.id)} && piece_id=${q(piece.id)} && agent_id=${q(a.id)}`);
   if (mine >= 5) throw new SocialError("RATE_LIMITED", "This agent already replied several times in this thread");
   await assertDailyCap(t, a);
@@ -304,6 +313,20 @@ function weighted(rows: Rec[], dir: number): number {
   return w;
 }
 
+/** Palasora Phase 1: one score from agent votes (agent_votes, same-owner weighting) and human votes (votes, one per person).
+ *  Every vote writer recounts from rows with this function, so an agent vote never overwrites human votes or the reverse. */
+export async function recountVotes(t: Tenant, kind: "piece" | "comment", targetId: string) {
+  const [agentRows, humanRows] = await Promise.all([
+    pb.list("agent_votes", { filter: `tenant_id=${q(t.id)} && target_kind=${q(kind)} && target_id=${q(targetId)}`, perPage: 500 }),
+    pb.list("votes", { filter: `tenant_id=${q(t.id)} && target_kind=${q(kind)} && target_id=${q(targetId)}`, perPage: 500 }),
+  ]);
+  const hUp = humanRows.filter((r) => r.direction === 1).length, hDown = humanRows.filter((r) => r.direction === -1).length;
+  const up = agentRows.filter((r) => r.direction === 1).length + hUp, down = agentRows.filter((r) => r.direction === -1).length + hDown;
+  const rank = weighted(agentRows, 1) - weighted(agentRows, -1) + (hUp - hDown);
+  await pb.update(kind === "piece" ? "editorial_pieces" : "comments", targetId, { vote_score: up - down, up_votes: up, down_votes: down, rank_votes: rank });
+  return { up, down, score: up - down, human_up: hUp, human_down: hDown };
+}
+
 export async function castVote(t: Tenant, actor: AgentActor, input: { target_kind: string; target_id: string; direction: number; reason?: string }): Promise<WriteResult> {
   await assertCanAct(t, actor, "vote");
   const a = actor.agent;
@@ -343,10 +366,7 @@ export async function castVote(t: Tenant, actor: AgentActor, input: { target_kin
       throw e;
     }
   }
-  const rows = await pb.list("agent_votes", { filter: `tenant_id=${q(t.id)} && target_kind=${q(kind)} && target_id=${q(target.id)}`, perPage: 500 });
-  const up = rows.filter((r) => r.direction === 1).length, down = rows.filter((r) => r.direction === -1).length;
-  const rank = weighted(rows, 1) - weighted(rows, -1);
-  await pb.update(kind === "piece" ? "editorial_pieces" : "comments", target.id, { vote_score: up - down, up_votes: up, down_votes: down, rank_votes: rank });
+  const { up, down } = await recountVotes(t, kind, target.id);
   if (authorAgent) {
     const au = await pb.get("agents", authorAgent);
     if (au) await pb.update("agents", au.id, { score_received: (au.score_received ?? 0) + (dir - prev) });

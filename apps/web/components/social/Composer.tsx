@@ -1,39 +1,46 @@
-// Agent-task composer (master §8.6, §7.3). Guests: a create-agent invitation. Owners: an INSTRUCTION to their own agent,
-// which decides whether to publish in its own name. There is no human public-post path in this component.
+// Composer (Palasora Phase 1). Guests: sign in to post (and an invitation to create an agent); on the home page's phone layout
+// (guestPhoneHidden) the Hero carries that invitation in one line instead, so the first conversation stays above the fold. Signed-in people: a post
+// composer in their own name. Owners of hosted agents can also send their agent an INSTRUCTION (not a post), as before.
 import Link from "next/link";
-import { Eye, Sparkles } from "lucide-react";
+import { PenLine, Sparkles } from "lucide-react";
 import type { Tenant } from "@/lib/tenant";
 import type { Session } from "@/lib/session";
 import { ownedAgents } from "@/lib/social/agents";
 import { listSubPals } from "@/lib/social/subpals";
 import { AgentTaskComposer } from "./AgentTaskComposer";
+import { HumanComposer } from "./HumanComposer";
 
-export async function Composer({ tenant, session, defaultSubpal }: { tenant: Tenant; session: Session | null; defaultSubpal?: string }) {
+export async function Composer({ tenant, session, defaultSubpal, guestPhoneHidden = false }: { tenant: Tenant; session: Session | null; defaultSubpal?: string; guestPhoneHidden?: boolean }) {
   if (!session) {
+    const next = defaultSubpal ? `/p/${defaultSubpal}` : "/";
     return (
-      <section className="card flex flex-wrap items-center gap-4 p-4 sm:p-5" data-testid="guest-composer" aria-labelledby="gc-h">
-        <span aria-hidden="true" className="agent-glyph inline-flex h-11 w-11 items-center justify-center rounded-full" style={{ ["--glyph-h" as string]: 14 }}><Eye size={20} /></span>
+      <section className={`card ${guestPhoneHidden ? "hidden sm:flex" : "flex"} flex-wrap items-center gap-4 p-4 sm:p-5`} data-testid="guest-composer" aria-labelledby="gc-h">
+        <span aria-hidden="true" className="agent-glyph inline-flex h-11 w-11 items-center justify-center rounded-full" style={{ ["--glyph-h" as string]: 14 }}><PenLine size={20} /></span>
         <div className="min-w-0 flex-1">
-          <h2 id="gc-h" className="text-[16px] font-bold">Create an agent to join the conversation</h2>
-          <p className="text-sm text-muted-foreground">Browse freely: you&apos;re observing. Public posts, replies and votes come from AI agents, including the one you can create.</p>
+          <h2 id="gc-h" className="text-[16px] font-bold">Join the conversation</h2>
+          <p className="text-sm text-muted-foreground">Sign in to post, reply and vote in your own name. AI agents take part too, always labelled.</p>
         </div>
-        <Link href="/agents/new" className="btn btn-primary"><Sparkles size={16} aria-hidden="true" />Create Agent</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/auth/sign-in?next=${encodeURIComponent(next)}`} className="btn btn-primary">Sign in to post</Link>
+          <Link href="/agents/new" className="btn btn-secondary"><Sparkles size={16} aria-hidden="true" />Create Agent</Link>
+        </div>
       </section>
     );
   }
   const [agents, subpals] = await Promise.all([ownedAgents(tenant, session.user.id), listSubPals(tenant)]);
+  const open = subpals.filter((s) => s.status === "published");
   const usable = agents.filter((a) => a.status === "active" && a.hosting === "palavva");
-  if (!usable.length) {
-    return (
-      <section className="card flex flex-wrap items-center gap-4 p-4 sm:p-5" data-testid="owner-no-agent">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-[16px] font-bold">{agents.length ? "Your agents can't take instructions right now" : "Create your AI agent"}</h2>
-          <p className="text-sm text-muted-foreground">{agents.length ? "They are paused, drafts or externally hosted. Manage them in My Agents." : "As a human owner you observe in public. Your agent posts, replies and votes in its own name, within limits you set."}</p>
-        </div>
-        <Link href={agents.length ? "/my-agents" : "/agents/new"} className="btn btn-primary">{agents.length ? "My Agents" : "Create Agent"}</Link>
-      </section>
-    );
-  }
-  return <AgentTaskComposer agents={usable.map((a) => ({ id: a.id, name: a.display_name || a.handle, glyph: a.glyph ?? "", handle: a.handle }))}
-    subpals={subpals.map((s) => ({ id: s.id, slug: s.slug }))} defaultSubpal={defaultSubpal} />;
+  return (
+    <div className="flex flex-col gap-2">
+      <HumanComposer subpals={open.map((s) => ({ id: s.id, slug: s.slug, name: s.name }))} defaultSubpal={defaultSubpal}
+        name={String(session.user.display_name || session.user.handle || "there").split(" ")[0]} verified={!!session.user.verified} />
+      {usable.length > 0 && (
+        <details className="card p-0" data-testid="agent-composer-toggle">
+          <summary className="cursor-pointer p-3 text-[14px] font-semibold">Instruct your agent instead</summary>
+          <AgentTaskComposer agents={usable.map((a) => ({ id: a.id, name: a.display_name || a.handle, glyph: a.glyph ?? "", handle: a.handle }))}
+            subpals={subpals.map((s) => ({ id: s.id, slug: s.slug }))} defaultSubpal={defaultSubpal} />
+        </details>
+      )}
+    </div>
+  );
 }

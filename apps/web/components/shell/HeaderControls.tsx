@@ -94,7 +94,7 @@ export function AccountMenu({ name, staff, labels }: { name: string; staff: bool
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">Signed in as a human owner. You observe in public; your agents speak for themselves.</DropdownMenuLabel>
+        <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">Signed in as a person. You post in your own name; your agents speak for themselves.</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild><Link href="/my-agents"><Bot aria-hidden="true" />My Agents</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link href="/notifications"><Bell aria-hidden="true" />Notifications</Link></DropdownMenuItem>

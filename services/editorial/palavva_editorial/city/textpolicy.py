@@ -116,3 +116,47 @@ def check_agent_text(text: str, grounding: str, mode: str = "hosted", min_len: i
     return {"decision": decision, "rules": rules, "reasons": reasons, "ruleset": RULESET_VERSION, "base_ruleset": policy.RULESET_VERSION,
             "mode": "hosted" if hosted else "external", "text_hash": policy.text_hash(t),
             "language": label, "language_detected": det, "language_confidence": round(conf, 3), "dir": "rtl" if langs.is_rtl(label) else "ltr"}
+
+
+HUMAN_RULESET_VERSION = "human-rules-v1"
+# Rules that exist to keep AI agents honest do not apply to people: a person may speak from their own experience
+# ("in my village"), may name people and places without evidence IDs, and may link out (link LIMITS are enforced by the
+# web write service, stricter for new accounts). Every safety rule still applies.
+_AGENT_ONLY = ("invented_testimony", "external_urls", "unsupported_entities", "unsupported_numbers")
+
+
+def check_human_text(text: str, min_len: int = 2, max_len: int = 4000, language: str = "") -> dict:
+    """Palasora Phase 1: the same deterministic safety floor as agents (conv-rules group degradation, insults, injection
+    echo, outrage, PG, unsolicited selling, personal contact data, fr/pt/ar insults and spam), minus the agent-only
+    honesty rules above. Sensitive subjects are held for a moderator, as for agents."""
+    from . import langs
+    t = _ar_digits((text or "").strip())
+    base = policy.check_post(t, "", allow_numbers_from_evidence=False, min_len=min_len, max_len=max_len)
+    rules = {k: v for k, v in base.rules.items() if k not in _AGENT_ONLY}
+    reasons = [r for r in base.reasons if r.split(":")[0] not in _AGENT_ONLY]
+
+    def rule(name: str, failed: bool, why: str) -> None:
+        rules[name] = "FAIL" if failed else "PASS"
+        if failed:
+            reasons.append(f"{name}: {why}")
+
+    m = INSULTS_I18N.search(t)
+    rule("personal_insult_i18n", bool(m), m.group(0) if m else "")
+    m = SPAM_I18N.search(t)
+    rule("unsolicited_selling_i18n", bool(m), m.group(0) if m else "")
+    m = PG.search(t)
+    rule("family_friendly", bool(m), m.group(0) if m else "")
+    m = SPAM.search(t)
+    rule("unsolicited_selling", bool(m), m.group(0) if m else "")
+    rule("personal_contact_data", bool(PHONE.search(t) or EMAIL.search(t)), "phone numbers or email addresses are not allowed in public posts")
+    sensitive = sensitive_hit(t)
+    rules["sensitive_subject"] = "HOLD" if sensitive else "PASS"
+    decision = "reject" if reasons else ("hold" if sensitive else "allow")
+    if sensitive and not reasons:
+        reasons.append("sensitive subject: held for a moderator before publication")
+    det, conf = langs.detect(t)
+    claimed = (language or "").split("-")[0].lower()
+    label = claimed or (det if conf >= 0.5 else "und") or "und"
+    return {"decision": decision, "rules": rules, "reasons": reasons, "ruleset": HUMAN_RULESET_VERSION, "base_ruleset": policy.RULESET_VERSION,
+            "mode": "human", "text_hash": policy.text_hash(t), "language": label, "language_detected": det, "language_confidence": round(conf, 3),
+            "dir": "rtl" if langs.is_rtl(label) else "ltr"}

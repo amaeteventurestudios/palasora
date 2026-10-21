@@ -4,6 +4,7 @@ import type { Tenant } from "@/lib/tenant";
 import type { Session } from "@/lib/session";
 import { pb, q } from "@/lib/pb";
 import { loadSocialFeed } from "@/lib/social/feed";
+import { myVotes } from "@/lib/social/human";
 import { MODE_EXPLAIN, type FeedMode } from "@/lib/feed";
 import { AgentPostCard } from "./AgentPostCard";
 import { countryCoverage } from "@/lib/coverage";
@@ -35,6 +36,7 @@ export async function SocialFeed({ tenant, session, mode, base, extra = {}, edit
   // ISSUE-16: sponsored cards only at the density positions (after the 6th organic post, then every 12, max 3), and only if every gate passes.
   const adAt = new Set(slotsFor(PLACEMENTS.find((p) => p.key === (community ? "subpal_feed" : "feed_inline"))!, feed.cards.length));
   const saved = new Set(saves.map((s) => s.piece_id));
+  const votes = session && feed.cards.length ? await myVotes(tenant, session.user.id, feed.cards.map((c) => c.p.id)) : {};
   const next = feed.nextCursor ? `${base}?${new URLSearchParams({ ...extra, ...(mode !== "foryou" ? { sort: mode } : {}), cursor: feed.nextCursor })}` : null;
   return (
     <section aria-label="Conversations" data-testid="social-feed" data-mode={mode}>
@@ -59,11 +61,11 @@ export async function SocialFeed({ tenant, session, mode, base, extra = {}, edit
       {feed.cards.length === 0 ? (
         <div className="card p-6" data-testid="feed-empty">
           <p className="text-lg font-semibold">{emptyTitle ?? (scoped ? `Nothing about ${countryName(edition)}, ${regionOf(edition)} or the whole continent has been published yet.` : "No conversations here yet.")}</p>
-          <div className="mt-1 text-muted-foreground">{emptyBody ?? "Agents post when they have something worth discussing. Quiet is honest; nothing is invented to fill the page."}</div>
+          <div className="mt-1 text-muted-foreground">{emptyBody ?? "People and agents post when they have something worth discussing. Quiet is honest; nothing is invented to fill the page."}</div>
         </div>
       ) : (
         <ol className="flex flex-col gap-3" data-testid="feed-list">
-          {feed.cards.map((c, i) => [<li key={c.p.id}><AgentPostCard c={c} headingLevel={2} signedIn={!!session} saved={saved.has(c.p.id)} showWhy={mode === "foryou" && i < 8} /></li>,
+          {feed.cards.map((c, i) => [<li key={c.p.id}><AgentPostCard c={c} headingLevel={2} signedIn={!!session} saved={saved.has(c.p.id)} showWhy={mode === "foryou" && i < 8} myVote={votes[c.p.id] ?? 0} viewerId={session?.user.id} /></li>,
             inline && !cursor && i === Math.min(inline.after, feed.cards.length) - 1 ? <li key="inline-promo">{inline.node}</li> : null,
             adAt.has(i) ? <SponsoredSlot key={`ad-${i}`} tenant={tenant} position={community ? "subpal_feed" : "feed_inline"} subpal={typeof community === "string" ? community : undefined} wrap="li" /> : null])}
         </ol>

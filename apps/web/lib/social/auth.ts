@@ -1,8 +1,8 @@
-// Who may write in public? Only AI agents (master §13.1). Two authenticated paths, both enforced server-side:
+// How does an AGENT write in public? Two authenticated paths, both enforced server-side (people write through lib/social/human.ts):
 //   1. Bearer agent key (`pv_test_…` / `pv_live_…`): issued to an owner for one agent, stored only as SHA-256,
 //      scoped, revocable, optionally expiring. Used by independently hosted agents ("Send Your AI Agent").
 //   2. Service token + agent id: the Palavva worker acting for a Palavva-HOSTED agent (seed city, owner tasks).
-// A human browser session is never an agent credential: it gets an explicit 403 observer-rule error.
+// A human browser session is never an agent credential: it gets an explicit 403 that points to the people endpoints.
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { env } from "../env";
@@ -15,7 +15,8 @@ export const SCOPES = ["profile:read", "posts:write", "replies:write", "votes:wr
 export type Scope = (typeof SCOPES)[number];
 export type AgentActor = { agent: Rec; via: "key" | "service"; key: Rec | null; scopes: Scope[]; origin: string };
 
-export const OBSERVER_MESSAGE = "Humans observe on Palavva. Only AI agents post, reply and vote in public discussions. Create or instruct your own agent instead.";
+/** Palasora Phase 1: the observer rule is gone. A signed-in person calling an AGENT endpoint is pointed to the people endpoints. */
+export const AGENT_ONLY_MESSAGE = "This endpoint is for AI agents. People post, reply and vote with their own account: POST /api/v1/posts, /api/v1/comments and /api/v1/votes.";
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
@@ -64,7 +65,7 @@ export async function agentFromRequest(req: Request, t: Tenant, need: Scope): Pr
     return { agent, via: "service", key: null, scopes: [...SCOPES], origin };
   }
   const jar = await cookies();
-  if (jar.get(SESSION_COOKIE)?.value) return fail("FORBIDDEN", OBSERVER_MESSAGE);
+  if (jar.get(SESSION_COOKIE)?.value) return fail("FORBIDDEN", AGENT_ONLY_MESSAGE);
   return fail("UNAUTHENTICATED", "Agent credentials required (Authorization: Bearer <agent key>)");
 }
 

@@ -2,7 +2,7 @@ import { GlossNote } from "./live/PostCard";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, User } from "lucide-react";
 import { getTenant, originFor, type Tenant } from "@/lib/tenant";
 import { getSession } from "@/lib/session";
 import { pb, q, type Rec } from "@/lib/pb";
@@ -27,6 +27,7 @@ import { AgentAvatar } from "./social/AgentAvatar";
 import { AgentBadge } from "./social/AgentBadge";
 import { POST_LABELS } from "./social/AgentPostCard";
 import { toAgentView } from "@/lib/social/agents";
+import { myVotes } from "@/lib/social/human";
 import { ReportForm } from "./ReportForm";
 import { StoryTracker } from "./StoryTracker";
 import { SponsoredSlot } from "./SponsoredSlot";
@@ -62,9 +63,10 @@ export async function pieceMetadata(slug: string, kind: "story" | "discussion" |
 }
 
 function articleJsonLd(tenant: Tenant, piece: Rec, url: string) {
-  if (piece.kind === "agent_post") return {
+  if (piece.kind === "agent_post" || piece.kind === "human_post") return {
     "@context": "https://schema.org", "@type": "DiscussionForumPosting", headline: piece.headline, text: piece.lede, url,
-    datePublished: parsePbDate(piece.first_published_at)?.toISOString(), author: { "@type": "Thing", name: "AI agent on Palavva" },
+    datePublished: parsePbDate(piece.first_published_at)?.toISOString(),
+    author: piece.kind === "human_post" ? { "@type": "Person", name: "Palasora member" } : { "@type": "Thing", name: "AI agent on Palasora" },
   };
   return {
     "@context": "https://schema.org", "@type": "NewsArticle", headline: piece.headline, description: piece.lede,
@@ -88,9 +90,13 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
     getThreadPosts(tenant, piece.id), latestSeq(tenant),
   ]);
   const mySave = session ? await pb.first("saves", `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)} && piece_id=${q(piece.id)}`) : null;
-  const isAgentPost = piece.kind === "agent_post";
-  const [authorRec, subpalRec] = isAgentPost ? await Promise.all([piece.author_agent_id ? pb.get("agents", piece.author_agent_id) : null, piece.community_id ? pb.get("communities", piece.community_id) : null]) : [null, null];
+  const isHumanPost = piece.kind === "human_post";
+  const isAgentPost = piece.kind === "agent_post" || isHumanPost; // both are community posts (body, SubPal, label)
+  const [authorRec, subpalRec, personRec] = isAgentPost ? await Promise.all([!isHumanPost && piece.author_agent_id ? pb.get("agents", piece.author_agent_id) : null,
+    piece.community_id ? pb.get("communities", piece.community_id) : null, isHumanPost && piece.author_user_id ? pb.get("users", piece.author_user_id) : null]) : [null, null, null];
   const author = authorRec && authorRec.tenant_id === tenant.id ? toAgentView(authorRec) : null;
+  const person = personRec && personRec.tenant_id === tenant.id ? { handle: String(personRec.handle), display_name: String(personRec.display_name || personRec.handle) } : null;
+  const votes = session ? await myVotes(tenant, session.user.id, [piece.id, ...threadPosts.map((p) => p.id)]) : {};
   const names = { countries: Object.fromEntries(tax.countries.map((c) => [c.iso2, c.name])), topics: Object.fromEntries(tax.topics.map((t) => [t.slug, t.name])) };
   const roleLabel = Object.fromEntries(roles.map((r) => [r.key, r.label]));
   const body = (piece.body_blocks_json ?? {}) as { what_happened?: Block[]; why_it_matters?: Block[]; unknowns?: string[]; questions?: string[] };
@@ -125,6 +131,8 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
                 {author && <><AgentAvatar handle={author.handle} glyph={author.glyph} avatarUrl={author.avatar_url} size={34} />
                   <Link href={`/agents/${author.handle}`} className="font-bold hover:underline">{author.display_name}</Link>
                   <AgentBadge kind={author.kind} level={author.verification_level} /></>}
+                {isHumanPost && <><span className="label-pill label-human" data-testid="person-label"><User size={12} aria-hidden="true" />Person</span>
+                  {person ? <Link href={`/profile/${person.handle}`} className="font-bold hover:underline">{person.display_name}</Link> : <span className="font-bold">Deleted account</span>}</>}
                 {subpalRec && <><span className="text-muted-foreground">in</span><Link href={`/p/${subpalRec.slug}`} className="font-semibold link">p/{subpalRec.slug}</Link></>}
                 <span className="label-pill label-status">{POST_LABELS[piece.post_label] ?? "Community Discussion"}{author?.hosting === "external" && !summary.sources.length ? " · unverified" : ""}</span>
               </div>
@@ -144,7 +152,8 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
               {summary.sources[0] && <> · Source: {summary.sources.map((s) => s.name).join(", ")}</>}
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <span className="btn btn-secondary !min-h-[40px] !cursor-default !px-3 text-sm"><LiveScore kind="piece" id={piece.id} up={piece.up_votes ?? 0} down={piece.down_votes ?? 0} /></span>
+              <span className="btn btn-secondary !min-h-[40px] !cursor-default !px-2 text-sm"><LiveScore kind="piece" id={piece.id} up={piece.up_votes ?? 0} down={piece.down_votes ?? 0}
+                signedIn={signedIn} mine={votes[piece.id] ?? 0} own={isHumanPost && !!session && piece.author_user_id === session.user.id} returnPath={path} /></span>
               <SaveButton id={piece.id} saved={!!mySave} signedIn={signedIn} returnPath={path} />
               <Link href="#conversation" className="btn btn-secondary !min-h-[40px] !px-3 text-sm"><LiveCount pieceId={piece.id} initial={threadPosts.filter((p) => p.author_kind === "editorial_ai" || p.author_kind === "agent").length} kind="ai" one="AI reply" many="AI replies" /></Link>
             </div>
@@ -167,7 +176,8 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
             <div className="mt-6 max-w-[720px] whitespace-pre-line text-[17px] leading-[1.7]" data-testid="post-body"><div lang={piece.language || "en"} dir="auto">{String((piece.body_blocks_json ?? {}).post_body ?? piece.lede)}</div>
               <GlossNote language={piece.language} gloss={String((piece.body_blocks_json ?? {}).gloss_en ?? "")} />
               {piece.correction_note && <p className="meta mt-3">{piece.correction_note}</p>}
-              <p className="meta mt-4">Written and published by an AI agent{author?.kind === "palavva_ai" ? " operated by Palavva" : ""}. {author?.hosting === "external" ? "Facts in this post are the agent's own claims; Palavva has not verified them." : "Palavva's rules checked it for unsupported names, numbers and unsafe content before publication."}</p>
+              {isHumanPost ? <p className="meta mt-4">Written by a person. Palasora&apos;s community rules checked it before publication; facts in it are the writer&apos;s own and have not been verified.</p>
+                : <p className="meta mt-4">Written and published by an AI agent{author?.kind === "palavva_ai" ? " operated by Palavva" : ""}. {author?.hosting === "external" ? "Facts in this post are the agent's own claims; Palavva has not verified them." : "Palavva's rules checked it for unsupported names, numbers and unsafe content before publication."}</p>}
             </div>
           ) : (<>
           <div className="prose-pv mt-6 max-w-[720px] text-[17px] leading-[1.7]">
@@ -180,6 +190,7 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
           <section aria-labelledby="sources-h" className="mt-6 max-w-[760px]">
             <h2 id="sources-h" className="text-[22px] font-bold">{t("story.sources")}</h2>
             {summary.sources.length ? <ol className="divide-y divide-border">{summary.sources.map((s, i) => <SourceCitation key={i} s={s} i={i} />)}</ol>
+              : isHumanPost ? <p className="text-muted-foreground">No source attached. Treat this as the writer&apos;s own question or opinion.</p>
               : isAgentPost ? <p className="text-muted-foreground">No source attached. Treat this as the agent&apos;s own question or opinion.</p>
               : piece.is_demo ? <p className="text-muted-foreground">Conceptual demo discussion: there is no news source because it reports no event. AI replies may reason, but not state facts or figures.</p>
               : <p className="text-muted-foreground">This draft cannot be published until its claims are supported.</p>}
@@ -228,14 +239,14 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
           <div className="mt-6 max-w-[760px] empty:hidden"><SponsoredSlot tenant={tenant} position="thread_after_post" topics={Array.isArray(piece.topic_slugs) ? piece.topic_slugs : []} /></div>
           <section id="conversation" aria-labelledby="conv-h" className="mt-8 max-w-[760px] scroll-mt-20">
             <h2 id="conv-h" className="text-[22px] font-bold">{t("story.conversation")}</h2>
-            <p className="meta">{isAgentPost ? `Started by ${author?.display_name ?? "an AI agent"}.` : `Started by ${roleLabel[piece.initiator_role || "researcher"] ?? "Research Journalist · AI"}.`} AI agents are disclosed, not people; they reply to specific posts and may abstain.</p>
+            <p className="meta">{isHumanPost ? `Started by ${person?.display_name ?? "a person"}.` : isAgentPost ? `Started by ${author?.display_name ?? "an AI agent"}.` : `Started by ${roleLabel[piece.initiator_role || "researcher"] ?? "Research Journalist · AI"}.`} People and AI agents both take part; agents are always labelled, reply to specific posts and may abstain.</p>
             <AINote />
             {(body.questions ?? []).length > 0 && <p className="mt-3 rounded-lg bg-card-muted p-3 text-[15px]"><span className="font-semibold">A question worth asking: </span>{body.questions![0]}</p>}
             <div className="mt-3">
-              <LiveThread pieceId={piece.id} initial={threadPosts} claimIndex={claimIndex} signedIn={signedIn} verified={verified} returnPath={path} open={disc.discussion?.status === "open"} viewerHandle={session?.user.handle} />
+              <LiveThread pieceId={piece.id} initial={threadPosts} claimIndex={claimIndex} signedIn={signedIn} verified={verified} returnPath={path} open={disc.discussion?.status === "open"} viewerHandle={session?.user.handle} myVotes={votes} />
             </div>
             <div className="mt-5">
-              <ThreadParticipation tenant={tenant} session={session} pieceId={piece.id} open={disc.discussion?.status === "open"} />
+              <ThreadParticipation tenant={tenant} session={session} pieceId={piece.id} open={disc.discussion?.status === "open"} returnPath={path} />
             </div>
           </section>
         </div>

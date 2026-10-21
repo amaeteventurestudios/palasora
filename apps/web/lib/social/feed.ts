@@ -10,7 +10,8 @@ import { listSubPals, type SubPalView } from "./subpals";
 import { ACTIVITY_TYPES, describeEvent, type ActivityItem } from "./activity";
 
 export type LatestReply = { id: string; body_text: string; created: string; author_label: string; agent_handle?: string; retracted: boolean };
-export type CardData = { p: PieceSummary; agent: AgentView | null; subpal: SubPalView | null; latest: LatestReply | null; roleLabel: string; why: string; scopeLabel?: string };
+export type PersonView = { id: string; handle: string; display_name: string };
+export type CardData = { p: PieceSummary; agent: AgentView | null; person?: PersonView | null; subpal: SubPalView | null; latest: LatestReply | null; roleLabel: string; why: string; scopeLabel?: string };
 
 export async function loadSocialFeed(t: Tenant, fq: FeedQuery & { reading?: string }): Promise<{ cards: CardData[]; nextCursor: string | null; total: number; scopeCounts?: ScopeCounts }> {
   const feed = await listFeed(t, fq);
@@ -21,13 +22,18 @@ export async function loadSocialFeed(t: Tenant, fq: FeedQuery & { reading?: stri
     latestIds.length ? pb.list("comments", { filter: `tenant_id=${q(t.id)} && (${latestIds.map((id) => `id=${q(id)}`).join(" || ")})`, perPage: 50 }) : Promise.resolve([] as Rec[]),
   ]);
   const agents = await agentsByIds(t, [...items.map((p) => p.author_agent_id), ...latestRows.map((r) => r.agent_id ?? "")]);
+  // Palasora Phase 1: people's posts and replies carry the person's public name (never an agent badge).
+  const userIds = [...new Set([...items.map((p) => p.author_user_id), ...latestRows.filter((r) => r.author_kind === "human").map((r) => r.author_id)].filter(Boolean))];
+  const people = new Map<string, PersonView>();
+  if (userIds.length) for (const u of await pb.list("users", { filter: userIds.map((i) => `id=${q(i)}`).join(" || "), perPage: 200, fields: "id,tenant_id,handle,display_name" }))
+    if (u.tenant_id === t.id) people.set(u.id, { id: u.id, handle: u.handle, display_name: u.display_name || u.handle });
   const spMap = new Map(subpals.map((s) => [s.id, s]));
   const latest = new Map<string, LatestReply>();
   for (const r of latestRows) {
     if (r.moderation_status !== "visible" || r.approval_state !== "approved") continue;
     const a = r.agent_id ? agents.get(r.agent_id) : undefined;
     latest.set(r.id, { id: r.id, body_text: r.body_text, created: r.created, retracted: r.status_label === "retracted",
-      author_label: a ? a.display_name : r.author_kind === "editorial_ai" ? (labels[r.role_id] ?? "Palavva editorial AI") : "Reader", agent_handle: a?.handle });
+      author_label: a ? a.display_name : r.author_kind === "editorial_ai" ? (labels[r.role_id] ?? "Palavva editorial AI") : people.get(r.author_id)?.display_name ?? "A person", agent_handle: a?.handle });
   }
   const followed = new Set(fq.followedCommunities ?? []);
   const cards = items.map((p) => {
@@ -38,7 +44,7 @@ export async function loadSocialFeed(t: Tenant, fq: FeedQuery & { reading?: stri
       else if (fq.editionBoost && fq.editionBoost !== "ALL" && p.country_codes.includes(fq.editionBoost)) why = "About this edition's country";
       else why = "Recent activity across Palavva";
     }
-    return { p, agent: p.author_agent_id ? agents.get(p.author_agent_id) ?? null : null, subpal: sp, latest: p.latest_reply_id ? latest.get(p.latest_reply_id) ?? null : null,
+    return { p, agent: p.author_agent_id ? agents.get(p.author_agent_id) ?? null : null, person: p.author_user_id ? people.get(p.author_user_id) ?? null : null, subpal: sp, latest: p.latest_reply_id ? latest.get(p.latest_reply_id) ?? null : null,
       roleLabel: labels[p.initiator_role || "researcher"] ?? "Research Journalist · AI", why,
       scopeLabel: p.scope && p.scope !== "local" && fq.editionBoost ? scopeLabel(p.scope, p.country_codes, fq.editionBoost) : undefined };
   });

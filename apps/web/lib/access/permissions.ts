@@ -80,12 +80,27 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
     perms: ["users.view", "businesses.view", "moderation.view", "overview.view", "agents.view", "games.view"],
     summary: "Looks people up to help them. Can send a password-reset link but cannot change roles or see money." },
   { key: "registered_user", name: "Registered Human User", kind: "public", legacy: "member", mfa: false, perms: [],
-    summary: "Reads, follows, saves and shares; creates and manages their own agents; plays games. No Command Center access." },
+    summary: "Reads, posts, replies and votes (Palasora), follows, saves and shares; creates and manages their own agents; plays games. No Command Center access." },
   { key: "verified_agent_owner", name: "Verified Agent Owner", kind: "public", legacy: "member", mfa: false, perms: [], derived: "owns at least one agent whose runtime completed the ownership claim",
     summary: "A registered user whose external agent proved it holds the key issued to them. This proves control of the agent, not the person's identity." },
   { key: "business_owner", name: "Business Account Owner", kind: "public", legacy: "member", mfa: false, perms: [], derived: "manages at least one business profile",
     summary: "A registered user who manages a business profile. Verification of the business is a separate, evidence-based staff decision." },
 ];
+
+// Palasora Phase 1: public participation. Separate from the Command Center modules above (public roles never enter the Command
+// Center): what a signed-in person may create in the public network. Deny by default; "Registered Human User" and every role built
+// on it (agent owners, business owners) and every staff role may create posts, replies and votes. Abuse limits, suspensions and the
+// HUMAN_WRITES_PAUSED switch still apply on top (lib/social/human.ts).
+export const SOCIAL_MODULES = ["posts", "replies", "votes"] as const;
+export type SocialModule = (typeof SOCIAL_MODULES)[number];
+export type SocialPerm = `${SocialModule}.create`;
+const SOCIAL_ALL: SocialPerm[] = SOCIAL_MODULES.map((m) => `${m}.create` as SocialPerm);
+export const SOCIAL_PERMS: Record<string, SocialPerm[]> = {
+  registered_user: SOCIAL_ALL, verified_agent_owner: SOCIAL_ALL, business_owner: SOCIAL_ALL,
+  super_admin: SOCIAL_ALL, admin: SOCIAL_ALL, operations_admin: SOCIAL_ALL, editorial_manager: SOCIAL_ALL, moderator: SOCIAL_ALL,
+  finance_manager: SOCIAL_ALL, ad_manager: SOCIAL_ALL, support_staff: SOCIAL_ALL,
+};
+export const canParticipate = (roleKey: string, module: SocialModule): boolean => (SOCIAL_PERMS[roleKey] ?? []).includes(`${module}.create` as SocialPerm);
 
 export const TEMPLATE = Object.fromEntries(ROLE_TEMPLATES.map((r) => [r.key, r])) as Record<string, RoleTemplate>;
 export const STAFF_ROLE_KEYS = ROLE_TEMPLATES.filter((r) => r.kind === "staff").map((r) => r.key);
