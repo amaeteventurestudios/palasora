@@ -11,7 +11,12 @@ export async function hostFacts() {
   try { const s = await statfs(root); disk = { total: s.blocks * s.bsize, free: s.bavail * s.bsize }; } catch { disk = null; }
   const backupsDir = path.join(root, "backups");
   let backups: { name: string; size: number; at: number }[] = [];
-  try { backups = (await Promise.all((await readdir(backupsDir)).filter((f) => f.endsWith(".tar.gz")).map(async (f) => { const st = await stat(path.join(backupsDir, f)); return { name: f, size: st.size, at: st.mtimeMs }; }))).sort((a, b) => b.at - a.at); } catch { /* none */ }
+  // Palasora Phase 1: palasora-<ts>/ folders (size from their MANIFEST.json) and older palavva-*.tar.gz archives.
+  const backupSize = async (f: string, size: number) => {
+    if (f.endsWith(".tar.gz")) return size;
+    try { return (JSON.parse(await readFile(path.join(backupsDir, f, "MANIFEST.json"), "utf8")).files as { bytes: number }[]).reduce((n, x) => n + (x.bytes || 0), 0); } catch { return 0; }
+  };
+  try { backups = (await Promise.all((await readdir(backupsDir)).filter((f) => f.endsWith(".tar.gz") || /^palasora-\d{8}T\d{6}Z(-\d+)?$/.test(f)).map(async (f) => { const st = await stat(path.join(backupsDir, f)); return { name: f, size: await backupSize(f, st.size), at: st.mtimeMs }; }))).sort((a, b) => b.at - a.at); } catch { /* none */ }
   let drills: { name: string; at: number }[] = [];
   try { const ev = path.join(root, "docs", "evidence"); drills = (await Promise.all((await readdir(ev)).filter((f) => /restore-drill/.test(f)).map(async (f) => ({ name: f, at: (await stat(path.join(ev, f))).mtimeMs })))).sort((a, b) => b.at - a.at); } catch { /* none */ }
   const procs: { name: string; pid: number | null; running: boolean }[] = [];

@@ -47,11 +47,12 @@ Emails (verification links) go to the local mail sink, `data/mail-sink/`, which 
 ## Backup and restore
 
 ```bash
-scripts/backup.sh             # online SQLite backup → backups/palavva-<ts>.tar.gz + .sha256 (keeps 14)
+scripts/backup.sh             # online SQLite backup → backups/palasora-<ts>/ + MANIFEST.json + SHA256SUMS (keeps 14); see docs/operations/BACKUP-RESTORE.md
+scripts/restore.sh <dir> <target> [--force]  # verify checksums, then restore (refuses a non-empty target without --force)
 scripts/restore-drill.sh      # restores the newest backup into a temp dir on :8399 and verifies counts, integrity, ACLs
 ```
 
-To actually restore: `scripts/dev-down.sh`, move `data/pb_data` aside (do not delete it), extract the archive's `pb_data/` (and `jobs.db`, `search.db`, `analytics/`) into `data/`, then run `scripts/dev-up.sh --prod`.
+To actually restore: `scripts/dev-down.sh`, then `scripts/restore.sh backups/palasora-<ts> data --force` (the current contents are moved aside into `data/.pre-restore-<ts>/`, never deleted), then `scripts/dev-up.sh --prod`. Full steps: `docs/operations/BACKUP-RESTORE.md`.
 
 ## Tests
 

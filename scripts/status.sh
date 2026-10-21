@@ -8,4 +8,4 @@ echo "pocketbase $(curl -s -o /dev/null -w '%{http_code}' "$PB_URL/api/health") 
 echo "editorial $(curl -s -o /dev/null -w '%{http_code}' "$EDITORIAL_URL/health")  $EDITORIAL_URL (loopback)"
 echo "qwen      $(curl -s -m 5 -o /dev/null -w '%{http_code}' "$OLLAMA_URL/api/tags")  (private Tailscale)"
 echo "policy    ORACLE_DEPLOYMENT_AUTHORIZED=$ORACLE_DEPLOYMENT_AUTHORIZED PUBLIC_LAUNCH_AUTHORIZED=$PUBLIC_LAUNCH_AUTHORIZED PAID_FALLBACKS_ENABLED=$PAID_FALLBACKS_ENABLED"
-echo "backups   $(ls -1t "$ROOT"/backups/palavva-*.tar.gz 2>/dev/null | head -1 | xargs -I{} basename {}) ; restore drill: $(cat "$ROOT/backups/LAST_RESTORE_DRILL_OK" 2>/dev/null || echo never)"
+echo "backups   $(ls -1td "$ROOT"/backups/palasora-*Z "$ROOT"/backups/palavva-*.tar.gz 2>/dev/null | head -1 | xargs -I{} basename {}) ; restore drill: $(cat "$ROOT/backups/LAST_RESTORE_DRILL_OK" 2>/dev/null || echo never)"
