@@ -1,11 +1,11 @@
 ---
 title: "Palasora · Headless Simulation & Validation Plan"
-subtitle: "Document 05 · Working draft v0.2 · 21 Oct 2026 · Amaete Umanah"
+subtitle: "Document 05 · Working draft v0.3 · 21 Oct 2026 · Amaete Umanah"
 ---
 
 **The answer in one line:** we write the economy once, as plain Python functions with no graphics, inside the existing economy service, run it for thousands of simulated days on a laptop, and only approve it when it passes every gate below. The live service then runs the same functions.
 
-This document turns Documents 02 and 04 into a test we can run. It is the last planning document before code. Numbers come from Document 04 v0.3 and are starting values to tune.
+This document turns Documents 02 and 04 into a test we can run. It is the last planning document before code. Numbers come from Document 04 v0.4 and are starting values to tune.
 
 # 1. What the tests must prove
 
@@ -14,7 +14,7 @@ This document turns Documents 02 and 04 into a test we can run. It is the last p
 | 1 | The economy runs without the 3D view. | Every test runs headless; there is no graphics code in the simulation. |
 | 2 | Nothing appears from nowhere: no coins, no goods. | Conservation checks on every tick (section 8). |
 | 3 | Humans and agents follow the same rules. | One action list and one rule check; a parity test runs the same plays as a human and as an agent. |
-| 4 | The island keeps running when players are offline. | The Quiet spell scenario. |
+| 4 | The town keeps running when players are offline. | The Quiet spell scenario. |
 | 5 | Agents are worth what they cost. | AI-planned businesses compared with rules-only ones on the measures in section 7. |
 | 6 | Every story is real, not invented drama. | Every story in a morning message must point to a real change in the records. |
 
@@ -81,7 +81,7 @@ All money is stored as whole numbers in hundredths of a Sora, so there is never 
 Each tick runs the same steps in the same order:
 
 1. **Clock:** advance one hour; daily and weekly jobs run at their set hours.
-2. **Arrivals and scenario events:** new players, droughts, airships.
+2. **Arrivals and scenario events:** new players, droughts, cargo ships.
 3. **Decide:** each agent picks actions (rules every hour; AI at its planning hour or on a trigger).
 4. **Act:** every action passes the gate in a fixed order (by account id), then is applied or refused.
 5. **Produce:** farms grow crops, workshops make tools, stalls cook meals, tools wear.
@@ -121,7 +121,7 @@ If a recorded answer is missing, the agent falls back to rules and the run notes
 | 3 | **Rush** | 10 new food stalls open on day 10 | Some close, owners recover |
 | 4 | **Rich arrivals** | 20 Founder Pass players on day 5 (a prime plot each, no coins) | Prices stay sane; no takeover |
 | 5 | **Cheater** | A mischief agent tries self-trades, over-limit spending, fake goods | Every attempt refused and logged |
-| 6 | **Quiet spell** | All players silent days 15 to 17 | The island keeps running |
+| 6 | **Quiet spell** | All players silent days 15 to 17 | The town keeps running |
 | 7 | **Growth** | 500 players join over 2 weeks | Jobs, food and money keep up |
 | 8 | **Job squeeze** | 50 players join on one day | Everyone has a job within 1 game day |
 
@@ -183,7 +183,7 @@ Each scenario runs for 30 days on 10 seeds: 80 runs, 2,400 simulated days. A lon
 - No news code remains.
 - Every event is delivered exactly once to each view; repeats from the relay are ignored.
 
-The economic model is approved for building the 3D island only when gates A to F all pass. Any failure goes back to Document 04, the numbers change, and every gate runs again.
+The economic model is approved for building the 3D town only when gates A to F all pass. Any failure goes back to Document 04, the numbers change, and every gate runs again.
 
 # 9. How we run it
 
@@ -212,7 +212,7 @@ Each run is one command, for example `sim run --scenario drought --seed 3 --days
 
 # 11. Not in this plan
 
-The 3D island, real WhatsApp or Telegram sending, payments, the public exchange, district islands, and the weekly vote's request collection from social channels. The vote itself runs, using test requests.
+The 3D town, real WhatsApp or Telegram sending, payments, the public exchange, new districts and other towns, and the weekly vote's request collection from social channels. The vote itself runs, using test requests.
 
 # 12. Defaults used until you decide
 
@@ -234,3 +234,12 @@ Applied from the approved amendments, following Document 06 v0.2:
 - **8. Gates:** added Gate F: migration fingerprints match; the observer rule is gone; no news code remains; events delivered exactly once to each view.
 - **10. Open source:** Vitest, fast-check and pure-rand are replaced by pytest and Hypothesis (MPL-2.0, test-only) and plain seeded `random`. The order book and AI calls now use what the economy service already has.
 - The "News" part and Gate C are renamed "Reports". There is no real-world news anywhere.
+
+# 14. Changes in v0.3
+
+**Why:** user decision, 21 Oct 2026. The world is no longer floating islands. It is a grounded, Meadowvale-style town, a little futuristic (Document 03 v0.4, Document 06 v0.3).
+
+- "Island" becomes "town" in the evidence table, the Quiet spell scenario, the approval line and what is not in this plan. District islands become new districts and other towns.
+- **4. The tick:** cargo ships replace airships as scenario arrivals.
+- Document 04 is now v0.4. Its numbers are unchanged.
+- **Unchanged:** the Python core inside the economy service, SpacetimeDB for presence only, the records, the tick, the scenarios, and Gates A to F.

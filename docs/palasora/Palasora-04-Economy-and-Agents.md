@@ -1,16 +1,16 @@
 ---
 title: "Palasora · Economy & AI Agent Simulation Specification"
-subtitle: "Document 04 · Working draft v0.3 · 21 Oct 2026 · Amaete Umanah"
+subtitle: "Document 04 · Working draft v0.4 · 21 Oct 2026 · Amaete Umanah"
 ---
 
-**The answer in one line:** one island, one coin (the Sora), four businesses that need each other, and one set of rules that humans and agents both follow. Every coin and every good has a recorded source, so the headless simulation can prove the economy works before anyone sees it.
+**The answer in one line:** one town, one coin (the Sora), four businesses that need each other, and one set of rules that humans and agents both follow. Every coin and every good has a recorded source, so the headless simulation can prove the economy works before anyone sees it.
 
 All numbers below are **starting values to tune**, not final prices. The headless simulation exists to change them.
 
 # 1. The world being simulated
 
 - **One coin, Sora.** Sora is the migrated Pals ledger from the existing economy service, not a new ledger. Its history is kept, and every balance converts once at 1 Pal = 1 Sora (Document 06 section 7).
-- **One capital island** with about 120 plots: homes, the four starter businesses, the Market Hall, the Harbour and the Town Hall.
+- **One town** (the first town, grounded on the coast) with about 120 plots: homes, the four starter businesses, the Market Hall, the Harbour and the Town Hall.
 - **Time:** one game day is one real day, so the morning message matches real mornings. The simulation runs in hourly ticks, and the headless test runs them as fast as it can.
 - **Population at the start:** 100 house agents, drawn from the existing 27,060 agents (see section 6). Players join on top of them.
 
@@ -52,7 +52,7 @@ Goods only arrive when delivered. An owner can fetch goods themselves, but slowl
 | Comes in (sources) | Goes out (sinks) |
 |---|---|
 | New player's grant and house agents' starting balances | Material imports at the Harbour |
-| Civic jobs paid by the Town Hall (building the voted project, island upkeep) | Buying plots from the Town Hall |
+| Civic jobs paid by the Town Hall (building the voted project, town upkeep) | Buying plots from the Town Hall |
 | The Harbour buying surplus goods at a floor price | Construction and upgrades |
 | Social rewards for posts and replies (Town Hall issuance within its weekly budget) | Daily plot upkeep |
 | | Cosmetics bought with coins |
@@ -134,7 +134,7 @@ Every action goes through the same checks: is it allowed by the rules, by the ow
 3. **Rush:** 10 new food stalls open in one day.
 4. **Rich arrivals:** 20 players arrive with Founder Passes (a prime plot each, no coins).
 5. **Cheater:** an agent tries self-trades and over-limit spending. Every attempt must be rejected.
-6. **Quiet spell:** all players go silent for 3 days. The island must keep running.
+6. **Quiet spell:** all players go silent for 3 days. The town must keep running.
 7. **Growth:** 500 players join over 2 weeks.
 8. **Job squeeze:** 50 players join on one day.
 
@@ -165,3 +165,11 @@ Applied from the approved amendments, following Document 06 v0.2:
 - **7. Actions:** contracts get a record of their own (terms, deliveries due, breaches), used by business cards and civic justice.
 - **8. Companies:** the 9 existing companies keep their 10,000 shares and listings as founding companies; new companies follow the 1,000-share and 30-day rules.
 - **10. Open questions:** added open orders at migration.
+
+# 13. Changes in v0.4
+
+**Why:** user decision, 21 Oct 2026. The world is no longer floating islands. It is a grounded, Meadowvale-style town, a little futuristic (Document 03 v0.4, Document 06 v0.3).
+
+- **One line, 1, 4 and 9:** the capital island is now the first town. "Island" becomes "town" in the summary, the world, town upkeep and the Quiet spell scenario.
+- The Harbour is now a real port with a marina. Its role is unchanged: it imports materials, buys surplus at a floor price, and is one of the two mints with the Town Hall.
+- **Unchanged:** every number, one currency Sora, the ledger rules, the 100 house agents drawn from the 27,060, the action list, contracts, the Market Hall, company rules, the tests and scenarios.

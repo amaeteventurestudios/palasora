@@ -1,0 +1,146 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Palasora Game Design Canvas</title>
+<style>
+@page { size: 11in 8.5in; margin: 0.35in; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 7.7pt/1.27 Helvetica, Arial, sans-serif; color: #1d2430; }
+header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+h1 { font-size: 17pt; margin: 0; letter-spacing: .2px; }
+h1 span { color: #2f7d6a; }
+.meta { font-size: 8pt; color: #5b6573; }
+.grid { display: grid; height: 7.2in; border: 1.2px solid #1d2430;
+  grid-template-columns: 1.55fr 1.6fr 1.6fr 1.6fr 1.55fr;
+  grid-template-rows: 1.7fr 1.95fr 1.6fr;
+  grid-template-areas:
+   "start obj goals mission emotion"
+   "idea  rsm rsm   rsm     emotion"
+   "idea  fail impr longev  emotion"; }
+.c { border: .8px solid #1d2430; padding: 6px 7px; overflow: hidden; }
+.c h2 { font-size: 9.3pt; margin: 0 0 3px; }
+.c ul { margin: 0; padding-left: 12px; }
+.c li { margin: 0 0 2px; }
+.c p { margin: 0 0 3px; }
+.start { grid-area: start; } .obj { grid-area: obj; } .goals { grid-area: goals; }
+.mission { grid-area: mission; } .emotion { grid-area: emotion; } .idea { grid-area: idea; }
+.fail { grid-area: fail; } .impr { grid-area: impr; } .longev { grid-area: longev; }
+.rsm { grid-area: rsm; background: #eef6f2; }
+.rsm h2 { font-size: 10.5pt; color: #1f5f50; }
+.loop { display: flex; align-items: center; gap: 4px; margin: 4px 0 6px; flex-wrap: nowrap; }
+.loop b { background: #2f7d6a; color: #fff; border-radius: 10px; padding: 3px 7px; font-size: 8.4pt; white-space: nowrap; }
+.loop i { color: #2f7d6a; font-style: normal; font-weight: bold; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cols h3 { font-size: 8.6pt; margin: 0 0 2px; color: #1f5f50; }
+footer { font-size: 7pt; color: #7a8390; margin-top: 4px; }
+</style></head><body>
+<header>
+  <h1><span>Palasora</span> · Game Design Canvas</h1>
+  <div class="meta">Working draft v0.4 · 21 Oct 2026 · Amaete Umanah</div>
+</header>
+<div class="grid">
+
+<div class="c start"><h2>Start</h2>
+<ul>
+<li>One product: you open into a living island; the social network, agents and economy are one tap away.</li>
+<li>Joining gives you a plot with your name on it, next to real neighbours, and your own agent.</li>
+<li>First 5 minutes: pick your first build (house, food stall, garden or workshop), watch it rise floor by floor, hand it to your agent.</li>
+<li>No money? Your agent takes a job and saves for your first stall. A Founder Pass gives a prime plot, a badge and cosmetics, no coins.</li>
+</ul></div>
+
+<div class="c obj"><h2>Objectives <small>(each visit)</small></h2>
+<ul>
+<li>Read your agent's morning message (WhatsApp, Telegram or the app) and watch the replay.</li>
+<li>Glance at your plot's colour: green, yellow or red.</li>
+<li>Make one decision: approve your agent's plan or pick one of its 3 suggestions.</li>
+<li>Vote on what the island builds this week.</li>
+<li>Visit a neighbour, a shop or downtown.</li>
+</ul></div>
+
+<div class="c goals"><h2>Goals <small>(days to weeks)</small></h2>
+<ul>
+<li>Level up your plot: house gets a floor, stall becomes a shop.</li>
+<li>Buy the plot next door; move up from stall to workshop to factory.</li>
+<li>Win a supply deal or beat a rival nearby.</li>
+<li>Get your request built in the weekly vote.</li>
+<li>Earn an island role (harbour master, market keeper).</li>
+</ul></div>
+
+<div class="c mission"><h2>Mission <small>(long term)</small></h2>
+<ul>
+<li>Make a name on the islands: own a street, run a known business.</li>
+<li>Climb the production ladder to a company others depend on: a chip foundry or a sky-ship maker.</li>
+<li>List it on the Sora Exchange and have others invest.</li>
+<li>Help your island grow until a new district island rises.</li>
+</ul></div>
+
+<div class="c emotion"><h2>Emotion</h2>
+<ul>
+<li><b>Belonging:</b> my name, my house, my neighbours.</li>
+<li><b>Curiosity:</b> what happened while I was away?</li>
+<li><b>Pride:</b> my building on the skyline, my clip shared.</li>
+<li><b>Trust:</b> my agent works for me and I can see why it chose.</li>
+<li><b>Anticipation:</b> will my vote win? will the deal close?</li>
+<li><b>Rivalry:</b> the stall across the road.</li>
+<li><b>Calm:</b> a soft, beautiful island that is nice just to watch.</li>
+</ul>
+<p style="margin-top:6px"><b>Not:</b> stress, grind or fear of losing everything.</p></div>
+
+<div class="c idea"><h2>Idea</h2>
+<p><b>A world of floating islands where your AI agent lives, works and builds for you.</b></p>
+<p>You claim a plot, decide what to build, and your agent runs it while you are away. Come back to see what changed. People and agents post and reply in one social network around it.</p>
+<p>Look: Meadowvale-style calm low-poly in real 3D, built on our Three.js diorama kit. Phone first.</p>
+<p>Underneath: a player-run economy and production chains (Capital Rift's idea), run by your agent so it never feels like work.</p>
+<p>Islands are districts around one shared downtown capital.</p>
+<p>Your agent lives where you chat: WhatsApp, Telegram, the app. Build your own, or bring your own AI.</p>
+<p>Money: free to join; Founder Pass (plot, badge, cosmetics); agent subscription. No coins are sold, and coins never cash out. Agents are tagged.</p></div>
+
+<div class="c rsm"><h2>Repeatable Scalable Mechanic</h2>
+<div class="loop"><b>Decide</b><i>→</i><b>Delegate</b><i>→</i><b>Away</b><i>→</i><b>Replay</b><i>→</i><b>Grow</b><i>→</i><b>Decide again</b></div>
+<div class="cols">
+<div>
+<h3>The loop (once or twice a day, 2 to 5 minutes)</h3>
+<ul>
+<li><b>Decide:</b> one tap on your plot: what to build, sell or try next.</li>
+<li><b>Delegate:</b> your agent turns it into a plan within its permissions.</li>
+<li><b>Away:</b> the island keeps living. Your agent restocks, routes deliveries and fixes anything red; it makes a few real AI decisions.</li>
+<li><b>Replay:</b> back on the island, what changed glows: money, deals, rivals, what rose next door, with an optional 30-second tour. Every property glows green, yellow or red.</li>
+<li><b>Grow:</b> spend earnings on a level, a plot or a share, which unlocks the next decision.</li>
+</ul>
+</div>
+<div>
+<h3>Why it repeats and scales</h3>
+<ul>
+<li><b>Same loop at every size:</b> plot, then street, then island, then a company on the exchange.</li>
+<li><b>Every new player adds to everyone:</b> another plot, agent and business means more customers, suppliers and rivals.</li>
+<li><b>The world makes its own content:</b> the simulation creates events; the procedural builder turns any decision into a building.</li>
+<li><b>Every replay is an ad:</b> the clip is shareable, and "follow = move in" brings the next resident.</li>
+<li><b>Cheap to run:</b> rules for most residents, about one AI call per agent per day.</li>
+</ul>
+</div></div></div>
+
+<div class="c fail"><h2>Failure</h2>
+<ul>
+<li>A business can lose money and close; a rival can take your customers.</li>
+<li>Your home plot is never lost, and nothing is wiped.</li>
+<li>Your agent explains a bad call; you can override it.</li>
+<li>Recover by changing plan or trying another business.</li>
+</ul></div>
+
+<div class="c impr"><h2>Improvement</h2>
+<ul>
+<li>Building levels and more plots; worker, owner, employer, factory.</li>
+<li>Your agent remembers your preferences and gets better at your business.</li>
+<li>Reputation: customers and neighbours rate you.</li>
+<li>Island roles and voting weight.</li>
+</ul></div>
+
+<div class="c longev"><h2>Longevity</h2>
+<ul>
+<li>New district islands rise as the population grows.</li>
+<li>Weekly votes, festivals and seasons.</li>
+<li>The production ladder: ore, metal, parts, electronics, chips, then airships and sky craft. Mining islands, airship trade, the Sora Exchange.</li>
+<li>A player- and agent-run economy that never stands still.</li>
+</ul></div>
+
+</div>
+<footer>Format after the Game Design Canvas, SBGames 2017: https://www.sbgames.org/sbgames2017/papers/ArtesDesignFull/175107.pdf</footer>
+</body></html>

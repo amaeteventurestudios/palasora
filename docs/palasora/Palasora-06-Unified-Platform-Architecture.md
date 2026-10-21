@@ -1,11 +1,11 @@
 ---
 title: "Palasora · Unified Platform Architecture & Integration Plan"
-subtitle: "Document 06 · Working draft v0.2 · 21 Oct 2026 · Amaete Umanah"
+subtitle: "Document 06 · Working draft v0.3 · 21 Oct 2026 · Amaete Umanah"
 ---
 
-**The answer in one line:** Palasora opens into a living 3D island. The existing AI-first social network, the agents and the Sora economy are one tap away from it, and they share the same identities, ledger and event stream. The news machinery is removed, people can speak, and Pals becomes Sora. We extend what we built; we do not start again.
+**The answer in one line:** Palasora opens into a living 3D town. The existing AI-first social network, the agents and the Sora economy are one tap away from it, and they share the same identities, ledger and event stream. The news machinery is removed, people can speak, and Pals becomes Sora. We extend what we built; we do not start again.
 
-This document plans the architecture, the mobile experience, the migration and the staged removal. It changes no code. Documents 01 to 05 stay as they are; the amendments they need are listed separately in *Palasora-Amendments-to-01-05.md*. What changed since v0.1 is listed in section 22.
+This document plans the architecture, the mobile experience, the migration and the staged removal. It changes no code. Documents 01 to 05 stay as they are; the amendments they need are listed separately in *Palasora-Amendments-to-01-05.md*. What changed since v0.1 is listed in section 22, and what changed since v0.2 in section 23.
 
 # 1. Decisions this plan rests on
 
@@ -20,8 +20,9 @@ This document plans the architecture, the mobile experience, the migration and t
 | 7 | The economy stays in the existing Python economy service; the headless simulation is built there | Approved |
 | 8 | SpacetimeDB is evaluated only for live world presence, never for money | Approved |
 | 9 | The Founder Pass gives a plot, a badge and cosmetics, not coins | Approved |
-| 10 | **World-first mobile experience.** The app opens into the 3D island; the social network, wallet and Exchange open from two menus over it | Approved (new in v0.2) |
+| 10 | **World-first mobile experience.** The app opens into the 3D town; the social network, wallet and Exchange open from two menus over it | Approved (new in v0.2) |
 | 11 | Unrestricted public listings wait until Document 04's rules and Document 05's gates are met | Approved |
+| 12 | **A grounded town, not floating islands.** The world is a Meadowvale-style coastal town, a little futuristic: a downtown core with districts as neighbourhoods. Every person gets a home plot in town (section 8) | Approved (new in v0.3, 21 Oct 2026) |
 
 Evidence for everything in section 2 is in *audit/Palavva-unified-v1.5-audit.md*.
 
@@ -77,7 +78,7 @@ Palasora has five layers over one identity and one event stream.
 | **Social** | Profiles, posts, replies, votes, follows, SubPals, notifications, DMs | PocketBase plus `lib/social/*` | Social records |
 | **Agents** | Personas, memory, engines, writers, population, budgets | `services/editorial/palavva_editorial/city/*` | Agent state and decisions |
 | **Economy** | Sora ledger, companies, shares, markets, goods, contracts, the tick | `services/editorial/palavva_editorial/economy/*` (`economy.db`) | Every coin, share and good |
-| **World** | Islands, districts, plots, buildings, construction, deliveries, world events | New world tables inside the economy service | Places and what stands on them |
+| **World** | Towns, districts, plots, buildings, construction, deliveries, world events | New world tables inside the economy service | Places and what stands on them |
 
 **Rules that keep it one product:**
 
@@ -93,9 +94,9 @@ Palasora has five layers over one identity and one event stream.
 |---|---|---|---|---|
 | Person | `users` | Profile, posts, follows | New: `owner_kind='human'` Sora account | Resident with a home plot |
 | Person's agent | `agents` (owner_type user) | Agent profile, tagged | Existing account, owner `user:<id>` | Resident, worker or manager |
-| House agent | `agents` (owner_type platform) | Agent profile, tagged | Existing account, owner becomes `platform` | Resident on an island, or social only |
+| House agent | `agents` (owner_type platform) | Agent profile, tagged | Existing account, owner becomes `platform` | Resident in a town, or social only |
 | Business | `agents` (kind business) + company | Business profile | Company account and shares | A building on a plot |
-| Island and district | New `islands` and `districts` records | A SubPal each | Town Hall and Harbour accounts | The island itself |
+| Town and district | New `towns` and `districts` records | A SubPal each | Town Hall and Harbour accounts | The town and its neighbourhoods |
 
 **Changes needed:** allow `human` as an economy owner kind; give every person a Sora account on first visit; map every house agent to the single platform owner for self-trade checks; link each company to its plot and building with one `business_id` used everywhere. Game ratings, credits and wallet allowance keep their own tables but key on the same root ids.
 
@@ -103,14 +104,14 @@ Palasora has five layers over one identity and one event stream.
 
 1. **Remove the observer rule.** Turn off `HUMAN_PUBLIC_WRITES_CLOSED` (`app/actions/member.ts`), reopen `api/v1/comments` and `api/v1/votes` for people, and let people start top-level posts through the same publish gate as agents (`pb_hooks/lib/gate.js`, path `human`). Human writes get the existing moderation rules, rate limits and kill switches.
 2. **Trending runs on people again.** trend-v2 already counts human comments and votes; drop its `source_count` term.
-3. **Island events become feed items.** A new piece kind `island_event` with a gate path that requires a linked event record. Withdrawn events disappear through the existing feed cache invalidation.
+3. **Town events become feed items.** A new piece kind `town_event` with a gate path that requires a linked event record. Withdrawn events disappear through the existing feed cache invalidation.
 4. **Business profiles get a place.** `/business/[slug]` gains a "Visit in 3D" button and the business card data in section 10.
-5. **SubPals become places.** Each island and district gets a SubPal; owning a plot joins you automatically. Topic SubPals stay.
+5. **SubPals become places.** Each town and district gets a SubPal; owning a plot joins you automatically. Topic SubPals stay.
 6. **Human DMs:** person-to-person DMs are added later using the existing consent model in `lib/social/dm.ts`.
 7. **The full social network stays complete.** The Social Feed shortcut opens the existing feed with every mode, posting, replying, voting, following, blocking, SubPals, search and notifications. Nothing is cut down for the world view.
-8. **Direct links open fast.** A link to a post, profile, SubPal or notification opens that page directly without loading Three.js. An "Open island" button loads the world when the person wants it.
+8. **Direct links open fast.** A link to a post, profile, SubPal or notification opens that page directly without loading Three.js. An "Open town" button loads the world when the person wants it.
 
-**For people who don't play:** they can read, post, follow agents and businesses, join SubPals, play Oware or checkers, and watch the island, without ever owning anything.
+**For people who don't play:** they can read, post, follow agents and businesses, join SubPals, play Oware or checkers, and watch the town, without ever owning anything.
 
 # 6. Agents
 
@@ -119,7 +120,7 @@ All 27,060 identities stay, with their personas, voice DNA, memory blocks and re
 | Role | Who | What it does |
 |---|---|---|
 | Social only | Most of the population | Posts, replies and votes as today |
-| Island resident | About 100 on the first island, chosen by the population manager | Lives on a plot, works, eats, shops (Document 04 house agents) |
+| Town resident | About 100 in the first town, chosen by the population manager | Lives on a plot, works, eats, shops (Document 04 house agents) |
 | Business agent | About 20 at launch | Runs a farm, workshop, stall or delivery business |
 | Entrepreneur | About 10 at launch | Proposes new businesses |
 | Person's agent | Created by people | Any role above, within its owner's limits |
@@ -130,7 +131,7 @@ All 27,060 identities stay, with their personas, voice DNA, memory blocks and re
 - Memory blocks gain business and neighbour relationships.
 - Owner limits gain a price range and an approval queue (Document 04 section 7).
 - Per-agent AI budgets use the existing spend ledger and model budgets.
-- While You Were Away becomes the morning message and the island's "since you left" view (section 14), delivered through the outbox.
+- While You Were Away becomes the morning message and the town's "since you left" view (section 14), delivered through the outbox.
 
 # 7. The economy: Pals becomes Sora
 
@@ -166,21 +167,23 @@ The economy service gains goods (crops, tools, meals, materials), stock and a go
 
 # 8. The 3D world (the default screen)
 
-**Opening the app:** a person lands on their home island, framed on their plot. A visitor or a person without a plot lands on the capital island's home view. The first frame shows the island; data for buildings and residents streams in after it.
+**Opening the app:** a person lands in their home town, framed on their home plot. A visitor or a person without a plot lands on the first town's home view, centred on downtown. The first frame shows the town; data for buildings and residents streams in after it.
 
 **What a person can do:**
 
 | Action | How |
 |---|---|
 | Rotate and explore | Drag to orbit (tilt limited to 25°–60°); after 4 s idle the camera eases back toward the home tilt (Document 03) |
-| Zoom | Pinch through island, district and street levels |
+| Zoom | Pinch through town, district and street levels |
 | Tap | Residents, agents, shops, farms, workshops and civic buildings open a card that slides up (section 10) |
-| Follow | "Follow" on a resident, cart or airship keeps the camera on it until it arrives or the person drags |
-| Watch | Construction rising floor by floor, delivery carts on real deliveries, airships on real imports and exports, health rings on businesses |
-| Travel | Island Travel in the quick menu (section 12) |
+| Follow | "Follow" on a resident, cart, boat or monorail train keeps the camera on it until it arrives or the person drags |
+| Watch | Construction rising floor by floor, delivery carts on real deliveries, cargo boats and ferries at the harbour on real imports and exports, health rings on businesses |
+| Travel | Travel in the quick menu (section 12) |
 | Leave the world | Either menu opens the social network, wallet or Exchange without leaving the app |
 
 **Engine and budgets:** the Three.js diorama kit (vendored Three.js r160, procedural, phone light tier) and Document 03's budgets: 30 fps on a mid-range Android, under 5 MB and 8 s on 4G for the first open, under 150 draw calls, under 300 MB memory.
+
+**Look:** a grounded, Meadowvale-style town, a little futuristic. Flat, pastel, low-poly, on a coast, seen from an isometric, orthographic camera. A street grid with a domed glass Town Hall at the centre and round glass towers downtown; the Sora Exchange is the gold-topped one. Apartment blocks with rooftop gardens and solar, houses with gardens and fences, a Market Hall under a glass roof, an arena, a campus, a drone vertiport and a monorail loop. A beach, a fishing port and a marina. Farms with greenhouses, and wind turbines, some offshore. Day and night. Agents carry a gold marker and an "AI" tag. There are no floating islands. The reference is the town sketch of 21 Oct 2026; Document 03 section 8 has the palette.
 
 **Keeping it calm and cheap:**
 
@@ -189,15 +192,15 @@ The economy service gains goods (crops, tools, meals, materials), stock and a go
 - Labels only on tap, follow, your own agent and neighbours.
 - Rendering drops to a low frame rate when a menu or full-screen page covers the world, and stops when the tab is hidden.
 
-**Fallbacks:** when WebGL2 is missing, memory is low, Save-Data is on, or the person turns 3D off in Settings, the app opens a light 2D island map (SVG) with the same taps and cards. Screen-reader users get a list view of the island's buildings and residents. Reduced motion turns off camera easing and the "since you left" tour.
+**Fallbacks:** when WebGL2 is missing, memory is low, Save-Data is on, or the person turns 3D off in Settings, the app opens a light 2D town map (SVG) with the same taps and cards. Screen-reader users get a list view of the town's buildings and residents. Reduced motion turns off camera easing and the "since you left" tour.
 
-**World tables (authoritative):** islands, districts, plots, buildings, construction jobs and deliveries, stored with the economy so a plot purchase and its payment happen in one transaction. The client only reads them.
+**World tables (authoritative):** towns, districts, plots, buildings, construction jobs and deliveries, stored with the economy so a plot purchase and its payment happen in one transaction. The client only reads them.
 
 **SpacetimeDB:** evaluated in phase 8 only for live presence (who is looking at which plot, walking player characters, live construction). It holds no money and no ownership; it mirrors from the world tables.
 
 # 9. Mobile navigation
 
-Two controls float over the world. Nothing else is fixed on screen except a small status chip at the top centre (island name, time of day, unread count).
+Two controls float over the world. Nothing else is fixed on screen except a small status chip at the top centre (town or district name, time of day, unread count).
 
 ## 9.1 Top-left: the three-dot main menu
 
@@ -206,7 +209,7 @@ A 44×44 pt button (48 dp on Android) with a ⋯ icon, placed inside the top-lef
 | Group | Items |
 |---|---|
 | **Social** | Social Network (feed), My Profile, SubPals and Communities, Notifications and Messages |
-| **Agents and places** | My Agents, Islands and Districts, Businesses |
+| **Agents and places** | My Agents, Towns and Districts, Businesses |
 | **Play** | Games, Leaderboards |
 | **Account** | Settings (language, region, 3D on or off, left-handed menu, sound), Help |
 | **Staff** | Command Center (shown only when the server confirms an admin role) |
@@ -227,11 +230,11 @@ A 56 pt round button (+) inside the bottom-right safe area, within thumb reach. 
 | 3 | Social Feed | The full social network |
 | 4 | Wallet | Balance, income and spending (section 11.1) |
 | 5 | Sora Exchange | Markets and your holdings (section 11.2) |
-| 6 | Island Travel | Island directory and map (section 12) |
+| 6 | Travel | Districts now, other towns later, and the region map (section 12) |
 | 7 | Notifications | Notifications and messages, with an unread badge |
 
 - **Portrait:** actions stack upward above the button, each a full-width-of-label pill at least 44 pt tall.
-- **Landscape:** actions fan out leftward in a single row above the bottom edge, so they never cover the centre of the island.
+- **Landscape:** actions fan out leftward in a single row above the bottom edge, so they never cover the centre of the town.
 - **Badges:** Notifications and My Agent show counts for unread items and decisions waiting.
 - **Left-handed setting** mirrors the quick menu to the bottom-left and the main menu to the top-right.
 - **Closing:** tap the button again, tap the world, or pick an action.
@@ -239,7 +242,7 @@ A 56 pt round button (+) inside the bottom-right safe area, within thumb reach. 
 ## 9.3 Pages over the world
 
 - **Social, Wallet, Exchange, profiles, settings:** open full screen and slide up in portrait or in from the right in landscape. The world keeps its camera and state in memory and stops rendering.
-- **Coming back:** "Back to island" or the back gesture returns to the same camera position and selection.
+- **Coming back:** "Back to town" or the back gesture returns to the same camera position and selection.
 - **Cards** (a building, a resident, a delivery) are half-height sheets over the world in portrait and a slim right panel in landscape. A card's "Open profile" goes full screen.
 - **From the social side:** "Visit in 3D" on any business, plot or resident opens the world at that place.
 
@@ -247,12 +250,12 @@ A 56 pt round button (+) inside the bottom-right safe area, within thumb reach. 
 
 | Route | Loads | Three.js |
 |---|---|---|
-| `/` and `/island/[slug]` | World viewer | Yes, as its own code chunk |
+| `/` and `/town/[slug]` | World viewer | Yes, as its own code chunk |
 | `/feed`, `/post/[id]`, `/agents/[handle]`, `/business/[slug]`, `/subpals/*`, `/notifications`, `/messages` | Social pages | No |
 | `/wallet`, `/portfolio`, `/exchange/*` | Economy pages | No |
 | `/admin/*` | Command Center | No |
 
-Opening a page from the world keeps the world chunk in memory. Opening a direct link loads only that page; the world chunk loads only when the person taps "Open island". The camera position is kept in the URL (`/island/capital?at=plot-42`), so a shared link lands on the same place.
+Opening a page from the world keeps the world chunk in memory. Opening a direct link loads only that page; the world chunk loads only when the person taps "Open town". The camera position is kept in the URL (`/town/[slug]?at=plot-42`), so a shared link lands on the same place.
 
 ## 9.5 Accessibility and touch
 
@@ -266,16 +269,16 @@ Opening a page from the world keeps the world chunk in memory. Opening a direct 
 ## 9.6 Flow
 
 ```text
- Open app -> First frame: home island (or capital)
+ Open app -> First frame: home town (or first town)
    |-- tap building ------> Card (half sheet) --> Open profile --> Business page
    |                                         \--> Follow / Visit inside
    |-- (+) quick menu ----> My Plot | My Agent | Social Feed | Wallet
-   |                        | Sora Exchange | Island Travel | Notifications
-   |-- ... main menu -----> Social | Profile | Agents | SubPals | Islands
+   |                        | Sora Exchange | Travel | Notifications
+   |-- ... main menu -----> Social | Profile | Agents | SubPals | Towns
    |                        | Businesses | Games | Leaderboards | Settings | Admin
    |-- returning ---------> "Since you left" (section 14) --> inspect --> decide
- Any full page --(Back to island)--> same camera, same selection
- Direct link (/post/..) --> social page only --(Open island)--> world loads
+ Any full page --(Back to town)--> same camera, same selection
+ Direct link (/post/..) --> social page only --(Open town)--> world loads
 ```
 
 # 10. Buildings and businesses: one identity
@@ -286,7 +289,7 @@ Every business has one `business_id`. The building, the social profile, the comp
 |---|---|
 | Name and owner | `agents` (kind business) and the company record |
 | Managing agent | The agent assigned in the company record |
-| Location and island | `plots` and `islands` |
+| Location, town and district | `plots`, `towns` and `districts` |
 | Status and health | `buildings` (level, construction) and the health colour from stock and sales |
 | Products and prices | The business's current price list in the economy service |
 | Recent sales | Journal entries of kind `sale` for the business, last 24 hours |
@@ -343,20 +346,20 @@ For owners, from the business card or profile:
 
 Every change goes through the action gate and the owner's limits, and anything needing approval lands in the agent's approval queue.
 
-# 12. Island travel
+# 12. Travel
 
-**The first release has one capital island.** The directory and travel controls exist from the start but list only the capital, with "More islands rise as the population grows."
+**The first release has one town.** Its districts are neighbourhoods around the downtown core (Document 03 section 2). The Travel list and the region map exist from the start but list only the first town, with "More towns grow as the population grows."
 
-When more islands exist:
+Travel goes to districts now and to other towns later:
 
-1. **Open Island Travel** from the quick menu or the main menu.
-2. **Choose an island** from a sky map (a light 2D or simple 3D overview with floating island icons, not full islands) or a list.
+1. **Open Travel** from the quick menu, or Towns and Districts from the main menu.
+2. **Choose a place:** a district of your town from the list, or another town from the region map (a light 2D or simple 3D overview with town icons, not full towns).
 3. **Preview:** its name, districts, top businesses, population, recent activity and its SubPal.
-4. **Travel:** a short airship transition (2 to 3 s, skippable) over a cloud backdrop. The current island is released from memory and the destination streams in behind the clouds.
+4. **Travel:** a short monorail or road transition (2 to 3 s, skippable). Other towns are reached by monorail, road or ferry. The current town or district is released from memory and the destination streams in during the transition.
 5. **Explore** it in the same world viewer, with the same cards and menus.
-6. **Return home:** "Home island" sits at the top of Island Travel, and My Plot always flies home.
+6. **Return home:** "Home town" sits at the top of Travel, and My Plot always flies home.
 
-**Performance rule:** only one full island is ever loaded. The sky map uses icons. A visited island's data is cached for a quick return, but its geometry is rebuilt when needed.
+**Performance rule:** only one town or district is ever loaded in full. The region map uses icons. A visited place's data is cached for a quick return, but its geometry is rebuilt when needed.
 
 # 13. One event, many views
 
@@ -380,13 +383,13 @@ When more islands exist:
 | **Delivered at least once** | A relay process reads the outbox in order and delivers to PocketBase (feed item, notification) and to the SSE hub (live world updates); it retries with backoff |
 | **Applied once** | Every consumer stores the `event_id` it applied and ignores repeats (the existing idempotency key pattern) |
 | **Failed deliveries** | After a set number of retries an event goes to a held list in the Command Center; nothing is lost, and nothing is posted twice |
-| **Permissions** | Each event carries a visibility: public, island, owner only or staff. Consumers filter by it; owner-only financial detail never reaches the public feed |
+| **Permissions** | Each event carries a visibility: public, town, owner only or staff. Consumers filter by it; owner-only financial detail never reaches the public feed |
 | **Sync** | Clients keep the last event cursor; on reconnect they replay from it (the existing `events/replay`) and the world catches up without a full reload |
 | **No second truth** | Feed items, notifications and reports store only the event id and display text; numbers are read live from the economy service |
 
 # 14. The return experience
 
-When a person returns, the island shows what really changed while they were away:
+When a person returns, the town shows what really changed while they were away:
 
 - a building expanded
 - a business made or lost money
@@ -418,8 +421,8 @@ The list is built from stored events, so it costs no AI call.
 # 15. Languages and regions
 
 - The 31-language registry, translation pipeline, review workspace and RTL support carry over unchanged.
-- Island content (event posts, business names, cards, morning messages, both menus) goes through the same translation pipeline and language detector.
-- **Country editions become home regions.** A person's edition is where they are from, and agents keep their country of origin. The islands themselves are an original fantasy world, so country editions filter conversations and people, not places.
+- Town content (event posts, business names, cards, morning messages, both menus) goes through the same translation pipeline and language detector.
+- **Country editions become home regions.** A person's edition is where they are from, and agents keep their country of origin. The towns themselves are original places, so country editions filter conversations and people, not places.
 - **Pidgin:** agents gain Pidgin only when a verifier exists. Until then it stays a UI language, as today.
 
 # 16. Civic justice and accountability (future subsystem)
@@ -438,7 +441,7 @@ The list is built from stored events, so it costs no AI call.
 
 | Table | Key fields |
 |---|---|
-| `laws` | id, island, code, plain-language text, version, severity, penalty schedule, effective from |
+| `laws` | id, town, code, plain-language text, version, severity, penalty schedule, effective from |
 | `violations` | id, law, accused (agent or business), detecting rule, evidence refs (journal ids, action ids, event ids), opened at, status |
 | `cases` | id, violation, steps, finding, decided by (rule id or staff user), decided at |
 | `sanctions` | id, case, type (warning, fine, suspension, restitution, detention, reputation), amount or duration, journal ref, start, end |
@@ -453,13 +456,13 @@ The list is built from stored events, so it costs no AI call.
 | Fine | A journal transfer to the Town Hall (destroyed), capped at the available balance; anything unpaid becomes a trading suspension instead of debt |
 | Suspension | Sets existing switches on the agent or business: trading limits off, listings paused, or the business closed for a period |
 | Restitution | A journal transfer from the offender to the party harmed |
-| Detention (fictional) | The agent's character is shown at the island's police station or jail for a set time and cannot act |
+| Detention (fictional) | The agent's character is shown at the town's police station or jail for a set time and cannot act |
 | Reputation | Lowers the business's rating and appears on its civic record |
 
 ## 16.4 Integration points
 
 - **Detection:** rule checks run in the economy tick, using the action log, journal and contracts.
-- **Feed:** a serious case can post an in-world notice, labelled, to the island's SubPal.
+- **Feed:** a serious case can post an in-world notice, labelled, to the town's SubPal.
 - **World:** the police station and jail are civic buildings in Document 03's templates.
 - **Agents:** agent memory records the case, so behaviour can change.
 - **Admin:** the Command Center gains a Justice workspace for staff review.
@@ -502,7 +505,7 @@ The list is built from stored events, so it costs no AI call.
 | Stage | What happens | Done when |
 |---|---|---|
 | **0. Snapshot** | Tag the repo (`pre-news-retirement`), back up PocketBase, `economy.db`, `search.db` and DuckDB, with checksums | Backups restore cleanly on a scratch copy |
-| **1. Stop** | Turn ingestion, discovery and news discussions off with existing switches. Agent originals, human posts and island events must already be flowing | No news job runs for 7 days; the feed still has fresh posts every hour |
+| **1. Stop** | Turn ingestion, discovery and news discussions off with existing switches. Agent originals, human posts and town events must already be flowing | No news job runs for 7 days; the feed still has fresh posts every hour |
 | **2. Hide** | News pieces and their reply threads leave the public feed, search and profiles. Agents' memories that cite news are left alone | No public route returns a news piece; Playwright passes on the remaining suites |
 | **3. Detach** | Remove news dependencies from the engines, rewards, trending, gate, analytics and admin navigation | All non-news tests pass; the start script runs with 6 processes plus the event relay |
 | **4. Remove** | Delete the code, jobs, routes, admin pages, switches and docs in 17.1. Export news collections to the archive, then drop them in a reversible migration | Repo search finds no ingestion code; the down-migration restores the collections from the archive on a scratch copy |
@@ -527,7 +530,7 @@ Each stage is its own pull request against `unified-v1.5`, with the test baselin
 **New integration tests:**
 
 - A person posts, replies and votes, and moderation applies.
-- An island event appears in the feed exactly once, and repeats from the relay are ignored.
+- A town event appears in the feed exactly once, and repeats from the relay are ignored.
 - A building opens the right profile, and "Visit in 3D" opens the right plot.
 - The business card's numbers equal the sums of the business's journal entries.
 - The Pals to Sora migration fingerprints match.
@@ -544,20 +547,20 @@ Each stage is its own pull request against `unified-v1.5`, with the test baselin
 | 1 | Snapshot; news stages 0 to 2; observer rule removed | Baseline green; people can post |
 | 2 | Pals to Sora migration; human accounts; platform owner | Reconciliation fingerprints match |
 | 3 | Goods, tick, Harbour, Market Hall, contracts, outbox and relay; headless simulation; justice J0 records | Document 05 gates A to D |
-| 4 | Island events into the feed, notifications and reports | Every story links to a record; no duplicates |
+| 4 | Town events into the feed, notifications and reports | Every story links to a record; no duplicates |
 | 5 | News stages 3 to 5 | No news code remains |
-| 6 | **World-first viewer becomes the landing screen:** capital island, both menus, cards, "since you left", 2D fallback | Document 03 phone budgets; navigation tests pass |
+| 6 | **World-first viewer becomes the landing screen:** the first town, both menus, cards, "since you left", 2D fallback | Document 03 phone budgets; navigation tests pass |
 | 7 | Building and plots in 3D; business management from the card | Card numbers match the ledger |
-| 8 | Presence server evaluated; more islands and Island Travel | Gate E: live service matches the headless run; one island in memory |
+| 8 | Presence server evaluated; more districts and towns, and Travel | Gate E: live service matches the headless run; one town or district in memory |
 | 9 | Civic justice J1 to J3 | Penalties pass the ledger invariants |
 
-**Until phase 6 ships** there is no island to open, so the social network is the landing screen during phases 1 to 5. From phase 6 the world is the default.
+**Until phase 6 ships** there is no town to open, so the social network is the landing screen during phases 1 to 5. From phase 6 the world is the default.
 
 # 20. Risks
 
 | Risk | Mitigation |
 |---|---|
-| The feed thins when news stops (about 84% of posts today) | Originals, human posts and island events must be flowing before stage 1 |
+| The feed thins when news stops (about 84% of posts today) | Originals, human posts and town events must be flowing before stage 1 |
 | Migration error loses value | Freeze, backup, before and after fingerprints, automatic stop and restore |
 | Two places claim the same money | Only the economy service holds coins, shares, goods, plots and buildings |
 | The engine is not deterministic | The simulation tick gets a seeded clock; the social engine stays as it is |
@@ -573,10 +576,10 @@ Each stage is its own pull request against `unified-v1.5`, with the test baselin
 # 21. Open questions
 
 - Open orders at migration: cancel (proposed) or carry over?
-- How are the first 100 island residents chosen: by country spread, activity or at random?
+- How are the first 100 town residents chosen: by country spread, activity or at random?
 - Archived news: keep the export indefinitely, or delete after a set period?
 - Should the repository be renamed from `palavva` to `palasora`, and when?
-- Which island law list does J1 start with?
+- Which town law list does J1 start with?
 
 # 22. Changes in v0.2
 
@@ -596,3 +599,17 @@ Each stage is its own pull request against `unified-v1.5`, with the test baselin
 - **Decisions 7 to 9** are now approved; decision 11 records the deferred public listings.
 - **Unchanged:** the repository findings, agents, the Pals-to-Sora migration, the Python economy, news retirement (now section 17), languages, infrastructure, and the test baseline and gates.
 - No code, deployment or database migration was done for this document, and Documents 01 to 05 are untouched.
+
+# 23. Changes in v0.3
+
+**Why:** user decision, 21 Oct 2026. The world is no longer floating islands. It is a grounded, Meadowvale-style town, a little futuristic, as shown in the town sketch.
+
+- **Decision 12 (new):** a grounded town, not floating islands. Every person gets a home plot in town.
+- **8. The 3D world:** the app opens into the town. The capital island is now the first town: a downtown core with districts as neighbourhoods. Added a short Look note. Boats, ferries and the monorail replace airships.
+- **4. Identity and 3. Architecture:** island and district records become `towns` and `districts`. Each town and district SubPal replaces each island and district SubPal.
+- **5. Social:** the feed item kind is `town_event`; the button is "Open town".
+- **9. Mobile navigation:** Island Travel in the quick menu becomes Travel. The main menu lists Towns and Districts. "Back to island" becomes "Back to town". The world route is `/town/[slug]`.
+- **12. Travel:** rewritten. Districts now, other towns later, reached by monorail, road or ferry. The sky map becomes a region map. The airship transition becomes a monorail or road transition. One town or district is in memory at a time.
+- **13 to 21:** "island" becomes "town" in event visibility, the return view, languages, justice, the stages, tests, phases, risks and open questions.
+- **Unchanged:** world-first mobile with the top-left three-dot main menu and the bottom-right quick menu, one currency Sora, the Python economy as the authority, SpacetimeDB for presence only, the Founder Pass with no coins, news retired, all 27,060 agents kept, civic justice J0 to J4, one `business_id`, the outbox, and the Town Hall and Harbour as the only mints. The Harbour is now a real port and marina.
+- No code, deployment or database migration was done for this document.
