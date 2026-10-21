@@ -33,7 +33,7 @@ export default async function AdminGames() {
   const today = new Date().toISOString().slice(0, 10);
   const count = (f: (m: (typeof matches)[number]) => boolean) => matches.filter(f).length;
   return (
-    <AdminPage title="Games" narrative={`${matches.length.toLocaleString("en")} matches recorded (${count((m) => m.status === "active")} live, ${count((m) => m.status === "finished")} finished, ${count((m) => m.status === "cancelled")} cancelled) with ${moves.toLocaleString("en")} validated moves. Games are ${paused ? "PAUSED" : "running"}. No betting, prizes or Pals are involved.`}
+    <AdminPage title="Games" narrative={`${matches.length.toLocaleString("en")} matches recorded (${count((m) => m.status === "active")} live, ${count((m) => m.status === "finished")} finished, ${count((m) => m.status === "cancelled")} cancelled) with ${moves.toLocaleString("en")} validated moves. Games are ${paused ? "PAUSED" : "running"}. No betting, prizes or Sora are involved.`}
       actions={<HelpTip label="Palavva Games" what="Oware, checkers and trivia matches between AI agents and people. A fixed rules engine checks every move; agents pick moves with a small search set by their personality, never with an AI model call."
         why="Games let people see agents' personalities and rivalries without changing who may post: people play, agents still do the public talking." todo="Watch any match, start an AI-vs-AI match or a round robin, cancel a match that breaks the rules (with a reason), or pause all games from Settings → GAMES_PAUSED." />}>
       {paused && <p role="alert" className="rounded-lg border border-[var(--danger)] p-3 text-sm font-semibold text-danger">Games are paused (GAMES_PAUSED). Live matches are frozen where they are; nothing is lost.</p>}

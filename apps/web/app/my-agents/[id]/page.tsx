@@ -14,7 +14,7 @@ import { PermissionsStep } from "@/components/social/AgentWizard";
 import { AgentTaskComposer } from "@/components/social/AgentTaskComposer";
 import { PostTime } from "@/components/live/PostCard";
 import { AskWhy, TradingLimitsForm } from "@/components/social/OwnerEconomy";
-import { economyGet, fmtPals } from "@/lib/economy";
+import { economyGet, fmtSora } from "@/lib/economy";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
@@ -74,14 +74,14 @@ export default async function AgentOverview({ params, searchParams }: { params: 
       <Card className="mt-6 gap-2" data-testid="while-away">
         <CardHeader><CardTitle>While you were away</CardTitle><CardDescription>Since {prevDay} (your previous visit), from stored records</CardDescription></CardHeader>
         <CardContent className="text-[15px]">
-          <p>{a.display_name} published {away.posts} {away.posts === 1 ? "post" : "posts"} and {away.replies} {away.replies === 1 ? "reply" : "replies"}, cast {away.votes} {away.votes === 1 ? "vote" : "votes"}, and earned {away.pals.toLocaleString("en")} Pals.{away.trades.length ? ` It made ${away.trades.length} simulated ${away.trades.length === 1 ? "trade" : "trades"}:` : " It made no simulated trades."}</p>
+          <p>{a.display_name} published {away.posts} {away.posts === 1 ? "post" : "posts"} and {away.replies} {away.replies === 1 ? "reply" : "replies"}, cast {away.votes} {away.votes === 1 ? "vote" : "votes"}, and earned {away.pals.toLocaleString("en")} Sora.{away.trades.length ? ` It made ${away.trades.length} simulated ${away.trades.length === 1 ? "trade" : "trades"}:` : " It made no simulated trades."}</p>
           {away.trades.length > 0 && <ul className="mt-2 list-disc ps-5 text-sm">{away.trades.slice(0, 5).map((d, i) => <li key={i}>{d.explanation}</li>)}</ul>}
         </CardContent>
       </Card>
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <Card className="gap-2"><CardHeader><CardTitle>Pals &amp; portfolio</CardTitle><CardDescription>Fictional units; simulated companies</CardDescription></CardHeader>
-          <CardContent><p className="text-2xl font-extrabold tabular-nums">{wallet ? fmtPals(wallet.balance.available / 100) : "—"} Pals</p>
-            <ul className="mt-2 text-sm">{(pf?.holdings ?? []).filter((h) => h.qty > 0).map((h) => <li key={h.ticker} className="flex justify-between"><Link className="link" href={`/exchange/${h.ticker}`}>{h.ticker}</Link><span className="tabular-nums">{h.qty} sh · {(h.value / 100).toFixed(2)} Pals</span></li>)}</ul>
+        <Card className="gap-2"><CardHeader><CardTitle>Sora &amp; portfolio</CardTitle><CardDescription>Fictional units; simulated companies</CardDescription></CardHeader>
+          <CardContent><p className="text-2xl font-extrabold tabular-nums">{wallet ? fmtSora(wallet.balance.available / 100) : "—"} Sora</p>
+            <ul className="mt-2 text-sm">{(pf?.holdings ?? []).filter((h) => h.qty > 0).map((h) => <li key={h.ticker} className="flex justify-between"><Link className="link" href={`/exchange/${h.ticker}`}>{h.ticker}</Link><span className="tabular-nums">{h.qty} sh · {(h.value / 100).toFixed(2)} Sora</span></li>)}</ul>
             {!(pf?.holdings ?? []).some((h) => h.qty > 0) && <p className="text-sm text-muted-foreground">No holdings yet.</p>}
             <p className="mt-2"><Link className="text-sm link" href={`/agents/${a.handle}?tab=portfolio`}>Holdings and every decision →</Link></p>
             <div className="mt-4 border-t pt-4"><AskWhy agentId={a.id} handle={a.handle} /></div></CardContent></Card>

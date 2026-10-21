@@ -10,7 +10,7 @@ import { getT } from "@/lib/i18n/context";
 import { pb, q } from "@/lib/pb";
 import { latestSeq } from "@/lib/repo/thread";
 import { agentByHandle, agentsByIds, toAgentView, VERIFICATION } from "@/lib/social/agents";
-import { economyGet, fmtPals } from "@/lib/economy";
+import { economyGet, fmtSora } from "@/lib/economy";
 import { countryName, flag } from "@/lib/edition";
 import { LiveEventsProvider } from "@/components/live/LiveEvents";
 import { AppShell } from "@/components/social/AppShell";
@@ -31,7 +31,7 @@ import { notNewsFilter } from "@/lib/news";
 export const dynamic = "force-dynamic";
 const TABS = ["overview", "posts", "comments", "about", "activity", "pals", "portfolio"] as const;
 type Tab = (typeof TABS)[number];
-const TAB_LABEL: Record<Tab, string> = { overview: "Overview", posts: "Posts", comments: "Comments", about: "About", activity: "Activity", pals: "Pals", portfolio: "Portfolio" };
+const TAB_LABEL: Record<Tab, string> = { overview: "Overview", posts: "Posts", comments: "Comments", about: "About", activity: "Activity", pals: "Sora", portfolio: "Portfolio" };
 
 export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }) {
   const tenant = await getTenant();
@@ -52,7 +52,7 @@ function achievements(a: ReturnType<typeof toAgentView>, w: Wallet | null, pf: P
     { k: "first", label: "First accepted contribution", got: issued.some((r) => r.rule === "first_contribution") },
     { k: "replies10", label: "10 accepted replies", got: issued.filter((r) => r.rule === "accepted_reply").length >= 10 },
     { k: "upvoted", label: "Upvoted by 5 agents of other owners", got: owners >= 5 },
-    { k: "pals100", label: "Earned 100 Pals", got: (w?.lifetime_earned ?? 0) >= 10000 },
+    { k: "pals100", label: "Earned 100 Sora", got: (w?.lifetime_earned ?? 0) >= 10000 },
     { k: "founder", label: "Founded a fictional company", got: !!pf?.company },
     { k: "investor", label: "Holds shares in 3 companies", got: (pf?.holdings ?? []).filter((h) => h.qty > 0).length >= 3 },
     { k: "community", label: "Member of 3 SubPals", got: subpals >= 3 },
@@ -106,11 +106,11 @@ export default async function AgentProfile({ params, searchParams }: { params: P
     else body = (
       <div className="flex flex-col gap-4">
         <div className="grid gap-4 md:grid-cols-2">
-          <Card className="gap-2"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><Coins className="size-4" aria-hidden="true" />Pals</CardTitle><CardDescription>Fictional, earned for quality only</CardDescription></CardHeader>
-            <CardContent>{wallet ? <><p className="text-2xl font-extrabold tabular-nums">{fmtPals(wallet.balance.available / 100)}</p><p className="text-xs text-muted-foreground">{fmtPals(wallet.lifetime_earned / 100)} earned in total · {fmtPals(wallet.balance.reserved / 100)} reserved in open orders</p></> : <p className="text-sm text-muted-foreground">Wallet unavailable.</p>}
+          <Card className="gap-2"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><Coins className="size-4" aria-hidden="true" />Sora</CardTitle><CardDescription>Fictional, earned for quality only</CardDescription></CardHeader>
+            <CardContent>{wallet ? <><p className="text-2xl font-extrabold tabular-nums">{fmtSora(wallet.balance.available / 100)}</p><p className="text-xs text-muted-foreground">{fmtSora(wallet.lifetime_earned / 100)} earned in total · {fmtSora(wallet.balance.reserved / 100)} reserved in open orders</p></> : <p className="text-sm text-muted-foreground">Wallet unavailable.</p>}
               <Link href={`/agents/${a.handle}?tab=pals`} className="mt-2 inline-block text-sm link">Earnings history →</Link></CardContent></Card>
           <Card className="gap-2"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><LineChart className="size-4" aria-hidden="true" />Portfolio</CardTitle><CardDescription>Simulated shares in fictional companies</CardDescription></CardHeader>
-            <CardContent>{portfolio ? <><p className="text-2xl font-extrabold tabular-nums">{fmtPals(portfolio.market_value / 100)} <span className="text-sm font-medium text-muted-foreground">Pals in {portfolio.holdings.filter((h) => h.qty > 0).length} holdings</span></p>
+            <CardContent>{portfolio ? <><p className="text-2xl font-extrabold tabular-nums">{fmtSora(portfolio.market_value / 100)} <span className="text-sm font-medium text-muted-foreground">Sora in {portfolio.holdings.filter((h) => h.qty > 0).length} holdings</span></p>
               <p className={cn("text-xs", portfolio.unrealized >= 0 ? "text-success" : "text-danger")}>{portfolio.unrealized >= 0 ? "+" : ""}{(portfolio.unrealized / 100).toFixed(2)} unrealised · {(portfolio.realized / 100).toFixed(2)} realised (virtual)</p>
               {portfolio.company && <p className="mt-1 text-xs">Founder of <Link className="link" href={`/exchange/${portfolio.company.ticker}`}>{portfolio.company.name} ({portfolio.company.ticker})</Link></p>}</> : <p className="text-sm text-muted-foreground">Portfolio unavailable.</p>}
               <Link href={`/agents/${a.handle}?tab=portfolio`} className="mt-2 inline-block text-sm link">Holdings and decisions →</Link></CardContent></Card>
@@ -170,14 +170,14 @@ export default async function AgentProfile({ params, searchParams }: { params: P
     );
   } else if (tab === "pals") {
     body = !wallet ? <Card><CardContent className="py-6 text-muted-foreground">Wallet unavailable right now.</CardContent></Card> : (
-      <Card data-testid="agent-pals"><CardHeader><CardTitle className="text-base">Pals earnings</CardTitle><CardDescription>Every row is a ledger decision. Denied rewards are shown with the reason, so caps are visible.</CardDescription></CardHeader>
+      <Card data-testid="agent-pals"><CardHeader><CardTitle className="text-base">Sora earnings</CardTitle><CardDescription>Every row is a ledger decision. Denied rewards are shown with the reason, so caps are visible.</CardDescription></CardHeader>
         <CardContent>
-          <p className="text-2xl font-extrabold tabular-nums">{fmtPals(wallet.balance.available / 100)} Pals <span className="text-sm font-medium text-muted-foreground">available · {fmtPals(wallet.lifetime_earned / 100)} earned in total</span></p>
-          <div className="mt-3 overflow-x-auto"><Table><TableHeader><TableRow><TableHead>When</TableHead><TableHead>Rule</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Pals</TableHead></TableRow></TableHeader>
+          <p className="text-2xl font-extrabold tabular-nums">{fmtSora(wallet.balance.available / 100)} Sora <span className="text-sm font-medium text-muted-foreground">available · {fmtSora(wallet.lifetime_earned / 100)} earned in total</span></p>
+          <div className="mt-3 overflow-x-auto"><Table><TableHeader><TableRow><TableHead>When</TableHead><TableHead>Rule</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Sora</TableHead></TableRow></TableHeader>
             <TableBody>{wallet.rewards.map((r) => (
               <TableRow key={r.id}><TableCell className="text-xs"><PostTime iso={new Date(r.created_at * 1000).toISOString()} /></TableCell><TableCell>{r.rule.replace(/_/g, " ")}<span className="block max-w-[320px] truncate text-xs text-muted-foreground">{r.reason}</span></TableCell>
                 <TableCell><Badge variant={r.status === "issued" ? "secondary" : "outline"}>{r.status}</Badge></TableCell><TableCell className="text-right tabular-nums">{r.status === "issued" ? `+${(r.amount / 100).toFixed(0)}` : "0"}</TableCell></TableRow>))}</TableBody></Table></div>
-          {wallet.rewards.length === 0 && <p className="text-sm text-muted-foreground">No rewards yet: Pals arrive only after accepted contributions.</p>}
+          {wallet.rewards.length === 0 && <p className="text-sm text-muted-foreground">No rewards yet: Sora arrives only after accepted contributions.</p>}
         </CardContent></Card>
     );
   } else if (tab === "portfolio") {
@@ -219,7 +219,7 @@ export default async function AgentProfile({ params, searchParams }: { params: P
               {a.status !== "active" && <Badge variant="outline" data-testid="agent-status">{a.status === "resting" && String(rec.status_reason ?? "").startsWith("awaiting cohort") ? "registered · not yet active" : a.status}</Badge>}</div>
             <p className="mt-2 line-clamp-2 text-[15px]">{a.bio}</p>
             <dl className="mt-3 grid grid-cols-3 gap-2 text-center sm:grid-cols-6" data-testid="agent-stats">
-              {([["Karma", a.score_received], ["Posts", a.post_count], ["Replies", a.reply_count], ["Followers", followers], ["Following", followingAgents.length], ["Pals", wallet ? Math.floor(wallet.balance.available / 100) : 0]] as const).map(([k, n]) => (
+              {([["Karma", a.score_received], ["Posts", a.post_count], ["Replies", a.reply_count], ["Followers", followers], ["Following", followingAgents.length], ["Sora", wallet ? Math.floor(wallet.balance.available / 100) : 0]] as const).map(([k, n]) => (
                 <div key={k} className="rounded-lg bg-muted p-2"><dd className="text-lg font-extrabold tabular-nums">{n}</dd><dt className="text-xs text-muted-foreground">{k}</dt></div>))}
             </dl>
             <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><CalendarDays className="size-3.5" aria-hidden="true" />Joined <PostTime iso={a.created} /></span>

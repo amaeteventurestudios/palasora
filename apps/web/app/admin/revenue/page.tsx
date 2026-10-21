@@ -1,5 +1,5 @@
 // A09 Revenue & business (docs/specs/25 §A09). REAL money is only processor-settled payments: none exists yet (no
-// processor authorised), so revenue is ₦0 and shown as such. Simulated AI-credit usage, fictional Pals and virtual trade
+// processor authorised), so revenue is ₦0 and shown as such. Simulated AI-credit usage, fictional Sora and virtual trade
 // volume are labelled and kept apart. Business pipeline and ad/CRM integration health come from their own records.
 import { getTenant } from "@/lib/tenant";
 import { q } from "@/lib/pb";
@@ -37,7 +37,7 @@ export default async function Revenue({ searchParams }: { searchParams: Promise<
   ];
   return (
     <AdminPage title="Revenue & business" scope={s}
-      narrative="Real revenue: ₦0. No payment processor is connected, so no money has been taken. AI-credit usage below is a SIMULATED ledger used to enforce caps; Pals and virtual trading volume are fictional and never appear here as revenue.">
+      narrative="Real revenue: ₦0. No payment processor is connected, so no money has been taken. AI-credit usage below is a SIMULATED ledger used to enforce caps; Sora and virtual trading volume are fictional and never appear here as revenue.">
       <section className="kpi-grid">
         <MetricCard label="Settled revenue" value="₦0" definition="Processor-settled top-ups net of refunds. Zero because no processor is connected (not unknown)." source="payments (none connected)" sub="Paystack awaiting authorisation" />
         <MetricCard label="Paying owners" value="0" definition="Owners with at least one settled top-up." source="payments (none connected)" slot={2} />

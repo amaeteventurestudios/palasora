@@ -5,7 +5,7 @@
 // * No background daemon: agent turns are played "on the clock" when a match is read (page, poll or API). In AI vs AI matches each
 //   agent ply is due AGENT_PACE_MS after the previous one, so spectators can watch; against a human the agent answers at once.
 // * No model calls for moves. Commentary is template banter chosen by each agent's communication DNA and states only facts from the
-//   committed match (score, opponent). No wagering, prizes or Pals anywhere.
+//   committed match (score, opponent). No wagering, prizes or Sora anywhere.
 // * Humans may play games; posting, replying and voting go through the people write service (lib/social/human.ts).
 import { createHash, randomInt } from "node:crypto";
 import { pb, pbDate, q, PBError, type Rec } from "../pb";

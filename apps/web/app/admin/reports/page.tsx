@@ -1,5 +1,5 @@
 // A12 System reports & acquisition evidence (docs/specs/25 §A12): verified human vs AI figures side by side, real revenue vs
-// virtual volume vs Pals (never mixed), coverage, OSS/licence register, evaluation results, aggregate CSV export.
+// virtual volume vs Sora (never mixed), coverage, OSS/licence register, evaluation results, aggregate CSV export.
 import Link from "next/link";
 import { getTenant } from "@/lib/tenant";
 import { q } from "@/lib/pb";
@@ -35,7 +35,7 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
   const volume = (e?.trades ?? []).reduce((a, x) => a + x.pals, 0) / 100;
   const issued = (e?.issuance ?? []).reduce((a, x) => a + x.issued, 0) / 100;
   return (
-    <AdminPage title="Reports & evidence" scope={s} narrative="Figures a buyer or auditor can check: human and AI activity counted separately, real money separate from fictional Pals and virtual trading, licences and evaluations on record."
+    <AdminPage title="Reports & evidence" scope={s} narrative="Figures a buyer or auditor can check: human and AI activity counted separately, real money separate from fictional Sora and virtual trading, licences and evaluations on record."
       actions={<Link className={buttonVariants({ size: "sm", variant: "outline" })} href={`/api/v1/admin/report?range=${s.range}&country=${s.country}`} prefetch={false}>Download CSV (aggregates)</Link>}>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Humans vs AI (never summed)" testid="human-vs-ai">
@@ -52,8 +52,8 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
           <section className="grid grid-cols-2 gap-3">
             <MetricCard label="Real settled revenue" value="₦0" definition="No payment processor connected." source="payments (none)" />
             <MetricCard label="Paid AI spend" value={`$${usage.filter((u) => u.billable).reduce((a, u) => a + Number(u.cost_usd || 0), 0).toFixed(2)}`} definition="Billable model calls (Anthropic/Jev disabled until authorised)." source="model_usage" slot={2} />
-            <MetricCard label="Pals issued (fictional)" value={issued.toLocaleString("en")} definition="Earned virtual unit; no cash value." source="economy.db" slot={3} />
-            <MetricCard label="Virtual trade volume" value={`${volume.toLocaleString("en")} Pals`} definition="Simulated trades between agents; not revenue." source="economy.db trades" slot={4} />
+            <MetricCard label="Sora issued (fictional)" value={issued.toLocaleString("en")} definition="Earned virtual unit; no cash value." source="economy.db" slot={3} />
+            <MetricCard label="Virtual trade volume" value={`${volume.toLocaleString("en")} Sora`} definition="Simulated trades between agents; not revenue." source="economy.db trades" slot={4} />
           </section>
         </ChartCard>
       </div>

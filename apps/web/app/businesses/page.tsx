@@ -31,7 +31,7 @@ export default async function Businesses() {
           ["Review qualified conversations", "Private requests need consent; you approve every commitment."]].map(([t, d]) => <div key={t} className="card p-4"><p className="font-bold">{t}</p><p className="text-sm text-muted-foreground">{d}</p></div>)}
       </div>
       <h2 id="directory">Business directory</h2>
-      <p>{realN === 0 ? "No real business has a public profile yet." : `${realN} ${realN === 1 ? "business" : "businesses"} listed, ${verN} verified by Palavva staff.`} Verified businesses are listed first. Paying for a placement never earns a verified badge or a higher position. These are real organisations, unrelated to the fictional companies on the Pals Exchange.</p>
+      <p>{realN === 0 ? "No real business has a public profile yet." : `${realN} ${realN === 1 ? "business" : "businesses"} listed, ${verN} verified by Palavva staff.`} Verified businesses are listed first. Paying for a placement never earns a verified badge or a higher position. These are real organisations, unrelated to the fictional companies on the Sora Exchange.</p>
       {sponsored.length > 0 && <div className="not-prose my-3 rounded-xl border p-3" data-testid="biz-sponsored"><p className="text-xs font-bold uppercase">Sponsored · paid placements (verified businesses only)</p>
         <ul className="mt-1 flex flex-wrap gap-3 text-sm">{sponsored.map((b) => <li key={b.id}><Link className="link" href={`/business/${b.slug}`}>{b.name}</Link></li>)}</ul></div>}
       <div className="not-prose my-4"><BusinessDirectory rows={organic.map(pub)} /></div>

@@ -122,7 +122,7 @@ export async function inventory(force = false): Promise<Inventory> {
       detail: ok ? "configured; not probed from here" : "not configured in this environment: no URL or API user, so it cannot be inspected or connected", checkedAt: at });
   services.push({ id: "oracle", name: "Oracle staging host", kind: "external", host: "not provisioned", purpose: "Planned staging target", version: "-", license: "-", status: "not_configured",
     detail: "No deployment authorized (ORACLE_DEPLOYMENT_AUTHORIZED=false)", checkedAt: at });
-  for (const [f, purpose] of [["pb_data/data.db", "PocketBase records"], ["pb_data/auxiliary.db", "PocketBase logs"], ["economy.db", "Pals ledger and Exchange"], ["jobs.db", "Job queue"],
+  for (const [f, purpose] of [["pb_data/data.db", "PocketBase records"], ["pb_data/auxiliary.db", "PocketBase logs"], ["economy.db", "Sora ledger and Exchange"], ["jobs.db", "Job queue"],
     ["search.db", "Full-text search"], ["spend.db", "Paid model spend ledger"]] as const) {
     try { const st = await stat(path.join(dataRoot(), f)); services.push({ id: `db:${f}`, name: f, kind: "database", host: os.hostname(), purpose, version: "SQLite", license: "public domain", status: "healthy",
       detail: `${(st.size / 1024 ** 2).toFixed(1)} MB, modified ${new Date(st.mtimeMs).toISOString().slice(0, 16)}`, checkedAt: at }); }
@@ -134,7 +134,7 @@ export async function inventory(force = false): Promise<Inventory> {
     { from: "editorial", to: "pocketbase", why: "reads and writes records" }, { from: "worker", to: "pocketbase", why: "jobs read and write records" }, { from: "worker", to: "db:jobs.db", why: "job queue" },
     { from: "fast", to: "pocketbase", why: "agent scheduling" }, { from: "fast", to: "writers", why: "hands writing jobs to the pool" }, { from: "writers", to: "openrouter", why: "paid writing calls" },
     { from: "writers", to: "db:spend.db", why: "spend cap and ledger" }, { from: "writers", to: "web", why: "publishes through the agent write API" }, { from: "intel", to: "pocketbase", why: "stores discovered link signals" },
-    { from: "editorial", to: "qwen", why: "translation and local model" }, { from: "editorial", to: "db:economy.db", why: "Pals and Exchange" }, { from: "pocketbase", to: "db:pb_data/data.db", why: "storage" },
+    { from: "editorial", to: "qwen", why: "translation and local model" }, { from: "editorial", to: "db:economy.db", why: "Sora and Exchange" }, { from: "pocketbase", to: "db:pb_data/data.db", why: "storage" },
     { from: "web", to: "db:search.db", why: "search" }, { from: "web", to: "espocrm", why: "sponsor inquiries (when configured)" }, { from: "web", to: "revive", why: "sponsored placements (when configured)" },
     { from: "population", to: "pocketbase", why: "creates resident identities" }];
   const disk = await import("./host").then((h) => h.hostFacts()).then((h) => ({ disk: h.disk, backups: h.backups, drills: h.drills, load: h.load }));

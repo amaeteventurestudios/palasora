@@ -6,19 +6,26 @@ export type EconStats = {
   reconciliations: { id: number; ran_at: number; ok: number; accounts: number; journal_rows: number; mismatches: string; supply_pals: number; issued_pals: number }[];
   top_earners: { agent_id: string; earned: number; n: number }[]; supply: number; switches: Record<string, string>;
   markets: { code: string; name: string; status: string; listed: number; trades: number; volume: number }[];
-  flows: { day: string; issued: number; reversed: number; fees: number; traded: number }[]; supply_before: number;
+  flows: { day: string; issued: number; reversed: number; fees: number; traded: number; destroyed?: number }[]; supply_before: number;
   balances: { label: string; value: number }[]; by_agent_rule: { agent_id: string; rule: string; n: number }[];
   companies: { id: string; ticker: string; name: string; market: string; last_price: number | null; ipo_price: number; trades: number; volume: number; founder_agent_id: string; status: string }[];
   investors: number;
+  // Phase 2 (Sora): supply from the mints and the burn account, the Town Hall's weekly budget, the migration state.
+  currency?: "SORA"; supply_detail?: SoraSupply; weekly_budget?: WeeklyBudget; migration?: MigrationState;
 };
+export type SoraSupply = { currency: "SORA"; created: number; destroyed: number; circulating: number; burn_account: number; by_mint: Record<string, number>; converted_from_pals: number; human_accounts: number };
+export type WeeklyBudget = { week: string; week_start: number; budget: number; source: "setting" | "formula" | "floor"; used: number; left: number; supply_at_start: number; growth: number;
+  formula_budget: number; floor: number; formula: string };
+export type MigrationState = { currency_state: "sora" | "pending"; migration: string; finished_at?: number | null; backup_dir?: string; fingerprint_before?: string; fingerprint_after?: string;
+  switches: Record<string, boolean>; pals_held_outside_conversion: number };
 export const econStats = (days: number) => economyGet<EconStats>(`/admin/stats?days=${days}`, 8000);
 
 // ISSUE-14: reward policy explained / previewed / changed, and integrity signals (economy service, policy.py).
 export type RewardRule = { code: string; amount: number; cap: number; active: boolean; one_time: boolean; description: string; default_amount: number | null; default_cap: number | null };
-export type DenyCat = "budget" | "agent_cap" | "one_time" | "paused" | "inactive_rule" | "ledger" | "other";
+export type DenyCat = "budget" | "weekly_budget" | "agent_cap" | "one_time" | "paused" | "inactive_rule" | "ledger" | "other";
 export type PolicyChange = { id: number; target: string; before_json: string; after_json: string; reason: string; preview_json: string; changed_by: string; rollback_of: number | null; created_at: number };
 export type RewardsExplain = {
-  rules: RewardRule[]; budget: { pals: number; default: number; source: "setting" | "default"; updated_by: string; updated_at: number | null }; revision: number; days: number;
+  rules: RewardRule[]; budget: { pals: number; default: number; source: "setting" | "default"; updated_by: string; updated_at: number | null }; weekly?: WeeklyBudget; revision: number; days: number;
   today: { day: string; issued_n: number; issued_pals: number; denied_n: number; reversed_n: number; denied_by: Partial<Record<DenyCat, number>>; budget_used_pct: number | null;
     budget_reached_at: number | null; by_rule: { rule: string; issued_n: number; issued_pals: number; denied_n: number }[] };
   history: { day: string; issued_n: number; issued_pals: number; denied_n: number; reversed_n: number; denied_by: Partial<Record<DenyCat, number>> }[];

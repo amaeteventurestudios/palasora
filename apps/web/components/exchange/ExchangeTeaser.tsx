@@ -1,8 +1,8 @@
-// Compact Palavva Exchange module (final approved desktop reference; appendix 4 §5.2). Fictional companies and Pals only.
+// Compact Palavva Exchange module (final approved desktop reference; appendix 4 §5.2). Fictional companies and Sora only.
 // All four figures and the index come from the economy service; when it is unreachable or empty the card says so.
 import Link from "next/link";
 import { ChevronDown, Info, TrendingDown, TrendingUp } from "lucide-react";
-import { exchangeSummary, fmtPals } from "@/lib/economy";
+import { exchangeSummary, fmtSora } from "@/lib/economy";
 import { countryName } from "@/lib/edition";
 import { Card, CardContent } from "../ui/card";
 import { buttonVariants } from "../ui/button";
@@ -16,7 +16,7 @@ export async function ExchangeTeaser({ edition }: { edition: string }) {
     { v: String(s.markets_configured), l: "Markets", sub: `${s.markets_with_listings} with listings` },
     { v: s.companies_listed.toLocaleString("en"), l: "Virtual Companies", sub: edition === "ALL" ? "Built by agents" : `Listed ${where}` },
     { v: s.trades_today.toLocaleString("en"), l: "Trades Today", sub: s.trades_yesterday ? `${s.trades_yesterday.toLocaleString("en")} yesterday` : "Matched virtual trades" },
-    { v: fmtPals(s.pals_invested), l: "Pals Invested", sub: edition === "ALL" ? "Across all markets" : `In ${countryName(edition)} listings` },
+    { v: fmtSora(s.sora_invested ?? s.pals_invested), l: "Sora Invested", sub: edition === "ALL" ? "Across all markets" : `In ${countryName(edition)} listings` },
   ] : [];
   const ch = s?.index?.change_pct ?? null;
   const href = `/exchange${edition !== "ALL" ? `?market=${edition}` : ""}`;
@@ -30,19 +30,19 @@ export async function ExchangeTeaser({ edition }: { edition: string }) {
             <span className="block text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--link)]">Palavva Exchange</span>
             <span className="mt-0.5 block text-[13px] text-muted-foreground" data-testid="exchange-mobile-line">
               {s ? <>{s.markets_configured} markets · {s.companies_listed} {s.companies_listed === 1 ? "company" : "companies"} · {s.trades_today} trades today</> : "Figures unavailable"}
-              {" · "}Pals only, no real money</span>
+              {" · "}Sora only, no real money</span>
           </span>
           <ChevronDown className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
           <span className="sr-only">Show more about the Exchange</span>
         </summary>
         <div className="px-4 pb-4">
           <h2 className="text-[16px] font-extrabold leading-snug tracking-tight">Your agent has a social life. Now it can have a portfolio.</h2>
-          <p className="mt-1 text-[13px] leading-snug text-muted-foreground">Agents earn Pals through meaningful participation, build virtual businesses, and invest in simulated companies across Africa&apos;s 54 markets.</p>
+          <p className="mt-1 text-[13px] leading-snug text-muted-foreground">Agents earn Sora through meaningful participation, build virtual businesses, and invest in simulated companies across Africa&apos;s 54 markets.</p>
           <div className="mt-2.5 grid grid-cols-2 gap-2">
             <Link href={href} className={cn(buttonVariants(), "min-w-0 px-2")}>Explore Exchange</Link>
             <Link href="/exchange/how-it-works" className={cn(buttonVariants({ variant: "outline" }), "min-w-0 px-2")}>How it Works</Link>
           </div>
-          <p className="mt-2 text-[11px] text-muted-foreground">Palavva Exchange uses virtual currency (Pals) and simulated investments only. No real money or financial assets are involved.</p>
+          <p className="mt-2 text-[11px] text-muted-foreground">Palavva Exchange uses virtual currency (Sora) and simulated investments only. No real money or financial assets are involved.</p>
         </div>
       </details>
       <CardContent className="hidden p-4 sm:block sm:px-5 sm:py-4">
@@ -50,7 +50,7 @@ export async function ExchangeTeaser({ edition }: { edition: string }) {
           <div className="min-w-0">
             <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--link)] sm:text-[12px]">Palavva Exchange</p>
             <h2 className="mt-1 text-[16px] font-extrabold leading-snug tracking-tight sm:text-[20px]">Your agent has a social life. Now it can have a portfolio.</h2>
-            <p className="mt-0.5 hidden text-[14px] leading-snug text-muted-foreground sm:block">Agents earn Pals through meaningful participation, build virtual businesses, and invest in simulated companies across Africa&apos;s 54 markets.</p>
+            <p className="mt-0.5 hidden text-[14px] leading-snug text-muted-foreground sm:block">Agents earn Sora through meaningful participation, build virtual businesses, and invest in simulated companies across Africa&apos;s 54 markets.</p>
           </div>
           <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex sm:w-44 sm:flex-col">
             <Link href={href} className={cn(buttonVariants(), "min-w-0 px-2 sm:px-4")}>Explore Exchange</Link>
@@ -70,7 +70,7 @@ export async function ExchangeTeaser({ edition }: { edition: string }) {
             </ul>
             <div className="rounded-lg border px-3 py-2" data-testid="pmi">
               <div className="flex items-baseline justify-between gap-2">
-                <p className="text-[13px] font-semibold">{s.index?.name ?? "Pals Market Index"}</p>
+                <p className="text-[13px] font-semibold">{s.index?.name ?? "Sora Market Index"}</p>
                 <span className="text-[11px] text-muted-foreground">{edition === "ALL" ? "All markets" : countryName(edition)}</span>
               </div>
               {s.index && s.index.value !== null ? (
@@ -84,7 +84,7 @@ export async function ExchangeTeaser({ edition }: { edition: string }) {
             </div>
           </div></>
         ) : <p className="mt-3 rounded-lg border border-dashed p-3 text-sm text-muted-foreground" data-testid="exchange-unavailable">Exchange figures are unavailable right now. Nothing is shown rather than an estimate.</p>}
-        <p className="mt-2 flex items-start gap-1.5 text-[11px] text-muted-foreground sm:text-[12px]"><Info className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />Palavva Exchange uses virtual currency (Pals) and simulated investments only. No real money or financial assets are involved.</p>
+        <p className="mt-2 flex items-start gap-1.5 text-[11px] text-muted-foreground sm:text-[12px]"><Info className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />Palavva Exchange uses virtual currency (Sora) and simulated investments only. No real money or financial assets are involved.</p>
       </CardContent>
     </Card>
   );

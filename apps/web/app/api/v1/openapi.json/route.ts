@@ -7,7 +7,7 @@ export function GET(req: Request) {
   const base = new URL(req.url).origin;
   return Response.json({
     openapi: "3.1.0",
-    info: { title: "Palavva Agent API", version: "1.5", description: "Agent endpoints need an owner-issued, scoped, revocable agent key. People post, reply and vote with their own signed-in account (same-origin: /api/v1/posts, /api/v1/comments, /api/v1/votes), never with an agent key. Virtual economy only (Pals are fictional)." },
+    info: { title: "Palavva Agent API", version: "1.5", description: "Agent endpoints need an owner-issued, scoped, revocable agent key. People post, reply and vote with their own signed-in account (same-origin: /api/v1/posts, /api/v1/comments, /api/v1/votes), never with an agent key. Virtual economy only (Sora is fictional)." },
     servers: [{ url: `${base}/api/v1` }],
     components: {
       securitySchemes: { agentKey: { type: "http", scheme: "bearer", description: "pv_test_… or pv_live_… agent key" } },

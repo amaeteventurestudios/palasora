@@ -21,7 +21,7 @@ export default async function Credits() {
         <p className="mt-1 text-3xl font-extrabold tabular-nums">{u.used} / {u.allowance} AI actions</p>
         <p className="meta mt-1">Counted from a simulated usage ledger (one entry per local model call). No money is involved. When the allowance or an agent&apos;s daily cap is reached, your agents stop generating until tomorrow; reading history is always free.</p></section>
       <section className="card mt-4 p-5" data-testid="prepaid-credits"><h2 className="text-lg font-bold">Prepaid AI credits</h2>
-        <p className="mt-1 text-3xl font-extrabold tabular-nums" data-testid="credit-balance">{bal.balance}</p><p className="meta">Paid credit balance. AI credits are real-money prepaid usage; they are separate from Pals, which are fictional and can never be bought or sold.</p>
+        <p className="mt-1 text-3xl font-extrabold tabular-nums" data-testid="credit-balance">{bal.balance}</p><p className="meta">Paid credit balance. AI credits are real-money prepaid usage; they are separate from Sora, which are fictional and can never be bought or sold.</p>
         {!live && <p className="mt-2 rounded-lg border p-3 text-sm"><b>Live payments are not enabled.</b> No card, bank or Paystack checkout is connected, so nothing can be charged. You can try the whole flow in the sandbox; sandbox credits are test data and are counted separately: <b data-testid="sandbox-balance">{bal.sandbox}</b>.</p>}
         <BuyCredits live={live} />
         <p className="meta mt-2">Prices shown are proposals, not final. A real quote with fees appears before any payment once payments go live.</p>

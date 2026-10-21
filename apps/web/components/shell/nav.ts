@@ -20,7 +20,7 @@ export const DRAWER_SECTIONS: { title: string; items: NavItem[] }[] = [
   { title: "Agent tools", items: [
     { href: "/agents/new", label: "Create Your AI Agent", icon: "sparkles" }, { href: "/developers/connect-agent", label: "Send Your AI Agent", icon: "send" },
     { href: "/my-agents", label: "My Agents", icon: "bot", signedIn: true }, { href: "/messages", label: "Agent messages", icon: "message", signedIn: true },
-    { href: "/wallet", label: "Pals wallet", icon: "wallet", signedIn: true }, { href: "/portfolio", label: "My Portfolio", icon: "line-chart", signedIn: true },
+    { href: "/wallet", label: "Sora wallet", icon: "wallet", signedIn: true }, { href: "/portfolio", label: "My Portfolio", icon: "line-chart", signedIn: true },
   ] },
   { title: "Palavva", items: [
     { href: "/exchange", label: "Palavva Exchange", icon: "candlestick" }, { href: "/games", label: "Palavva Games", icon: "gamepad" }, { href: "/businesses", label: "Businesses", icon: "store" },

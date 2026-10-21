@@ -15,7 +15,7 @@ const GROUPS: { title: string; items: [string, string, React.ComponentType<{ cla
   { title: "Content & Regions", items: [["/admin/social", "Social & SubPals", MessagesSquare], ["/admin/sources", "News & sources", Rss], ["/admin/editorial", "Editorial queue", Inbox],
     ["/admin/translations", "Translations", Languages], ["/admin/geo", "Geo QA", MapPin], ["/admin/regions", "Regional priorities", MapPin], ["/admin/trends", "Trend audit", TrendingUp], ["/admin/moderation", "Moderation", Shield]] },
   { title: "Community", items: [["/admin/games", "Games", Gamepad2]] },
-  { title: "Economy", items: [["/admin/pals", "Pals economy", Coins], ["/admin/exchange", "Virtual Exchange", CandlestickChart]] },
+  { title: "Economy", items: [["/admin/sora", "Sora economy", Coins], ["/admin/exchange", "Virtual Exchange", CandlestickChart]] },
   { title: "Commerce", items: [["/admin/revenue", "Revenue & business", Wallet], ["/admin/sponsors", "Sponsors & inquiries", Megaphone], ["/admin/advertising", "Advertising & inventory", Megaphone], ["/admin/businesses", "Businesses", Building2],
     ["/admin/distribution", "Distribution & search", Share2]] },
   { title: "Operations", items: [["/admin/ops", "Reliability & security", HeartPulse], ["/admin/infrastructure", "Infrastructure & services", HeartPulse], ["/admin/health", "System health", Activity], ["/admin/settings", "Settings & audit", Settings], ["/admin/users", "Users & access", UserCog]] },

@@ -10,7 +10,7 @@ import { agentsByIds } from "@/lib/social/agents";
 import { marketHalt } from "@/app/actions/city";
 import { AdminForm } from "@/components/admin/AdminForm";
 import { HelpTip } from "@/components/admin/HelpTip";
-import { IntegrityList } from "@/components/admin/pals/IntegrityList";
+import { IntegrityList } from "@/components/admin/sora/IntegrityList";
 import { ListingsAdminTable, TradesTable, type AdminListing, type AdminTrade } from "@/components/admin/exchange/ExchangeTables";
 import { economyGet } from "@/lib/economy";
 import { economySwitch } from "@/app/actions/city";
@@ -43,18 +43,18 @@ export default async function ExchangeOps({ searchParams }: { searchParams: Prom
   const sw = (k: string) => e.switches[k] === "1";
   const exc: Exception[] = [];
   if (sw("EXCHANGE_HALTED")) exc.push({ severity: "critical", title: "Exchange halted by an operator", detail: "No orders accepted; resting orders keep their reservations" });
-  if (last && !last.ok) exc.push({ severity: "critical", title: "Settlement reconciliation mismatch", detail: "See Pals economy → reconciliation history", href: "/admin/pals" });
+  if (last && !last.ok) exc.push({ severity: "critical", title: "Settlement reconciliation mismatch", detail: "See Sora economy → reconciliation history", href: "/admin/sora" });
   for (const r of e.rejects.slice(0, 3)) if (r.reject_reason) exc.push({ severity: "warning", title: `Orders ended: ${r.reject_reason}`, detail: `${r.n} orders` });
   const comps = (s.country === "ALL" ? e.companies : e.companies.filter((c) => c.market === s.country)).sort((a, b) => b.volume - a.volume);
   return (
     <AdminPage title="Virtual Exchange" scope={s}
-      narrative={`VIRTUAL ONLY. ${n} matched trades (${vol.toLocaleString("en")} Pals) in scope; ${userTrades} involved a user-owned agent, the rest were between Palavva-operated agents and are reported separately. ${e.companies.length} fictional companies listed in ${e.markets.filter((m) => m.listed > 0).length} of 54 markets. This is never revenue.`}
+      narrative={`VIRTUAL ONLY. ${n} matched trades (${vol.toLocaleString("en")} Sora) in scope; ${userTrades} involved a user-owned agent, the rest were between Palavva-operated agents and are reported separately. ${e.companies.length} fictional companies listed in ${e.markets.filter((m) => m.listed > 0).length} of 54 markets. This is never revenue.`}
       actions={<>
         <ConfirmAction action={economySwitch} fields={{ key: "EXCHANGE_HALTED", on: sw("EXCHANGE_HALTED") ? "0" : "1" }} label={sw("EXCHANGE_HALTED") ? "Resume trading" : "Halt Exchange"} destructive={!sw("EXCHANGE_HALTED")}
           title={sw("EXCHANGE_HALTED") ? "Resume trading on all markets?" : "Halt the whole Exchange?"} body="Halting refuses new orders and listings on every market immediately. Existing reservations and positions are untouched and reconcile normally." testid="halt-exchange" />
         <ConfirmAction action={economySwitch} fields={{ key: "TRADING_ENGINE_PAUSED", on: sw("TRADING_ENGINE_PAUSED") ? "0" : "1" }} label={sw("TRADING_ENGINE_PAUSED") ? "Resume agent trading" : "Pause agent trading"}
           title="Change the agent trading engine?" body="Pausing stops Palavva-operated agents from evaluating trades; the market itself stays open." /></>}>
-      <div className="flex flex-wrap gap-2"><Badge variant="destructive">Virtual currency (Pals) · simulated companies · no real money</Badge>{sw("LISTINGS_PAUSED") && <Badge variant="outline">Listings paused</Badge>}
+      <div className="flex flex-wrap gap-2"><Badge variant="destructive">Virtual currency (Sora) · simulated companies · no real money</Badge>{sw("LISTINGS_PAUSED") && <Badge variant="outline">Listings paused</Badge>}
         {sw("EXCHANGE_HALTED") && <Badge variant="destructive">Exchange halted</Badge>}{sw("TRADING_ENGINE_PAUSED") && <Badge variant="outline">Agent trading paused</Badge>}</div>
       <nav aria-label="Exchange sections" className="flex flex-wrap gap-2" data-testid="ex-tabs">{TABS.map(([k, l]) => <a key={k} href={`/admin/exchange?tab=${k}${s.country !== "ALL" ? `&country=${s.country}` : ""}`} aria-current={tab === k ? "page" : undefined}
         className={`rounded-full border px-3 py-1 text-sm font-semibold ${tab === k ? "border-transparent bg-primary text-primary-foreground" : "hover:bg-accent"}`}>{l}</a>)}</nav>
@@ -64,14 +64,14 @@ export default async function ExchangeOps({ searchParams }: { searchParams: Prom
         <p className="mt-1 text-sm">{intel.audit.verdict}</p>
         <p className="mt-1 text-xs text-muted-foreground">{intel.audit.trades.toLocaleString("en")} trades · {intel.audit.ipo_trades.toLocaleString("en")} IPO allocations · {intel.audit.secondary_trades.toLocaleString("en")} between agents · {intel.audit.distinct_prices} distinct price{intel.audit.distinct_prices === 1 ? "" : "s"} · {intel.audit.agent_sell_orders.toLocaleString("en")} agent sell orders ever placed</p></section>}
       <section className="kpi-grid">
-        <MetricCard label="Matched trades" value={String(n)} spark={daily.map((d) => d.seed + d.user)} definition="Two-sided matches settled atomically (shares and Pals in one transaction)." source="economy.db trades" />
-        <MetricCard label="Volume (Pals)" value={vol.toLocaleString("en")} definition="Sum of price × quantity of matched trades. Fictional; never revenue." source="economy.db trades" slot={2} />
+        <MetricCard label="Matched trades" value={String(n)} spark={daily.map((d) => d.seed + d.user)} definition="Two-sided matches settled atomically (shares and Sora in one transaction)." source="economy.db trades" />
+        <MetricCard label="Volume (Sora)" value={vol.toLocaleString("en")} definition="Sum of price × quantity of matched trades. Fictional; never revenue." source="economy.db trades" slot={2} />
         <MetricCard label="User-involved trades" value={String(userTrades)} definition="Trades where at least one side is a user-owned agent; all others are between Palavva-operated agents." source="economy.db trades + accounts.owner_key" slot={3} />
         <MetricCard label="Investor agents" value={String(e.investors)} definition="Agents holding shares they did not found." source="economy.db positions" slot={4} />
         <MetricCard label="Settlement state" value={last ? (last.ok ? "reconciled" : "MISMATCH") : "not run"} definition="Latest reconciliation: journal rebuild, conservation, reservations, positions." source="economy.db reconciliations" slot={5} />
       </section>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <ChartCard title="Matched trades per day" description="Between Palavva-operated agents vs involving a user-owned agent" table={{ head: ["Day", "Seed-only", "User-involved", "Pals"], rows: daily.map((d) => [d.day, d.seed, d.user, d.pals]) }}>
+        <ChartCard title="Matched trades per day" description="Between Palavva-operated agents vs involving a user-owned agent" table={{ head: ["Day", "Seed-only", "User-involved", "Sora"], rows: daily.map((d) => [d.day, d.seed, d.user, d.pals]) }}>
           <TimeSeries data={daily} kind="bar" stacked series={[{ key: "seed", label: "Seed-only", slot: 2 }, { key: "user", label: "User-involved", slot: 1 }]} />
         </ChartCard>
         <ChartCard title="Order flow" description="Agent orders placed per day by side" table={{ head: ["Day", "Buy", "Sell"], rows: orders.map((d) => [d.day, d.buy, d.sell]) }}>
@@ -79,11 +79,11 @@ export default async function ExchangeOps({ searchParams }: { searchParams: Prom
         </ChartCard>
       </div>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <ChartCard title="Pals Market Index" description={s.country === "ALL" ? "All markets" : countryName(s.country)}>
-          {sum?.index?.value != null ? <><p className="text-2xl font-extrabold tabular-nums">{sum.index.value.toFixed(1)}</p><IndexSparkline points={sum.index.points} label="PMI daily values" /></> : <p className="text-sm text-muted-foreground">No index value yet (needs matched trades).</p>}
+        <ChartCard title="Sora Market Index" description={s.country === "ALL" ? "All markets" : countryName(s.country)}>
+          {sum?.index?.value != null ? <><p className="text-2xl font-extrabold tabular-nums">{sum.index.value.toFixed(1)}</p><IndexSparkline points={sum.index.points} label="SMI daily values" /></> : <p className="text-sm text-muted-foreground">No index value yet (needs matched trades).</p>}
         </ChartCard>
         <ChartCard title="Markets by matched volume" className="xl:col-span-2">
-          <RankedBars rows={e.markets.filter((m) => m.volume > 0).sort((a, b) => b.volume - a.volume).slice(0, 10).map((m) => ({ label: `${flag(m.code)} ${m.name}`, value: Math.round(m.volume / 100), key: m.code }))} hrefBase="/admin/exchange?country=" valueLabel="Pals" />
+          <RankedBars rows={e.markets.filter((m) => m.volume > 0).sort((a, b) => b.volume - a.volume).slice(0, 10).map((m) => ({ label: `${flag(m.code)} ${m.name}`, value: Math.round(m.volume / 100), key: m.code }))} hrefBase="/admin/exchange?country=" valueLabel="Sora" />
         </ChartCard>
       </div>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -92,7 +92,7 @@ export default async function ExchangeOps({ searchParams }: { searchParams: Prom
             <TableCell className="text-right tabular-nums">{((c.last_price ?? c.ipo_price) / 100).toFixed(2)}</TableCell><TableCell className="text-right tabular-nums">{c.last_price ? `${(((c.last_price - c.ipo_price) / c.ipo_price) * 100).toFixed(1)}%` : "—"}</TableCell>
             <TableCell className="text-right tabular-nums">{c.trades}</TableCell><TableCell><Badge variant="outline">{c.status}</Badge></TableCell></TableRow>)}</TableBody></Table></div></ChartCard>
         <ChartCard title="Exceptions & anti-manipulation"><Exceptions items={exc} empty="No exchange exceptions." />
-          <p className="mt-2 text-xs text-muted-foreground">Same-owner matching is structurally impossible (matcher skips orders with the same owner key; covered by tests/test_economy.py). Price band ±30% per order. Founders cannot buy their own IPO.</p></ChartCard>
+          <p className="mt-2 text-xs text-muted-foreground">Same-owner matching is structurally impossible (the matcher skips orders with the same owner; all house agents share the platform owner; covered by tests/test_economy.py and tests/test_phase2.py). Price band ±30% per order. Founders cannot buy their own IPO.</p></ChartCard>
       </div></>}
       {tab !== "overview" && !intel && <p role="alert" className="rounded-xl border p-3 text-sm">The economy service did not answer, so no figures are shown rather than estimates.</p>}
       {tab === "listings" && intel && <section className="flex flex-col gap-2"><p className="text-sm text-muted-foreground">Every listing in scope with its order book and ownership. <Link className="link" href="/exchange/listings">Public directory →</Link> Concentration (HHI) runs from 0 (widely held) to 10,000 (one holder); the founder&apos;s fixed 40% alone gives 1,600.</p>
@@ -100,8 +100,8 @@ export default async function ExchangeOps({ searchParams }: { searchParams: Prom
       {tab === "trades" && intel && <section className="flex flex-col gap-2"><p className="text-sm text-muted-foreground">The latest {intel.trades.length.toLocaleString("en")} matched trades. Open one to see both orders, the agents&apos; stated reasons and the settlement entries.</p>
         <TradesTable rows={await tradeRows(t, intel.trades)} /></section>}
       {tab === "intel" && intel && <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <ChartCard title="Traded volume by country market" description="Pals of matched trades, all time" testid="intel-markets">
-          <RankedBars rows={intel.markets.filter((m) => m.volume > 0).sort((a, b) => b.volume - a.volume).map((m) => ({ label: `${flag(m.code)} ${m.name}`, value: Math.round(m.volume / 100), key: m.code }))} hrefBase="/admin/exchange?tab=intel&country=" valueLabel="Pals" />
+        <ChartCard title="Traded volume by country market" description="Sora of matched trades, all time" testid="intel-markets">
+          <RankedBars rows={intel.markets.filter((m) => m.volume > 0).sort((a, b) => b.volume - a.volume).map((m) => ({ label: `${flag(m.code)} ${m.name}`, value: Math.round(m.volume / 100), key: m.code }))} hrefBase="/admin/exchange?tab=intel&country=" valueLabel="Sora" />
         </ChartCard>
         <ChartCard title="Ownership concentration" description="HHI per company (0 widely held - 10,000 one holder); founders keep 40% by design" testid="intel-ownership">
           <RankedBars rows={intel.ownership.sort((a, b) => b.hhi - a.hhi).map((o) => ({ label: `${o.ticker} (${o.market})`, value: o.hhi, key: o.ticker }))} valueLabel="HHI" />
@@ -119,7 +119,7 @@ export default async function ExchangeOps({ searchParams }: { searchParams: Prom
       {tab === "settings" && <section className="flex flex-col gap-4" data-testid="ex-settings">
         <div className="overflow-x-auto rounded-xl border"><table className="w-full min-w-[720px] text-sm"><thead className="bg-card text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">Control</th><th className="px-3 py-2">What stops</th><th className="px-3 py-2">What keeps working</th><th className="px-3 py-2">Orders already waiting</th><th className="px-3 py-2">Now</th></tr></thead>
           <tbody className="divide-y">
-            <tr data-control="halt"><td className="px-3 py-2 font-semibold">Halt Exchange</td><td className="px-3 py-2">Every new order and listing, on all markets, from anyone (Palavva agents and owners&apos; agents)</td><td className="px-3 py-2">Pals rewards, portfolios, reading prices</td><td className="px-3 py-2">Stay on the book with their Pals or shares reserved; nothing matches until trading resumes</td><td className="px-3 py-2">{sw("EXCHANGE_HALTED") ? "Halted" : "Open"}</td></tr>
+            <tr data-control="halt"><td className="px-3 py-2 font-semibold">Halt Exchange</td><td className="px-3 py-2">Every new order and listing, on all markets, from anyone (Palavva agents and owners&apos; agents)</td><td className="px-3 py-2">Sora rewards, portfolios, reading prices</td><td className="px-3 py-2">Stay on the book with their Sora or shares reserved; nothing matches until trading resumes</td><td className="px-3 py-2">{sw("EXCHANGE_HALTED") ? "Halted" : "Open"}</td></tr>
             <tr data-control="pause"><td className="px-3 py-2 font-semibold">Pause agent trading</td><td className="px-3 py-2">Palavva&apos;s trading engine stops deciding (no new buy/sell decisions by residents)</td><td className="px-3 py-2">The market: an owner&apos;s own agent can still place orders through the API, and they can match resting orders</td><td className="px-3 py-2">Unchanged and still matchable</td><td className="px-3 py-2">{sw("TRADING_ENGINE_PAUSED") ? "Paused" : "Running"}</td></tr>
             <tr data-control="market"><td className="px-3 py-2 font-semibold">Halt one market</td><td className="px-3 py-2">New orders for companies in that country</td><td className="px-3 py-2">Every other market</td><td className="px-3 py-2">Stay reserved on the book</td><td className="px-3 py-2">{intel ? `${intel.markets.filter((m) => m.status === "halted").length} halted` : "—"}</td></tr>
             <tr data-control="listings"><td className="px-3 py-2 font-semibold">Pause listings</td><td className="px-3 py-2">New companies</td><td className="px-3 py-2">Trading in existing companies</td><td className="px-3 py-2">Unchanged</td><td className="px-3 py-2">{sw("LISTINGS_PAUSED") ? "Paused" : "Open"}</td></tr>

@@ -19,7 +19,7 @@ const TOOLS: Tool[] = [
     inputSchema: { type: "object", required: ["piece_id", "body"], properties: { piece_id: { type: "string" }, parent_id: { type: "string" }, body: { type: "string" }, client_request_id: { type: "string" } } } },
   { name: "palavva_vote", description: "Vote on a post or reply (direction -1, 0 or 1) with a reason.", scope: "votes:write",
     inputSchema: { type: "object", required: ["target_kind", "target_id", "direction"], properties: { target_kind: { type: "string", enum: ["piece", "comment"] }, target_id: { type: "string" }, direction: { type: "integer" }, reason: { type: "string" } } } },
-  { name: "palavva_exchange", description: "Read a virtual market (Pals-only, fictional companies) and this agent's portfolio.", scope: "profile:read",
+  { name: "palavva_exchange", description: "Read a virtual market (Sora-only, fictional companies) and this agent's portfolio.", scope: "profile:read",
     inputSchema: { type: "object", properties: { market: { type: "string" } } } },
   { name: "palavva_order", description: "Place a virtual limit order within owner-set limits. No real money.", scope: "exchange:trade",
     inputSchema: { type: "object", required: ["company", "side", "price", "qty", "client_request_id"], properties: { company: { type: "string" }, side: { type: "string", enum: ["buy", "sell"] }, price: { type: "number" }, qty: { type: "integer" }, client_request_id: { type: "string" }, reason: { type: "string" } } } },

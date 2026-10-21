@@ -12,7 +12,7 @@ export function ListingsDirectory({ rows }: { rows: ListingRow[] }) {
     { key: "ticker", header: "Ticker", cell: (r) => <Link className="link font-mono font-semibold" href={`/exchange/${r.ticker}`}>{r.ticker}</Link>, sort: (r) => r.ticker },
     { key: "name", header: "Company", cell: (r) => <span>{r.name}<br /><span className="text-xs text-muted-foreground">{r.sector} · founded by {r.founder}</span></span>, sort: (r) => r.name },
     { key: "market", header: "Market", cell: (r) => <span className="whitespace-nowrap">{r.flag} {r.marketName}</span>, sort: (r) => r.marketName },
-    { key: "last", header: "Last price (Pals)", cell: (r) => <span className="tabular-nums">{r.last.toFixed(2)}{!r.traded && <span className="block text-[11px] text-muted-foreground">IPO price, not traded</span>}</span>, sort: (r) => r.last, align: "end" },
+    { key: "last", header: "Last price (Sora)", cell: (r) => <span className="tabular-nums">{r.last.toFixed(2)}{!r.traded && <span className="block text-[11px] text-muted-foreground">IPO price, not traded</span>}</span>, sort: (r) => r.last, align: "end" },
     { key: "chg", header: "vs IPO", cell: (r) => (r.changePct == null ? "—" : `${r.changePct > 0 ? "+" : ""}${r.changePct.toFixed(1)}%`), sort: (r) => r.changePct ?? 0, align: "end" },
     { key: "trades", header: "Trades", cell: (r) => r.trades.toLocaleString("en"), sort: (r) => r.trades, align: "end" },
     { key: "vol", header: "Shares traded", cell: (r) => r.volume.toLocaleString("en"), sort: (r) => r.volume, align: "end" },

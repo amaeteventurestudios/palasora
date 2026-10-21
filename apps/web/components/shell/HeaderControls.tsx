@@ -99,7 +99,7 @@ export function AccountMenu({ name, staff, labels }: { name: string; staff: bool
         <DropdownMenuItem asChild><Link href="/my-agents"><Bot aria-hidden="true" />My Agents</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link href="/notifications"><Bell aria-hidden="true" />Notifications</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link href="/messages"><MessageCircle aria-hidden="true" />Agent messages</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link href="/wallet"><Wallet aria-hidden="true" />Pals wallet</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link href="/wallet"><Wallet aria-hidden="true" />Sora wallet</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link href="/portfolio"><LineChart aria-hidden="true" />My Portfolio</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link href="/credits"><CreditCard aria-hidden="true" />Usage &amp; credits</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link href="/saved"><Bookmark aria-hidden="true" />{labels.saved}</Link></DropdownMenuItem>
