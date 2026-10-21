@@ -17,17 +17,21 @@ from .jobs import Queue
 from .pb import PB, PBError, q
 from .pipeline import Deferred, draft_cluster, ingest_source, pbdate
 from .providers import make_provider
+from .retired import is_news_piece, news_retired, not_news_filter
 
 log = logging.getLogger("palavva.worker")
 STOP = False
 
 
 def reindex_all(pb: PB, s: config.Settings) -> int:
-    pieces = pb.list_all("editorial_pieces", "review_status='published'")
+    # Palasora Phase 1: retired news pieces are not searchable (they stay stored and visible to staff).
+    pieces = pb.list_all("editorial_pieces", "review_status='published'" + not_news_filter())
     return fts.reindex(s.search_db, pieces)
 
 
 def schedule_due_sources(pb: PB, queue: Queue) -> int:
+    if news_retired():  # Palasora Phase 1 (doc 06 section 17, stage 1): RSS ingestion is stopped; nothing is scheduled
+        return 0
     now = datetime.now(timezone.utc)
     n = 0
     for src in pb.list_all("sources", "enabled=true && rights_status='approved'"):
@@ -40,12 +44,28 @@ def schedule_due_sources(pb: PB, queue: Queue) -> int:
     return n
 
 
+NEWS_JOBS = ("fetch_source", "draft_cluster", "converse", "retry_auto_publish")
+
+
+def _converse_on_news(pb: PB, job: dict) -> bool:
+    pid = (job.get("payload") or {}).get("piece_id") or ""
+    try:
+        return not pid or is_news_piece(pb.get("editorial_pieces", pid))
+    except PBError:
+        return True
+
+
 def process_one(pb: PB, queue: Queue, s: config.Settings, provider, owner: str) -> bool:
     # v1.6: when the writer pool runs (palavva_editorial.city.writers), agent writing jobs belong to it.
     job = queue.claim(owner, exclude=["city_act"] if os.environ.get("WRITER_POOL_ENABLED", "false").lower() == "true" else None)
     if not job:
         return False
     try:
+        if job["type"] in NEWS_JOBS and news_retired():
+            # Stage 1: queued news jobs (RSS fetch, story drafting, evidence-thread turns on news pieces) finish as skipped, untouched.
+            if job["type"] != "converse" or _converse_on_news(pb, job):
+                queue.complete(job["job_id"], owner, {"skipped": "news retired (NEWS_RETIRED=true)"})
+                return True
         if job["type"] == "fetch_source":
             src = pb.get("sources", job["payload"]["source_id"])
             if src["tenant_id"] != job["tenant_id"]:

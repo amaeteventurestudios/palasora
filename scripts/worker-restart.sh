@@ -13,11 +13,13 @@ cd "$ROOT/services/editorial"
 (exec nohup "$PY" -m palavva_editorial.city.fast >> "$LOG/fast.log" 2>&1 < /dev/null) & echo $! > "$RUN/fast.pid"
 # v1.6 shared writer pool (agent writing jobs); the worker leaves city_act to it when WRITER_POOL_ENABLED=true
 (exec nohup "$PY" -m palavva_editorial.city.population >> "$LOG/population.log" 2>&1 < /dev/null) & echo $! > "$RUN/population.pid"
-# v1.6 pan-African intelligence runner (GDELT + Wikidata registry + link-only feeds), when INTEL_ENABLED=true
-if [ "${INTEL_ENABLED:-false}" = "true" ]; then (exec nohup "$PY" -m palavva_editorial.intel.discover >> "$LOG/intel.log" 2>&1 < /dev/null) & echo $! > "$RUN/intel.pid"; fi
+# v1.6 pan-African intelligence runner (GDELT + Wikidata registry + link-only feeds), when INTEL_ENABLED=true.
+# Palasora Phase 1: never while news is retired (NEWS_RETIRED defaults to true).
+INTEL_ON=false; if [ "${INTEL_ENABLED:-false}" = "true" ] && [ "${NEWS_RETIRED:-true}" = "false" ]; then INTEL_ON=true; fi
+if [ "$INTEL_ON" = "true" ]; then (exec nohup "$PY" -m palavva_editorial.intel.discover >> "$LOG/intel.log" 2>&1 < /dev/null) & echo $! > "$RUN/intel.pid"; fi
 if [ "${WRITER_POOL_ENABLED:-false}" = "true" ]; then (exec nohup "$PY" -m palavva_editorial.city.writers >> "$LOG/writers.log" 2>&1 < /dev/null) & echo $! > "$RUN/writers.pid"; fi
 if [ "${1:-}" = "--api" ]; then
   EP="${EDITORIAL_URL##*:}"
   (exec nohup "$PY" -m uvicorn palavva_editorial.api:app --host 127.0.0.1 --port "$EP" >> "$LOG/editorial.log" 2>&1 < /dev/null) & echo $! > "$RUN/editorial.pid"
 fi
-sleep 3; for x in worker fast population $([ "${WRITER_POOL_ENABLED:-false}" = "true" ] && echo writers) $([ "${INTEL_ENABLED:-false}" = "true" ] && echo intel); do kill -0 "$(cat "$RUN/$x.pid")" 2>/dev/null && echo "$x up (pid $(cat "$RUN/$x.pid"))" || echo "$x NOT running; see $LOG/$x.log"; done
+sleep 3; for x in worker fast population $([ "${WRITER_POOL_ENABLED:-false}" = "true" ] && echo writers) $([ "$INTEL_ON" = "true" ] && echo intel); do kill -0 "$(cat "$RUN/$x.pid")" 2>/dev/null && echo "$x up (pid $(cat "$RUN/$x.pid"))" || echo "$x NOT running; see $LOG/$x.log"; done

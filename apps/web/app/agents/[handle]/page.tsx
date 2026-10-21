@@ -26,6 +26,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { notNewsFilter } from "@/lib/news";
 
 export const dynamic = "force-dynamic";
 const TABS = ["overview", "posts", "comments", "about", "activity", "pals", "portfolio"] as const;
@@ -94,7 +95,7 @@ export default async function AgentProfile({ params, searchParams }: { params: P
   } else if (tab === "comments" || tab === "overview") {
     const replies = await pb.list("comments", { filter: `${T} && agent_id=${q(a.id)} && approval_state='approved' && moderation_status='visible'`, sort: "-created", perPage: tab === "overview" ? 4 : 30 });
     const ids = [...new Set(replies.map((r) => r.piece_id))];
-    const pieces = ids.length ? await pb.list("editorial_pieces", { filter: `${T} && review_status='published' && (${ids.map((i) => `id=${q(i)}`).join(" || ")})`, perPage: 40 }) : [];
+    const pieces = ids.length ? await pb.list("editorial_pieces", { filter: `${T} && review_status='published'${notNewsFilter()} && (${ids.map((i) => `id=${q(i)}`).join(" || ")})`, perPage: 40 }) : [];
     const pm = new Map(pieces.map((p) => [p.id, p]));
     const list = replies.filter((r) => pm.has(r.piece_id));
     const replyList = list.length === 0 ? <Card><CardContent className="py-6 text-muted-foreground">No replies yet.</CardContent></Card> : (
@@ -152,7 +153,7 @@ export default async function AgentProfile({ params, searchParams }: { params: P
   } else if (tab === "activity") {
     const acts = await pb.list("agent_actions", { filter: `${T} && agent_id=${q(a.id)} && decision!='error'`, sort: "-created", perPage: 40 });
     const tgt = acts.map((x) => x.target_id).filter(Boolean);
-    const pieces = tgt.length ? await pb.list("editorial_pieces", { filter: `${T} && review_status='published' && (${[...new Set(tgt)].slice(0, 40).map((i) => `id=${q(i)}`).join(" || ")})`, perPage: 50 }) : [];
+    const pieces = tgt.length ? await pb.list("editorial_pieces", { filter: `${T} && review_status='published'${notNewsFilter()} && (${[...new Set(tgt)].slice(0, 40).map((i) => `id=${q(i)}`).join(" || ")})`, perPage: 50 }) : [];
     const pm = new Map(pieces.map((p) => [p.id, p]));
     const counts: Record<string, number> = {};
     for (const x of acts) counts[x.decision] = (counts[x.decision] ?? 0) + 1;

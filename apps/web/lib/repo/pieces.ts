@@ -5,6 +5,7 @@ import { pb, q, type Rec } from "../pb";
 import type { Tenant } from "../tenant";
 import { rankPieces, type FeedMode, decodeCursor, encodeCursor } from "../feed";
 import { ALL, diversifyByCountry, scopeOf, type Scope } from "../edition";
+import { notNewsFilter } from "../news";
 
 export type SourceRef = { name: string; url: string; title?: string; published_at?: string };
 export type PieceSummary = {
@@ -19,6 +20,8 @@ export type PieceSummary = {
   // v1.4 social fields (empty for editorial topics)
   author_agent_id: string; community_id: string; post_label: string; last_activity_at: string; source_url: string; latest_reply_id: string;
   up_votes: number; down_votes: number; rank_votes: number; agent_replies: number;
+  /** Palasora Phase 1: the person who wrote a human_post (empty otherwise). */
+  author_user_id?: string;
   /** v1.5: relevance to the edition being viewed (set by listFeed when an edition scope applies). */
   scope?: Scope;
 };
@@ -26,7 +29,8 @@ export type PieceSummary = {
 export function publicFilter(t: Tenant): string {
   let f = `tenant_id=${q(t.id)} && review_status='published'`;
   if (!t.isDemo && !env.showDemo) f += " && is_demo=false";
-  return f;
+  // Palasora Phase 1: retired news (publisher cards, editorial stories, agent news discussions) leaves every public surface.
+  return f + notNewsFilter();
 }
 
 const CODE = /^[A-Z]{2}$/;
@@ -46,7 +50,7 @@ export function toSummary(r: Rec): PieceSummary {
     initiator_role: r.initiator_role ?? "", thread_state: r.thread_state ?? "", publish_path: r.publish_path ?? "", origin_country: r.origin_country ?? "",
     original_language: r.original_language || r.language || "en", area_ids: Array.isArray(r.area_ids) ? r.area_ids : [],
     revision: r.revision ?? 1, source_language: (Array.isArray(r.sources_json) && r.sources_json[0]?.language) || "en",
-    author_agent_id: r.author_agent_id ?? "", community_id: r.community_id ?? "", post_label: r.post_label ?? "", source_url: r.source_url ?? "",
+    author_agent_id: r.author_agent_id ?? "", author_user_id: r.author_user_id ?? "", community_id: r.community_id ?? "", post_label: r.post_label ?? "", source_url: r.source_url ?? "",
     last_activity_at: r.last_activity_at || r.material_updated_at || r.published_at, latest_reply_id: r.latest_reply_id ?? "",
     up_votes: r.up_votes ?? 0, down_votes: r.down_votes ?? 0, rank_votes: r.rank_votes ?? 0, agent_replies: r.agent_reply_count ?? 0,
   };
@@ -91,7 +95,7 @@ export async function listFeed(t: Tenant, fq: FeedQuery): Promise<{ items: Piece
   if (fq.area && /^[A-Z]{2}-[A-Z0-9]{1,3}$/.test(fq.area)) f += ` && area_ids~${q(`"${fq.area}"`)}`;
   if (fq.community && /^[a-z0-9]{10,20}$/.test(fq.community)) f += ` && community_id=${q(fq.community)}`;
   if (fq.agent && /^[a-z0-9]{10,20}$/.test(fq.agent)) f += ` && author_agent_id=${q(fq.agent)}`;
-  if (fq.kind === "agent_post") f += " && kind='agent_post'";
+  if (fq.kind === "agent_post") f += " && (kind='agent_post' || kind='human_post')"; // community posts: agents and people
   // Bounded candidate window (MVP scale); ranking happens in feed.ts. Published-only rows are
   // micro-cached per tenant+filter for 5 s (keyed by tenant id, so no cross-tenant reuse).
   const rows = await cachedList(f);

@@ -9,6 +9,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { dataRoot } from "../analytics-server";
 import { env } from "../env";
+import { newsRetired } from "../news";
 
 const run = promisify(execFile);
 const ROOT = () => path.resolve(dataRoot(), "..");
@@ -26,7 +27,7 @@ export type JobFacts = { byState: Record<string, number>; byType: Record<string,
 
 const PROCS: [string, string, string][] = [
   ["pocketbase", "PocketBase database and API", "MIT"], ["editorial", "Editorial service (rules, translation, economy API)", "Palavva"], ["worker", "Background job worker", "Palavva"],
-  ["fast", "Fast agent engine (scheduling)", "Palavva"], ["writers", "Writer pool (model calls)", "Palavva"], ["intel", "Source discovery (link signals)", "Palavva"],
+  ["fast", "Fast agent engine (scheduling)", "Palavva"], ["writers", "Writer pool (model calls)", "Palavva"], ["intel", "Source discovery (link signals): retired with news, not started while NEWS_RETIRED=true", "Palavva"],
   ["population", "Population jobs runner", "Palavva"], ["web", "Next.js web app", "Palavva"]];
 
 async function probe(url: string, ms = 3000): Promise<{ ok: boolean; ms: number; status: number }> {
@@ -106,10 +107,11 @@ export async function inventory(force = false): Promise<Inventory> {
   const services: ServiceRow[] = PROCS.map(([id, purpose, license], i) => {
     const p = procs[i];
     const endpoint = id === "pocketbase" ? pbH : id === "editorial" ? edH : null;
-    const status: Health = !p.running ? "down" : endpoint ? (endpoint.ok ? "healthy" : "degraded") : id === "web" ? "healthy" : "running";
+    const retired = id === "intel" && newsRetired() && !p.running; // Palasora Phase 1: not a failure, the runner is retired with news
+    const status: Health = retired ? "not_configured" : !p.running ? "down" : endpoint ? (endpoint.ok ? "healthy" : "degraded") : id === "web" ? "healthy" : "running";
     const ver = id === "pocketbase" ? pbVer : id === "web" ? `Next.js ${npmV("next")}, Node ${process.version}` : pyVer;
     return { id, name: id, kind: "process", host: os.hostname(), purpose, version: ver, license, status, pid: p.pid, uptime: p.etime, cpu: p.cpu, rssMb: p.rss ? Math.round(p.rss) : undefined,
-      latencyMs: endpoint?.ms, checkedAt: at, detail: !p.running ? "process not running" : endpoint ? (endpoint.ok ? `health endpoint ${endpoint.status}` : "running but health endpoint failed") : "running (no health endpoint; liveness only)" };
+      latencyMs: endpoint?.ms, checkedAt: at, detail: retired ? "retired: news ingestion and discovery are off (NEWS_RETIRED=true)" : !p.running ? "process not running" : endpoint ? (endpoint.ok ? `health endpoint ${endpoint.status}` : "running but health endpoint failed") : "running (no health endpoint; liveness only)" };
   });
   services.push({ id: "qwen", name: "Local Qwen (Ollama)", kind: "model", host: "private Tailscale host", purpose: "Local model for translation and fallback writing", version: qwen?.models.map((m) => m.name).join(", ") || "unknown",
     license: "Qwen licence (model) / MIT (Ollama)", status: !qwen ? "not_configured" : qwen.ok ? "healthy" : "down", detail: qwen ? (qwen.ok ? `${qwen.models.length} model(s) listed` : "not reachable") : "OLLAMA_URL not set", checkedAt: at });

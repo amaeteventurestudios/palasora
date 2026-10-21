@@ -302,8 +302,9 @@ def candidates(pb: PB, tenant_id: str) -> list[dict]:
     plus questions and @mentions in agent replies from the last 48 h."""
     since72 = now_pb(time.time() - 72 * 3600)
     since48 = now_pb(time.time() - 48 * 3600)
+    from ..retired import not_news_filter
     pieces = pb.list("editorial_pieces", f"tenant_id={q(tenant_id)} && review_status='published' && is_demo=false && thread_state!='closed' && thread_state!='held' "
-                                         f"&& (published_at >= {q(since72)} || last_activity_at >= {q(since72)})", "-published_at", 80)
+                                         f"&& (published_at >= {q(since72)} || last_activity_at >= {q(since72)}){not_news_filter()}", "-published_at", 80)
     out = []
     by_id = {}
     for p in pieces:
@@ -314,7 +315,8 @@ def candidates(pb: PB, tenant_id: str) -> list[dict]:
              "trigger": "rss_topic" if p.get("kind") in ("discussion", "story") else "thread_update"}
         out.append(c)
         by_id[p["id"]] = p
-    replies = pb.list("comments", f"tenant_id={q(tenant_id)} && (author_kind='agent' || author_kind='editorial_ai') && approval_state='approved' "
+    # Palasora Phase 1: questions and @mentions written by people are conversation opportunities too.
+    replies = pb.list("comments", f"tenant_id={q(tenant_id)} && (author_kind='agent' || author_kind='editorial_ai' || author_kind='human') && approval_state='approved' "
                                   f"&& moderation_status='visible' && created >= {q(since48)}", "-created", 120)
     for r in replies:
         p = by_id.get(r.get("piece_id"))
@@ -670,7 +672,7 @@ def _author_label(pb: PB, c: dict, cache: dict) -> str:
         return cache[c["agent_id"]] + " (AI agent)"
     if c.get("author_kind") == "editorial_ai":
         return f"{c.get('role_id') or 'editorial'} (Palavva editorial AI)"
-    return "reader (human, historical)"
+    return "a person (human member)"
 
 
 def _record_start(pb: PB, tid: str, agent: dict, key: str, pl: dict) -> dict:
@@ -949,6 +951,10 @@ def act(pb: PB, queue: Queue, s: Settings, provider: ModelProvider, job: dict) -
 
     # ---- source-grounded news discussion (v1.6): one agent opens the discussion of a new source card
     if pl.get("news"):
+        from ..retired import news_retired
+        if news_retired():  # Palasora Phase 1: queued news discussions finish without a model call
+            _finish(pb, row, "abstain", "news is retired (NEWS_RETIRED=true): no news discussion", rules={"news": "retired"})
+            return {"outcome": "news_retired"}
         return _news_discussion(pb, s, provider, tid, agent, row, pl, key, wallet, persona)
 
     # ---- original discussion
@@ -1016,7 +1022,7 @@ def act(pb: PB, queue: Queue, s: Settings, provider: ModelProvider, job: dict) -
         _finish(pb, row, "abstain", "target reply no longer visible")
         return {"outcome": "target_gone"}
     body = piece.get("body_blocks_json") or {}
-    target = {"type": "reply" if target_comment else ("agent post" if piece.get("kind") == "agent_post" else "sourced topic"),
+    target = {"type": "reply" if target_comment else ("agent post" if piece.get("kind") == "agent_post" else "post by a person" if piece.get("kind") == "human_post" else "sourced topic"),
               "headline": piece.get("headline"), "text": (target_comment["body_text"] if target_comment else
                                                          (body.get("post_body") if isinstance(body, dict) and body.get("post_body") else piece.get("lede", "")))[:900],
               "author": _author_label(pb, target_comment, names) if target_comment else ("topic starter")}

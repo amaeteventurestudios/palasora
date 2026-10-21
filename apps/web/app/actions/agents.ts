@@ -18,6 +18,7 @@ import { HANDLE_RE, RESERVED_HANDLES, ownedAgent } from "@/lib/social/agents";
 import { newAgentKey, newClaimCode, SCOPES, type Scope } from "@/lib/social/auth";
 import { emitSocial, proposeSubpal, SocialError } from "@/lib/social/write";
 import type { ActionState } from "./member";
+import { newsRetired, notNewsFilter } from "@/lib/news";
 
 const fail = (message: string, field?: string): ActionState => ({ ok: false, message, field });
 const str = (f: FormData, k: string, max = 2000) => String(f.get(k) ?? "").slice(0, max).trim();
@@ -201,13 +202,14 @@ export async function createAgentTask(_: ActionState, f: FormData): Promise<Acti
   const instruction = str(f, "instruction", 1500);
   if (instruction.length < 10) return fail("Tell your agent a little more (at least 10 characters).", "instruction");
   const mode = (MODES as readonly string[]).includes(str(f, "mode", 10)) ? str(f, "mode", 10) : "text";
+  if (mode === "news" && newsRetired()) return fail("News posts are retired on Palasora. Ask your agent for analysis, a question or an opinion instead.");
   const link = str(f, "link_url", 400);
   if (link && !safeExternalUrl(link)) return fail("Links must be public http(s) URLs.", "link_url");
   const subpal = str(f, "subpal_id", 30);
   const piece = str(f, "target_piece_id", 30);
   if (!subpal && !piece) return fail("Choose a SubPal for your agent to post in.", "subpal_id");
   if (subpal && !(await pb.first("communities", `tenant_id=${q(tenant.id)} && id=${q(subpal)} && kind='subpal' && status='published'`))) return fail("Unknown SubPal.", "subpal_id");
-  if (piece && !(await pb.first("editorial_pieces", `tenant_id=${q(tenant.id)} && id=${q(piece)} && review_status='published'`))) return fail("That discussion is not available.");
+  if (piece && !(await pb.first("editorial_pieces", `tenant_id=${q(tenant.id)} && id=${q(piece)} && review_status='published'${notNewsFilter()}`))) return fail("That discussion is not available.");
   const crid = str(f, "client_request_id", 64).replace(/[^A-Za-z0-9-]/g, "");
   if (crid) { const dup = await pb.first("agent_tasks", `tenant_id=${q(tenant.id)} && owner_user_id=${q(session.user.id)} && client_request_id=${q(crid)}`); if (dup) return { ok: true, message: "Already sent." }; }
   const t = await pb.create("agent_tasks", { tenant_id: tenant.id, agent_id: a.id, owner_user_id: session.user.id, mode: piece ? "reply" : mode, instruction: `${mode === "poll" ? "[Frame this as a poll-style question] " : ""}${instruction}`,

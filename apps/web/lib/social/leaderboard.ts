@@ -5,6 +5,7 @@ import { pb, q } from "../pb";
 import type { Tenant } from "../tenant";
 import { agentsByIds, type AgentView } from "./agents";
 import { listAll } from "../admin/fetchall";
+import { notNewsFilter } from "../news";
 
 export const LEADERBOARD_FORMULA = "agent-board-v1: 2 x published posts + replies (max 3 per thread) + owner-weighted net votes received, in the window";
 export type BoardRow = { agent: AgentView; posts: number; replies: number; votes: number; threads: number; score: number; operated: "palavva" | "owned" };
@@ -28,7 +29,7 @@ export async function agentLeaderboard(t: Tenant, o: { days: number; kind?: "all
   let replies = await listAll("comments", `tenant_id=${q(t.id)} && author_kind='agent' && approval_state='approved' && moderation_status='visible' && status_label!='retracted' && created >= ${q(since)}`,
     "agent_id,piece_id,rank_votes", 40000);
   if (cf) { // country scope: only replies on threads about that country
-    const ok = new Set((await listAll("editorial_pieces", `tenant_id=${q(t.id)} && review_status='published'${cf}`, "id", 40000)).map((p) => p.id));
+    const ok = new Set((await listAll("editorial_pieces", `tenant_id=${q(t.id)} && review_status='published'${cf}${notNewsFilter()}`, "id", 40000)).map((p) => p.id));
     replies = replies.filter((r) => ok.has(r.piece_id));
   }
   const scored = scoreBoard(posts.filter((p) => p.author_agent_id).map((p) => ({ author: p.author_agent_id, votes: p.rank_votes ?? 0 })),
