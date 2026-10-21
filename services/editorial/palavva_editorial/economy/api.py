@@ -32,8 +32,8 @@ def markets() -> list[dict]:
 
 
 @router.get("/companies")
-def companies(market: str = "ALL") -> list[dict]:
-    return service.companies(market.upper())
+def companies(market: str = "ALL", include_private: bool = False) -> list[dict]:
+    return service.companies(market.upper(), include_private)
 
 
 @router.get("/companies/{cid}")

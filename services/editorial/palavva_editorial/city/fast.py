@@ -936,7 +936,7 @@ class FastEngine:
             return {"evaluated": 0, "note": "no agent holds Sora yet"}
         pick = [ids[(self.trade_cursor + i) % len(ids)] for i in range(min(c["agents_per_trade_tick"], len(ids)))]
         self.trade_cursor = (self.trade_cursor + len(pick)) % len(ids)
-        listed = econ.companies("ALL")
+        listed = econ.companies("ALL", include_private=True)
         out = {"evaluated": 0, "orders": 0, "companies": 0}
         from . import control
         discovery = bool(control.get(self.tid, "price_discovery_enabled"))  # ISSUE-15 deterministic-trade-v2 (economy/pricing.py)
@@ -958,7 +958,7 @@ class FastEngine:
                     res = self.found_company(con, a)
                     if res:
                         out["companies"] += 1
-                        listed = econ.companies("ALL")
+                        listed = econ.companies("ALL", include_private=True)
                         continue
             pf = ex.portfolio(con, aid)
             held = {h["company_id"]: h for h in pf["holdings"] if h["qty"] > 0}

@@ -464,6 +464,12 @@ def test_town_hall_weekly_budget_from_the_growth_target_is_enforced(con):
     with db.tx(con):  # growth outside the 15-25% band is clamped to it
         con.execute("INSERT INTO switches(key, value, updated_at) VALUES ('SORA_GROWTH_TARGET', '0.9', 0)")
     assert issuance.growth(con) == 0.25
+    # an audited weekly-budget change sits in the policy history but is not restored through the reward-rule rollback
+    with db.tx(con):
+        cur = con.execute("INSERT INTO reward_policy_changes(target, before_json, after_json, reason, changed_by, created_at) VALUES ('weekly_budget','{}','{}','t','t',0)")
+    with pytest.raises(policy.PolicyError) as e:
+        policy.rollback(con, cur.lastrowid, by="t", reason="restore it", expected_revision=policy.revision(con))
+    assert e.value.code == "NOT_RESTORABLE"
 
 
 def test_issuance_paused_and_sourced_reply_retired(con):

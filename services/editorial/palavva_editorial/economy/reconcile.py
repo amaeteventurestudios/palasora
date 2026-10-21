@@ -103,7 +103,9 @@ def fingerprint(con: sqlite3.Connection, coin: str | None = None) -> dict:
     shares: dict[str, dict[str, int]] = defaultdict(dict)
     for a in con.execute("SELECT * FROM accounts WHERE asset LIKE 'SHR:%' ORDER BY asset, owner_kind, owner_id"):
         amt = a["available"] + a["reserved"]
-        if amt:
+        if is_mint(a):
+            platform[f"{a['owner_kind']}:{a['owner_id']}"] = amt
+        elif amt:
             shares[a["asset"][4:]][f"{a['owner_kind']}:{a['owner_id']}"] = amt
     orders = [dict(o) for o in con.execute("SELECT id, side, company_id, status, qty, filled, reserved_left FROM orders WHERE status IN ('open','partial') ORDER BY id")]
     companies = {r["id"]: {"shares_outstanding": r["shares_outstanding"], "status": r["status"]} for r in con.execute("SELECT id, shares_outstanding, status FROM companies")}

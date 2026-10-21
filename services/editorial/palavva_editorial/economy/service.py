@@ -89,9 +89,12 @@ def markets() -> list[dict]:
     return [dict(r) for r in rows]
 
 
-def companies(market: str | None) -> list[dict]:
+def companies(market: str | None, include_private: bool = False) -> list[dict]:
+    """Companies on the Exchange (listed or halted). Private companies (new ones, before 30 days with revenue; Doc 04
+    section 8) are not on the Exchange: they appear only when asked for (admin views, the one-company-per-founder rule)."""
     c = con()
-    q = "SELECT * FROM companies WHERE status != 'delisted'" + (" AND market=?" if market and market != "ALL" else "") + " ORDER BY created_at DESC"
+    q = ("SELECT * FROM companies WHERE status != 'delisted'" + ("" if include_private else " AND status != 'private'")
+         + (" AND market=?" if market and market != "ALL" else "") + " ORDER BY created_at DESC")
     out = []
     for r in c.execute(q, (market,) if market and market != "ALL" else ()):
         d = dict(r)
@@ -196,16 +199,22 @@ def admin_stats(days: int = 30) -> dict:
     switches = {r["key"]: r["value"] for r in c.execute("SELECT key, value FROM switches")}
     flows = [dict(r) for r in c.execute("""SELECT strftime('%Y-%m-%d', created_at, 'unixepoch') day,
                SUM(CASE WHEN kind='issue' AND rule != ? THEN amount ELSE 0 END) issued, SUM(CASE WHEN kind='reverse' THEN amount ELSE 0 END) reversed,
-               SUM(CASE WHEN kind='fee' THEN amount ELSE 0 END) fees, SUM(CASE WHEN kind='trade_cash' THEN amount ELSE 0 END) traded
+               SUM(CASE WHEN kind='fee' THEN amount ELSE 0 END) fees, SUM(CASE WHEN kind='trade_cash' THEN amount ELSE 0 END) traded,
+               SUM(CASE WHEN asset='SORA' AND kind IN ('fee','reverse','burn') THEN amount WHEN asset='PALS' AND kind='reverse' THEN amount ELSE 0 END) destroyed
                FROM journal WHERE created_at>=? AND asset IN ('SORA','PALS') GROUP BY day ORDER BY day""", (ledger.MIGRATION_RULE, since))]
-    supply_before = issuance.supply(c, before=since)["circulating"]
+    # Supply at the start of the window: Sora before it, plus (when the conversion happened inside the window or has not
+    # happened yet) the Pals that existed before it, which became Sora 1:1 later.
+    conv_at = float(db.meta(c, "currency_since", "0") or 0)
+    pals_before = 0 if conv_at and conv_at < since else c.execute(
+        "SELECT COALESCE(SUM(CASE WHEN kind='issue' THEN amount WHEN kind='reverse' THEN -amount ELSE 0 END),0) s FROM journal WHERE asset=? AND created_at<?", (db.PALS, since)).fetchone()["s"]
+    supply_before = issuance.supply(c, before=since)["circulating"] + pals_before
     bal = [r["available"] for r in c.execute("SELECT available FROM accounts WHERE owner_kind='agent' AND asset=?", (db.SORA,))]
     buckets = [("0", 0, 0), ("1-24", 100, 2499), ("25-49", 2500, 4999), ("50-99", 5000, 9999), ("100-249", 10000, 24999), ("250+", 25000, 10**12)]
     balances = [{"label": l, "value": sum(1 for b in bal if lo <= b <= hi)} for l, lo, hi in buckets]
     by_agent_rule = [dict(r) for r in c.execute("""SELECT agent_id, rule, COUNT(*) n FROM rewards WHERE status='issued' AND created_at>=?
                      AND agent_id IN (SELECT agent_id FROM rewards WHERE status='issued' AND created_at>=? GROUP BY agent_id ORDER BY SUM(amount) DESC LIMIT 12)
                      GROUP BY agent_id, rule""", (since, since))]
-    comps = companies("ALL")
+    comps = companies("ALL", include_private=True)
     holders = c.execute("SELECT COUNT(DISTINCT owner_id) n FROM positions p JOIN companies co ON co.id=p.company_id WHERE p.qty>0 AND p.owner_id != co.founder_agent_id").fetchone()["n"]
     return {"issuance": issuance, "trades": trades, "orders": orders, "rejects": rejects, "reconciliations": recs, "top_earners": top,
             "supply": round(sup["circulating"] * db.CENTS), "supply_detail": sup, "weekly_budget": weekly_budget(c),

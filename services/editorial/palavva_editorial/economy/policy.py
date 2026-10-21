@@ -309,6 +309,8 @@ def rollback(con: sqlite3.Connection, change_id: int, *, by: str, reason: str, e
     if not ch:
         raise PolicyError("NOT_FOUND", "no such change")
     before = json.loads(ch["before_json"])
+    if ch["target"] == "weekly_budget":
+        raise PolicyError("NOT_RESTORABLE", "a weekly budget setting is changed again through the issuance settings, not restored here")
     if ch["target"] == "budget":
         proposal: dict = {"budget": int(before["pals"])}
     else:
