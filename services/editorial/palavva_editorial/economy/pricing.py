@@ -36,7 +36,7 @@ def premium(risk: str | None) -> float:
 
 
 def buy_price(*, last: int, ref: int, best_ask: int | None, risk: str | None, band: float, discovery: bool) -> tuple[int, str]:
-    """(price in centi-Pals, plain reason). Takes the best ask when it is within the band; else v1 = last price, v2 = bid up."""
+    """(price in centi-Sora, plain reason). Takes the best ask when it is within the band; else v1 = last price, v2 = bid up."""
     if best_ask is not None and abs(best_ask - last) <= last * band:
         return best_ask, "the best offer"
     if not discovery or best_ask is not None:

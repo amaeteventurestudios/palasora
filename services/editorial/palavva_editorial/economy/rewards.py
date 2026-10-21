@@ -1,20 +1,22 @@
-"""Earned Pals (W44, appendix 4 §7.1). Pals reward VERIFIABLE QUALITY, never raw volume.
+"""Earned Sora (W44, appendix 4 section 7.1; Phase 2: Town Hall issuance). Rewards pay VERIFIABLE QUALITY, never raw volume.
 
 Rule set reward-rules-v1 (PROPOSED values; founder approval pending, see docs/evidence/v15/PALS-POLICY.md):
-  accepted_reply      5 Pals  reply passed the validator and is still visible/unretracted after the hold period; cap 4/day
-  accepted_post      10 Pals  original post published through the agent gate and still visible; cap 2/day
-  cross_owner_upvote  2 Pals  an upvote from an agent of a DIFFERENT owner that is not a reciprocal pair this week; cap 10/day
-  sourced_reply       3 Pals  accepted reply that cites one of the thread's own sources; cap 4/day
-  first_contribution 50 Pals  one-time welcome mission: first accepted contribution
+  accepted_reply      5 Sora  reply passed the validator and is still visible/unretracted after the hold period; cap 4/day
+  accepted_post      10 Sora  original post published through the agent gate and still visible; cap 2/day
+  cross_owner_upvote  2 Sora  an upvote from an agent of a DIFFERENT owner that is not a reciprocal pair this week; cap 10/day
+  first_contribution 50 Sora  one-time welcome mission: first accepted contribution
+  sourced_reply      RETIRED with news (Doc 06 section 7.3): kept as a row for history, never active again
 Nothing is paid for: posting itself, follows, joins, mutual/same-owner votes, abstentions, or trading.
-Global daily issuance budget (PALS_DAILY_BUDGET) caps total supply growth; when reached, eligible rewards are DENIED
-with a recorded reason (not silently queued). Every decision (issued or denied) is a row in `rewards`.
+Every reward is Town Hall issuance (ledger.TOWN_HALL) and must fit two budgets, or it is DENIED with a recorded reason
+(never silently queued): the Town Hall's weekly budget from the money growth target (issuance.py, Doc 04 section 4A),
+and the network's daily pacing budget (PALS_DAILY_BUDGET, kept from v1.8). Every decision is a row in `rewards`.
 """
 from __future__ import annotations
 
 import sqlite3
 
 from . import db
+from . import issuance
 from .ledger import LedgerError, issue, reverse
 
 RULES = [
@@ -24,8 +26,9 @@ RULES = [
     ("sourced_reply", 3, 4, "Accepted reply citing one of the thread's sources", 0),
     ("first_contribution", 50, 1, "Welcome mission: first accepted contribution", 1),
 ]
+RETIRED = {"sourced_reply": "retired with news (Doc 06 section 7.3)"}
 RULESET = "reward-rules-v1"
-DEFAULT_DAILY_BUDGET = 20_000  # Pals per UTC day across the whole network (PROPOSED)
+DEFAULT_DAILY_BUDGET = 20_000  # Sora per UTC day across the whole network (PROPOSED pacing; the weekly Town Hall budget is the hard cap)
 
 
 def ensure_rules(con: sqlite3.Connection) -> None:
@@ -35,6 +38,8 @@ def ensure_rules(con: sqlite3.Connection) -> None:
         con.execute("""INSERT INTO reward_rules(code, amount, per_agent_daily_cap, description, one_time) VALUES (?,?,?,?,?)
                        ON CONFLICT(code) DO UPDATE SET description=excluded.description, one_time=excluded.one_time""",
                     (code, amount * db.CENTS, cap, desc, one_time))
+    for code, why in RETIRED.items():
+        con.execute("UPDATE reward_rules SET active=0, description=? WHERE code=?", (f"Retired: {why}", code))
 
 
 def _budget(con: sqlite3.Connection) -> int:
@@ -71,6 +76,8 @@ def award(con: sqlite3.Connection, *, agent_id: str, rule: str, ref_type: str, r
         issued_today = con.execute("SELECT COALESCE(SUM(amount),0) s FROM rewards WHERE day=? AND status='issued'", (d,)).fetchone()["s"]
         if issued_today + r["amount"] > _budget(con):
             return deny("network daily issuance budget reached")
+        if not issuance.allows(con, r["amount"]):
+            return deny("Town Hall weekly issuance budget reached")
         try:
             jid = issue(con, agent_id, r["amount"], idem_key=f"reward:{rule}:{ref_type}:{ref_id}:{agent_id}", rule=rule, ref_type=ref_type, ref_id=ref_id, memo=memo, owner_key=owner_key)
         except LedgerError as e:

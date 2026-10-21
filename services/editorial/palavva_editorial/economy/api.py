@@ -55,23 +55,35 @@ def portfolio(agent_id: str) -> dict:
 
 
 class Limits(BaseModel):
+    """Trading limits in Sora. `max_order_pals` and `daily_pals` are the pre-Sora names, still accepted (1 Pal = 1 Sora)."""
     enabled: bool
-    max_order_pals: int = Field(ge=1, le=100_000)
-    daily_pals: int = Field(ge=1, le=1_000_000)
+    max_order_sora: int | None = Field(default=None, ge=1, le=100_000)
+    daily_sora: int | None = Field(default=None, ge=1, le=1_000_000)
+    max_order_pals: int | None = Field(default=None, ge=1, le=100_000)
+    daily_pals: int | None = Field(default=None, ge=1, le=1_000_000)
     daily_orders: int = Field(ge=1, le=200)
     markets: list[str] = []
     updated_by: str
 
+    def values(self) -> tuple[int, int]:
+        mx = self.max_order_sora or self.max_order_pals
+        dl = self.daily_sora or self.daily_pals
+        if mx is None or dl is None:
+            raise HTTPException(status_code=422, detail={"code": "BAD_LIMITS", "message": "max_order_sora and daily_sora are required"})
+        return mx, dl
+
 
 @router.post("/agents/{agent_id}/limits")
 def set_limits(agent_id: str, b: Limits) -> dict:
+    mx, dl = b.values()
     c = service.con()
     with db.tx(c):
         c.execute("""INSERT INTO trading_limits(agent_id, enabled, max_order_pals, daily_pals, daily_orders, markets, updated_by, updated_at) VALUES (?,?,?,?,?,?,?,?)
                      ON CONFLICT(agent_id) DO UPDATE SET enabled=excluded.enabled, max_order_pals=excluded.max_order_pals, daily_pals=excluded.daily_pals,
                      daily_orders=excluded.daily_orders, markets=excluded.markets, updated_by=excluded.updated_by, updated_at=excluded.updated_at""",
-                  (agent_id, int(b.enabled), b.max_order_pals, b.daily_pals, b.daily_orders, json.dumps([m.upper() for m in b.markets][:54]), b.updated_by[:80], db.now()))
-    return service.portfolio(agent_id)["limits"] or {}
+                  (agent_id, int(b.enabled), mx, dl, b.daily_orders, json.dumps([m.upper() for m in b.markets][:54]), b.updated_by[:80], db.now()))
+    lim = service.portfolio(agent_id)["limits"] or {}
+    return {**lim, "max_order_sora": lim.get("max_order_pals"), "daily_sora": lim.get("daily_pals")} if lim else {}
 
 
 class OrderIn(BaseModel):
@@ -79,7 +91,7 @@ class OrderIn(BaseModel):
     owner_key: str
     company_id: str
     side: Literal["buy", "sell"]
-    price: float = Field(gt=0)   # Pals per share
+    price: float = Field(gt=0)   # Sora per share
     qty: int = Field(gt=0, le=100_000)
     idem_key: str = Field(min_length=6, max_length=120)
     reason: str = ""
@@ -149,6 +161,81 @@ class ReverseIn(BaseModel):
 @router.post("/rewards/{rid}/reverse")
 def reverse(rid: int, b: ReverseIn) -> dict:
     return rewards.reverse_reward(service.con(), rid, b.reason)
+
+
+@router.get("/migration")
+def migration_status() -> dict:
+    """Pals-to-Sora migration state, plus the note the wallet shows."""
+    from . import migration
+    c = service.con()
+    return {**migration.status(c), "note": service.migration_note(c)}
+
+
+@router.post("/humans/{user_id}/account")
+def human_account(user_id: str) -> dict:
+    """Lazy, idempotent: the person's Sora account (created on the first call), with balance, history and the conversion note."""
+    try:
+        return service.human_account(user_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail={"code": "BAD_USER"})
+
+
+@router.get("/humans/{user_id}/portfolio")
+def human_portfolio(user_id: str) -> dict:
+    return service.portfolio(user_id, "human")
+
+
+@router.get("/companies/{cid}/listing")
+def listing(cid: str) -> dict:
+    try:
+        return ex.listing_status(service.con(), cid)
+    except ex.ExchangeError as e:
+        _err(e)
+
+
+@router.post("/companies/{cid}/list")
+def list_company(cid: str) -> dict:
+    c = service.con()
+    try:
+        with db.tx(c):
+            return ex.list_company(c, cid)
+    except ex.ExchangeError as e:
+        _err(e)
+
+
+@router.get("/admin/issuance")
+def issuance_status() -> dict:
+    c = service.con()
+    return {"weekly": service.weekly_budget(c), "supply": service.supply_summary(c)}
+
+
+class IssuanceIn(BaseModel):
+    weekly_budget: int | None = Field(default=None, ge=0, le=10_000_000)   # Sora; null = use the formula
+    growth: float | None = Field(default=None, ge=0.15, le=0.25)           # Doc 04 4A band
+    floor: int | None = Field(default=None, ge=0, le=1_000_000)            # Sora per week
+    by: str = Field(min_length=1)
+    reason: str = Field(min_length=3)
+
+
+@router.post("/admin/issuance")
+def set_issuance(b: IssuanceIn) -> dict:
+    """Operator settings for the Town Hall's weekly budget. Audited in reward_policy_changes (target 'weekly_budget');
+    they apply to the budget check at once and never touch issued Sora."""
+    c = service.con()
+    before = service.weekly_budget(c)
+    changes = {"SORA_WEEKLY_BUDGET": "" if b.weekly_budget is None else str(b.weekly_budget)}
+    if b.growth is not None:
+        changes["SORA_GROWTH_TARGET"] = str(b.growth)
+    if b.floor is not None:
+        changes["SORA_WEEKLY_FLOOR"] = str(b.floor)
+    with db.tx(c):
+        for k, v in changes.items():
+            c.execute("INSERT INTO switches(key, value, updated_by, updated_at) VALUES (?,?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, "
+                      "updated_by=excluded.updated_by, updated_at=excluded.updated_at", (k, v, b.by[:80], db.now()))
+        c.execute("DELETE FROM issuance_budgets WHERE week=? AND mint='town_hall'", (before["week"],))  # growth/floor apply from now
+        c.execute("INSERT INTO reward_policy_changes(target, before_json, after_json, reason, changed_by, created_at) VALUES ('weekly_budget',?,?,?,?,?)",
+                  (json.dumps({k: before[k] for k in ("budget", "source", "growth", "floor")}), json.dumps(changes), b.reason[:1000], b.by[:120], db.now()))
+    return issuance_status()
 
 
 @router.post("/reconcile")
@@ -278,7 +365,7 @@ def trade_trail(tid: int) -> dict:
 
 
 class SwitchIn(BaseModel):
-    key: Literal["EXCHANGE_HALTED", "LISTINGS_PAUSED", "PALS_ISSUANCE_PAUSED", "TRADING_ENGINE_PAUSED"]
+    key: Literal["EXCHANGE_HALTED", "LISTINGS_PAUSED", "PALS_ISSUANCE_PAUSED", "TRADING_ENGINE_PAUSED"]  # PALS_ISSUANCE_PAUSED pauses Town Hall rewards
     on: bool
     by: str
 
@@ -311,10 +398,10 @@ class ExplainIn(BaseModel):
     tenant_id: str
 
 
-EXPLAIN_SYSTEM = """You are {handle}, an AI agent on Palavva, answering YOUR OWNER privately about your simulated Pals portfolio.
-Use ONLY the FACTS JSON: your Pals balance, holdings, recent trading decisions with their stored explanations, and Pals rewards.
+EXPLAIN_SYSTEM = """You are {handle}, an AI agent on Palasora, answering YOUR OWNER privately about your simulated Sora portfolio.
+Use ONLY the FACTS JSON: your Sora balance, holdings, recent trading decisions with their stored explanations, and Sora rewards.
 Never invent a ticker, price, trade, reward or reason that is not in FACTS. If FACTS do not answer the question, say so plainly.
-Remind the owner, briefly, that Pals and shares are fictional (no real money). 40-140 words, plain language, first person."""
+Remind the owner, briefly, that Sora and shares are fictional (no real money). 40-140 words, plain language, first person."""
 
 
 @router.post("/agents/{agent_id}/explain")
@@ -328,10 +415,10 @@ def explain(agent_id: str, b: ExplainIn) -> dict:
     from ..providers.router import MeteredRouter
     pf = service.portfolio(agent_id)
     w = service.wallet(agent_id)
-    facts = {"pals_available": w["balance"]["available"] / 100, "lifetime_earned": w["lifetime_earned"] / 100,
+    facts = {"sora_available": w["balance"]["available"] / 100, "lifetime_earned": w["lifetime_earned"] / 100,
              "holdings": [{k: h[k] for k in ("ticker", "name", "market", "qty", "price", "unrealized", "realized", "founder_allocation")} for h in pf["holdings"]],
              "decisions": [{"action": d["action"], "explanation": d["explanation"], "when": d["created_at"]} for d in pf["decisions"][:10]],
-             "recent_rewards": [{"rule": r["rule"], "pals": r["amount"] / 100, "status": r["status"]} for r in w["rewards"][:10]]}
+             "recent_rewards": [{"rule": r["rule"], "sora": r["amount"] / 100, "status": r["status"]} for r in w["rewards"][:10]]}
     s = load()
     pb = PB(s.pb_url, s.pb_email, s.pb_password)
     router_ = MeteredRouter(pb, b.tenant_id, make_provider(s))
@@ -344,7 +431,7 @@ def explain(agent_id: str, b: ExplainIn) -> dict:
         return {"ok": False, "answer": "", "reason": f"model {r.status}", "facts": facts}
     ans = str(r.structured_output["answer"]).strip()
     known = {h["ticker"] for h in facts["holdings"]} | set(_re.findall(r"\b[A-Z]{3,5}\b", " ".join(d["explanation"] for d in facts["decisions"])))
-    cited = set(_re.findall(r"\b[A-Z]{4,5}\b", ans)) - {"PALS", "IPO", "AI"}
+    cited = set(_re.findall(r"\b[A-Z]{4,5}\b", ans)) - {"PALS", "SORA", "IPO", "AI"}
     if cited - known:  # grounding gate: an invented ticker means the answer is withheld
         return {"ok": False, "answer": "", "reason": f"answer cited unknown tickers {sorted(cited - known)}; withheld", "facts": facts}
     return {"ok": True, "answer": ans, "provider": r.provider, "latency_ms": r.elapsed_ms, "facts": facts}
@@ -352,14 +439,14 @@ def explain(agent_id: str, b: ExplainIn) -> dict:
 
 @router.get("/founder-pool")
 def founder_pool() -> list[dict]:
-    """v1.7 (spec 34): agents that currently meet the PROPOSED company-formation rules (lifetime earned >= threshold, Pals
-    for the listing fee, not already a founder). The web maps them to markets, so an empty market can say truthfully how
+    """v1.7 (spec 34): agents that currently meet the PROPOSED company-formation rules (lifetime earned >= threshold, Sora
+    for the registration fee, not already a founder). The web maps them to markets, so an empty market can say truthfully how
     close it is to a first listing. Read-only."""
     from . import exchange as ex
     from .service import con
     c = con()
     founders = {r["founder_agent_id"] for r in c.execute("SELECT founder_agent_id FROM companies")}
-    rows = c.execute("SELECT r.agent_id, SUM(r.amount) earned, COALESCE((SELECT available FROM accounts a WHERE a.owner_kind='agent' AND a.owner_id=r.agent_id AND a.asset='PALS'),0) bal "
+    rows = c.execute("SELECT r.agent_id, SUM(r.amount) earned, COALESCE((SELECT available FROM accounts a WHERE a.owner_kind='agent' AND a.owner_id=r.agent_id AND a.asset='SORA'),0) bal "
                      "FROM rewards r WHERE r.status='issued' GROUP BY r.agent_id HAVING earned >= ?", (ex.MIN_LIFETIME_EARNED,)).fetchall()
     return [{"agent_id": r["agent_id"], "earned": r["earned"] / 100, "available": r["bal"] / 100, "can_pay_fee": r["bal"] >= ex.LISTING_FEE}
             for r in rows if r["agent_id"] not in founders]

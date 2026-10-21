@@ -36,11 +36,14 @@ def enable(con, agent, **kw):
                     (agent, 1, kw.get("max_order", 5000), kw.get("daily", 20000), kw.get("orders", 50), kw.get("markets", "[]"), db.now()))
 
 
-def make_company(con, founder="f1", market="NG", price=100, name="Kola Logistics", ticker="KOLA"):
+def make_company(con, founder="f1", market="NG", price=100, name="Kola Logistics", ticker="KOLA", founding=True):
+    """A listed company under the founding rules (10,000 shares, IPO), founded by a house agent. Phase 2: new companies are
+    private (see test_phase2.py), so the matching tests use a founding company and buyers owned by people (user:<id>):
+    house agents share the platform owner and never trade with each other or with a house agent's company."""
     fund(con, founder)
     with db.tx(con):
         return ex.create_company(con, founder_agent_id=founder, owner_key=f"seed:{founder}", name=name, ticker=ticker, market=market, sector="logistics",
-                                 description="A fictional logistics co-op.", ipo_price=price, fictional_ack=True)
+                                 description="A fictional logistics co-op.", ipo_price=price, fictional_ack=True, founding=founding)
 
 
 def test_rewards_caps_idempotency_and_reconcile(con):
@@ -87,8 +90,11 @@ def test_listing_eligibility_and_real_names(con):
             ex.create_company(con, founder_agent_id="f2", owner_key="seed:f2", name="Dangote Fresh", ticker="DFRS", market="NG", sector="retail",
                               description="x", ipo_price=100, fictional_ack=True)
     assert e.value.code == "REAL_NAME"
+    new = make_company(con, founder="f3", name="Sahel Seeds", ticker="SAHL", founding=False)
+    assert new["status"] == "private" and new["shares_outstanding"] == 1_000 and new["founder_shares"] == 1_000
+    assert ex.book(con, new["id"]) == {"bids": [], "asks": []}  # no IPO: a new company is private
     c = make_company(con)
-    assert c["status"] == "listed" and c["shares_outstanding"] == 10_000
+    assert c["status"] == "listed" and c["shares_outstanding"] == 10_000 and c["founding"] == 1
     bk = ex.book(con, c["id"])
     assert bk["asks"][0]["qty"] == 6000 and bk["asks"][0]["price"] == 100  # primary offering rests at the IPO price
     assert reconcile.run(con)["ok"]
@@ -98,13 +104,13 @@ def test_ipo_buy_partial_fill_price_improvement_and_settlement(con):
     c = make_company(con)
     fund(con, "b1"); enable(con, "b1")
     before = ledger.balance(con, "agent", "b1")["available"]
-    r = ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=c["id"], side="buy", price=110, qty=50, idem_key="o1")
+    r = ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=c["id"], side="buy", price=110, qty=50, idem_key="o1")
     assert len(r["trades"]) == 1 and r["trades"][0]["price"] == 100 and r["order"]["status"] == "filled"
     after = ledger.balance(con, "agent", "b1")
     assert before - after["available"] == 50 * 100 and after["reserved"] == 0  # paid the resting price; improvement released
     assert ledger.balance(con, "agent", "b1", f"SHR:{c['id']}")["available"] == 50
     assert ledger.balance(con, "company", c["id"])["available"] == 5000  # treasury raised fictional capital
-    replay = ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=c["id"], side="buy", price=110, qty=50, idem_key="o1")
+    replay = ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=c["id"], side="buy", price=110, qty=50, idem_key="o1")
     assert replay["replayed"] and ledger.balance(con, "agent", "b1", f"SHR:{c['id']}")["available"] == 50
     pf = ex.portfolio(con, "b1")
     assert pf["holdings"][0]["qty"] == 50 and pf["holdings"][0]["cost"] == 5000
@@ -134,23 +140,23 @@ def test_limits_band_halt_and_insufficient(con):
     c = make_company(con)
     fund(con, "b1")
     with pytest.raises(ex.ExchangeError) as e:
-        ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=c["id"], side="buy", price=100, qty=1, idem_key="nolim")
+        ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=c["id"], side="buy", price=100, qty=1, idem_key="nolim")
     assert e.value.code == "TRADING_DISABLED"
     enable(con, "b1", max_order=10)
     with pytest.raises(ex.ExchangeError) as e:
-        ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=c["id"], side="buy", price=100, qty=20, idem_key="big")
+        ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=c["id"], side="buy", price=100, qty=20, idem_key="big")
     assert e.value.code == "ORDER_LIMIT"
     enable(con, "b1")
     with pytest.raises(ex.ExchangeError) as e:
-        ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=c["id"], side="buy", price=200, qty=1, idem_key="band")
+        ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=c["id"], side="buy", price=200, qty=1, idem_key="band")
     assert e.value.code == "PRICE_BAND"
     with pytest.raises(ex.ExchangeError) as e:
-        ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=c["id"], side="buy", price=100, qty=4000, idem_key="broke")
+        ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=c["id"], side="buy", price=100, qty=4000, idem_key="broke")
     assert e.value.code in ("INSUFFICIENT", "ORDER_LIMIT", "DAILY_LIMIT")
     with db.tx(con):
         ex.set_switch(con, "EXCHANGE_HALTED", True, "ops")
     with pytest.raises(ex.ExchangeError) as e:
-        ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=c["id"], side="buy", price=100, qty=1, idem_key="halt")
+        ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=c["id"], side="buy", price=100, qty=1, idem_key="halt")
     assert e.value.code == "HALTED"
     # A rejected order leaves no trace in balances.
     assert ledger.balance(con, "agent", "b1")["reserved"] == 0
@@ -162,11 +168,11 @@ def test_secondary_market_two_markets_cancel_and_index(con):
     k = make_company(con, founder="f9", market="KE", price=200, name="Rift Solar Works", ticker="RIFT")
     for ag in ("b1", "b2"):
         fund(con, ag); enable(con, ag)
-    ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=a["id"], side="buy", price=100, qty=40, idem_key="1")
-    ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=k["id"], side="buy", price=200, qty=10, idem_key="2")
+    ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=a["id"], side="buy", price=100, qty=40, idem_key="1")
+    ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=k["id"], side="buy", price=200, qty=10, idem_key="2")
     # b1 sells 20 NG shares to b2 at 110 (secondary market; above IPO = price moves only through a matched order)
-    ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=a["id"], side="sell", price=110, qty=20, idem_key="3")
-    r = ex.place_order(con, agent_id="b2", owner_key="seed:b2", company_id=a["id"], side="buy", price=110, qty=20, idem_key="4")
+    ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=a["id"], side="sell", price=110, qty=20, idem_key="3")
+    r = ex.place_order(con, agent_id="b2", owner_key="user:b2", company_id=a["id"], side="buy", price=110, qty=20, idem_key="4")
     # the IPO ask at 100 is cheaper, so b2 is filled there first (price-time priority)
     assert r["trades"][0]["price"] == 100
     open_sell = con.execute("SELECT id FROM orders WHERE idem_key='3'").fetchone()["id"]
@@ -190,7 +196,7 @@ def test_failed_settlement_rolls_back_everything(con, monkeypatch):
         raise RuntimeError("simulated crash mid-settlement")
     monkeypatch.setattr(ex, "_position", boom)
     with pytest.raises(RuntimeError):
-        ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=c["id"], side="buy", price=100, qty=10, idem_key="crash")
+        ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=c["id"], side="buy", price=100, qty=10, idem_key="crash")
     monkeypatch.setattr(ex, "_position", real)
     assert con.execute("SELECT COUNT(*) n FROM journal").fetchone()["n"] == snapshot
     assert con.execute("SELECT COUNT(*) n FROM orders WHERE idem_key='crash'").fetchone()["n"] == 0
@@ -205,8 +211,8 @@ def test_restart_restores_book_and_positions(tmp_path):
         ex.ensure_markets(c1, COUNTRIES); rewards.ensure_rules(c1)
     co = make_company(c1)
     fund(c1, "b1"); enable(c1, "b1")
-    ex.place_order(c1, agent_id="b1", owner_key="seed:b1", company_id=co["id"], side="buy", price=100, qty=30, idem_key="x")
-    ex.place_order(c1, agent_id="b1", owner_key="seed:b1", company_id=co["id"], side="sell", price=120, qty=10, idem_key="y")
+    ex.place_order(c1, agent_id="b1", owner_key="user:b1", company_id=co["id"], side="buy", price=100, qty=30, idem_key="x")
+    ex.place_order(c1, agent_id="b1", owner_key="user:b1", company_id=co["id"], side="sell", price=120, qty=10, idem_key="y")
     c1.close()  # "process exits"
     c2 = db.connect(p)
     assert ex.book(c2, co["id"])["asks"][0]["price"] == 100
@@ -228,7 +234,7 @@ def test_concurrent_orders_keep_invariants(tmp_path):
         c = db.connect(p)
         try:
             for i in range(8):
-                ex.place_order(c, agent_id=a, owner_key=f"seed:{a}", company_id=co["id"], side="buy", price=100 + (i % 3), qty=5, idem_key=f"{a}-{i}")
+                ex.place_order(c, agent_id=a, owner_key=f"user:{a}", company_id=co["id"], side="buy", price=100 + (i % 3), qty=5, idem_key=f"{a}-{i}")
         except Exception as e:  # noqa: BLE001
             errs.append(e)
         finally:

@@ -4,7 +4,7 @@
                   bids waiting and nobody offering, agent sell orders ever placed, and whether price discovery is on.
 * ownership():    per company: holders, founder share, largest outside holder, treasury left, concentration (HHI 0-10,000).
 * trade_trail():  one trade end to end: both orders (who, price, the agent's stated reason, decision id), the settlement journal
-                  entries written in the same transaction, and whether shares and Pals both moved.
+                  entries written in the same transaction, and whether shares and Sora both moved.
 * recent_trades() / open_book(): tables for the admin Trades & Orders tab.
 """
 from __future__ import annotations
@@ -95,6 +95,6 @@ def trade_trail(con: sqlite3.Connection, trade_id: int) -> dict | None:
     return {"trade": {**dict(t), "price": t["price"] / db.CENTS, "kind": "ipo" if t["seller_id"] == t["company_id"] else "secondary"},
             "buy_order": {**orders.get(t["buy_order"], {}), "price": orders.get(t["buy_order"], {}).get("price", 0) / db.CENTS},
             "sell_order": {**orders.get(t["sell_order"], {}), "price": orders.get(t["sell_order"], {}).get("price", 0) / db.CENTS},
-            "journal": [{**e, "amount": e["amount"] / db.CENTS if e["asset"] == db.PALS else e["amount"]} for e in entries],
+            "journal": [{**e, "amount": e["amount"] / db.CENTS if e["asset"] in (db.SORA, db.PALS) else e["amount"]} for e in entries],
             "settled": paid == t["price"] * t["qty"] and moved == t["qty"],
-            "settlement": f"{moved} shares to the buyer and {paid / db.CENTS:.2f} Pals to the seller in one transaction ({len(entries)} journal entries)."}
+            "settlement": f"{moved} shares to the buyer and {paid / db.CENTS:.2f} {"Pals (before the Sora conversion)" if cash and cash[0]["asset"] == db.PALS else "Sora"} to the seller in one transaction ({len(entries)} journal entries)."}

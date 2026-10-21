@@ -47,11 +47,11 @@ def test_sold_out_ipo_bids_up_founder_sells_one_percent_and_price_and_index_foll
     fund(con, "f1")
     with db.tx(con):
         co = ex.create_company(con, founder_agent_id="f1", owner_key="seed:f1", name="Kola Logistics", ticker="KOLA", market="NG", sector="logistics",
-                               description="A fictional logistics co-op.", ipo_price=100, fictional_ack=True)
+                               description="A fictional logistics co-op.", ipo_price=100, fictional_ack=True, founding=True)
     for b in ("b1", "b2"):
         fund(con, b)
-    ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=co["id"], side="buy", price=100, qty=30, idem_key="ipo1")
-    ex.place_order(con, agent_id="b2", owner_key="seed:b2", company_id=co["id"], side="buy", price=100, qty=30, idem_key="ipo2")
+    ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=co["id"], side="buy", price=100, qty=30, idem_key="ipo1")
+    ex.place_order(con, agent_id="b2", owner_key="user:b2", company_id=co["id"], side="buy", price=100, qty=30, idem_key="ipo2")
     comp = dict(con.execute("SELECT * FROM companies WHERE id=?", (co["id"],)).fetchone())
     assert comp["last_price"] == 100 and not ex.book(con, co["id"])["asks"]  # IPO sold out; v1 would stop here forever
     assert ex.compute_index(con, None)[-1]["value"] == 1000.0  # correct: every trade was at the IPO price
@@ -60,7 +60,7 @@ def test_sold_out_ipo_bids_up_founder_sells_one_percent_and_price_and_index_foll
     fund(con, "b3")
     p, why = pricing.buy_price(last=100, ref=100, best_ask=None, risk="balanced", band=ex.BAND, discovery=True)
     assert p == 102 and "nobody is offering" in why
-    r = ex.place_order(con, agent_id="b3", owner_key="seed:b3", company_id=co["id"], side="buy", price=p, qty=5, idem_key="bid1")
+    r = ex.place_order(con, agent_id="b3", owner_key="user:b3", company_id=co["id"], side="buy", price=p, qty=5, idem_key="bid1")
     assert r["trades"] == [] and r["order"]["status"] == "open"  # a bid is not a trade
     assert con.execute("SELECT last_price FROM companies WHERE id=?", (co["id"],)).fetchone()["last_price"] == 100  # no fabricated motion
     # The founder may sell up to 1% of founder shares per day (40 -> 1 share) into that real bid (rule 3).
@@ -96,14 +96,14 @@ def test_engine_trade_tick_uses_v2_rules_end_to_end(tmp_path, monkeypatch):
         fund(con, a)
     with db.tx(con):
         co = ex.create_company(con, founder_agent_id="f1", owner_key="seed:f1", name="Kola Logistics", ticker="KOLA", market="NG", sector="logistics",
-                               description="A fictional logistics co-op.", ipo_price=100, fictional_ack=True)
-    ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=co["id"], side="buy", price=100, qty=30, idem_key="ipo1")
-    ex.place_order(con, agent_id="b2", owner_key="seed:b2", company_id=co["id"], side="buy", price=100, qty=30, idem_key="ipo2")
+                               description="A fictional logistics co-op.", ipo_price=100, fictional_ack=True, founding=True)
+    ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=co["id"], side="buy", price=100, qty=30, idem_key="ipo1")
+    ex.place_order(con, agent_id="b2", owner_key="user:b2", company_id=co["id"], side="buy", price=100, qty=30, idem_key="ipo2")
     eng = fast.FastEngine.__new__(fast.FastEngine)
     eng.tid, eng.trade_cursor, eng.meter = "t1", 0, None
     base = {"trading_enabled": True, "risk_profile": "balanced", "country_affinities": ["NG"], "primary_subjects": ["logistics"], "secondary_subjects": [], "_home": "NG"}
     # ids sort as b3 < f1: the buyer bids first, then the founder sells into that bid in the same tick.
-    eng.agents = {"b3": {**base, "id": "b3", "handle": "b3"}, "f1": {**base, "id": "f1", "handle": "f1"}}
+    eng.agents = {"b3": {**base, "id": "b3", "handle": "b3", "owner_type": "user", "owner_user_id": "u3"}, "f1": {**base, "id": "f1", "handle": "f1"}}
     eng.notify = lambda *a, **k: None
     eng._emit_economy = lambda *a, **k: None
     out = eng.trade_tick()
@@ -127,11 +127,11 @@ def _company_with_resting_orders(con):
     fund(con, "f1")
     with db.tx(con):
         co = ex.create_company(con, founder_agent_id="f1", owner_key="seed:f1", name="Kola Logistics", ticker="KOLA", market="NG", sector="logistics",
-                               description="A fictional logistics co-op.", ipo_price=100, fictional_ack=True)
+                               description="A fictional logistics co-op.", ipo_price=100, fictional_ack=True, founding=True)
     for b in ("b1", "b2"):
         fund(con, b)
-    ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=co["id"], side="buy", price=100, qty=10, idem_key="ipo1")
-    rest = ex.place_order(con, agent_id="b2", owner_key="seed:b2", company_id=co["id"], side="buy", price=95, qty=5, idem_key="rest1")  # rests below the IPO offer
+    ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=co["id"], side="buy", price=100, qty=10, idem_key="ipo1")
+    rest = ex.place_order(con, agent_id="b2", owner_key="user:b2", company_id=co["id"], side="buy", price=95, qty=5, idem_key="rest1")  # rests below the IPO offer
     return co, rest
 
 
@@ -143,7 +143,7 @@ def test_halt_vs_pause_with_pending_orders(con):
     with db.tx(con):
         ex.set_switch(con, "EXCHANGE_HALTED", True, "admin")
     with pytest.raises(ex.ExchangeError) as e:
-        ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=co["id"], side="buy", price=100, qty=1, idem_key="during-halt")
+        ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=co["id"], side="buy", price=100, qty=1, idem_key="during-halt")
     assert e.value.code == "HALTED"
     assert con.execute("SELECT status FROM orders WHERE id=?", (rest["order"]["id"],)).fetchone()["status"] == "open"
     assert ledger.balance(con, "agent", "b2")["reserved"] == reserved
@@ -154,13 +154,13 @@ def test_halt_vs_pause_with_pending_orders(con):
     with db.tx(con):
         con.execute("UPDATE markets SET status='halted' WHERE code='NG'")
     with pytest.raises(ex.ExchangeError):
-        ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=co["id"], side="buy", price=100, qty=1, idem_key="ng-halt")
+        ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=co["id"], side="buy", price=100, qty=1, idem_key="ng-halt")
     with db.tx(con):
         con.execute("UPDATE markets SET status='open' WHERE code='NG'")
     # PAUSE AGENT TRADING: the engine stops deciding, but the market stays open to orders (e.g. a user's own agent through the API).
     with db.tx(con):
         ex.set_switch(con, "TRADING_ENGINE_PAUSED", True, "admin")
-    r = ex.place_order(con, agent_id="b1", owner_key="seed:b1", company_id=co["id"], side="buy", price=100, qty=1, idem_key="during-pause")
+    r = ex.place_order(con, agent_id="b1", owner_key="user:b1", company_id=co["id"], side="buy", price=100, qty=1, idem_key="during-pause")
     assert r["trades"] and r["trades"][0]["price"] == 100
     assert reconcile.run(con, store=False)["ok"]
 

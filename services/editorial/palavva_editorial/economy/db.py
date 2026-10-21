@@ -1,8 +1,12 @@
 """Economy database: schema, connection policy and helpers.
 
-Amounts are INTEGER centi-Pals (1 Pal = 100) and integer shares, so no float rounding ever touches a balance.
+Amounts are INTEGER centi-Sora (1 Sora = 100) and integer shares, so no float rounding ever touches a balance.
 Every balance change is a row in `journal` (double entry: from one account bucket to another). The cached balances on
 `accounts` are updated in the same transaction and can be rebuilt from the journal (reconcile.py).
+
+Currency (Phase 2, Doc 06 section 7): the coin is the Sora. The old unit, the Pal (asset 'PALS'), is kept as readable
+history only. A ledger that held Pals is converted once by `migration.py` (1 Pal = 1 Sora); a new ledger starts in Sora.
+`currency_state()` tells which: 'sora' (fresh or converted) or 'pending' (Pals not converted yet: money cannot move).
 """
 from __future__ import annotations
 
@@ -11,31 +15,37 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 1
-CENTS = 100  # centi-Pals per Pal
-PALS = "PALS"
+SCHEMA_VERSION = 2
+CENTS = 100  # centi-Sora per Sora (and, historically, centi-Pals per Pal)
+PALS = "PALS"  # legacy unit: history only after the migration
+SORA = "SORA"  # the coin
+CURRENCY = SORA
 
-SCHEMA = """
-PRAGMA foreign_keys = ON;
-CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS accounts (
+# Mint accounts. Only these may hold a negative balance: they are the counter-entry of every coin (or share) created.
+# Sora: the Town Hall and the Harbour (Doc 04 section 4). Pals (legacy): platform:issuance. Shares: platform:mint:<cid>.
+MINT_IDS = ("town_hall", "harbour")
+_MINT_CHECK = "(owner_kind = 'platform' AND (owner_id IN ('town_hall','harbour','issuance') OR owner_id LIKE 'mint:%'))"
+
+ACCOUNTS_DDL = f"""CREATE TABLE IF NOT EXISTS {{t}} (
   id INTEGER PRIMARY KEY,
-  owner_kind TEXT NOT NULL CHECK (owner_kind IN ('agent','platform','company')),
+  owner_kind TEXT NOT NULL CHECK (owner_kind IN ('agent','platform','company','human')),
   owner_id TEXT NOT NULL,
-  asset TEXT NOT NULL,                       -- 'PALS' or 'SHR:<company_id>'
+  asset TEXT NOT NULL,                       -- 'SORA', legacy 'PALS', or 'SHR:<company_id>'
   available INTEGER NOT NULL DEFAULT 0,
   reserved INTEGER NOT NULL DEFAULT 0 CHECK (reserved >= 0),
-  owner_key TEXT NOT NULL DEFAULT '',        -- human owner (or 'platform') behind an agent: wash-trade / collusion checks
+  owner_key TEXT NOT NULL DEFAULT '',        -- identity behind the account (user:<id>, seed:<id>, platform): wash-trade / collusion checks
   created_at REAL NOT NULL,
   UNIQUE (owner_kind, owner_id, asset),
-  -- only the platform issuance account may go negative (it is the counter-entry of every issued Pal)
-  CHECK (available >= 0 OR owner_kind = 'platform')
-);
-CREATE TABLE IF NOT EXISTS journal (
+  -- only a mint may go negative (it is the counter-entry of every coin or share it created)
+  CHECK (available >= 0 OR {_MINT_CHECK})
+)"""
+JOURNAL_KINDS = ("issue", "reverse", "reserve", "release", "trade_cash", "trade_shares", "refund", "ipo_shares", "fee", "treasury",
+                 "convert", "burn", "revenue")
+JOURNAL_DDL = f"""CREATE TABLE IF NOT EXISTS {{t}} (
   id INTEGER PRIMARY KEY,
   txn_id TEXT NOT NULL,
   idem_key TEXT NOT NULL UNIQUE,
-  kind TEXT NOT NULL CHECK (kind IN ('issue','reverse','reserve','release','trade_cash','trade_shares','refund','ipo_shares','fee','treasury')),
+  kind TEXT NOT NULL CHECK (kind IN ({",".join(f"'{k}'" for k in JOURNAL_KINDS)})),
   from_account INTEGER NOT NULL REFERENCES accounts(id),
   from_bucket TEXT NOT NULL CHECK (from_bucket IN ('available','reserved')),
   to_account INTEGER NOT NULL REFERENCES accounts(id),
@@ -47,11 +57,29 @@ CREATE TABLE IF NOT EXISTS journal (
   rule TEXT NOT NULL DEFAULT '',
   memo TEXT NOT NULL DEFAULT '',
   created_at REAL NOT NULL
-);
+)"""
+COMPANIES_DDL = """CREATE TABLE IF NOT EXISTS {t} (
+  id TEXT PRIMARY KEY, ticker TEXT NOT NULL UNIQUE, name TEXT NOT NULL UNIQUE COLLATE NOCASE, market TEXT NOT NULL REFERENCES markets(code),
+  founder_agent_id TEXT NOT NULL, sector TEXT NOT NULL, description TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('private','listed','halted','delisted')),
+  shares_outstanding INTEGER NOT NULL CHECK (shares_outstanding > 0), founder_shares INTEGER NOT NULL, ipo_price INTEGER NOT NULL CHECK (ipo_price > 0),
+  last_price INTEGER, prev_close INTEGER, eligibility TEXT NOT NULL DEFAULT '{{}}', created_at REAL NOT NULL, listed_at REAL,
+  founding INTEGER NOT NULL DEFAULT 0          -- 1 = one of the founding companies (10,000 shares, listed before Sora); 0 = Doc 04 rules
+)"""
+INDEXES = """
 CREATE INDEX IF NOT EXISTS idx_journal_ref ON journal (ref_type, ref_id);
 CREATE INDEX IF NOT EXISTS idx_journal_from ON journal (from_account, created_at);
 CREATE INDEX IF NOT EXISTS idx_journal_to ON journal (to_account, created_at);
 CREATE INDEX IF NOT EXISTS idx_journal_txn ON journal (txn_id);
+CREATE INDEX IF NOT EXISTS idx_journal_rule ON journal (rule);
+CREATE INDEX IF NOT EXISTS idx_companies_market ON companies (market, status);
+"""
+
+SCHEMA = f"""
+PRAGMA foreign_keys = ON;
+CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+{ACCOUNTS_DDL.format(t="accounts")};
+{JOURNAL_DDL.format(t="journal")};
 
 CREATE TABLE IF NOT EXISTS reward_rules (
   code TEXT PRIMARY KEY, amount INTEGER NOT NULL CHECK (amount > 0), per_agent_daily_cap INTEGER NOT NULL, description TEXT NOT NULL,
@@ -70,14 +98,7 @@ CREATE TABLE IF NOT EXISTS markets (
   name TEXT NOT NULL, region TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','halted')),
   halted_reason TEXT NOT NULL DEFAULT '', updated_at REAL NOT NULL
 );
-CREATE TABLE IF NOT EXISTS companies (
-  id TEXT PRIMARY KEY, ticker TEXT NOT NULL UNIQUE, name TEXT NOT NULL UNIQUE COLLATE NOCASE, market TEXT NOT NULL REFERENCES markets(code),
-  founder_agent_id TEXT NOT NULL, sector TEXT NOT NULL, description TEXT NOT NULL,
-  status TEXT NOT NULL CHECK (status IN ('listed','halted','delisted')),
-  shares_outstanding INTEGER NOT NULL CHECK (shares_outstanding > 0), founder_shares INTEGER NOT NULL, ipo_price INTEGER NOT NULL CHECK (ipo_price > 0),
-  last_price INTEGER, prev_close INTEGER, eligibility TEXT NOT NULL DEFAULT '{}', created_at REAL NOT NULL, listed_at REAL
-);
-CREATE INDEX IF NOT EXISTS idx_companies_market ON companies (market, status);
+{COMPANIES_DDL.format(t="companies")};
 CREATE TABLE IF NOT EXISTS orders (
   id INTEGER PRIMARY KEY, idem_key TEXT NOT NULL UNIQUE, account_owner_kind TEXT NOT NULL, owner_id TEXT NOT NULL, owner_key TEXT NOT NULL,
   company_id TEXT NOT NULL REFERENCES companies(id), market TEXT NOT NULL, side TEXT NOT NULL CHECK (side IN ('buy','sell')),
@@ -108,7 +129,7 @@ CREATE TABLE IF NOT EXISTS trading_limits (
 );
 CREATE TABLE IF NOT EXISTS decisions (
   id INTEGER PRIMARY KEY, agent_id TEXT NOT NULL, kind TEXT NOT NULL, action TEXT NOT NULL CHECK (action IN ('buy','sell','hold','create_company','abstain')),
-  company_id TEXT, inputs TEXT NOT NULL DEFAULT '{}', explanation TEXT NOT NULL DEFAULT '', decider TEXT NOT NULL DEFAULT 'deterministic',
+  company_id TEXT, inputs TEXT NOT NULL DEFAULT '{{}}', explanation TEXT NOT NULL DEFAULT '', decider TEXT NOT NULL DEFAULT 'deterministic',
   order_id INTEGER, created_at REAL NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_decisions_agent ON decisions (agent_id, created_at);
@@ -116,7 +137,7 @@ CREATE INDEX IF NOT EXISTS idx_decisions_agent ON decisions (agent_id, created_a
 -- Changes apply to FUTURE rewards only; past rows in `rewards` and `journal` are never rewritten.
 CREATE TABLE IF NOT EXISTS reward_policy_changes (
   id INTEGER PRIMARY KEY, target TEXT NOT NULL, before_json TEXT NOT NULL, after_json TEXT NOT NULL, reason TEXT NOT NULL,
-  preview_json TEXT NOT NULL DEFAULT '{}', changed_by TEXT NOT NULL, rollback_of INTEGER, created_at REAL NOT NULL
+  preview_json TEXT NOT NULL DEFAULT '{{}}', changed_by TEXT NOT NULL, rollback_of INTEGER, created_at REAL NOT NULL
 );
 -- ISSUE-14: a person's disposition of an integrity signal (signals are warnings, not proof).
 CREATE TABLE IF NOT EXISTS integrity_reviews (
@@ -129,6 +150,17 @@ CREATE TABLE IF NOT EXISTS reconciliations (
   id INTEGER PRIMARY KEY, ran_at REAL NOT NULL, ok INTEGER NOT NULL, accounts INTEGER NOT NULL, journal_rows INTEGER NOT NULL,
   mismatches TEXT NOT NULL DEFAULT '[]', supply_pals INTEGER NOT NULL, issued_pals INTEGER NOT NULL
 );
+-- Phase 2: the Town Hall's weekly issuance budget, fixed when first computed in a week (Doc 04 section 4A, rule 2).
+CREATE TABLE IF NOT EXISTS issuance_budgets (
+  week TEXT NOT NULL, mint TEXT NOT NULL, supply_at_start INTEGER NOT NULL, growth REAL NOT NULL, formula_budget INTEGER NOT NULL,
+  floor INTEGER NOT NULL, computed_at REAL NOT NULL, PRIMARY KEY (week, mint)
+);
+-- Phase 2: one-time ledger migrations (pals-to-sora), with the before/after fingerprints.
+CREATE TABLE IF NOT EXISTS migrations (
+  name TEXT PRIMARY KEY, status TEXT NOT NULL, started_at REAL NOT NULL, finished_at REAL, backup_dir TEXT NOT NULL DEFAULT '',
+  fingerprint_before TEXT NOT NULL DEFAULT '', fingerprint_after TEXT NOT NULL DEFAULT '', report TEXT NOT NULL DEFAULT '{{}}'
+);
+{INDEXES}
 """
 
 
@@ -143,9 +175,71 @@ def connect(path: str | Path) -> sqlite3.Connection:
     return con
 
 
+def _needs_upgrade(con: sqlite3.Connection) -> bool:
+    acc = con.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='accounts'").fetchone()
+    jr = con.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='journal'").fetchone()
+    co = con.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='companies'").fetchone()
+    return bool((acc and "'human'" not in acc["sql"]) or (jr and "'convert'" not in jr["sql"]) or (co and "founding" not in co["sql"]))
+
+
+def upgrade(con: sqlite3.Connection) -> bool:
+    """Schema v1 -> v2, in place and atomic: rebuild accounts, journal and companies with the widened CHECKs (owner kind
+    'human', mint-only negatives, the new journal kinds, private companies and the `founding` flag). Every row and id is
+    copied unchanged; nothing about a balance changes. Returns True when it upgraded."""
+    if not _needs_upgrade(con):
+        return False
+    con.execute("PRAGMA foreign_keys=OFF")  # only outside a transaction; the rebuild keeps every id, so references stay valid
+    try:
+        con.execute("BEGIN IMMEDIATE")
+        try:
+            if _needs_upgrade(con):  # another process may have upgraded while we waited for the lock
+                for name, ddl, extra in (("accounts", ACCOUNTS_DDL, {}), ("journal", JOURNAL_DDL, {}), ("companies", COMPANIES_DDL, {"founding": "0"})):
+                    old_cols = [r["name"] for r in con.execute(f"PRAGMA table_info({name})")]
+                    con.execute(ddl.format(t=f"{name}_v2"))
+                    cols = old_cols + [c for c in extra if c not in old_cols]
+                    sel = [c if c in old_cols else extra[c] for c in cols]
+                    con.execute(f"INSERT INTO {name}_v2 ({','.join(cols)}) SELECT {','.join(sel)} FROM {name}")
+                    con.execute(f"DROP TABLE {name}")
+                    con.execute(f"ALTER TABLE {name}_v2 RENAME TO {name}")
+                for stmt in INDEXES.strip().split(";"):
+                    if stmt.strip():
+                        con.execute(stmt)
+                bad = con.execute("PRAGMA foreign_key_check").fetchall()
+                if bad:
+                    raise sqlite3.IntegrityError(f"foreign key check failed after upgrade: {[tuple(b) for b in bad[:5]]}")
+                con.execute("INSERT INTO meta(key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (str(SCHEMA_VERSION),))
+        except BaseException:
+            con.execute("ROLLBACK")
+            raise
+        else:
+            con.execute("COMMIT")
+    finally:
+        con.execute("PRAGMA foreign_keys=ON")
+    return True
+
+
 def init(con: sqlite3.Connection) -> None:
+    exists = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='accounts'").fetchone() is not None
+    if exists:
+        upgrade(con)  # before SCHEMA: its new indexes name columns that only exist after the upgrade
     con.executescript(SCHEMA)
     con.execute("INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', ?)", (str(SCHEMA_VERSION),))
+    # A ledger that never held Pals starts in Sora. One that did stays 'pending' until migration.py converts it.
+    if not con.execute("SELECT 1 FROM meta WHERE key='currency'").fetchone():
+        held_pals = con.execute("SELECT 1 FROM journal WHERE asset=? LIMIT 1", (PALS,)).fetchone()
+        if not held_pals:
+            con.execute("INSERT OR IGNORE INTO meta(key, value) VALUES ('currency', ?)", (SORA,))
+            con.execute("INSERT OR IGNORE INTO meta(key, value) VALUES ('currency_since', ?)", (str(now()),))
+
+
+def meta(con: sqlite3.Connection, key: str, default: str = "") -> str:
+    r = con.execute("SELECT value FROM meta WHERE key=?", (key,)).fetchone()
+    return r["value"] if r else default
+
+
+def currency_state(con: sqlite3.Connection) -> str:
+    """'sora' when the ledger runs in Sora (new, or converted); 'pending' when it still holds unconverted Pals."""
+    return "sora" if meta(con, "currency") == SORA else "pending"
 
 
 @contextmanager

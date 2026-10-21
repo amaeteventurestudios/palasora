@@ -83,6 +83,25 @@ def seed_agent_originals(pb: PB, t: dict) -> int:
     return made
 
 
+FOUNDING = {"name": "Volta Harvest Co-op", "ticker": "VHCO", "market": "GH", "sector": "agriculture",
+            "description": "A fictional Ghanaian farming co-op, seeded as a founding company for the end-to-end tests. Simulated only: no real business."}
+
+
+def seed_founding_company(pb: PB, t: dict) -> dict | None:
+    """Palasora Phase 2: new companies are private (Doc 04 section 8) and the real founding companies came from before Sora,
+    so the test stack gets one founding company (listed, 10,000 shares, its treasury offered at 1.00 Sora). Its founder is a
+    house agent, so only people and their agents can buy its IPO (house agents share the platform owner)."""
+    from .economy import db as edb, exchange as ex, rewards, service
+    c = service.con()
+    if c.execute("SELECT 1 FROM companies WHERE ticker=?", (FOUNDING["ticker"],)).fetchone():
+        return None
+    a = pb.first("agents", f"tenant_id={q(t['id'])} && is_seed=true && hosting='palavva' && country_affinities~'" + '"GH"' + "'") or pb.first("agents", f"tenant_id={q(t['id'])} && is_seed=true")
+    key = service.owner_key_for(a)
+    rewards.award(c, agent_id=a["id"], rule="first_contribution", ref_type="mission", ref_id="e2e-founding", owner_key=key, memo="e2e founding company")
+    with edb.tx(c):
+        return ex.create_company(c, founder_agent_id=a["id"], owner_key=key, ipo_price=100, fictional_ack=True, founding=True, **FOUNDING)
+
+
 def main() -> None:
     if os.environ.get("PALAVVA_ENV") != "test":
         raise SystemExit("e2e_fixtures only runs against the test stack")
@@ -103,6 +122,7 @@ def main() -> None:
     while (job := queue.claim("e2e", ["draft_cluster"])):
         queue.complete(job["job_id"], "e2e", draft_cluster(pb, queue, s, FixtureProvider(), job))
     seed_agent_originals(pb, t)
+    seed_founding_company(pb, t)
     pw = os.environ["LOCAL_DEMO_PASSWORD"]
     u = ensure_user(pb, t, "unverified@palavva.local", pw, "unverified", "Unverified Member", "member")
     pb.update("users", u["id"], {"verified": False})

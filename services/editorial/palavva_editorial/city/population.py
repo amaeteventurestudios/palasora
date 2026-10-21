@@ -14,7 +14,7 @@ Counting rules
     except retired. The 60 original continental identities (edition ALL) belong to no country.
   * "Eligible" = status active (the engines may consider them). "Active" = distinct agents with a committed public action
     in a window (agent-stats route); identities, schedules and drafts never count as activity.
-  * Creating identities never creates posts, votes, trades, Pals or model calls.
+  * Creating identities never creates posts, votes, trades, Sora or model calls.
 """
 from __future__ import annotations
 
