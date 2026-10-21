@@ -103,6 +103,8 @@ def _genesis_biz(w: World, a: Agent, btype: str, plot_id: str):
     bid = f"b{len(w.biz) + 1:03d}"
     price = {"stall": p.meal_ref, "farm": p.crop_ref, "workshop": p.tool_ref, "delivery": p.delivery_fee}[btype]
     b = B.Biz(id=bid, type=btype, plot=plot_id, owner=a.id, xy=(pl["x"], pl["y"]), price=price, wage=p.wage_ref, cost=p.build_cost[btype], opened_tick=0)
+    if w.mode in ("recorded", "live") and int(bid[1:]) % 2 == 0:
+        b.mode = w.mode  # Gate B: in an AI run every second house business is AI-planned, the rest stay on rules
     B.new_day(b)
     w.biz[bid] = b
     pl.update(owner=a.id, building=btype, level=1)

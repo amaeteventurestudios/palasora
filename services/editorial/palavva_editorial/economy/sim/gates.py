@@ -63,7 +63,8 @@ def check_run(s: dict) -> dict:
         ok = lo <= v["payback"] <= hi
         pb_ok &= ok
         pb_txt.append(f"{t} {v['payback']:.1f}d [{lo:g}-{hi:g}]")
-    out["payback_lanes"] = (pb_ok, "; ".join(pb_txt))
+    bs = [f"{t} {v['payback']:.1f}d ({v['businesses']})" for t, v in s.get("paybacks_beside", {}).items() if v]
+    out["payback_lanes"] = (pb_ok, "; ".join(pb_txt) + (f"; beside the curve: {', '.join(bs)}" if bs else ""))
     out["playing_beats_sitting"] = _sitting(s)
     devs = [abs(d["dev"]) for d in s["meal_price"] if d["day"] >= 7]
     out["meal_price"] = (all(x <= 0.25 for x in devs), f"max {max(devs, default=0):.0%} off its 7-day average")
@@ -153,29 +154,28 @@ def gate_a(runs: list[dict], long_run: dict | None) -> dict:
 
 
 # ---------------------------------------------------------------------------------------------------------- Gate B
-def gate_b(rec_runs: list[dict], rules_runs: list[dict]) -> dict:
-    """AI-planned (recorded) businesses against rules-only ones in the same scenario and seed: profit a day, recovery
-    time after a closure, closure rate. Plus: no agent stuck losing for 3 days without changing anything."""
-    def stats(runs, only_ai: bool | None):
+def gate_b(rec_runs: list[dict], rules_runs: list[dict] | None = None) -> dict:
+    """AI-planned (recorded) businesses against rules-only ones in the same runs (every second house business and every
+    player's business is AI-planned in an AI run): profit a day, recovery time after a closure, closure rate. Plus: no
+    agent stuck losing for 3 days without changing anything."""
+    def stats(runs, ai_planned: bool):
         prof, closed, n, rec = [], 0, 0, []
         for s in runs:
+            mine = set()
             for b in s["businesses"]:
-                if only_ai is True and b["mode"] not in ("recorded", "live"):
+                if (b["mode"] in ("recorded", "live")) != ai_planned or b["days"] < 3:
                     continue
-                if only_ai is False and b["owner_kind"] != "player":
-                    continue
-                if b["days"] < 3:
-                    continue
+                mine.add(b["id"])
                 n += 1
                 prof.append(b["profit_total"] / b["days"])
                 closed += b["status"] == "closed"
             for r in s["closures"]["detail"]:
-                if r["recovery_days"] is not None:
+                if r["business"] in mine and r["recovery_days"] is not None:
                     rec.append(r["recovery_days"])
         return {"businesses": n, "profit_per_day": (sum(prof) / len(prof) / 100) if prof else 0.0,
                 "closure_rate": closed / n if n else 0.0, "recovery_days": median(rec) if rec else None}
     ai_s = stats(rec_runs, True)
-    rules_s = stats(rules_runs, False)
+    rules_s = stats(rec_runs, False)
     stuck = sum(len(s["stuck"]) for s in rec_runs)
     calls = sum(s["ai"]["calls"] for s in rec_runs)
     fb = sum(s["ai"]["fallbacks"] for s in rec_runs)

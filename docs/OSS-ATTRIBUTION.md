@@ -9,6 +9,7 @@ Palavva includes or depends on the following open-source software. The full pack
 - **defusedxml** (PSF-2.0) © Christian Heimes. **DuckDB** (MIT) © DuckDB Foundation.
 - **Inter** and **Source Serif 4** fonts (SIL Open Font License 1.1), self-hosted via `next/font`.
 - **caniuse-lite** data (CC-BY-4.0) © Alexis Deveria, used by the Next.js build toolchain.
+- **uPlot** (MIT) © Leon Sorokin. v1.6.31, vendored in `services/editorial/palavva_editorial/economy/sim/vendor/uplot/` and inlined into the simulation run reports (not shipped to the web app).
 - Test tooling (not shipped): Playwright (Apache-2.0), Vitest (MIT), pytest (MIT), axe-core / @axe-core/playwright (MPL-2.0).
 
 ## Ideas adapted (no code copied)

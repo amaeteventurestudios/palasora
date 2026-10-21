@@ -57,7 +57,7 @@ def summarise(w: World, scenario: str, seed: int, days: int, mode: str, elapsed:
         biz.append({"id": b.id, "type": b.type, "owner": b.owner, "owner_kind": w.agents[b.owner].kind, "mode": b.mode, "status": b.status, "cost": b.cost,
                     "opened_day": b.opened_tick // 24, "closed_day": None if b.closed_tick is None else b.closed_tick // 24,
                     "days": len(prof), "profit_total": sum(prof), "profit_median": M._median(prof) if prof else 0, "price": b.price,
-                    "workers": len(b.workers), "level": b.level})
+                    "workers": len(b.workers), "level": b.level, "beside_curve": b.beside_curve})
     sitter = {}
     if scenario == "sitter":
         s, r = w.agents.get("s001"), w.agents.get("s002")
@@ -75,7 +75,7 @@ def summarise(w: World, scenario: str, seed: int, days: int, mode: str, elapsed:
         "params": {k: v for k, v in p.as_dict().items()},
         "series": ds,
         "growth_windows": M.growth_windows(ds), "weeks_above_band": M.weeks_above(ds, p.growth_band),
-        "paybacks": M.paybacks(w), "profitable_windows": M.profitable_windows(w), "meal_price": M.meal_price_dev(ds),
+        "paybacks": M.paybacks(w), "paybacks_beside": M.paybacks(w, beside=True), "profitable_windows": M.profitable_windows(w), "meal_price": M.meal_price_dev(ds),
         "closures": M.closures_and_recovery(w), "players": prog,
         "out_of_stock": {"hours": sum(d.get("out_hours", 0) for d in ds), "biz_hours": sum(d.get("biz_hours", 0) for d in ds)},
         "mischief": {"attempts": len(mis), "refused": sum(1 for m in mis if not m["ok"]), "codes": sorted({m["code"] for m in mis if not m["ok"]}),
@@ -88,6 +88,8 @@ def summarise(w: World, scenario: str, seed: int, days: int, mode: str, elapsed:
         "ai_source": getattr(w.planner, "meta", {}).get("provider", "") if w.planner is not None else "",
         "active_players": sum(1 for a in w.agents.values() if a.is_player and a.role not in ("sitter", "mischief")), "sitter": sitter, "stuck": M.stuck_agents(w),
         "violations": con.execute("SELECT COUNT(*) n FROM violations").fetchone()["n"],
+        "event_log": [dict(r) for r in con.execute("SELECT seq, tick, kind, visibility, text FROM world_events ORDER BY seq DESC LIMIT 400")][::-1],
+        "event_kinds": {r["kind"]: r["n"] for r in con.execute("SELECT kind, COUNT(*) n FROM world_events GROUP BY kind")},
         "events": con.execute("SELECT COUNT(*) n FROM world_events").fetchone()["n"],
         "outbox_rows": con.execute("SELECT COUNT(*) n FROM outbox").fetchone()["n"],
         "civic_shortfall_days": w.flags["civic_shortfall_days"],

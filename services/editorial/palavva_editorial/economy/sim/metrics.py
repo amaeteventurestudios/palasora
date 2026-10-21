@@ -112,12 +112,14 @@ def weeks_above(days: list[dict], band: tuple) -> int:
     return best
 
 
-def paybacks(w, last: int = 7) -> dict:
+def paybacks(w, last: int = 7, beside: bool = False) -> dict:
+    """Median payback per type over the last `last` days: on-curve businesses (the gate), or with beside=True the ones
+    opened where their trade had no room (shown, not forced; Doc 04 rule 1)."""
     out = {}
     for t in ("stall", "farm", "workshop", "delivery"):
         meds = []
         for b in w.biz.values():
-            if b.type != t or b.beside_curve:
+            if b.type != t or b.beside_curve != beside or b.status != "open":
                 continue
             hist = [x for x in b.history if x["day"] > (w.day - 1) - last]
             if len(hist) >= last:
