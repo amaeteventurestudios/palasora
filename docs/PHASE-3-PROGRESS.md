@@ -1,6 +1,6 @@
 # Phase 3 progress: the economy engine and the headless simulation
 
-Branch `phase-3-economy-engine`. Spec: Doc 05 v0.5 (gates A to D), Doc 04 v0.6, Doc 06 sections 7.4, 13, 16.2 and 19.
+Branch `phase-3-economy-engine`. Spec: Doc 05 v0.6 (gates A to D), Doc 04 v0.6, Doc 06 sections 7.4, 13, 16.2 and 19.
 
 ## Done
 
@@ -33,23 +33,23 @@ working capital 1.5 days, genesis mix 5 stalls / 3 farms / 1 workshop / 2 carts.
    weekly issuance budget (counts against it), before the day's civic wages. 80 is the float a first stall needs on
    top of the 200 arrival grant. Paid on arrival or at 100 Sora, it put first businesses at a median of 1 day.
 3. New stalls are placed on the free plot with the most residents nearby for each stall already in its street.
+4. Starter grants are spread: each person's falls due on a seeded day 5 to 9 days after arrival.
+5. Profitable share leaves out the town's first week (windows from day 7; Doc 05 v0.6). The band is unchanged.
 
 ## Gates (final code: 10 scenarios x 10 seeds x 30 days, plus a 180-day Baseline; `docs/evidence/phase-3/`)
 
 - **A, fail.**
-  - Pass: conservation, determinism, every cheat refused, growth band (80/80; +19.9 to +20.0% in every 30-day window
+  - Pass: conservation, determinism, every cheat refused, growth band (80/80; +19.8 to +20.0% in every 30-day window
     over 180 days), thermostat, meal price, no windfall, closure and recovery, first job.
-  - First business: 2/80 fail (was 14/80). Job squeeze now passes. Two Sitter seeds have a median of 4 days.
-  - Payback lanes: 31/80 fail (was 35/80). On-curve stall median is 6.6 days, but only 37 of 54 runs are in 1 to 13.
-  - Profitable share: 80/80 fail. The worst week is 14 to 82% profitable, but some week reaches 100% in every run
-    (the first week of a fresh town, and again after exits thin a trade).
-  - Out of stock: 22/80 fail (was 14/80): 9 Sitter, 4 Drought, 4 Cheater, 4 Price shock, 1 Quiet spell. The starter
-    grant's new player stalls run short more often.
-  - Playing beats sitting: 10/80 fail (was 0). All 10 are Job squeeze: 50 players get the grant on the same day and
-    open 50 stalls, so the median business loses 1% of its cost a day.
-- **B, fail.** AI-planned 66.48 Sora a day against rules 43.74; recovery equal; closures 61.2% against 55.5% (fail);
-  no stuck agents; recordings cover every prompt. Still the fixture planner: Gate B with a real model is blocked
-  (no key).
+  - Profitable share: 80/80 fail. Even from day 7, the worst week is 24 to 83% profitable, but the median run has 71%
+    of its weeks above 80%: after the first closures the survivors are almost all profitable.
+  - Payback lanes: 27/80 fail. Stall on-curve median is 6.3 days, but only 39 of 54 runs are in 1 to 13.
+  - Out of stock: 14/80 fail (8 Sitter, 2 Drought, 2 Cheater, 1 Quiet spell, 1 Price shock).
+  - Playing beats sitting: 10/80 fail, all Job squeeze. About 69 stalls open, so the median business loses 1% of its
+    cost a day.
+  - First business: 5/80 fail, all Sitter (median 4 days).
+- **B, fail.** AI-planned 65.42 Sora a day against rules 42.47; recovery equal; closures 60.6% against 53.4% (fail);
+  no stuck agents; recordings cover every prompt. Fixture planner only: Gate B with a real model is blocked (no key).
 - **C, pass.** Every story links records; at least 59% of mornings carry a real event; no padded quiet mornings.
 - **D, blocked.** Estimate $0.009 a player a month; no live sample (no key).
 - Harbour floor at 40/60/80% (12 runs each, before the decisions above): out of stock median 2.2/1.8/1.3%, payback
@@ -57,7 +57,7 @@ working capital 1.5 days, genesis mix 5 stalls / 3 farms / 1 workshop / 2 carts.
 
 ## Tests (final code)
 
-tsc clean; vitest 146 passed; pytest 231 passed, 3 skipped (baseline 210 passed, 3 skipped). Playwright (before the
+tsc clean; vitest 146 passed; pytest 232 passed, 3 skipped (baseline 210 passed, 3 skipped). Playwright (before the
 owner decisions, no web code changed since): 150 passed, 2 failed (v18 ISSUE-24 and ISSUE-28, known before Phase 3),
 1 did not run (ISSUE-23), 5 skipped.
 

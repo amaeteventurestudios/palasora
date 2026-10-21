@@ -233,7 +233,9 @@ def test_starter_grant_once_per_person_after_five_days_within_the_budget():
         a = genesis.arrive_player(w, "p900")
         assert not civic.queue_starter_grant(w, a)  # already queued on arrival: once per person
         assert civic.starter_grants(w) == 0  # not due before five days in town
-        w.tick += w.p.starter_grant_after_days * 24
+        due = w.con.execute("SELECT due_tick - queued_tick d FROM starter_grants WHERE person=?", (a.owner_key,)).fetchone()["d"]
+        assert w.p.starter_grant_after_days * 24 <= due < (w.p.starter_grant_after_days + w.p.starter_grant_spread_days) * 24
+        w.tick += due
         used0 = issuance.weekly(w.con)["used"]
         before = w.bal(a.acct)
         paid = civic.starter_grants(w)
@@ -243,6 +245,15 @@ def test_starter_grant_once_per_person_after_five_days_within_the_budget():
         assert civic.starter_grants(w) == 0  # never twice
         row = w.con.execute("SELECT status FROM starter_grants WHERE person=?", (a.owner_key,)).fetchone()
         assert row["status"] == "paid"
+
+
+def test_starter_grants_are_spread_over_several_days():
+    w = make_world()
+    with db.clock(lambda: w.ts()):
+        for i in range(40):
+            genesis.arrive_player(w, f"p{700 + i}")
+    days = {r["d"] for r in w.con.execute("SELECT (due_tick - queued_tick) / 24 d FROM starter_grants")}
+    assert len(days) == w.p.starter_grant_spread_days
 
 
 def test_new_stalls_go_to_the_street_with_room():

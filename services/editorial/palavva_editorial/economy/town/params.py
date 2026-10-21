@@ -21,6 +21,7 @@ class Params:
     grant_new_player: int = 200 * C
     starter_grant: int = 80 * C    # once per person, from the Town Hall's weekly budget (owner decision, Phase 3 review)
     starter_grant_after_days: int = 5  # paid at the end of a new player's first working week, not on arrival
+    starter_grant_spread_days: int = 5  # and spread over days 5 to 9 per person, so newcomers don't all build on one day
     meal_ref: int = 5 * C
     crop_ref: int = 150            # 1.50 Sora
     tool_ref: int = 20 * C
