@@ -91,17 +91,26 @@ test("V15-03 'Save as my home edition' persists to the account; viewing never ov
 });
 
 test("V15-04 SSE stream bound to an edition never delivers another region's events", async ({ request }) => {
+  test.setTimeout(120_000);
   const res = await request.get(`/api/v1/events?cursor=0&edition=LR`, { timeout: 8000 }).catch(() => null);
   // Playwright's request API buffers; use fetch with an abort to read the first seconds of the stream instead.
   void res;
-  const ctl = new AbortController();
-  setTimeout(() => ctl.abort(), 4000);
   let text = "";
-  try {
-    const r = await fetch(`${BASE}/api/v1/events?cursor=0&edition=LR`, { signal: ctl.signal });
-    const reader = r.body!.getReader();
-    for (;;) { const { value, done } = await reader.read(); if (done) break; text += new TextDecoder().decode(value); }
-  } catch { /* aborted after 4 s */ }
+  // The stream allows 60 connections a minute per client and the pages before this test open many; on a 429 wait out the window once.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const ctl = new AbortController();
+    setTimeout(() => ctl.abort(), 4000);
+    text = "";
+    let status = 0;
+    try {
+      const r = await fetch(`${BASE}/api/v1/events?cursor=0&edition=LR`, { signal: ctl.signal });
+      status = r.status;
+      const reader = r.body!.getReader();
+      for (;;) { const { value, done } = await reader.read(); if (done) break; text += new TextDecoder().decode(value); }
+    } catch { /* aborted after 4 s */ }
+    if (status !== 429) break;
+    await new Promise((res) => setTimeout(res, 61_000));
+  }
   expect(text).toContain("edition=LR");
   const events = text.split("\n").filter((l) => l.startsWith("data: ")).map((l) => JSON.parse(l.slice(6)));
   expect(events.some((e) => e.piece_id === lr.id)).toBe(true);
