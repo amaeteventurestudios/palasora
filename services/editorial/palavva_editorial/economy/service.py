@@ -185,7 +185,7 @@ def weekly_budget(c: sqlite3.Connection) -> dict:
 def admin_stats(days: int = 30) -> dict:
     c = con()
     since = time.time() - days * 86400
-    issuance = [dict(r) for r in c.execute("""SELECT day, rule, SUM(CASE WHEN status='issued' THEN amount ELSE 0 END) issued, SUM(status='denied') denied,
+    by_rule = [dict(r) for r in c.execute("""SELECT day, rule, SUM(CASE WHEN status='issued' THEN amount ELSE 0 END) issued, SUM(status='denied') denied,
                                               SUM(status='reversed') reversed FROM rewards WHERE created_at>=? GROUP BY day, rule ORDER BY day""", (since,))]
     trades = [dict(r) for r in c.execute("""SELECT strftime('%Y-%m-%d', created_at, 'unixepoch') day, market, COUNT(*) n, SUM(qty) shares, SUM(price*qty) pals,
                                             SUM(CASE WHEN buyer_id IN (SELECT owner_id FROM accounts WHERE owner_key LIKE 'user:%') OR seller_id IN (SELECT owner_id FROM accounts WHERE owner_key LIKE 'user:%') THEN 1 ELSE 0 END) user_involved
@@ -216,7 +216,7 @@ def admin_stats(days: int = 30) -> dict:
                      GROUP BY agent_id, rule""", (since, since))]
     comps = companies("ALL", include_private=True)
     holders = c.execute("SELECT COUNT(DISTINCT owner_id) n FROM positions p JOIN companies co ON co.id=p.company_id WHERE p.qty>0 AND p.owner_id != co.founder_agent_id").fetchone()["n"]
-    return {"issuance": issuance, "trades": trades, "orders": orders, "rejects": rejects, "reconciliations": recs, "top_earners": top,
+    return {"issuance": by_rule, "trades": trades, "orders": orders, "rejects": rejects, "reconciliations": recs, "top_earners": top,
             "supply": round(sup["circulating"] * db.CENTS), "supply_detail": sup, "weekly_budget": weekly_budget(c),
             "migration": migration.status(c), "currency": db.SORA, "switches": switches, "markets": markets(), "flows": flows, "supply_before": supply_before,
             "balances": balances, "by_agent_rule": by_agent_rule, "companies": comps, "investors": holders}

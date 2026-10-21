@@ -352,6 +352,9 @@ def test_human_account_is_created_once_on_first_visit(tmp_path, monkeypatch):
     assert lim["max_order_sora"] == 300 and lim["daily_sora"] == 900
     s = cl.get("/economy/summary", headers={"x-service-token": "tok"}).json()
     assert s["currency"] == "SORA" and s["sora_invested"] == s["pals_invested"] and s["index"]["name"].startswith("Sora")
+    st = cl.get("/economy/admin/stats?days=30", headers={"x-service-token": "tok"})
+    assert st.status_code == 200 and {"weekly_budget", "supply_detail", "migration"} <= set(st.json())
+    assert cl.get("/economy/admin/issuance", headers={"x-service-token": "tok"}).json()["weekly"]["budget"] > 0
     assert eapi.router  # imported
 
 
