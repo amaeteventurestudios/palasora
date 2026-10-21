@@ -2,7 +2,7 @@
 
 1. Every cached account bucket equals the sum of its journal movements (rebuild from scratch).
 2. Conservation: for every asset, sum(available + reserved) over ALL accounts is 0 (the mints hold the negative).
-3. Reservations: each account's reserved bucket equals the reserved_left of its open orders.
+3. Reservations: each account's reserved bucket equals the reserved_left of its open orders (Exchange and Market Hall).
 4. Positions: each position qty equals the holder's share balance (available + reserved).
 5. No negative balance outside a mint (also enforced by CHECK constraints).
 6. Phase 2: no Pals moved after the ledger switched to Sora (except the migration's own entries).
@@ -49,6 +49,10 @@ def run(con: sqlite3.Connection, store: bool = True) -> dict:
         else:
             asset = f"SHR:{o['company_id']}"
         res[(o["k"], o["owner_id"], asset)] += o["reserved_left"]
+    # Phase 3: Market Hall goods orders reserve Sora for a buy (the goods side is checked by town.market.check_reservations)
+    for o in con.execute("SELECT holder, reserved_left FROM goods_orders WHERE side='buy' AND status IN ('open','partial')"):
+        k, oid = o["holder"].split(":", 1)
+        res[(k, oid, db.SORA)] += o["reserved_left"]
     for a in accts:
         if a["owner_kind"] in ("agent", "company", "human") and a["reserved"] != res.get((a["owner_kind"], a["owner_id"], a["asset"]), 0):
             mism.append({"check": "reservation", "account": a["id"], "reserved": a["reserved"], "open_orders": res.get((a["owner_kind"], a["owner_id"], a["asset"]), 0)})
