@@ -1,0 +1,101 @@
+{
+  "name": "pals-to-sora",
+  "economy_db": "<dry-run-temp>/economy.db",
+  "started_utc": "2026-10-21T19:51:01Z",
+  "freeze": {
+    "orders_cancelled": 3,
+    "released": [
+      {
+        "order": 1,
+        "owner": "company:c109c9a8c96944a",
+        "side": "sell",
+        "company": "c109c9a8c96944a",
+        "released": 5988,
+        "asset": "SHR:c109c9a8c96944a"
+      },
+      {
+        "order": 3,
+        "owner": "company:cd1337c53291344",
+        "side": "sell",
+        "company": "cd1337c53291344",
+        "released": 5995,
+        "asset": "SHR:cd1337c53291344"
+      },
+      {
+        "order": 5,
+        "owner": "agent:eq69fsjteblea9b",
+        "side": "buy",
+        "company": "cd1337c53291344",
+        "released": 180,
+        "asset": "PALS"
+      }
+    ]
+  },
+  "backup": {
+    "dir": "<dry-run-temp>/backups/palasora-20261021T195101Z",
+    "files": 3,
+    "economy_sha256": "78cce62f965c2dfc5fcb4e5ab3b24dfc1fd388cf291b5ade434c02ad8f08b508",
+    "git_commit": "37b40cf7ce97872080b5e5a892f3059998d29b41",
+    "verify": "verify: OK <dry-run-temp>/backups/palasora-20261021T195101Z (3 files + manifest, created 20261021T195101Z, commit 37b40cf)"
+  },
+  "before": {
+    "coin": "PALS",
+    "sha256": "81f8780a244253b4479804841bc9e7dc6af9b8ea676e114c33b3b799349c4662",
+    "money_sha256": "1a8b6632751c000beb71808a749fb932df3064f2497a2de227cf7ac4bd704f3a",
+    "shares_sha256": "10c729a5e8b3c2f223e804d0029082d0b580b156342e42b74ce01358fb028168",
+    "totals": {
+      "accounts_with_balance": 6,
+      "money_total": 19500,
+      "share_holdings": 6,
+      "shares_total": 20000,
+      "open_orders": 0,
+      "companies": 2
+    },
+    "platform": {
+      "platform:issuance": -19500,
+      "platform:mint:c109c9a8c96944a": -10000,
+      "platform:mint:cd1337c53291344": -10000
+    }
+  },
+  "convert": {
+    "accounts_converted": 6,
+    "total_converted": 19500,
+    "txn_id": "pals-to-sora:ede1188c5f8f42a6a1635d72df6776b9",
+    "founding_companies": 2
+  },
+  "after": {
+    "coin": "SORA",
+    "sha256": "81f8780a244253b4479804841bc9e7dc6af9b8ea676e114c33b3b799349c4662",
+    "money_sha256": "1a8b6632751c000beb71808a749fb932df3064f2497a2de227cf7ac4bd704f3a",
+    "shares_sha256": "10c729a5e8b3c2f223e804d0029082d0b580b156342e42b74ce01358fb028168",
+    "totals": {
+      "accounts_with_balance": 6,
+      "money_total": 19500,
+      "share_holdings": 6,
+      "shares_total": 20000,
+      "open_orders": 0,
+      "companies": 2
+    },
+    "platform": {
+      "platform:town_hall": -19500,
+      "platform:mint:c109c9a8c96944a": -10000,
+      "platform:mint:cd1337c53291344": -10000
+    }
+  },
+  "fingerprints_match": true,
+  "summary": {
+    "before": "81f8780a244253b4479804841bc9e7dc6af9b8ea676e114c33b3b799349c4662",
+    "after": "81f8780a244253b4479804841bc9e7dc6af9b8ea676e114c33b3b799349c4662",
+    "money_before": "1a8b6632751c000beb71808a749fb932df3064f2497a2de227cf7ac4bd704f3a",
+    "money_after": "1a8b6632751c000beb71808a749fb932df3064f2497a2de227cf7ac4bd704f3a",
+    "accounts_converted": 6,
+    "sora_issued": 19500,
+    "backup": "<dry-run-temp>/backups/palasora-20261021T195101Z"
+  },
+  "status": "done",
+  "seconds": 0.84,
+  "message": "converted; the freeze stays on until an operator unfreezes (python -m palavva_editorial.economy.migration unfreeze --by NAME)",
+  "dry_run": true,
+  "source_db": "<pals-era-e2e>/economy.db",
+  "second_run": "already_done"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "pals-to-sora",
+  "economy_db": "<dry-run-temp>/economy.db",
+  "started_utc": "2026-10-21T19:50:54Z",
+  "status": "nothing_to_do",
+  "message": "this ledger never held Pals (it started in Sora); nothing was changed",
+  "dry_run": true,
+  "source_db": "<data-test>/economy.db"
+}
