@@ -1,11 +1,11 @@
 ---
 title: "Palasora · Headless Simulation & Validation Plan"
-subtitle: "Document 05 · Working draft v0.3 · 21 Oct 2026 · Amaete Umanah"
+subtitle: "Document 05 · Working draft v0.4 · 21 Oct 2026 · Amaete Umanah"
 ---
 
 **The answer in one line:** we write the economy once, as plain Python functions with no graphics, inside the existing economy service, run it for thousands of simulated days on a laptop, and only approve it when it passes every gate below. The live service then runs the same functions.
 
-This document turns Documents 02 and 04 into a test we can run. It is the last planning document before code. Numbers come from Document 04 v0.4 and are starting values to tune.
+This document turns Documents 02 and 04 into a test we can run. It is the last planning document before code. Numbers come from Document 04 v0.5 and are starting values to tune. Its section 4A balance rules (one payback curve, one money growth target, playing beats sitting) are tested here.
 
 # 1. What the tests must prove
 
@@ -124,8 +124,10 @@ If a recorded answer is missing, the agent falls back to rules and the run notes
 | 6 | **Quiet spell** | All players silent days 15 to 17 | The town keeps running |
 | 7 | **Growth** | 500 players join over 2 weeks | Jobs, food and money keep up |
 | 8 | **Job squeeze** | 50 players join on one day | Everyone has a job within 1 game day |
+| 9 | **Price shock** | Material import prices rise 50% on days 10 to 16 | Old buildings and incomes don't jump; payback lanes hold |
+| 10 | **Sitter** | One agent holds 2,000 Sora and does nothing; another runs a business with the same money | Playing beats sitting |
 
-Each scenario runs for 30 days on 10 seeds: 80 runs, 2,400 simulated days. A longer 180-day baseline run checks slow drifts.
+Each scenario runs for 30 days on 10 seeds: 100 runs, 3,000 simulated days. A longer 180-day baseline run checks slow drifts.
 
 # 7. What we measure
 
@@ -133,7 +135,10 @@ Each scenario runs for 30 days on 10 seeds: 80 runs, 2,400 simulated days. A lon
 |---|---|
 | Coin conservation | Coins held = coins created − coins destroyed, every tick |
 | Goods conservation | Stock = made + imported − eaten − worn − exported, every tick, per good |
-| Money supply growth | Change in total coins against change in population, per month |
+| Money supply growth | Sora per active resident, change per month, against the 20% a year target (band 15 to 25%) |
+| Issuance thermostat | Town Hall weekly budget against measured growth; weeks above or below the band |
+| Payback by business | Build cost ÷ median daily profit over 7 days, per business type, against its lane (Document 04 Rule 1) |
+| Active against passive | Sora a day from holding money or rent, against the median business run with the same money |
 | Meal price stability | Daily average meal price against its 7-day average |
 | Profitable businesses | Share profitable over each 7-day window |
 | Closures and recovery | Businesses closed; days until the owner earns again |
@@ -148,12 +153,16 @@ Each scenario runs for 30 days on 10 seeds: 80 runs, 2,400 simulated days. A lon
 
 # 8. Pass or fail gates
 
-**Gate A, the core (rules only).** Baseline, Drought, Rush, Cheater, Quiet spell and Job squeeze, all seeds:
+**Gate A, the core (rules only).** Baseline, Drought, Rush, Cheater, Quiet spell, Job squeeze, Price shock and Sitter, all seeds:
 
 - Both conservation checks hold on every tick of every run.
 - Same seed gives the same fingerprint.
 - Every Cheater attempt is refused.
-- Money supply grows no faster than population plus 5% a month.
+- Sora per active resident grows within 15 to 25% a year, measured monthly after the first 2 weeks (on the 180-day run, the whole run sits in the band).
+- No two weeks in a row above the band: the issuance thermostat pulls growth back.
+- Every business type's payback sits in its lane, within half a lane either side, unless marked as beside the curve.
+- Playing beats sitting: in the Sitter scenario, and across all runs, holding money or rent earns less per day than the median business with the same money.
+- Price shock: no building, rent or income already owned rises in value by more than the shock itself.
 - Meal price within ±25% of its 7-day average after week 1.
 - 50 to 80% of businesses profitable in any 7-day window; at least one closure and recovery per 30-day run.
 - First business in 5 to 10 days on the worker path; first job within 1 game day.
@@ -188,9 +197,9 @@ The economic model is approved for building the 3D town only when gates A to F a
 # 9. How we run it
 
 1. Build the core and Gate A with rules-only agents.
-2. Add the run report: one HTML page per run with charts of prices, money, jobs and closures, plus the event log.
+2. Add the run report: one HTML page per run with charts of prices, money, jobs and closures, plus the event log. It includes the payback curve (every business type against its lane), money growth against the target, and a leaderboard sorted three ways (fastest to pay back, most Sora a day, cheapest to start). The same charts become the public Economy notes when a change ships.
 3. Add recorded and live AI; run Gates B, C and D.
-4. Tune Document 04's numbers until every gate passes.
+4. Tune Document 04's numbers until every gate passes. Any later balance change repeats steps 1 to 4 before it goes live, and ships with Economy notes showing before and after.
 5. Run the Baseline on the live economy service; run Gate E. Run Gate F alongside the migration and the news removal.
 6. Freeze the numbers as Document 04 v1.0 and start the 3D greybox.
 
@@ -243,3 +252,13 @@ Applied from the approved amendments, following Document 06 v0.2:
 - **4. The tick:** cargo ships replace airships as scenario arrivals.
 - Document 04 is now v0.4. Its numbers are unchanged.
 - **Unchanged:** the Python core inside the economy service, SpacetimeDB for presence only, the records, the tick, the scenarios, and Gates A to F.
+
+# 15. Changes in v0.4
+
+**Why:** user decision, 21 Oct 2026, after studying how a live player-run city economy fixed its inflation. Its one-day untested rebalance closed shops across the game; this plan makes sure every balance change passes the simulation first.
+
+- **6. Scenarios:** added Price shock and Sitter (100 runs, 3,000 simulated days).
+- **7. Measures:** money growth per resident against the target, the issuance thermostat, payback by business, and active against passive income.
+- **8. Gate A:** money growth within 15 to 25% a year per resident (replacing "population plus 5% a month"), the thermostat holds, every business on its payback lane, playing beats sitting, and no windfall from a price shock.
+- **9. How we run it:** the run report shows the payback curve, growth against the target and a three-way leaderboard; the same charts become the public Economy notes; every later balance change reruns the gates first.
+- **Unchanged:** the Python core inside the economy service, the records, the tick, Gates B to F.

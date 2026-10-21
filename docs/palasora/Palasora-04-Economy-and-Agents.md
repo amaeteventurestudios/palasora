@@ -1,6 +1,6 @@
 ---
 title: "Palasora · Economy & AI Agent Simulation Specification"
-subtitle: "Document 04 · Working draft v0.4 · 21 Oct 2026 · Amaete Umanah"
+subtitle: "Document 04 · Working draft v0.5 · 21 Oct 2026 · Amaete Umanah"
 ---
 
 **The answer in one line:** one town, one coin (the Sora), four businesses that need each other, and one set of rules that humans and agents both follow. Every coin and every good has a recorded source, so the headless simulation can prove the economy works before anyone sees it.
@@ -58,7 +58,43 @@ Goods only arrive when delivered. An owner can fetch goods themselves, but slowl
 | | Cosmetics bought with coins |
 | | Exchange fees (later) |
 
-**Only two accounts can create or destroy coins: the Town Hall and the Harbour,** and only through the rules above. They replace the old `platform:issuance` account as the only mints. No coins are sold: the Founder Pass gives a plot, a badge and cosmetics. The Town Hall has a weekly issuance budget, set so the total money supply grows roughly in step with the population. Everyone else, human or agent, can only move coins they already have.
+**Only two accounts can create or destroy coins: the Town Hall and the Harbour,** and only through the rules above. They replace the old `platform:issuance` account as the only mints. No coins are sold: the Founder Pass gives a plot, a badge and cosmetics. The Town Hall has a weekly issuance budget, set from the money growth target in section 4A. Everyone else, human or agent, can only move coins they already have.
+
+# 4A. Balance rules: one curve, one growth target
+
+These rules come from a live game that went through this the hard way (a player-run city economy, October 2026). Its NPC income caused heavy inflation. A one-day "pay what the real business earns" rebalance then made running a business the worst use of money, while rent and savings interest grew, and shops closed in a day. It finally fixed the economy with the rules below. We adopt them from the start so we don't repeat that route.
+
+**Rule 1. One payback curve for every way to earn.** Every business and every income is tuned by its payback time: the build cost divided by its normal daily profit at a typical spot. Where it sits depends on what limits how many anyone can own. The tighter the limit, the faster the payback, because a fast payback is cheap when few can have it and ruinous when only money limits it.
+
+| Lane | What limits it | Example | Target payback |
+|---|---|---|---|
+| **Tight** | One per player | Your first food stall, your own cart | 2 to 4 days |
+| **Shared** | Local demand in a district | More stalls, farms, workshops, delivery fleets | 4 to 10 days |
+| **Money only** | Nothing but cash | Big builds, upgrades, extra plots | 15 to 40 days |
+| **Holding** | Nothing | Savings, rent on buildings already owned | Slower than any business (Rule 3) |
+
+- **Starter targets:** food stall about 3 days (300 Sora at about 100 a day), delivery 3 to 4 days, farm 4 to 6 days, workshop 5 to 7 days. The simulation tunes prices and wages until each sits in its lane.
+- **Harder setups earn more per Sora:** a setup that needs more play (staff, contracts, a supply chain of its own) earns up to 1.5 times what a place-and-go setup earns for the same money.
+- **Some things sit beside the curve, not on it:** a stall in a crowded street (it shares shoppers by design) or a second cart past what one person can run. They are shown, not forced.
+
+**Rule 2. One target for how fast money grows.** Added up, every earning decides how fast the town's money grows, and money that grows too fast makes everything people own worth less. The target is **Sora per active resident grows about 20% a year** (allowed band 15 to 25%), and the total supply grows with the population on top. For comparison, long-running online worlds report about 14 to 17% a year.
+
+- The Town Hall's weekly issuance budget is computed from this target. Harbour floor-price buying counts against the same budget.
+- If measured growth runs above the band for two weeks, next week's issuance budget shrinks automatically. If it runs below, the budget grows. No one's coins are ever taken back.
+- The Command Center shows growth against the target every day.
+
+**Rule 3. Playing beats sitting.** Money that needs no play must never beat running a business.
+
+- **No savings interest in v0.1.** If it is added later, it comes in bands: full rate up to 1,000 Sora, a quarter of the rate from 1,000 to 10,000, and nothing above 10,000 (starting values).
+- **Rent (when it arrives) is tied to what the building cost when it was bought,** not to today's price, so a price change never turns old buildings into a windfall.
+- **Test:** a resident who only holds savings or rent must earn less per day than one who runs the median business with the same money.
+
+**Rule 4. Every change is tested first, then explained in public.**
+
+- No balance change goes live without passing every scenario in Document 05 on all seeds. There is no "try it on the live town" switch for the whole economy.
+- Each change ships with **Economy notes**: a public page that says what changed and why, with before-and-after charts per business. It has a leaderboard of every business sorted three ways (fastest to pay back, most Sora a day, cheapest to start) and money growth against the target. Every number comes from the ledger.
+
+**Later:** a production-chain view showing what each business makes and needs, with live rates, drawn from the goods table. It comes after the Exchange.
 
 # 5. The ledger
 
@@ -118,7 +154,9 @@ Every action goes through the same checks: is it allowed by the rules, by the ow
 |---|---|
 | **Conservation** | Both invariants hold on every tick of every run. |
 | **Stable prices** | The average meal price stays within ±25% of its 7-day average after the first week. |
-| **Healthy money supply** | Total coins grow no faster than the population plus 5% a month. |
+| **Healthy money supply** | Sora per active resident grows within 15 to 25% a year (Rule 2), checked monthly after the first 2 weeks. |
+| **On the curve** | Every business's measured payback sits in its lane (Rule 1), within half a lane either side, unless it is marked as beside the curve. |
+| **Playing beats sitting** | Holding money or rent never earns more per day than running the median business with the same money (Rule 3). |
 | **Winners and losers** | 50 to 80% of businesses are profitable over any 7-day window; at least one closes and the owner recovers in a 30-day run. |
 | **Progression** | A new worker can afford a first stall in 5 to 10 days. |
 | **Supply** | Crops and tools are out of stock less than 5% of business-hours. |
@@ -137,6 +175,8 @@ Every action goes through the same checks: is it allowed by the rules, by the ow
 6. **Quiet spell:** all players go silent for 3 days. The town must keep running.
 7. **Growth:** 500 players join over 2 weeks.
 8. **Job squeeze:** 50 players join on one day.
+9. **Price shock:** material import prices rise 50% for a week. Old buildings and incomes must not jump in value, and payback lanes must hold.
+10. **Sitter:** one agent with 2,000 Sora only holds it, while another runs a business with the same money.
 
 Document 05 turns these into runnable tests and pass or fail gates.
 
@@ -173,3 +213,12 @@ Applied from the approved amendments, following Document 06 v0.2:
 - **One line, 1, 4 and 9:** the capital island is now the first town. "Island" becomes "town" in the summary, the world, town upkeep and the Quiet spell scenario.
 - The Harbour is now a real port with a marina. Its role is unchanged: it imports materials, buys surplus at a floor price, and is one of the two mints with the Town Hall.
 - **Unchanged:** every number, one currency Sora, the ledger rules, the 100 house agents drawn from the 27,060, the action list, contracts, the Market Hall, company rules, the tests and scenarios.
+
+# 14. Changes in v0.5
+
+**Why:** user decision, 21 Oct 2026, after studying how a live player-run city economy fixed its inflation.
+
+- **New section 4A, balance rules:** one payback curve with four lanes, a money growth target of about 20% a year per resident (band 15 to 25%) that sets the Town Hall's issuance budget, playing beats sitting (no savings interest in v0.1, banded if added; rent tied to purchase cost), and every change tested first and explained in public Economy notes.
+- **4:** the Town Hall's issuance budget now comes from the growth target.
+- **9:** the money supply test uses the new target; added the On the curve and Playing beats sitting tests, and the Price shock and Sitter scenarios.
+- **Unchanged:** every starting value in section 3, one currency Sora, the two mints, the ledger rules and the action list.
