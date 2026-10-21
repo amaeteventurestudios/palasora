@@ -253,6 +253,27 @@ def review_rules(w, b: Biz) -> list[Proposal]:
     if new != b.price:
         out.append((b.owner, "set_price", {"business": b.id, "price": new}, ""))
     out += _close_rule(w, b)
+    return _unstick(w, b, out, "")
+
+
+CHANGES = ("set_price", "hire", "fire", "close_business", "upgrade", "set_wage", "sign_contract", "end_contract")
+
+
+def _unstick(w, b: Biz, out: list[Proposal], tag: str) -> list[Proposal]:
+    """Default (recorded in the PR): an owner losing money two days running who planned no change makes one. Without
+    staff to let go it tries the price: down when sales were slow, up when it sold what it had."""
+    if b.loss_streak < 2 or any(k in CHANGES for _, k, _, _ in out):
+        return out
+    if b.workers and _recent(b, 2) < 0:
+        return out + [(b.owner, "fire", {"business": b.id}, tag)]
+    last = b.history[-1] if b.history else {}
+    slow = last.get("sold", 0) < 0.8 * max(b.ema_demand, 1) if b.type == "stall" else B.committed_out(w, b) < 0.7 * max(B.daily_capacity(w, b), 1)
+    step = w.p.price_step
+    new = _bound(w, b, int(b.price * (1 - step if slow else 1 + step)))
+    if new == b.price:
+        new = _bound(w, b, int(b.price * (1 + step if slow else 1 - step)))
+    if new != b.price:
+        out = out + [(b.owner, "set_price", {"business": b.id, "price": new}, tag)]
     return out
 
 
@@ -406,8 +427,9 @@ def ai_events(w, b: Biz) -> list[Proposal]:
              for r in w.today_events()):
         trig = "rival_opened"
     if trig is None or w.planner is None:
-        return []
-    return _ask(w, b, trig) or review_rules(w, b)
+        return _unstick(w, b, [], "ai")
+    props = _ask(w, b, trig)
+    return review_rules(w, b) if props is None else _unstick(w, b, props, "ai")
 
 
 # --------------------------------------------------------------------------- progression and investment
@@ -510,10 +532,15 @@ def mischief(w) -> list[Proposal]:
         own = next((x for x in a.businesses if w.biz[x].status == "open"), None)
         other = next((b.id for b in w.open_biz() if b.owner != a.id), "b001")
         if trick == "self_trade" and own:
-            # the setup sell rests at the top of the band so no honest buyer takes it first; the buy then crosses it
+            # the setup sell rests at the top of the band so no honest buyer takes it first; once it rests, the buy
+            # crosses it (a buy with no own sell resting would be an honest order, so it is not counted as a trick)
             hi = int(w.p.crop_ref * 1.45)
-            out.append((a.id, "place_order", {"good": "crops", "side": "sell", "price": hi, "qty": 5, "business": own}, "setup"))
-            out.append((a.id, "place_order", {"good": "crops", "side": "buy", "price": hi, "qty": 5}, "mischief"))
+            resting = w.con.execute("""SELECT price FROM goods_orders WHERE holder=? AND good='crops' AND side='sell'
+                                       AND status IN ('open','partial') ORDER BY id DESC LIMIT 1""", (w.biz[own].holder,)).fetchone()
+            if resting is None:
+                out.append((a.id, "place_order", {"good": "crops", "side": "sell", "price": hi, "qty": 5, "business": own}, "setup"))
+            else:
+                out.append((a.id, "place_order", {"good": "crops", "side": "buy", "price": resting["price"], "qty": 5}, "mischief"))
         elif trick == "over_limit":
             out.append((a.id, "buy_decor", {"amount": a.limits["daily_cap"] + C}, "mischief"))
         elif trick == "fake_goods":
@@ -529,5 +556,6 @@ def mischief(w) -> list[Proposal]:
         elif trick == "fake_floor":
             out.append((a.id, "sell_floor", {"business": own or other, "good": "crops", "qty": 500}, "mischief"))
         if trick == "self_trade" and not own:
-            out.append((a.id, "place_order", {"good": "tools", "side": "sell", "price": w.p.tool_ref, "qty": 3}, "mischief"))
+            held = goods.free(w.con, f"{a.acct[0]}:{a.acct[1]}", "tools")  # sell more tools than it holds
+            out.append((a.id, "place_order", {"good": "tools", "side": "sell", "price": w.p.tool_ref, "qty": held + 3}, "mischief"))
     return out

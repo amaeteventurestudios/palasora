@@ -1,0 +1,4328 @@
+{
+ "A": {
+  "ok": false,
+  "checks": {
+   "cheater_refused": {
+    "ok": true,
+    "runs": 10,
+    "failed": 0,
+    "examples": [
+     "cheater seed 1: 83/83 refused"
+    ]
+   },
+   "closure_recovery": {
+    "ok": true,
+    "runs": 80,
+    "failed": 0,
+    "examples": [
+     "baseline seed 1: 15 closed, 13 recovered"
+    ]
+   },
+   "conservation": {
+    "ok": true,
+    "runs": 80,
+    "failed": 0,
+    "examples": [
+     "baseline seed 1: 720 ticks"
+    ]
+   },
+   "determinism": {
+    "ok": true,
+    "runs": 80,
+    "failed": 0,
+    "examples": [
+     "baseline seed 1: 42ef88b9aa66"
+    ]
+   },
+   "first_business": {
+    "ok": false,
+    "runs": 80,
+    "failed": 14,
+    "examples": [
+     "job_squeeze seed 1: median 18 days (60 players)",
+     "job_squeeze seed 2: median inf days (60 players)",
+     "job_squeeze seed 3: median inf days (60 players)",
+     "job_squeeze seed 4: median inf days (60 players)"
+    ]
+   },
+   "first_job": {
+    "ok": true,
+    "runs": 80,
+    "failed": 0,
+    "examples": [
+     "baseline seed 1: max 0 days"
+    ]
+   },
+   "growth_band": {
+    "ok": true,
+    "runs": 80,
+    "failed": 0,
+    "examples": [
+     "baseline seed 1: +19.8%"
+    ]
+   },
+   "meal_price": {
+    "ok": true,
+    "runs": 80,
+    "failed": 0,
+    "examples": [
+     "baseline seed 1: max 9% off its 7-day average"
+    ]
+   },
+   "no_windfall": {
+    "ok": true,
+    "runs": 10,
+    "failed": 0,
+    "examples": [
+     "price_shock seed 1: largest rise against the Baseline +1% (stall) (shock +50%)"
+    ]
+   },
+   "out_of_stock": {
+    "ok": false,
+    "runs": 80,
+    "failed": 14,
+    "examples": [
+     "drought seed 2: 8.2% of business-hours",
+     "drought seed 3: 10.6% of business-hours",
+     "drought seed 4: 18.5% of business-hours",
+     "drought seed 5: 6.9% of business-hours"
+    ]
+   },
+   "payback_lanes": {
+    "ok": false,
+    "runs": 80,
+    "failed": 35,
+    "examples": [
+     "baseline seed 1: stall n/a; farm 17.0d [1-13]; workshop 2.9d [1-13]; delivery 1.4d [1-5]; beside the curve: stall 8.6d (9), delivery 4.1d (1)",
+     "drought seed 2: stall infd [1-5]; farm 4.1d [1-13]; workshop 2.0d [1-13]; delivery 1.7d [1-5]; beside the curve: stall 32.7d (9)",
+     "drought seed 4: stall 27.0d [1-5]; farm 4.5d [1-13]; workshop 3.0d [1-13]; delivery 3.1d [1-5]; beside the curve: stall 46.8d (2)",
+     "drought seed 5: stall 62.5d [1-5]; farm 6.0d [1-13]; workshop 1.5d [1-13]; delivery 3.1d [1-5]; beside the curve: stall 18.3d (9)"
+    ]
+   },
+   "playing_beats_sitting": {
+    "ok": true,
+    "runs": 80,
+    "failed": 0,
+    "examples": [
+     "baseline seed 1: holding 0.00%/day vs median business 6.35%/day of its cost"
+    ]
+   },
+   "profitable_share": {
+    "ok": false,
+    "runs": 80,
+    "failed": 80,
+    "examples": [
+     "baseline seed 1: 67% to 100% profitable",
+     "baseline seed 2: 67% to 100% profitable",
+     "baseline seed 3: 76% to 100% profitable",
+     "baseline seed 4: 71% to 100% profitable"
+    ]
+   },
+   "thermostat": {
+    "ok": true,
+    "runs": 80,
+    "failed": 0,
+    "examples": [
+     "baseline seed 1: 0 weeks above in a row"
+    ]
+   },
+   "growth_180_days": {
+    "ok": true,
+    "runs": 1,
+    "failed": 0,
+    "examples": [
+     "d14-44 +19.9%, d44-74 +20.0%, d74-104 +20.0%, d104-134 +20.0%, d134-164 +20.0%, d164-179 +20.0%"
+    ]
+   }
+  },
+  "per_run": {
+   "baseline:1": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "42ef88b9aa66"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall n/a; farm 17.0d [1-13]; workshop 2.9d [1-13]; delivery 1.4d [1-5]; beside the curve: stall 8.6d (9), delivery 4.1d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 6.35%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 9% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "67% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "15 closed, 13 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6.5 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.2% of business-hours"
+    ]
+   },
+   "baseline:2": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "065bd025c40e"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 7.7d [1-13]; workshop 1.3d [1-13]; delivery 2.8d [1-5]; beside the curve: stall 21.0d (9), delivery 3.1d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 9.01%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "67% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "14 closed, 13 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.2% of business-hours"
+    ]
+   },
+   "baseline:3": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "73e8d890f18f"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 9.2d [1-13]; workshop 2.0d [1-13]; delivery 3.2d [1-5]; beside the curve: stall 7.8d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 10.56%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 4% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "76% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "13 closed, 12 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.2% of business-hours"
+    ]
+   },
+   "baseline:4": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "66b6b3e09bd9"
+    ],
+    "growth_band": [
+     true,
+     "+19.4%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 7.4d [1-13]; workshop 1.5d [1-13]; delivery 3.4d [1-5]; beside the curve: stall 15.1d (10), delivery 3.1d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 6.68%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "71% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "11 closed, 9 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.5% of business-hours"
+    ]
+   },
+   "baseline:5": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "4b70c82823fe"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall 3.8d [1-5]; farm 5.7d [1-13]; workshop 3.6d [1-13]; delivery 2.9d [1-5]; beside the curve: stall 42.2d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 8.05%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "79% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "13 closed, 11 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.5% of business-hours"
+    ]
+   },
+   "baseline:6": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "9b40a2fcfe82"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 5.9d [1-13]; workshop 1.4d [1-13]; delivery 1.5d [1-5]; beside the curve: stall 21.2d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 6.88%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "67% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 11 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "0.7% of business-hours"
+    ]
+   },
+   "baseline:7": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "8a5d95da8591"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 4.2d [1-13]; workshop 1.5d [1-13]; delivery 3.7d [1-5]; beside the curve: stall 9.2d (10)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 10.08%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 8% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "69% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "13 closed, 12 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.0% of business-hours"
+    ]
+   },
+   "baseline:8": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "2961a0339bfe"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall 2.1d [1-5]; farm 6.7d [1-13]; workshop 1.6d [1-13]; delivery 3.4d [1-5]; beside the curve: stall 8.9d (9), delivery 1.8d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 9.26%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 9% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "58% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "17 closed, 16 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.5% of business-hours"
+    ]
+   },
+   "baseline:9": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "8522b3410530"
+    ],
+    "growth_band": [
+     true,
+     "+19.9%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 5.6d [1-13]; workshop 1.6d [1-13]; delivery 2.2d [1-5]; beside the curve: stall 28.5d (10), delivery 2.9d (2)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 5.92%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "73% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 10 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.6% of business-hours"
+    ]
+   },
+   "baseline:10": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "05570ec0941c"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall 3.7d [1-5]; farm 6.7d [1-13]; workshop 1.9d [1-13]; delivery 1.5d [1-5]; beside the curve: stall 25.8d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 6.98%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 3% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "64% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "13 closed, 13 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.2% of business-hours"
+    ]
+   },
+   "drought:1": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "9655f148a954"
+    ],
+    "growth_band": [
+     true,
+     "+19.4%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 10.2d [1-13]; workshop 1.3d [1-13]; delivery 2.9d [1-5]; beside the curve: stall 16.4d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 2.34%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 8% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "57% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "15 closed, 14 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.1% of business-hours"
+    ]
+   },
+   "drought:2": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "30a89f6a99e6"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall infd [1-5]; farm 4.1d [1-13]; workshop 2.0d [1-13]; delivery 1.7d [1-5]; beside the curve: stall 32.7d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 9.55%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "58% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "14 closed, 13 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "8.2% of business-hours"
+    ]
+   },
+   "drought:3": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "b343b448f840"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall 3.6d [1-5]; farm 5.0d [1-13]; workshop 2.0d [1-13]; delivery 2.6d [1-5]; beside the curve: stall 24.2d (4)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 7.56%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 4% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "56% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "17 closed, 14 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "10.6% of business-hours"
+    ]
+   },
+   "drought:4": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "98f41ebeef7e"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 27.0d [1-5]; farm 4.5d [1-13]; workshop 3.0d [1-13]; delivery 3.1d [1-5]; beside the curve: stall 46.8d (2)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 11.20%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 5% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "75% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "16 closed, 15 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "18.5% of business-hours"
+    ]
+   },
+   "drought:5": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "a097595ebf27"
+    ],
+    "growth_band": [
+     true,
+     "+19.3%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 62.5d [1-5]; farm 6.0d [1-13]; workshop 1.5d [1-13]; delivery 3.1d [1-5]; beside the curve: stall 18.3d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 4.33%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 5% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "58% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "14 closed, 14 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "6.9% of business-hours"
+    ]
+   },
+   "drought:6": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "6250443de541"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 32.5d [1-5]; farm 3.9d [1-13]; workshop 3.3d [1-13]; delivery 2.5d [1-5]; beside the curve: stall infd (4)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 11.46%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 8% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "62% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 11 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "21.6% of business-hours"
+    ]
+   },
+   "drought:7": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "81a8608cd85e"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 163.9d [1-5]; farm 2.8d [1-13]; workshop 1.4d [1-13]; delivery 2.9d [1-5]; beside the curve: stall 33.7d (8)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 2.50%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 5% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "60% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "15 closed, 15 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "5.0% of business-hours"
+    ]
+   },
+   "drought:8": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "ba73cf12b131"
+    ],
+    "growth_band": [
+     true,
+     "+19.4%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 30.4d [1-5]; farm 7.6d [1-13]; workshop 2.2d [1-13]; delivery n/a; beside the curve: stall 53.6d (10), delivery 3.1d (3)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 6.12%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 4% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "53% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "14 closed, 13 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 5.5 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "8.7% of business-hours"
+    ]
+   },
+   "drought:9": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "a70052534f4e"
+    ],
+    "growth_band": [
+     true,
+     "+19.4%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 15.5d [1-5]; farm 4.2d [1-13]; workshop 1.4d [1-13]; delivery 2.9d [1-5]; beside the curve: stall 150.4d (10)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 4.24%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 5% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "62% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "9 closed, 8 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.7% of business-hours"
+    ]
+   },
+   "drought:10": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "ae626099c404"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 6.4d [1-5]; farm 4.2d [1-13]; workshop 2.5d [1-13]; delivery n/a; beside the curve: stall infd (9), delivery 1.5d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 12.50%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 9% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "65% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 12 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "14.6% of business-hours"
+    ]
+   },
+   "rush:1": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "d775f82e73bf"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 2.7d [1-13]; workshop 1.4d [1-13]; delivery 4.1d [1-5]; beside the curve: stall infd (10), delivery 2.5d (2)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 1.70%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 9% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "50% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "17 closed, 16 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.1% of business-hours"
+    ]
+   },
+   "rush:2": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "bbe5cae3037a"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 18.1d [1-5]; farm 2.1d [1-13]; workshop 1.5d [1-13]; delivery 3.9d [1-5]; beside the curve: stall 377.4d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 0.15%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "56% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "17 closed, 15 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.5% of business-hours"
+    ]
+   },
+   "rush:3": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "40fee95ad67f"
+    ],
+    "growth_band": [
+     true,
+     "+19.5%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall n/a; farm 6.2d [1-13]; workshop 1.4d [1-13]; delivery 5.5d [1-5]; beside the curve: stall 24.7d (10)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 6.60%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 4% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "60% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "16 closed, 15 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "0.7% of business-hours"
+    ]
+   },
+   "rush:4": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "d91653862613"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 2.6d [1-13]; workshop 1.4d [1-13]; delivery 2.9d [1-5]; beside the curve: stall 50.0d (10)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 3.26%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "41% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "17 closed, 16 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.8% of business-hours"
+    ]
+   },
+   "rush:5": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "fcd5db4b069d"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 16.3d [1-5]; farm 3.2d [1-13]; workshop 1.4d [1-13]; delivery 2.1d [1-5]; beside the curve: stall infd (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 4.61%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "71% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "18 closed, 17 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.6% of business-hours"
+    ]
+   },
+   "rush:6": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "449b41572161"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 2.8d [1-13]; workshop 1.4d [1-13]; delivery 2.1d [1-5]; beside the curve: stall 41.6d (10), delivery 3.1d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 3.64%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "52% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "17 closed, 17 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "0.5% of business-hours"
+    ]
+   },
+   "rush:7": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "4ce019f4c3ea"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 3.1d [1-13]; workshop 1.4d [1-13]; delivery 2.2d [1-5]; beside the curve: stall 49.3d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 2.46%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "50% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "18 closed, 17 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "0.8% of business-hours"
+    ]
+   },
+   "rush:8": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "9d6edf32335d"
+    ],
+    "growth_band": [
+     true,
+     "+19.7%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 2.8d [1-13]; workshop 2.1d [1-13]; delivery 3.7d [1-5]; beside the curve: stall infd (9), delivery 2.1d (2)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 4.86%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 8% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "57% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "17 closed, 16 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 5.5 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.3% of business-hours"
+    ]
+   },
+   "rush:9": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "66f6f97f166a"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 2.5d [1-13]; workshop 1.5d [1-13]; delivery 2.1d [1-5]; beside the curve: stall 36.8d (10)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 1.87%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "53% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "18 closed, 16 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6.5 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.5% of business-hours"
+    ]
+   },
+   "rush:10": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "269d44462880"
+    ],
+    "growth_band": [
+     true,
+     "+19.7%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 3.1d [1-13]; workshop 1.4d [1-13]; delivery 2.2d [1-5]; beside the curve: stall 10.4d (8)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 2.97%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "64% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "19 closed, 18 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6.5 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "0.6% of business-hours"
+    ]
+   },
+   "cheater:1": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "09c4bb9f6c6b"
+    ],
+    "cheater_refused": [
+     true,
+     "83/83 refused"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall n/a; farm 27.5d [1-13]; workshop 2.0d [1-13]; delivery 2.1d [1-5]; beside the curve: stall 7.1d (9), farm 6.5d (1), delivery 1.5d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 11.02%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 4% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "79% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "15 closed, 15 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "0.9% of business-hours"
+    ]
+   },
+   "cheater:2": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "abb7bfc6bd9e"
+    ],
+    "cheater_refused": [
+     true,
+     "83/83 refused"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 8.6d [1-13]; workshop 2.2d [1-13]; delivery 3.0d [1-5]; beside the curve: stall 15.0d (8), farm 3.4d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 7.30%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 4% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "76% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "16 closed, 14 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "0.6% of business-hours"
+    ]
+   },
+   "cheater:3": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "2d80eb05ba74"
+    ],
+    "cheater_refused": [
+     true,
+     "83/83 refused"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall n/a; farm 3.7d [1-13]; workshop 2.8d [1-13]; delivery 9.6d [1-5]; beside the curve: stall 22.8d (8), farm 2.3d (1), delivery 3.9d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 7.70%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "62% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "14 closed, 14 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "3.8% of business-hours"
+    ]
+   },
+   "cheater:4": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "c41d2cc1c3a7"
+    ],
+    "cheater_refused": [
+     true,
+     "86/86 refused"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall infd [1-5]; farm 2.4d [1-13]; workshop 3.2d [1-13]; delivery 2.8d [1-5]; beside the curve: stall 296.3d (6), delivery 3.1d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 16.01%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 3% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "77% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "16 closed, 14 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "8.7% of business-hours"
+    ]
+   },
+   "cheater:5": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "8c7e92e3fa7e"
+    ],
+    "cheater_refused": [
+     true,
+     "83/83 refused"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 6.5d [1-5]; farm 8.3d [1-13]; workshop 1.5d [1-13]; delivery 2.9d [1-5]; beside the curve: stall 16.2d (10), farm 5.9d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 6.26%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "69% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "13 closed, 12 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7.5 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.1% of business-hours"
+    ]
+   },
+   "cheater:6": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "a65d28a3f375"
+    ],
+    "cheater_refused": [
+     true,
+     "83/83 refused"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 4.0d [1-13]; workshop 2.3d [1-13]; delivery 2.8d [1-5]; beside the curve: stall 144.4d (10), farm 3.1d (1), delivery 2.1d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 8.65%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 5% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "79% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "13 closed, 13 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "3.1% of business-hours"
+    ]
+   },
+   "cheater:7": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "895c6ea20f2c"
+    ],
+    "cheater_refused": [
+     true,
+     "83/83 refused"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 7.4d [1-13]; workshop 3.6d [1-13]; delivery 2.2d [1-5]; beside the curve: stall infd (8), farm 1.7d (1), delivery 2.1d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 11.24%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "85% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "18 closed, 18 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "4.0% of business-hours"
+    ]
+   },
+   "cheater:8": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "c85bff97eacb"
+    ],
+    "cheater_refused": [
+     true,
+     "83/83 refused"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 2.5d [1-5]; farm 13.0d [1-13]; workshop 2.1d [1-13]; delivery 2.9d [1-5]; beside the curve: stall 8.0d (10), farm infd (1), delivery 2.1d (2)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 7.04%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "69% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "18 closed, 15 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.0% of business-hours"
+    ]
+   },
+   "cheater:9": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "2ad24e6ca547"
+    ],
+    "cheater_refused": [
+     true,
+     "83/83 refused"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 12.8d [1-13]; workshop 2.6d [1-13]; delivery 2.2d [1-5]; beside the curve: stall 7.8d (8), farm 14.4d (1), delivery 5.6d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 9.76%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 4% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "60% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "15 closed, 14 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.7% of business-hours"
+    ]
+   },
+   "cheater:10": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "841fe5786deb"
+    ],
+    "cheater_refused": [
+     true,
+     "83/83 refused"
+    ],
+    "growth_band": [
+     true,
+     "+19.4%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 10.2d [1-13]; workshop 2.2d [1-13]; delivery 2.8d [1-5]; beside the curve: stall 6.6d (8), farm 3.6d (1), delivery 4.1d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 12.93%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 5% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "67% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "15 closed, 14 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8.5 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "3.3% of business-hours"
+    ]
+   },
+   "quiet_spell:1": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "4d291abb217d"
+    ],
+    "growth_band": [
+     true,
+     "+19.7%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 6.1d [1-13]; workshop 2.9d [1-13]; delivery 1.5d [1-5]; beside the curve: stall 13.2d (10), delivery 2.7d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 8.04%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 9% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "67% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "14 closed, 14 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.8% of business-hours"
+    ]
+   },
+   "quiet_spell:2": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "14707813d044"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall n/a; farm 66.9d [1-13]; workshop 1.4d [1-13]; delivery 3.9d [1-5]; beside the curve: stall 6.6d (10), delivery 9.5d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 7.75%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "67% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "14 closed, 13 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.9% of business-hours"
+    ]
+   },
+   "quiet_spell:3": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "4ef92917ae98"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall 3.9d [1-5]; farm 9.0d [1-13]; workshop 2.0d [1-13]; delivery 3.3d [1-5]; beside the curve: stall 12.1d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 9.84%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 4% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "58% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 11 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.2% of business-hours"
+    ]
+   },
+   "quiet_spell:4": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "df4ca43dca8d"
+    ],
+    "growth_band": [
+     true,
+     "+19.4%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 36.3d [1-5]; farm 5.1d [1-13]; workshop 2.3d [1-13]; delivery 3.7d [1-5]; beside the curve: stall 27.1d (9), delivery 4.2d (2)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 8.22%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "65% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "11 closed, 9 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.9% of business-hours"
+    ]
+   },
+   "quiet_spell:5": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "29e7ff13e92f"
+    ],
+    "growth_band": [
+     true,
+     "+19.4%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 10.8d [1-13]; workshop 1.9d [1-13]; delivery 2.9d [1-5]; beside the curve: stall 11.3d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 9.20%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "81% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "15 closed, 14 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.8% of business-hours"
+    ]
+   },
+   "quiet_spell:6": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "0be713b70673"
+    ],
+    "growth_band": [
+     true,
+     "+19.9%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 8.5d [1-13]; workshop 1.4d [1-13]; delivery 3.5d [1-5]; beside the curve: stall 15.9d (10), delivery 3.5d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 8.92%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "67% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "10 closed, 8 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "0.7% of business-hours"
+    ]
+   },
+   "quiet_spell:7": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "92c888a37066"
+    ],
+    "growth_band": [
+     true,
+     "+19.9%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall n/a; farm 58.7d [1-13]; workshop 1.7d [1-13]; delivery 2.6d [1-5]; beside the curve: stall 9.1d (10)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 8.79%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 8% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "82% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 11 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.1% of business-hours"
+    ]
+   },
+   "quiet_spell:8": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "05916ab2c7f0"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 2.8d [1-5]; farm 13.6d [1-13]; workshop 1.6d [1-13]; delivery 1.6d [1-5]; beside the curve: stall 17.2d (9), delivery 3.1d (2)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 5.58%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 9% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "65% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "15 closed, 15 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.5% of business-hours"
+    ]
+   },
+   "quiet_spell:9": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "cdf0a01c4566"
+    ],
+    "growth_band": [
+     true,
+     "+19.9%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 7.5d [1-13]; workshop 2.0d [1-13]; delivery 3.1d [1-5]; beside the curve: stall 17.2d (10), delivery 3.1d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 8.71%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "73% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 11 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.4% of business-hours"
+    ]
+   },
+   "quiet_spell:10": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "377863c421a4"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 4.5d [1-13]; workshop 2.3d [1-13]; delivery 3.3d [1-5]; beside the curve: stall 28.7d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 9.17%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 3% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "64% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "14 closed, 12 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "0.8% of business-hours"
+    ]
+   },
+   "job_squeeze:1": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "b3fb185e0465"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall 3.6d [1-5]; farm 1.9d [1-13]; workshop 6.7d [1-13]; delivery 4.7d [1-5]; beside the curve: stall 10.0d (5), delivery 4.1d (3)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 15.83%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 8% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "79% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "16 closed, 14 recovered"
+    ],
+    "first_business": [
+     false,
+     "median 18 days (60 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "6.2% of business-hours"
+    ]
+   },
+   "job_squeeze:2": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "1e803e2f284b"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 1.6d [1-13]; workshop 8.3d [1-13]; delivery 4.6d [1-5]; beside the curve: stall 76.3d (7), delivery 2.6d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 15.95%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "56% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "13 closed, 10 recovered"
+    ],
+    "first_business": [
+     false,
+     "median inf days (60 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.7% of business-hours"
+    ]
+   },
+   "job_squeeze:3": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "1ca01c5beae6"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall 2.8d [1-5]; farm 5.6d [1-13]; workshop 3.0d [1-13]; delivery 2.4d [1-5]; beside the curve: stall 4.5d (5), delivery 4.4d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 19.81%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 4% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "92% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "8 closed, 7 recovered"
+    ],
+    "first_business": [
+     false,
+     "median inf days (60 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.4% of business-hours"
+    ]
+   },
+   "job_squeeze:4": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "678bd4abb9ae"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall 3.2d [1-5]; farm 1.6d [1-13]; workshop 6.6d [1-13]; delivery 1.4d [1-5]; beside the curve: stall 19.6d (6)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 22.05%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 5% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "79% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "10 closed, 10 recovered"
+    ],
+    "first_business": [
+     false,
+     "median inf days (60 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "4.9% of business-hours"
+    ]
+   },
+   "job_squeeze:5": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "661ebead076a"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 7.9d [1-5]; farm 2.7d [1-13]; workshop 4.4d [1-13]; delivery 2.9d [1-5]; beside the curve: stall 12.9d (7)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 17.23%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "86% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "11 closed, 11 recovered"
+    ],
+    "first_business": [
+     false,
+     "median inf days (60 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "4.3% of business-hours"
+    ]
+   },
+   "job_squeeze:6": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "7866b1e7b30e"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall 2.0d [1-5]; farm 2.4d [1-13]; workshop 3.7d [1-13]; delivery 3.1d [1-5]; beside the curve: stall 11.8d (6), delivery 3.1d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 23.92%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "86% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "8 closed, 8 recovered"
+    ],
+    "first_business": [
+     false,
+     "median inf days (60 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "0.7% of business-hours"
+    ]
+   },
+   "job_squeeze:7": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "fe39537d4852"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 2.5d [1-13]; workshop 3.6d [1-13]; delivery 3.3d [1-5]; beside the curve: stall 16.5d (5)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 14.97%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 5% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "77% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "11 closed, 9 recovered"
+    ],
+    "first_business": [
+     false,
+     "median inf days (60 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.0% of business-hours"
+    ]
+   },
+   "job_squeeze:8": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "a12a805425c0"
+    ],
+    "growth_band": [
+     true,
+     "+19.2%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall infd [1-5]; farm 1.6d [1-13]; workshop 3.2d [1-13]; delivery 5.4d [1-5]; beside the curve: stall infd (9), delivery 4.2d (2)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 6.09%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "58% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 11 recovered"
+    ],
+    "first_business": [
+     false,
+     "median 15 days (60 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "0.7% of business-hours"
+    ]
+   },
+   "job_squeeze:9": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "6e562e137d90"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 8.6d [1-13]; workshop 2.5d [1-13]; delivery 2.9d [1-5]; beside the curve: stall 9.3d (6), delivery 1.6d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 19.52%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "92% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "9 closed, 8 recovered"
+    ],
+    "first_business": [
+     false,
+     "median inf days (60 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.7% of business-hours"
+    ]
+   },
+   "job_squeeze:10": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "37b01363cc9f"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 4.2d [1-13]; workshop 3.2d [1-13]; delivery 1.8d [1-5]; beside the curve: stall 4.5d (5)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 23.70%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 3% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "86% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "10 closed, 10 recovered"
+    ],
+    "first_business": [
+     false,
+     "median inf days (60 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.5% of business-hours"
+    ]
+   },
+   "price_shock:1": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "aa10a4d5f52f"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 8.4d [1-13]; workshop 3.0d [1-13]; delivery 1.6d [1-5]; beside the curve: stall 10.9d (10), delivery 1.6d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 11.84%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 9% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "67% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "14 closed, 13 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6.5 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.8% of business-hours"
+    ],
+    "no_windfall": [
+     true,
+     "largest rise against the Baseline +1% (stall) (shock +50%)"
+    ]
+   },
+   "price_shock:2": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "18e7afc12424"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 8.7d [1-13]; workshop 1.5d [1-13]; delivery 2.1d [1-5]; beside the curve: stall 11.2d (10), delivery 2.7d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 9.92%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "67% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 12 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "1.7% of business-hours"
+    ],
+    "no_windfall": [
+     true,
+     "largest rise against the Baseline +5% (farm) (shock +50%)"
+    ]
+   },
+   "price_shock:3": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "5d4af2370af7"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 5.6d [1-13]; workshop 2.0d [1-13]; delivery 4.1d [1-5]; beside the curve: stall 10.7d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 6.06%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 4% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "71% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 11 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.3% of business-hours"
+    ],
+    "no_windfall": [
+     true,
+     "largest rise against the Baseline +8% (farm) (shock +50%)"
+    ]
+   },
+   "price_shock:4": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "431938233b01"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall n/a; farm 5.3d [1-13]; workshop 1.6d [1-13]; delivery 6.8d [1-5]; beside the curve: stall 10.6d (9), delivery 8.7d (2)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 8.22%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "62% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "13 closed, 11 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.5% of business-hours"
+    ],
+    "no_windfall": [
+     true,
+     "largest rise against the Baseline +5% (farm) (shock +50%)"
+    ]
+   },
+   "price_shock:5": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "8ab4e2d28e43"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 6.4d [1-13]; workshop 3.3d [1-13]; delivery 3.6d [1-5]; beside the curve: stall 7.4d (9), delivery 4.8d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 7.29%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "71% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "16 closed, 16 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6.5 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.5% of business-hours"
+    ],
+    "no_windfall": [
+     true,
+     "largest rise against the Baseline +5% (delivery) (shock +50%)"
+    ]
+   },
+   "price_shock:6": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "7aff2dfecd5b"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 5.7d [1-13]; workshop 1.7d [1-13]; delivery 2.8d [1-5]; beside the curve: stall 9.4d (10), delivery 2.9d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 8.09%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "67% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "11 closed, 11 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7.5 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.6% of business-hours"
+    ],
+    "no_windfall": [
+     true,
+     "largest rise against the Baseline +9% (farm) (shock +50%)"
+    ]
+   },
+   "price_shock:7": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "07fc831a20b3"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall n/a; farm 7.9d [1-13]; workshop 1.5d [1-13]; delivery 5.2d [1-5]; beside the curve: stall 12.3d (10), delivery 6.0d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 9.26%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "75% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "14 closed, 13 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 7 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.0% of business-hours"
+    ],
+    "no_windfall": [
+     true,
+     "largest rise against the Baseline +12% (farm) (shock +50%)"
+    ]
+   },
+   "price_shock:8": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "34806cb371b8"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall 3.7d [1-5]; farm 5.8d [1-13]; workshop 1.7d [1-13]; delivery 1.8d [1-5]; beside the curve: stall 29.3d (9), delivery 1.9d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 9.12%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 9% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "62% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "18 closed, 17 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 6 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "0.6% of business-hours"
+    ],
+    "no_windfall": [
+     true,
+     "largest rise against the Baseline +6% (delivery) (shock +50%)"
+    ]
+   },
+   "price_shock:9": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "5911c7559231"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall n/a; farm 3.9d [1-13]; workshop 1.6d [1-13]; delivery 3.2d [1-5]; beside the curve: stall 8.2d (9), delivery 2.6d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 10.20%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "73% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "13 closed, 13 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.3% of business-hours"
+    ],
+    "no_windfall": [
+     true,
+     "largest rise against the Baseline +18% (farm) (shock +50%)"
+    ]
+   },
+   "price_shock:10": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "623e38d927b2"
+    ],
+    "growth_band": [
+     true,
+     "+19.7%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     true,
+     "stall 4.7d [1-5]; farm 5.2d [1-13]; workshop 1.9d [1-13]; delivery 2.5d [1-5]; beside the curve: stall 14.5d (9)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "holding 0.00%/day vs median business 7.02%/day of its cost"
+    ],
+    "meal_price": [
+     true,
+     "max 3% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "64% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "13 closed, 12 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 8 days (10 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.0% of business-hours"
+    ],
+    "no_windfall": [
+     true,
+     "largest rise against the Baseline +11% (farm) (shock +50%)"
+    ]
+   },
+   "sitter:1": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "055da2466ea6"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall infd [1-5]; farm 13.2d [1-13]; workshop 3.4d [1-13]; delivery 3.9d [1-5]; beside the curve: stall 5.4d (10), delivery 5.1d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "sitter 0.00/day vs median business on the same money 228.60/day (the scenario's runner: 70.43/day)"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "75% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 11 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 5 days (11 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "6.6% of business-hours"
+    ]
+   },
+   "sitter:2": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "eca7477c552c"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall infd [1-5]; farm 6.3d [1-13]; workshop 3.6d [1-13]; delivery 3.5d [1-5]; beside the curve: stall 5.1d (10)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "sitter 0.00/day vs median business on the same money 184.50/day (the scenario's runner: 89.84/day)"
+    ],
+    "meal_price": [
+     true,
+     "max 5% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "69% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 10 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 5 days (11 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "7.4% of business-hours"
+    ]
+   },
+   "sitter:3": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "a2c3cad697fd"
+    ],
+    "growth_band": [
+     true,
+     "+19.8%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall infd [1-5]; farm 9.1d [1-13]; workshop 2.9d [1-13]; delivery 7.0d [1-5]; beside the curve: stall 5.9d (10)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "sitter 0.00/day vs median business on the same money 103.25/day (the scenario's runner: 70.09/day)"
+    ],
+    "meal_price": [
+     true,
+     "max 5% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "62% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "14 closed, 12 recovered"
+    ],
+    "first_business": [
+     false,
+     "median 4 days (11 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "4.7% of business-hours"
+    ]
+   },
+   "sitter:4": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "fed92c82c9f5"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 4.3d [1-5]; farm 12.6d [1-13]; workshop 3.0d [1-13]; delivery 26.3d [1-5]; beside the curve: stall 10.5d (9), delivery 3.0d (2)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "sitter 0.00/day vs median business on the same money 196.40/day (the scenario's runner: 48.16/day)"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "74% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 10 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 5 days (11 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "4.8% of business-hours"
+    ]
+   },
+   "sitter:5": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "906c129d2c31"
+    ],
+    "growth_band": [
+     true,
+     "+19.7%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall infd [1-5]; farm 10.4d [1-13]; workshop 2.2d [1-13]; delivery 2.9d [1-5]; beside the curve: stall 12.6d (10), delivery 4.1d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "sitter 0.00/day vs median business on the same money 88.95/day (the scenario's runner: 80.73/day)"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "67% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "14 closed, 10 recovered"
+    ],
+    "first_business": [
+     false,
+     "median 4 days (11 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "5.1% of business-hours"
+    ]
+   },
+   "sitter:6": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "b8e217b21c9e"
+    ],
+    "growth_band": [
+     true,
+     "+19.9%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall n/a; farm 9.8d [1-13]; workshop 2.4d [1-13]; delivery 12.5d [1-5]; beside the curve: stall 5.3d (9), delivery 2.6d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "sitter 0.00/day vs median business on the same money 208.00/day (the scenario's runner: 75.87/day)"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "71% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "13 closed, 11 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 5 days (11 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.3% of business-hours"
+    ]
+   },
+   "sitter:7": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "9c51942d2380"
+    ],
+    "growth_band": [
+     true,
+     "+19.9%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall 14.3d [1-5]; farm 11.2d [1-13]; workshop 2.6d [1-13]; delivery 2.9d [1-5]; beside the curve: stall 7.6d (10)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "sitter 0.00/day vs median business on the same money 210.00/day (the scenario's runner: 109.45/day)"
+    ],
+    "meal_price": [
+     true,
+     "max 7% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "75% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "12 closed, 8 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 5 days (11 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "2.5% of business-hours"
+    ]
+   },
+   "sitter:8": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "bda325ddbfea"
+    ],
+    "growth_band": [
+     true,
+     "+19.6%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall infd [1-5]; farm 6.0d [1-13]; workshop 2.6d [1-13]; delivery 3.7d [1-5]; beside the curve: stall 14.3d (10)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "sitter 0.00/day vs median business on the same money 123.63/day (the scenario's runner: 65.99/day)"
+    ],
+    "meal_price": [
+     true,
+     "max 8% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "65% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "17 closed, 15 recovered"
+    ],
+    "first_business": [
+     false,
+     "median 3 days (11 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     true,
+     "4.5% of business-hours"
+    ]
+   },
+   "sitter:9": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "1b12bfdfa05c"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall infd [1-5]; farm 7.1d [1-13]; workshop 3.0d [1-13]; delivery 4.1d [1-5]; beside the curve: stall 7.2d (8)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "sitter 0.00/day vs median business on the same money 146.00/day (the scenario's runner: 73.30/day)"
+    ],
+    "meal_price": [
+     true,
+     "max 10% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "65% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "15 closed, 12 recovered"
+    ],
+    "first_business": [
+     false,
+     "median 4 days (11 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "5.8% of business-hours"
+    ]
+   },
+   "sitter:10": {
+    "conservation": [
+     true,
+     "720 ticks"
+    ],
+    "determinism": [
+     true,
+     "87e72ff63594"
+    ],
+    "growth_band": [
+     true,
+     "+20.0%"
+    ],
+    "thermostat": [
+     true,
+     "0 weeks above in a row"
+    ],
+    "payback_lanes": [
+     false,
+     "stall infd [1-5]; farm 15.8d [1-13]; workshop 2.2d [1-13]; delivery 2.7d [1-5]; beside the curve: stall 4.4d (9), delivery 1.9d (1)"
+    ],
+    "playing_beats_sitting": [
+     true,
+     "sitter 0.00/day vs median business on the same money 154.40/day (the scenario's runner: 49.63/day)"
+    ],
+    "meal_price": [
+     true,
+     "max 6% off its 7-day average"
+    ],
+    "profitable_share": [
+     false,
+     "70% to 100% profitable"
+    ],
+    "closure_recovery": [
+     true,
+     "13 closed, 9 recovered"
+    ],
+    "first_business": [
+     true,
+     "median 5 days (11 players)"
+    ],
+    "first_job": [
+     true,
+     "max 0 days"
+    ],
+    "out_of_stock": [
+     false,
+     "6.8% of business-hours"
+    ]
+   }
+  }
+ },
+ "B": {
+  "ok": false,
+  "checks": {
+   "ai_beats_rules_profit": {
+    "ok": true,
+    "examples": [
+     "AI 64.83/day vs rules 41.51/day (485 vs 1554 businesses)"
+    ]
+   },
+   "ai_recovery_not_worse": {
+    "ok": true,
+    "examples": [
+     "AI 0.96 vs rules 0.96 days"
+    ]
+   },
+   "ai_closure_not_worse": {
+    "ok": false,
+    "examples": [
+     "AI 65.6% vs rules 52.3%"
+    ]
+   },
+   "no_stuck_agents": {
+    "ok": true,
+    "examples": [
+     "0 stuck across 100 runs"
+    ]
+   },
+   "recordings_cover_prompts": {
+    "ok": true,
+    "examples": [
+     "30413 plans, 0 fell back to rules"
+    ]
+   }
+  },
+  "ai": {
+   "businesses": 485,
+   "by_type": {
+    "stall": 60.98,
+    "farm": 86.62,
+    "delivery": 26.22
+   },
+   "closure_rate": 0.6556701030927835,
+   "recovery_days": 0.96,
+   "profit_per_day": 64.83287330661825
+  },
+  "rules": {
+   "businesses": 1554,
+   "by_type": {
+    "stall": 36.7,
+    "farm": 54.04,
+    "workshop": 68.74,
+    "delivery": 24.64
+   },
+   "closure_rate": 0.5231660231660231,
+   "recovery_days": 0.96,
+   "profit_per_day": 41.50529053035998
+  },
+  "planner_source": [
+   "fixture"
+  ],
+  "note": "Recorded answers come from the deterministic fixture planner (no OpenRouter key in this environment); the parity test is tests/test_phase3_town.py::test_parity_human_and_agent."
+ },
+ "C": {
+  "ok": true,
+  "checks": {
+   "stories_link_records": {
+    "ok": true,
+    "examples": [
+     "326576 stories in 292840 morning messages, every one checked against the journal and events"
+    ]
+   },
+   "real_event_most_mornings": {
+    "ok": true,
+    "examples": [
+     "lowest run 73% of mornings with a real event"
+    ]
+   },
+   "quiet_not_padded": {
+    "ok": true,
+    "examples": [
+     "0 padded quiet mornings"
+    ]
+   }
+  }
+ },
+ "D": {
+  "ok": false,
+  "checks": {
+   "estimate_under_budget": {
+    "ok": true,
+    "examples": [
+     "up to $0.009 a player a month at anthropic/claude-haiku-5.5 list price (assumed), budget $1.00"
+    ]
+   },
+   "live_sample": {
+    "ok": false,
+    "blocked": true,
+    "examples": [
+     "blocked: no OPENROUTER_API_KEY in this environment, so no live call was made"
+    ]
+   }
+  },
+  "estimate_usd_per_player_month": 0.0085588
+ },
+ "meta": {
+  "text": "100 rules runs and 100 recorded-AI runs of 30 days on seeds 1 to 10, plus a 180-day Baseline; 264 s on 4 cores."
+ }
+}

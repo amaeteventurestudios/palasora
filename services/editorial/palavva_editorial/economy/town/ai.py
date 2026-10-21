@@ -63,8 +63,13 @@ def fixture_answer(btype: str, b: dict, trigger: str) -> dict:
         price = "+8%" if b["crowd"] == "short" else "+4%"
         staff = "hire" if b["profit"] != "loss" else "hold"
     elif b["sales"] == "slow":
-        price = "-8%" if b["crowd"] == "crowded" and b["price"] != "low" else "-4%" if b["price"] != "low" else "hold"
-        staff = "fire" if b["profit"] == "loss" else "hold"
+        # in a crowded trade a price war only thins every margin: cut costs first, and cut price only from high
+        if b["crowd"] == "crowded":
+            price = "-4%" if b["price"] == "high" else "hold"
+            staff = "fire" if b["profit"] != "good" else "hold"
+        else:
+            price = "-4%" if b["price"] != "low" else "hold"
+            staff = "fire" if b["profit"] == "loss" else "hold"
     elif b["profit"] == "loss":
         price = "+4%" if b["price"] == "low" else "-4%" if b["crowd"] == "crowded" else "hold"
     if b["price"] == "high" and price.startswith("+"):

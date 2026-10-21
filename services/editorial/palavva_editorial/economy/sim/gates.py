@@ -159,23 +159,30 @@ def gate_b(rec_runs: list[dict], rules_runs: list[dict] | None = None) -> dict:
     player's business is AI-planned in an AI run): profit a day, recovery time after a closure, closure rate. Plus: no
     agent stuck losing for 3 days without changing anything."""
     def stats(runs, ai_planned: bool):
-        prof, closed, n, rec = [], 0, 0, []
+        by_type, closed, n, rec = {}, 0, 0, []
         for s in runs:
             mine = set()
             for b in s["businesses"]:
-                if (b["mode"] in ("recorded", "live")) != ai_planned or b["days"] < 3:
+                if (b["mode"] in ("recorded", "live")) != ai_planned or b["days"] < 3 or b.get("owner_kind") != "house":
                     continue
                 mine.add(b["id"])
                 n += 1
-                prof.append(b["profit_total"] / b["days"])
+                by_type.setdefault(b["type"], []).append(b["profit_total"] / b["days"])
                 closed += b["status"] == "closed"
             for r in s["closures"]["detail"]:
                 if r["business"] in mine and r["recovery_days"] is not None:
                     rec.append(r["recovery_days"])
-        return {"businesses": n, "profit_per_day": (sum(prof) / len(prof) / 100) if prof else 0.0,
-                "closure_rate": closed / n if n else 0.0, "recovery_days": median(rec) if rec else None}
+        return {"businesses": n, "by_type": by_type, "closure_rate": closed / n if n else 0.0, "recovery_days": median(rec) if rec else None}
     ai_s = stats(rec_runs, True)
     rules_s = stats(rec_runs, False)
+    # house businesses only (players' businesses are all AI-planned, so they have no rules twin), and the same mix of
+    # trades on both sides: each trade's mean profit a day, weighted by how many AI-planned businesses it has
+    types = [t for t in ai_s["by_type"] if rules_s["by_type"].get(t)]
+    wts = {t: len(ai_s["by_type"][t]) for t in types}
+    tot = sum(wts.values()) or 1
+    for st in (ai_s, rules_s):
+        st["profit_per_day"] = sum(wts[t] * (sum(st["by_type"][t]) / len(st["by_type"][t])) for t in types) / tot / 100
+        st["by_type"] = {t: round(sum(v) / len(v) / 100, 2) for t, v in st["by_type"].items()}
     stuck = sum(len(s["stuck"]) for s in rec_runs)
     calls = sum(s["ai"]["calls"] for s in rec_runs)
     fb = sum(s["ai"]["fallbacks"] for s in rec_runs)
