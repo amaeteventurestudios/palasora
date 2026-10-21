@@ -42,7 +42,7 @@ working capital 1.5 days, genesis mix 5 stalls / 3 farms / 1 workshop / 2 carts.
 
 ## Tests (final code)
 
-tsc clean; vitest 146 passed; pytest 229 passed, 3 skipped (baseline 210 passed, 3 skipped); Playwright: see PR.
+tsc clean; vitest 146 passed; pytest 229 passed, 3 skipped (baseline 210 passed, 3 skipped); Playwright 150 passed, 2 failed (v18 ISSUE-24 and ISSUE-28, known before Phase 3), 1 did not run (ISSUE-23), 5 skipped.
 
 ## Next
 
