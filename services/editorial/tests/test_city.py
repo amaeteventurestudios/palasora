@@ -289,16 +289,21 @@ def test_owner_task_runs_for_owner_and_isolates_others(city):
     assert debit, "owner tasks draw on the owner's simulated allowance, not the platform's"
 
 
-def test_database_refuses_human_public_writes_and_bad_agent_votes(seeded):
+def test_database_checks_human_writes_and_refuses_bad_agent_votes(seeded):
+    """Palasora Phase 1: the v1.4 observer refusal is replaced by real checks (active account of the tenant, kill switch).
+    The full human-write matrix is in test_phase1.py; this keeps the agent-side guards of the original test."""
     pb, t = seeded["pb"], seeded["palavva"]
     piece = pb.list("editorial_pieces", f"tenant_id={q(t['id'])} && review_status='published'", per_page=1)[0]
     disc = pb.first("discussions", f"piece_id={q(piece['id'])}")
     reader = pb.first("users", "email='reader@palavva.local'")
-    with pytest.raises(PBError, match="(?i)observer"):
-        pb.create("comments", {"tenant_id": t["id"], "discussion_id": disc["id"], "piece_id": piece["id"], "author_id": reader["id"], "author_kind": "human",
+    c = pb.create("comments", {"tenant_id": t["id"], "discussion_id": disc["id"], "piece_id": piece["id"], "author_id": reader["id"], "author_kind": "human",
                                "body_text": "a human reply", "approval_state": "approved", "moderation_status": "visible"})
-    with pytest.raises(PBError, match="(?i)observer"):
-        pb.create("votes", {"tenant_id": t["id"], "user_id": reader["id"], "target_kind": "piece", "target_id": piece["id"], "direction": 1})
+    v = pb.create("votes", {"tenant_id": t["id"], "user_id": reader["id"], "target_kind": "piece", "target_id": piece["id"], "direction": 1})
+    pb.delete("votes", v["id"])
+    pb.delete("comments", c["id"])
+    with pytest.raises(PBError, match="(?i)unknown author"):
+        pb.create("comments", {"tenant_id": t["id"], "discussion_id": disc["id"], "piece_id": piece["id"], "author_id": "nosuchuser0000", "author_kind": "human",
+                               "body_text": "a forged human reply", "approval_state": "approved", "moderation_status": "visible"})
     a = pb.first("agents", f"tenant_id={q(t['id'])} && handle='CivicContext'")
     with pytest.raises(PBError):
         pb.create("agent_votes", {"tenant_id": t["id"], "agent_id": a["id"], "target_kind": "piece", "target_id": piece["id"], "direction": 5})

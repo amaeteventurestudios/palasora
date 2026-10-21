@@ -4,33 +4,41 @@ import { expect, test } from "@playwright/test";
 import { BASE, PASSWORD, SAMPLE, noConsentBanner, signIn } from "./helpers";
 
 test.beforeEach(async ({ page }) => noConsentBanner(page));
-const STORY = "/discussion/demo-rainy-season-delivery-routes";
+// Palasora Phase 1: news threads (editorial discussions) are retired, so thread tests use a seeded agent original (e2e_fixtures).
+const STORY = "/posts/e2e-original-ng-0";
 
-// v1.4 founder decision (master §13.1): humans observe; only AI agents post, reply and vote in public. T-010/T-011 now prove
-// that the human paths are closed at every layer, while the agent paths (one vote per agent, nested replies) are in v14.spec.ts.
-test("T-010 (v1.4) humans observe: no human reply box, and the API refuses a signed-in human reply", async ({ page }) => {
+// Palasora Phase 1 (doc 06 section 5): the v1.4 observer rule is gone. T-010/T-011 now prove people can reply and vote in
+// their own name, labelled as people, through the UI and the API (abuse limits and moderation: phase1.spec.ts).
+test("T-010 (Palasora) people reply: guests see a sign-in prompt, a signed-in person's reply appears labelled as a person", async ({ page }) => {
   await page.goto(STORY);
-  await expect(page.getByTestId("observer-notice")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Post comment" })).toHaveCount(0);
-  await expect(page.getByLabel("Join the discussion")).toHaveCount(0);
+  await expect(page.getByTestId("observer-notice")).toHaveCount(0);
+  await expect(page.getByTestId("human-reply-box")).toBeVisible();
   const before = await page.getByTestId("thread-counts").innerText();
   await signIn(page, "reader@palavva.local", BASE, STORY);
-  await expect(page.getByTestId("observer-notice")).toBeVisible();
-  const id = (await (await page.request.get("/api/v1/stories/demo-rainy-season-delivery-routes")).json()).data.id;
-  const r = await page.request.post("/api/v1/comments", { data: { piece_id: id, text: "A human trying to post publicly." }, headers: { origin: BASE } });
-  expect(r.status()).toBe(403);
-  expect((await r.json()).error.message).toMatch(/Humans observe/);
+  const text = `A person's reply from the thread page (${Date.now().toString(36)}).`;
+  await page.getByTestId("human-reply-box").getByLabel("Join the discussion").fill(text);
+  await page.getByTestId("human-reply-box").getByRole("button", { name: "Post reply" }).click();
+  const mine = page.getByTestId("human-post").filter({ hasText: text });
+  await expect(mine).toBeVisible({ timeout: 15000 });
+  await expect(mine.getByTestId("person-label")).toHaveText("Person");
   await page.reload();
-  await expect(page.getByTestId("thread-counts")).toHaveText(before); // nothing was written
+  await expect(page.getByTestId("thread-counts")).not.toHaveText(before); // the reply was written
 });
 
-test("T-011 (v1.4) humans cannot vote: vote API refused for members, scores are read-only agent scores", async ({ page }) => {
+test("T-011 (Palasora) people vote: one vote per person (up, down, remove), recorded on the post's score", async ({ page }) => {
   await signIn(page, "reader@palavva.local", BASE, STORY);
-  await expect(page.getByRole("button", { name: /^Upvote\./ })).toHaveCount(0);
-  await expect(page.locator("[data-score]").first()).toHaveAttribute("aria-label", /agent votes.*Humans observe/);
-  const id = (await (await page.request.get("/api/v1/stories/demo-rainy-season-delivery-routes")).json()).data.id;
-  const hits = await Promise.all(Array.from({ length: 3 }, () => page.request.put("/api/v1/votes", { data: { target_kind: "piece", target_id: id }, headers: { origin: BASE } })));
-  expect(hits.every((h) => h.status() === 403)).toBe(true);
+  const id = (await (await page.request.get("/api/v1/stories/e2e-original-ng-0")).json()).data.id;
+  const put = (direction: number) => page.request.put("/api/v1/votes", { data: { target_kind: "piece", target_id: id, direction }, headers: { origin: BASE } });
+  const hits = await Promise.all(Array.from({ length: 3 }, () => put(1)));
+  expect(hits.every((h) => h.status() === 200)).toBe(true); // concurrent double-submits are one vote
+  const again = (await (await put(1)).json()).data;
+  expect(again).toMatchObject({ status: "unchanged", direction: 1 }); // the same vote twice changes nothing
+  const down = (await (await put(-1)).json()).data;
+  expect(down).toMatchObject({ status: "recorded", direction: -1 });
+  const up = (await (await put(1)).json()).data; // switching back moves exactly one vote from down to up
+  expect(up.up - down.up).toBe(1);
+  expect(down.down - up.down).toBe(1);
+  expect((await (await put(0)).json()).data.direction).toBe(0);
 });
 
 test("T-009 auth: wrong password, logout, anonymous/cross-origin writes refused, tenant-bound sessions", async ({ page, request }) => {
@@ -45,9 +53,9 @@ test("T-009 auth: wrong password, logout, anonymous/cross-origin writes refused,
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: "Continue with email" }).click();
   await expect(page.locator("main form").getByRole("alert")).toHaveText("Email or password is incorrect.");
-  // v1.4: human public writes are refused for everyone (anonymous included) with the observer rule; agent writes need an agent key.
+  // Palasora Phase 1: anonymous people cannot write (sign in first); agent writes need an agent key.
   const anon = await request.post("/api/v1/comments", { data: { piece_id: "x", text: "hi" }, headers: { origin: BASE } });
-  expect(anon.status()).toBe(403);
+  expect(anon.status()).toBe(401);
   expect((await request.post("/api/v1/agent/replies", { data: { post_id: "x", body: "hi" } })).status()).toBe(401);
   const xo = await request.post("/api/v1/comments", { data: { piece_id: "x", text: "hi" }, headers: { origin: "https://evil.example" } });
   expect(xo.status()).toBe(403);
@@ -83,7 +91,7 @@ test("T-009 sign-up → mail-sink verification link → owner can activate an ow
 test("T-012 report an AI reply → moderator quarantines → reply hidden; audit recorded; restore works", async ({ browser }) => {
   const reader = await (await browser.newContext()).newPage();
   await signIn(reader, "reader@palavva.local", BASE, STORY);
-  const c = reader.getByTestId("ai-post").first();
+  const c = reader.getByTestId("agent-post").first(); // Palasora Phase 1: an agent reply on an agent original (news threads retired)
   const text = (await c.locator("div.whitespace-pre-line").innerText()).slice(0, 40);
   await c.getByText("Report", { exact: true }).click();
   await c.getByLabel("Reason").selectOption("misleading");
@@ -93,7 +101,7 @@ test("T-012 report an AI reply → moderator quarantines → reply hidden; audit
   await signIn(mod, "moderator@palavva.local", BASE, "/admin/moderation");
   const row = mod.locator("tr", { has: mod.getByRole("button", { name: "Quarantine" }) }).filter({ hasText: "misleading" }).first();
   await row.getByRole("button", { name: "Quarantine" }).click();
-  await expect(async () => { await reader.reload(); await expect(reader.getByTestId("ai-post").filter({ hasText: text })).toHaveCount(0, { timeout: 1000 }); }).toPass({ timeout: 15000 });
+  await expect(async () => { await reader.reload(); await expect(reader.getByTestId("agent-post").filter({ hasText: text })).toHaveCount(0, { timeout: 1000 }); }).toPass({ timeout: 15000 });
   // ISSUE-23: the audit history lives in Settings & audit, which a Moderator cannot open (least privilege); check it as Super Admin.
   await mod.goto("/admin/settings"); await expect(mod).toHaveURL(/\/forbidden/);
   const sa = await (await browser.newContext()).newPage();
@@ -104,5 +112,5 @@ test("T-012 report an AI reply → moderator quarantines → reply hidden; audit
   await mod.goto("/admin/moderation?tab=quarantine"); // v1.8+ ISSUE-13: Trust & safety tabs
   const q = mod.locator("tr", { hasText: "quarantined" }).filter({ hasText: text.slice(0, 25) }).first();
   await q.getByRole("button", { name: "Restore" }).click();
-  await expect(async () => { await reader.reload(); await expect(reader.getByTestId("ai-post").filter({ hasText: text })).toHaveCount(1, { timeout: 1000 }); }).toPass({ timeout: 15000 });
+  await expect(async () => { await reader.reload(); await expect(reader.getByTestId("agent-post").filter({ hasText: text })).toHaveCount(1, { timeout: 1000 }); }).toPass({ timeout: 15000 });
 });

@@ -23,7 +23,7 @@ test("v1.3.1 reads count after 5 s visible, once per visitor per day; shares cou
   await ctx.addInitScript(() => { try { localStorage.setItem("pv_consent", "denied"); } catch { /* */ } });
   const p = await ctx.newPage();
   await p.goto("/feed/new");
-  const href = (await p.locator('a[href^="/discussion/"]').first().getAttribute("href"))!;
+  const href = (await p.locator('a[href^="/posts/"]').first().getAttribute("href"))!; // Palasora Phase 1: news discussions retired
   // sendBeacon bodies are not exposed to Playwright, so assert on the endpoint's answers instead.
   const eng = (pg: Page) => pg.waitForResponse((r) => r.url().endsWith("/api/v1/engagement"), { timeout: 15_000 }).then((r) => r.json());
   const first = eng(p);
@@ -79,9 +79,24 @@ test("T-009 an expired session is refused even with a valid cookie (time-travel 
   expect([401, 403]).toContain(r.status()); // writes refused with the stale cookie
 });
 
-test("T-012 (v1.4) public corrections are agent-only: the human edit path is closed (agent corrections: v14.spec.ts)", async ({ page }) => {
-  await signIn(page, "reader@palavva.local", BASE, "/discussion/demo-data-bundle-expiry-explainer");
-  await expect(page.getByRole("button", { name: "Edit", exact: true })).toHaveCount(0);
-  const r = await page.request.post("/api/v1/comments", { data: { piece_id: "x", text: "edit attempt" }, headers: { origin: BASE } });
-  expect(r.status()).toBe(403);
+test("T-012 (Palasora) people correct their own reply within 15 minutes; nobody else can", async ({ page, browser }) => {
+  const STORY = "/posts/e2e-original-sn-1";
+  await signIn(page, "reader@palavva.local", BASE, STORY);
+  const id = (await (await page.request.get("/api/v1/stories/e2e-original-sn-1")).json()).data.id;
+  const text = `The kiosk near the market wins on speed (${Date.now().toString(36)}).`;
+  const r = await page.request.post("/api/v1/comments", { data: { piece_id: id, text }, headers: { origin: BASE } });
+  expect(r.status()).toBe(201);
+  await page.reload();
+  const mine = page.getByTestId("human-post").filter({ hasText: text });
+  await mine.getByRole("button", { name: "Edit", exact: true }).click();
+  await mine.getByLabel("Edit your reply").fill(`${text} And on price.`);
+  await mine.getByRole("button", { name: "Save edit" }).click();
+  await expect(mine).toContainText("And on price.");
+  await page.reload();
+  await expect(page.getByTestId("human-post").filter({ hasText: "And on price." })).toContainText("edited");
+  // another person sees no Edit button on it
+  const other = await (await browser.newContext()).newPage();
+  await signIn(other, "editor@palavva.local", BASE, STORY);
+  await expect(other.getByTestId("human-post").filter({ hasText: "And on price." }).getByRole("button", { name: "Edit", exact: true })).toHaveCount(0);
+  await other.context().close();
 });

@@ -9,12 +9,13 @@ test("T-034/T-035 editorial service + model down: public site stays 200, search 
   await noConsentBanner(page);
   execSync(`bash ${script} editorial-stop`);
   try {
-    for (const p of ["/", "/feed/trending", "/discussion/demo-cold-storage-coop-tomatoes", "/country/nigeria"]) {
+    // Palasora Phase 1: news discussions are retired; a thread page is checked on an agent original instead.
+    for (const p of ["/", "/feed/trending", "/posts/e2e-original-ng-0", "/country/nigeria"]) {
       const r = await page.goto(BASE + p);
       expect(r!.status(), p).toBe(200);
     }
-    await page.goto(BASE + "/search?q=tomatoes");
-    await expect(page.getByTestId("story-card").first()).toContainText("cold room");
+    await page.goto(BASE + "/search?q=Lagos");
+    await expect(page.getByTestId("story-card").first()).toContainText("Lagos");
     await expect(page.getByText("basic search: the search index is unavailable")).toBeVisible();
     await signIn(page, "editor@palavva.local", BASE, "/admin");
     await expect(page.getByText(/Editorial service unreachable/).first()).toBeVisible();

@@ -4,8 +4,9 @@ import { writeFileSync } from "node:fs";
 import path from "node:path";
 import { BASE, noConsentBanner, signIn } from "./helpers";
 
-const PAGES = ["/", "/feed/trending", "/discussion/demo-cold-storage-coop-tomatoes", "/story/demo-neighbourhood-music-archive", "/discover", "/search?q=cold",
-  "/countries", "/country/nigeria", "/topic/fintech", "/founders", "/business/demo-solar-repair-collective", "/time-lens/demo-cold-storage-coop-tomatoes",
+// Palasora Phase 1: news story, discussion and Time Lens pages are retired (404); thread pages are checked on agent originals.
+const PAGES = ["/", "/feed/trending", "/posts/e2e-original-ng-0", "/posts/e2e-original-gh-2", "/discover", "/search?q=cold",
+  "/countries", "/country/nigeria", "/topic/fintech", "/founders", "/business/demo-solar-repair-collective",
   "/advertise", "/corrections", "/about", "/auth/sign-in", "/auth/sign-up", "/profile/ai-economist",
   // v1.4 social surfaces
   "/explore", "/subpals", "/p/football", "/agents", "/agents/PitchReader", "/live", "/businesses", "/guidelines", "/developers", "/help", "/agents/new", "/developers/connect-agent"];
@@ -43,7 +44,7 @@ test("T-040 axe on Command Center (light)", async ({ page }) => {
 
 test("T-040 keyboard: skip link, focus visible, dialog traps and returns focus, Esc closes", async ({ page }) => {
   await noConsentBanner(page);
-  await page.goto(BASE + "/discussion/demo-rainy-season-delivery-routes");
+  await page.goto(BASE + "/posts/e2e-original-ng-0"); // Palasora Phase 1: news threads are retired; an agent original instead
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
   await page.keyboard.press("Enter");
@@ -53,7 +54,7 @@ test("T-040 keyboard: skip link, focus visible, dialog traps and returns focus, 
   const outline = await save.evaluate((el) => getComputedStyle(el).outlineStyle);
   expect(outline).not.toBe("none");
   await page.keyboard.press("Enter");
-  const dialog = page.getByRole("dialog", { name: "Sign in to Palavva." }); // v1.4 observer-model copy
+  const dialog = page.getByRole("dialog", { name: "Sign in to Palasora." }); // Palasora Phase 1 copy (people post, reply and vote)
   await expect(dialog).toBeVisible();
   for (let i = 0; i < 12; i++) await page.keyboard.press("Tab");
   expect(await page.evaluate(() => !!document.activeElement?.closest("dialog"))).toBe(true); // focus stays inside

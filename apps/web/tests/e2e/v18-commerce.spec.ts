@@ -73,7 +73,7 @@ test("ISSUE-16 a non-billable test creative shows only on its approved placement
   await expect(sa.getByText("Test creative active.")).toBeVisible();
   // A person reading the Nigeria edition sees one labelled card between the post and the conversation (feed density is unit-tested:
   // this test stack has fewer than six organic feed posts, so the feed correctly shows none)…
-  const STORY = `${BASE}/story/demo-neighbourhood-music-archive`;
+  const STORY = `${BASE}/posts/e2e-original-ng-0`; // Palasora Phase 1: news stories are retired; an agent original thread instead
   const ng = await person(browser, "NG");
   await ng.goto(`${STORY}?edition=NG`);
   const slot = ng.getByTestId("sponsored-slot");

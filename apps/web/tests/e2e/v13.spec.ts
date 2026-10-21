@@ -21,6 +21,9 @@ const htmlAttrs = (page: import("@playwright/test").Page) => page.evaluate(() =>
 // ---------------- AI-first conversation ----------------
 
 test("A-04/A-06/A-07 demo thread: nested AI replies arrive live without reload; replay is ordered and duplicate-free", async ({ browser }) => {
+  // Palasora Phase 1: the editorial demo conversation (conversation.py evidence thread) is news, retired and hidden from public
+  // pages (doc 06 section 17, stage 2). Live nested agent replies on agent posts stay covered by v14.spec.ts (UI-04/W17).
+  test.skip(true, "news retired (NEWS_RETIRED=true): editorial demo conversations are hidden; removed with the news code in stage 4");
   test.setTimeout(240_000);
   const ed = await (await browser.newContext()).newPage();
   await signIn(ed, "editor@palavva.local", BASE, "/admin/conversations");
@@ -64,14 +67,14 @@ test("A-04/A-06/A-07 demo thread: nested AI replies arrive live without reload; 
   for (const id of liveIds) expect(ssrIds.filter((x) => x === id)).toHaveLength(1);
 });
 
-test("A-06 (v1.4) an open thread is live for observers; the human reply path is closed (agent live replies: v14.spec.ts)", async ({ browser }) => {
+test("A-06 (Palasora) an open thread is live for everyone; a signed-in person gets the reply box", async ({ browser }) => {
   const watcher = await (await browser.newContext()).newPage();
-  await watcher.goto("/discussion/demo-data-bundle-expiry-explainer");
+  await watcher.goto("/posts/e2e-original-ke-3"); // an agent original (news threads are retired in Phase 1)
   await expect(watcher.locator('[data-live-status="live"]')).toBeVisible({ timeout: 20_000 });
-  await expect(watcher.getByTestId("observer-notice")).toBeVisible();
+  await expect(watcher.getByTestId("observer-notice")).toHaveCount(0);
   const writer = await (await browser.newContext()).newPage();
-  await signIn(writer, "reader@palavva.local", BASE, "/discussion/demo-data-bundle-expiry-explainer");
-  await expect(writer.getByLabel("Join the discussion")).toHaveCount(0);
+  await signIn(writer, "reader@palavva.local", BASE, "/posts/e2e-original-ke-3");
+  await expect(writer.getByTestId("human-reply-box").getByLabel("Join the discussion")).toBeVisible();
 });
 
 test("A-09 AI posts never count as human demand: trend audit shows AI posts excluded", async ({ page }) => {
@@ -92,10 +95,12 @@ test("A-02/A-10 held or rejected candidates emit no public event and are visible
   const held = await page.request.get("/api/v1/events/replay");
   expect(held.ok()).toBeTruthy();
   // No event in the public log points at an unpublished piece.
-  for (const e of r.data as { type: string; payload: { slug?: string } }[]) {
+  const NEWS = ["source_link", "short", "discussion", "story", "spotlight"]; // Palasora Phase 1: retired news pages answer 404
+  for (const e of r.data as { type: string; payload: { slug?: string; kind?: string; label?: string } }[]) {
     if (e.type !== "topic_published" || !e.payload.slug) continue;
     const res = await page.request.get(`/discussion/${e.payload.slug}`);
-    expect([200, 410]).toContain(res.status());
+    const news = NEWS.includes(e.payload.kind ?? "discussion") || e.payload.label === "sourced_news";
+    expect(news ? [404] : [200, 410]).toContain(res.status());
   }
 });
 
@@ -179,7 +184,7 @@ test("L-08/L-09/L-17 French reading: honest pending → machine label with origi
   await ctx.addCookies([prefsCookie({ ui: "en", reading: "fr" })]);
   const p = await ctx.newPage();
   await p.goto("/feed/new");
-  const href = await p.locator('a[href^="/discussion/"]').first().getAttribute("href");
+  const href = await p.locator('a[href^="/posts/"]').first().getAttribute("href"); // Palasora Phase 1: news discussions retired
   await p.goto(href!);
   const bar = p.getByTestId("translation-bar");
   await expect(bar).toBeVisible();
@@ -337,6 +342,7 @@ test("L-22 performance: first story and map render fast on a throttled mobile pr
 });
 
 test("L-25 demo content is labelled as fictional and kept out of trend popularity", async ({ page }) => {
+  test.skip(true, "news retired (NEWS_RETIRED=true): every demo item is an editorial news discussion or story, hidden in Palasora Phase 1");
   await page.goto("/discussion/demo-rainy-season-delivery-routes");
   await expect(page.getByText("Demo content").first()).toBeVisible();
   await page.goto("/");
@@ -363,6 +369,7 @@ test("S-v13 screenshots: home rail, Local Pulse, Explore Africa, My Africa at 32
 
 // Runs last in this file: it revokes the fixture source, which withdraws its derived topic.
 test("A-05 rights revocation propagates: topic withdrawn, public correction, thread_paused event", async ({ page }) => {
+  test.skip(true, "news retired (NEWS_RETIRED=true): publisher sources and their derived topics are hidden; rights revocation is removed with the news code in stage 4");
   await page.goto("/feed/new");
   const card = page.getByTestId("story-card").filter({ hasText: "Fixture Wire (synthetic)" }).first();
   await expect(card).toBeVisible();
