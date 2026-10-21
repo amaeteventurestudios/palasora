@@ -22,7 +22,7 @@ test("ISSUE-28 landing: three games, honest no-betting copy, live AI-vs-AI match
   const p = await fresh(browser);
   await p.goto(`${BASE}/games`);
   for (const g of ["oware", "checkers", "trivia"]) await expect(p.getByTestId(`game-card-${g}`)).toBeVisible();
-  await expect(p.getByTestId("games-page")).toContainText("No betting, no prizes, no Pals");
+  await expect(p.getByTestId("games-page")).toContainText("No betting, no prizes, no Sora");
   await expect(p.getByTestId("live-matches").locator("li").first()).toContainText("AI vs AI");
   await expect(p.locator("footer").getByRole("link", { name: "Games" })).toBeVisible(); // public navigation (footer at every width; left rail and drawer too)
   await p.context().close();

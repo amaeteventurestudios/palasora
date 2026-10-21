@@ -3,7 +3,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { BASE, noConsentBanner, pbAdmin, signIn } from "./helpers";
+import { BASE, noConsentBanner, pbAdmin, personAgent, signIn } from "./helpers";
 
 const envText = readFileSync(path.resolve(__dirname, "../../../../.env.test"), "utf8");
 const TOKEN = /^EDITORIAL_SERVICE_TOKEN=(.*)$/m.exec(envText)![1].trim();
@@ -129,40 +129,57 @@ for (const w of [320, 375, 390, 428, 768]) {
   });
 }
 
-test("V15-06 Exchange: earned eligibility → listing → matched trade → portfolio → reconciliation", async ({ page }) => {
+test("V15-06 Exchange: a new company starts private; a founding company's IPO is bought by a person's agent → portfolio → reconciliation", async ({ page }) => {
   const pb = await pbAdmin();
   const agents = await pb.list("agents", "is_seed=true && hosting='palavva'");
-  const founders = new Set(((await econ("/companies?market=ALL")).json as { founder_agent_id: string }[]).map((c) => c.founder_agent_id));
-  const free = agents.filter((a) => !founders.has(a.id)); // one company per founder: pick agents that have not founded one
-  const [founder, buyer] = [free[0], free[1]];
-  for (const a of [founder, buyer]) {
-    if (a.status !== "active") await pb.update("agents", a.id, { status: "active" });
-    await econ("/rewards", { agent_id: a.id, rule: "first_contribution", ref_type: "mission", ref_id: `welcome-${run}`, owner_key: `seed:${a.id}` });
-    await econ(`/agents/${a.id}/limits`, { enabled: true, max_order_pals: 500, daily_pals: 2000, daily_orders: 20, markets: [], updated_by: "e2e" });
-  }
+  const founders = new Set(((await econ("/companies?market=ALL&include_private=true")).json as { founder_agent_id: string }[]).map((c) => c.founder_agent_id));
+  const founder = agents.filter((a) => !founders.has(a.id))[0]; // one company per founder: pick an agent that has not founded one
+  if (founder.status !== "active") await pb.update("agents", founder.id, { status: "active" });
+  await econ("/rewards", { agent_id: founder.id, rule: "first_contribution", ref_type: "mission", ref_id: `welcome-${run}`, owner_key: `seed:${founder.id}` });
+  // Phase 2 (Doc 04 section 8): a new company gets 1,000 founder shares and stays private until 30 days of revenue.
   const ticker = "E" + Array.from({ length: 4 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ"[Math.floor(Math.random() * 24)]).join(""); // unique per run
   const co = await econ("/companies", { founder_agent_id: founder.id, owner_key: `seed:${founder.id}`, name: `Test Harvest Co-op ${ticker}`, ticker, market: "GH", sector: "agriculture",
     description: "A fictional agricultural co-op created by the end-to-end test.", ipo_price: 1.0, fictional_ack: true });
   expect(co.status, JSON.stringify(co.json)).toBe(200);
-  const order = await econ("/orders", { agent_id: buyer.id, owner_key: `seed:${buyer.id}`, company_id: co.json.id, side: "buy", price: 1.0, qty: 12, idem_key: `e2e-${run}-buy` });
-  expect(order.json.trades).toHaveLength(1);
+  expect(co.json.status).toBe("private");
+  expect(co.json.shares_outstanding).toBe(1000);
+  const { agent: buyer, ownerKey } = await personAgent(run);
+  await econ("/rewards", { agent_id: buyer.id, rule: "first_contribution", ref_type: "mission", ref_id: `welcome-${run}`, owner_key: ownerKey });
+  await econ(`/agents/${buyer.id}/limits`, { enabled: true, max_order_sora: 500, daily_sora: 2000, daily_orders: 20, markets: [], updated_by: "e2e" });
+  const refused = await econ("/orders", { agent_id: buyer.id, owner_key: ownerKey, company_id: co.json.id, side: "buy", price: 1.0, qty: 1, idem_key: `e2e-${run}-private` });
+  expect(refused.status).toBe(409);
+  expect(JSON.stringify(refused.json)).toContain("NOT_LISTED");
+  // The founding company (seeded by the E2E fixtures, listed with 10,000 shares) offers its treasury at 1.00 Sora.
+  const vhco = ((await econ("/companies?market=GH")).json as { id: string; ticker: string; founder_agent_id: string }[]).find((c) => c.ticker === "VHCO")!;
+  expect(vhco, "founding fixture company VHCO").toBeTruthy();
+  // A house agent cannot buy from a house agent's company: both map to the one platform owner.
+  const house = agents.find((a) => a.id !== vhco.founder_agent_id)!;
+  await econ("/rewards", { agent_id: house.id, rule: "first_contribution", ref_type: "mission", ref_id: `welcome-${run}`, owner_key: `seed:${house.id}` });
+  await econ(`/agents/${house.id}/limits`, { enabled: true, max_order_sora: 500, daily_sora: 2000, daily_orders: 20, markets: [], updated_by: "e2e" });
+  const self = await econ("/orders", { agent_id: house.id, owner_key: `seed:${house.id}`, company_id: vhco.id, side: "buy", price: 1.0, qty: 1, idem_key: `e2e-${run}-house` });
+  expect(self.json.trades ?? []).toHaveLength(0);
+  if (self.json.order?.id) await econ(`/orders/${self.json.order.id}/cancel?agent_id=${house.id}`, {});
+  const order = await econ("/orders", { agent_id: buyer.id, owner_key: ownerKey, company_id: vhco.id, side: "buy", price: 1.0, qty: 12, idem_key: `e2e-${run}-buy` });
+  expect(order.json.trades, JSON.stringify(order.json)).toHaveLength(1);
   const rec = await econ("/reconcile", {});
   expect(rec.json.ok).toBe(true);
   await noConsentBanner(page);
   await page.goto("/exchange?market=GH");
-  await expect(page.getByText("Simulated, Pals-only")).toBeVisible();
-  await expect(page.getByTestId("listings").getByRole("link", { name: ticker, exact: true })).toBeVisible();
-  await page.goto(`/exchange/${ticker}`);
+  await expect(page.getByText("Simulated, Sora-only")).toBeVisible();
+  await expect(page.getByTestId("listing-rule")).toContainText("30 days");
+  await expect(page.getByTestId("listings").getByRole("link", { name: "VHCO", exact: true })).toBeVisible();
+  await expect(page.getByTestId("listings").getByRole("link", { name: ticker, exact: true })).toHaveCount(0);
+  await page.goto(`/exchange/VHCO`);
   await expect(page.getByTestId("company-page")).toContainText("Simulated company and shares");
   await expect(page.getByTestId("order-book")).toBeVisible();
   await page.goto(`/agents/${buyer.handle}?tab=portfolio`);
-  await expect(page.getByTestId("agent-portfolio")).toContainText(ticker);
+  await expect(page.getByTestId("agent-portfolio")).toContainText("VHCO");
   await expect(page.getByTestId("agent-portfolio")).toContainText(/bought|buy|holding|12/i);
 });
 
 test("V15-07 Command Center: all 12 workspaces render a chart or map and a scope narrative", async ({ page }) => {
   await signIn(page, "admin@palavva.local", BASE, "/admin");
-  for (const p of ["/admin", "/admin/audience", "/admin/geography", "/admin/agent-city", "/admin/social", "/admin/sources", "/admin/pals", "/admin/exchange", "/admin/revenue", "/admin/models", "/admin/ops", "/admin/reports"]) {
+  for (const p of ["/admin", "/admin/audience", "/admin/geography", "/admin/agent-city", "/admin/social", "/admin/sources", "/admin/sora", "/admin/exchange", "/admin/revenue", "/admin/models", "/admin/ops", "/admin/reports"]) {
     await page.goto(`${p}?range=7d`);
     await expect(page.getByTestId("admin-page"), p).toBeVisible();
     await expect(page.getByTestId("narrative"), p).not.toBeEmpty();

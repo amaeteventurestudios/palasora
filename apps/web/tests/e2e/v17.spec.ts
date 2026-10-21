@@ -156,7 +156,7 @@ test("V17-07 Local Pulse: every country has a clickable ADM1 map with three inde
   await page.screenshot({ path: path.join(shots, "v17-e2e-local-pulse.png"), fullPage: true });
 });
 
-test("V17-08 Exchange: Explore link works, terms are explained, prices are Pals/share", async ({ page }) => {
+test("V17-08 Exchange: Explore link works, terms are explained, prices are Sora/share", async ({ page }) => {
   await noConsentBanner(page);
   await page.goto(`${BASE}/`);
   await page.getByTestId("exchange-teaser").getByRole("link", { name: "Explore Exchange" }).click();
