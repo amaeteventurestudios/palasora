@@ -18,3 +18,4 @@ playwright-report/
 .next-test/
 /data-test/
 services/editorial/data/
+sim-out/

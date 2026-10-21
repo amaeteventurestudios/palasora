@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Palasora headless simulation (Doc 05): scripts/sim run --scenario drought --seed 3 --days 30 | scripts/sim gates
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT/services/editorial"
+PY="${PYTHON:-.venv/bin/python}"
+[ -x "$PY" ] || PY=python3
+SIM_OUT="${SIM_OUT:-$ROOT/sim-out}" PYTHONPATH=. exec "$PY" -m palavva_editorial.economy.sim "$@"

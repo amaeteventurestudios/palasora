@@ -10,6 +10,7 @@ Regenerate: `cd apps/web && pnpm licenses list --prod --json` and the Python sni
 | Node.js (host) | 24.14.1 | MIT | Homebrew; container base node:22.20.0-alpine3.22 |
 | Python (host) | 3.11.15 | PSF-2.0 | Homebrew; container base python:3.11.15-slim-bookworm |
 | SQLite (Python) | 3.53.4 | Public domain | bundled |
+| uPlot | 1.6.31 | MIT | npm `uplot@1.6.31` tarball, `dist/uPlot.iife.min.js` and `uPlot.min.css` vendored for the simulation run reports |
 | Ollama + qwen3.5:4b | remote (Simeon's iMac) | Ollama MIT; Qwen model license per Alibaba (not redistributed; no weights on this Mac) | not installed here |
 | Inter, Source Serif 4 fonts | via next/font (self-hosted at build) | SIL OFL 1.1 | Google Fonts |
 | Lucide icons | lucide-react 1.47.0 | ISC | npm |

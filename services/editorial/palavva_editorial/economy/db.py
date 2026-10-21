@@ -10,12 +10,13 @@ history only. A ledger that held Pals is converted once by `migration.py` (1 Pal
 """
 from __future__ import annotations
 
+import contextvars
 import sqlite3
 import time
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 CENTS = 100  # centi-Sora per Sora (and, historically, centi-Pals per Pal)
 PALS = "PALS"  # legacy unit: history only after the migration
 SORA = "SORA"  # the coin
@@ -40,7 +41,10 @@ ACCOUNTS_DDL = f"""CREATE TABLE IF NOT EXISTS {{t}} (
   CHECK (available >= 0 OR {_MINT_CHECK})
 )"""
 JOURNAL_KINDS = ("issue", "reverse", "reserve", "release", "trade_cash", "trade_shares", "refund", "ipo_shares", "fee", "treasury",
-                 "convert", "burn", "revenue")
+                 "convert", "burn", "revenue",
+                 # Phase 3 (the town economy): wages, payments into a mint (destroyed: imports, upkeep, building, decor), plain
+                 # transfers between one owner's accounts or for an approved business sale, and Market Hall goods settlements.
+                 "wage", "sink", "transfer", "goods_cash")
 JOURNAL_DDL = f"""CREATE TABLE IF NOT EXISTS {{t}} (
   id INTEGER PRIMARY KEY,
   txn_id TEXT NOT NULL,
@@ -73,6 +77,111 @@ CREATE INDEX IF NOT EXISTS idx_journal_to ON journal (to_account, created_at);
 CREATE INDEX IF NOT EXISTS idx_journal_txn ON journal (txn_id);
 CREATE INDEX IF NOT EXISTS idx_journal_rule ON journal (rule);
 CREATE INDEX IF NOT EXISTS idx_companies_market ON companies (market, status);
+"""
+
+# --------------------------------------------------------------------------- Phase 3: the town economy (Doc 05 section 3)
+# Goods are whole units. Every change to `stock` has a `goods_log` row (made, eaten, worn, imported, exported, moved), so
+# stock = made + imported - eaten - worn - exported for every good, holder and tick (Doc 04 section 5, invariant 2).
+# Holders are 'kind:id' keys matching ledger accounts (company:b001, agent:h001, human:p001) plus platform:transit.
+TOWN_SCHEMA = """
+CREATE TABLE IF NOT EXISTS issuance_carry (week_start REAL PRIMARY KEY, carry INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS starter_grants (
+  person TEXT PRIMARY KEY, agent TEXT NOT NULL, amount INTEGER NOT NULL CHECK (amount > 0), queued_tick INTEGER NOT NULL, due_tick INTEGER NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('queued','paid')), paid_tick INTEGER
+);
+CREATE TABLE IF NOT EXISTS town_state (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS stock (
+  holder TEXT NOT NULL, good TEXT NOT NULL CHECK (good IN ('crops','meals','tools','materials')),
+  qty INTEGER NOT NULL DEFAULT 0 CHECK (qty >= 0), reserved INTEGER NOT NULL DEFAULT 0 CHECK (reserved >= 0 AND reserved <= qty),
+  PRIMARY KEY (holder, good)
+);
+CREATE TABLE IF NOT EXISTS goods_log (
+  id INTEGER PRIMARY KEY, tick INTEGER NOT NULL, holder TEXT NOT NULL, good TEXT NOT NULL, change INTEGER NOT NULL CHECK (change != 0),
+  cause TEXT NOT NULL CHECK (cause IN ('made','eaten','worn','imported','exported','moved')), ref_type TEXT NOT NULL DEFAULT '', ref_id TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_goods_log_tick ON goods_log (tick);
+CREATE TABLE IF NOT EXISTS plots (
+  id TEXT PRIMARY KEY, area TEXT NOT NULL, x REAL NOT NULL, y REAL NOT NULL, size INTEGER NOT NULL DEFAULT 1, prime INTEGER NOT NULL DEFAULT 0,
+  use TEXT NOT NULL CHECK (use IN ('home','business','civic')), owner TEXT NOT NULL DEFAULT '', building TEXT NOT NULL DEFAULT '', level INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS town_agents (
+  id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('house','player')), role TEXT NOT NULL, owner_kind TEXT NOT NULL, owner_key TEXT NOT NULL,
+  personality TEXT NOT NULL DEFAULT '{}', limits TEXT NOT NULL DEFAULT '{}', mode TEXT NOT NULL DEFAULT 'rules',
+  ai_budget_left INTEGER NOT NULL DEFAULT 0, arrived_tick INTEGER NOT NULL DEFAULT 0, home TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'active'
+);
+CREATE TABLE IF NOT EXISTS businesses (
+  id TEXT PRIMARY KEY, type TEXT NOT NULL CHECK (type IN ('farm','workshop','stall','delivery')), plot TEXT NOT NULL, owner TEXT NOT NULL,
+  price INTEGER NOT NULL, wage INTEGER NOT NULL, level INTEGER NOT NULL DEFAULT 1, health TEXT NOT NULL DEFAULT 'green',
+  status TEXT NOT NULL CHECK (status IN ('open','closed')), cost INTEGER NOT NULL, shares_issued INTEGER NOT NULL DEFAULT 1000,
+  rating REAL NOT NULL DEFAULT 1.0, opened_tick INTEGER NOT NULL, closed_tick INTEGER, beside_curve INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS jobs (
+  id INTEGER PRIMARY KEY, employer TEXT NOT NULL, worker TEXT NOT NULL, wage INTEGER NOT NULL, start_tick INTEGER NOT NULL, end_tick INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_jobs_worker ON jobs (worker, end_tick);
+CREATE TABLE IF NOT EXISTS goods_orders (
+  id INTEGER PRIMARY KEY, idem_key TEXT NOT NULL UNIQUE, holder TEXT NOT NULL, owner_key TEXT NOT NULL, good TEXT NOT NULL,
+  side TEXT NOT NULL CHECK (side IN ('buy','sell')), price INTEGER NOT NULL CHECK (price > 0), qty INTEGER NOT NULL CHECK (qty > 0),
+  filled INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL CHECK (status IN ('open','partial','filled','cancelled')),
+  reserved_left INTEGER NOT NULL DEFAULT 0 CHECK (reserved_left >= 0), tick INTEGER NOT NULL, expires_tick INTEGER NOT NULL, reason TEXT NOT NULL DEFAULT '',
+  CHECK (filled <= qty)
+);
+CREATE INDEX IF NOT EXISTS idx_goods_orders_book ON goods_orders (good, side, status, price, id);
+CREATE TABLE IF NOT EXISTS goods_trades (
+  id INTEGER PRIMARY KEY, good TEXT NOT NULL, buy_order INTEGER NOT NULL, sell_order INTEGER NOT NULL, buyer TEXT NOT NULL, seller TEXT NOT NULL,
+  price INTEGER NOT NULL, qty INTEGER NOT NULL, tick INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS contracts (
+  id TEXT PRIMARY KEY, seller TEXT NOT NULL, buyer TEXT NOT NULL, good TEXT NOT NULL, qty_per_day INTEGER NOT NULL, price INTEGER NOT NULL,
+  start_day INTEGER NOT NULL, end_day INTEGER NOT NULL, terms TEXT NOT NULL DEFAULT '{}', due INTEGER NOT NULL DEFAULT 0, delivered INTEGER NOT NULL DEFAULT 0,
+  breaches INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL CHECK (status IN ('active','ended','breached')), related_party INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS deliveries (
+  id INTEGER PRIMARY KEY, src TEXT NOT NULL, dst TEXT NOT NULL, good TEXT NOT NULL, qty INTEGER NOT NULL, cart TEXT NOT NULL, fee INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL CHECK (status IN ('moving','arrived')), created_tick INTEGER NOT NULL, due_tick INTEGER NOT NULL, ref_type TEXT NOT NULL DEFAULT '', ref_id TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_deliveries_due ON deliveries (status, due_tick);
+CREATE TABLE IF NOT EXISTS agent_decisions (
+  id INTEGER PRIMARY KEY, agent TEXT NOT NULL, tick INTEGER NOT NULL, mode TEXT NOT NULL CHECK (mode IN ('rules','recorded','live','fixture','mischief')),
+  trigger TEXT NOT NULL DEFAULT 'plan', prompt_hash TEXT NOT NULL DEFAULT '', actions TEXT NOT NULL DEFAULT '[]', reason TEXT NOT NULL DEFAULT '',
+  tokens_in INTEGER NOT NULL DEFAULT 0, tokens_out INTEGER NOT NULL DEFAULT 0, cost_usd REAL NOT NULL DEFAULT 0, fallback INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS actions (
+  id INTEGER PRIMARY KEY, tick INTEGER NOT NULL, actor TEXT NOT NULL, via TEXT NOT NULL DEFAULT 'agent', type TEXT NOT NULL, inputs TEXT NOT NULL DEFAULT '{}',
+  result TEXT NOT NULL CHECK (result IN ('done','refused')), refusal TEXT NOT NULL DEFAULT '', detail TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_actions_actor ON actions (actor, tick);
+CREATE TABLE IF NOT EXISTS world_events (
+  id TEXT PRIMARY KEY, seq INTEGER NOT NULL UNIQUE, tick INTEGER NOT NULL, kind TEXT NOT NULL, who TEXT NOT NULL DEFAULT '[]',
+  visibility TEXT NOT NULL CHECK (visibility IN ('public','town','owner','staff')), refs TEXT NOT NULL DEFAULT '{}', text TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_world_events_tick ON world_events (tick);
+CREATE TABLE IF NOT EXISTS outbox (
+  event_id TEXT NOT NULL REFERENCES world_events(id), destination TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, next_try REAL NOT NULL DEFAULT 0,
+  delivered_at REAL, status TEXT NOT NULL CHECK (status IN ('pending','delivered','held')), last_error TEXT NOT NULL DEFAULT '',
+  PRIMARY KEY (event_id, destination)
+);
+CREATE INDEX IF NOT EXISTS idx_outbox_status ON outbox (status, destination);
+CREATE TABLE IF NOT EXISTS event_receipts (consumer TEXT NOT NULL, event_id TEXT NOT NULL, applied_at REAL NOT NULL, PRIMARY KEY (consumer, event_id));
+CREATE TABLE IF NOT EXISTS violations (
+  id INTEGER PRIMARY KEY, rule TEXT NOT NULL, accused TEXT NOT NULL, detecting_rule TEXT NOT NULL, evidence TEXT NOT NULL DEFAULT '{}',
+  opened_tick INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'candidate' CHECK (status IN ('candidate'))
+);
+CREATE TABLE IF NOT EXISTS messages (
+  id INTEGER PRIMARY KEY, agent TEXT NOT NULL, tick INTEGER NOT NULL, channel TEXT NOT NULL DEFAULT 'morning', text TEXT NOT NULL,
+  stories TEXT NOT NULL DEFAULT '[]', quiet INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'written'
+);
+CREATE TABLE IF NOT EXISTS votes (week TEXT PRIMARY KEY, options TEXT NOT NULL, asked_by TEXT NOT NULL DEFAULT '[]', ballots TEXT NOT NULL DEFAULT '{}', winner TEXT NOT NULL DEFAULT '');
+CREATE TABLE IF NOT EXISTS town_metrics (day INTEGER NOT NULL, key TEXT NOT NULL, value REAL NOT NULL, PRIMARY KEY (day, key));
+CREATE TABLE IF NOT EXISTS growth_weeks (
+  week TEXT PRIMARY KEY, measured REAL NOT NULL, band TEXT NOT NULL CHECK (band IN ('below','in','above')), multiplier REAL NOT NULL, next_multiplier REAL NOT NULL
+);
+-- Doc 05 `mint`: every coin a mint created or destroyed, read straight from the journal (one truth, no second copy).
+CREATE VIEW IF NOT EXISTS mint AS
+  SELECT j.id, j.created_at, CASE WHEN fa.owner_id IN ('town_hall','harbour') AND fa.owner_kind='platform' THEN fa.owner_id ELSE ta.owner_id END AS account,
+         CASE WHEN fa.owner_kind='platform' AND fa.owner_id IN ('town_hall','harbour') THEN j.amount ELSE -j.amount END AS amount, j.rule
+  FROM journal j JOIN accounts fa ON fa.id=j.from_account JOIN accounts ta ON ta.id=j.to_account
+  WHERE j.asset='SORA' AND ((fa.owner_kind='platform' AND fa.owner_id IN ('town_hall','harbour')) <> (ta.owner_kind='platform' AND ta.owner_id IN ('town_hall','harbour','burn')));
 """
 
 SCHEMA = f"""
@@ -161,7 +270,8 @@ CREATE TABLE IF NOT EXISTS migrations (
   fingerprint_before TEXT NOT NULL DEFAULT '', fingerprint_after TEXT NOT NULL DEFAULT '', report TEXT NOT NULL DEFAULT '{{}}'
 );
 {INDEXES}
-"""
+""" + TOWN_SCHEMA
+
 
 
 def connect(path: str | Path) -> sqlite3.Connection:
@@ -179,11 +289,11 @@ def _needs_upgrade(con: sqlite3.Connection) -> bool:
     acc = con.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='accounts'").fetchone()
     jr = con.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='journal'").fetchone()
     co = con.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='companies'").fetchone()
-    return bool((acc and "'human'" not in acc["sql"]) or (jr and "'convert'" not in jr["sql"]) or (co and "founding" not in co["sql"]))
+    return bool((acc and "'human'" not in acc["sql"]) or (jr and "'goods_cash'" not in jr["sql"]) or (co and "founding" not in co["sql"]))
 
 
 def upgrade(con: sqlite3.Connection) -> bool:
-    """Schema v1 -> v2, in place and atomic: rebuild accounts, journal and companies with the widened CHECKs (owner kind
+    """Schema v1/v2 -> v3, in place and atomic (v3 only widens the journal kinds for the Phase 3 town economy): rebuild accounts, journal and companies with the widened CHECKs (owner kind
     'human', mint-only negatives, the new journal kinds, private companies and the `founding` flag). Every row and id is
     copied unchanged; nothing about a balance changes. Returns True when it upgraded."""
     if not _needs_upgrade(con):
@@ -255,9 +365,23 @@ def tx(con: sqlite3.Connection):
         con.execute("COMMIT")
 
 
+_clock: contextvars.ContextVar = contextvars.ContextVar("economy_clock", default=None)
+
+
+@contextmanager
+def clock(fn):
+    """Run with a seeded clock (Doc 05 section 4: no real clock in the simulation). `fn()` returns the simulated time."""
+    tok = _clock.set(fn)
+    try:
+        yield
+    finally:
+        _clock.reset(tok)
+
+
 def now() -> float:
-    return time.time()
+    f = _clock.get()
+    return f() if f is not None else time.time()
 
 
 def day(ts: float | None = None) -> str:
-    return time.strftime("%Y-%m-%d", time.gmtime(ts if ts is not None else time.time()))
+    return time.strftime("%Y-%m-%d", time.gmtime(ts if ts is not None else now()))
