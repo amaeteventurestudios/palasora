@@ -39,6 +39,7 @@ if [ ! -f "$ENVF" ]; then
   sed -e "s|^PALAVVA_DATA_DIR=.*|PALAVVA_DATA_DIR=./data-test|" -e "s|^PALAVVA_ENV=.*|PALAVVA_ENV=test|" \
       -e "s|^PB_URL=.*|PB_URL=http://127.0.0.1:8390|" -e "s|^EDITORIAL_URL=.*|EDITORIAL_URL=http://127.0.0.1:8400|" \
       -e "s|^WEB_ORIGIN=.*|WEB_ORIGIN=http://127.0.0.1:3300|" -e "s|^MODEL_PROVIDER=.*|MODEL_PROVIDER=fixture|" \
+      -e "s|^TRUSTED_GEO_HEADER=.*|TRUSTED_GEO_HEADER=x-test-country|" \
       -e "s|^TENANT_HOSTS=.*|TENANT_HOSTS='{\"127.0.0.1:3300\":\"palavva\",\"localhost:3300\":\"palavva\",\"sample.localhost:3300\":\"sample-community\"}'|" \
       "$ROOT/.env.local" > "$ENVF"
   chmod 600 "$ENVF"

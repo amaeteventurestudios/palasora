@@ -175,6 +175,6 @@ All are in `docs/evidence/phase-1/`, 59 to 243 KB each. They are produced by `ph
 ## Known gaps and follow-ups
 - **Stale stored SubPal `post_count`.** The values stay stale until the next recount, so a SubPal card can show "0 posts" while it has posts. Live counts elsewhere are correct.
 - **Capped hidden-id lookup.** The `hiddenPieceIds` lookup in stats reads at most 500 ids per page.
-- **Pre-existing geo-header mismatch.** It causes 4 of the 6 Playwright failures, needs a `.env.test` or spec fix, and was not changed here.
+- **Geo-header mismatch: fixed after the full run.** `scripts/test-stack.sh` now writes `TRUSTED_GEO_HEADER=x-test-country` into a generated `.env.test` (test stack only). A re-run of `tests/e2e/v13.spec.ts` on the rebuilt stack gave 18 passed and 3 skipped (the news-only skips), so L-01, L-02, L-05/L-24 and L-15/L-16 now pass. The remaining full-run failures are v18 ISSUE-24 and ISSUE-28 (sign-up timeouts in this environment, also red on the baseline).
 - **Rename deferred.** "Palavva" is renamed to "Palasora" only in copy touched for this work. The brand, header and footer still say Palavva.
 - **News stages 3 and 4 not started:** removing the news code, the collections and the demo data.
