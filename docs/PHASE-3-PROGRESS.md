@@ -1,6 +1,6 @@
 # Phase 3 progress: the economy engine and the headless simulation
 
-Branch `phase-3-economy-engine`. Spec: Doc 05 v0.6 (gates A to D), Doc 04 v0.7, Doc 06 sections 7.4, 13, 16.2 and 19.
+Branch `phase-3-economy-engine`. Spec: Doc 05 v0.7 (gates A to D), Doc 04 v0.7, Doc 06 sections 7.4, 13, 16.2 and 19.
 
 ## Done
 
@@ -38,26 +38,16 @@ working capital 1.5 days, genesis mix 5 stalls / 3 farms / 1 workshop / 2 carts.
 6. One tuning round (TUNING in `town/params.py`):
    - 2 days between newcomers in a trade (was 5).
    - A trade has room while its payback is at or under the lane's middle (no shortage needed).
-   - A player's first stall waits up to 3 days for room.
+   - A player's first stall waits 1 day for room (3 pushed the median first business past 10 days).
    - Stall stock buffer kept at 1.2x + 3: 1.4x + 5 and 1.1x + 2 were both worse.
    - Players who start with a scenario endowment (Sitter's runner) are left off the worker path for first business.
+7. Profitable-share band widened to 50 to 90% (Doc 05 v0.7).
 
-## Gates (final code: 10 scenarios x 10 seeds x 30 days, plus a 180-day Baseline; `docs/evidence/phase-3/`)
+## Gates (final)
 
-- **A, fail.**
-  - Pass: conservation, determinism, every cheat refused, growth band (80/80; +19.8 to +20.0% in every 30-day window
-    over 180 days), thermostat, meal price, no windfall, closure and recovery, first job.
-  - Payback lanes: 19/80 fail (was 27). Stall on-curve median 5.8 days, 51 of 58 runs in lane.
-  - Out of stock: 12/80 fail (was 14): 6 Sitter, 2 Cheater, 2 Job squeeze, 1 Drought, 1 Rush.
-  - First business: 11/80 fail (was 5). The 3-day wait pushes the median to 10.5 to 12 days: 7 Job squeeze,
-    2 Cheater, 2 Quiet spell.
-  - Playing beats sitting: 10/80 fail, all Job squeeze (median business still -1% of its cost a day).
-  - Profitable share: 80/80 fail. From day 7, the median run has 82% of its weeks above 80% profitable (was 71%).
-    More entry did not hold more businesses at the margin.
-- **B, fail.** AI-planned 64.39 Sora a day against rules 36.30; recovery equal; closures 64.8% against 55.3% (fail);
-  no stuck agents; recordings cover every prompt. Fixture planner only: Gate B with a real model is blocked (no key).
-- **C, pass.** Every story links records; at least 57% of mornings carry a real event; no padded quiet mornings.
-- **D, blocked.** Estimate $0.009 a player a month; no live sample (no key).
+See `docs/PHASE-3-REPORT.md` for the final table and the follow-ups. A fails (profitable share 79/80, payback 26/80,
+out of stock 23/80, sitting 9/80, first business 1/80); B fails on closure rate (68.3% against 59.0%); C passes;
+D is blocked (no key).
 
 ## Tests (final code)
 
@@ -67,4 +57,4 @@ owner decisions, no web code changed since): 150 passed, 2 failed (v18 ISSUE-24 
 
 ## Next
 
-Owner decisions listed in the PR.
+Owner merges PR #5. Follow-ups are listed in `docs/PHASE-3-REPORT.md`.

@@ -1,11 +1,11 @@
 ---
 title: "Palasora · Headless Simulation & Validation Plan"
-subtitle: "Document 05 · Working draft v0.6 · 21 Oct 2026 · Amaete Umanah"
+subtitle: "Document 05 · Working draft v0.7 · 21 Oct 2026 · Amaete Umanah"
 ---
 
 **The answer in one line:** we write the economy once, as plain Python functions with no graphics, inside the existing economy service, run it for thousands of simulated days on a laptop, and only approve it when it passes every gate below. The live service then runs the same functions.
 
-This document turns Documents 02 and 04 into a test we can run. It is the last planning document before code. Numbers come from Document 04 v0.6 and are starting values to tune. Its section 4A balance rules (one payback curve, one money growth target, playing beats sitting) are tested here.
+This document turns Documents 02 and 04 into a test we can run. It is the last planning document before code. Numbers come from Document 04 v0.7 and are starting values to tune. Its section 4A balance rules (one payback curve, one money growth target, playing beats sitting) are tested here.
 
 # 1. What the tests must prove
 
@@ -164,7 +164,7 @@ Each scenario runs for 30 days on 10 seeds: 100 runs, 3,000 simulated days. A lo
 - Playing beats sitting: in the Sitter scenario, and across all runs, holding money or rent earns less per day than the median business with the same money.
 - Price shock: no building, rent or income already owned rises in value by more than the shock itself.
 - Meal price within ±25% of its 7-day average after week 1.
-- 50 to 80% of businesses profitable in any 7-day window from day 7 on (the town's first week is left out); at least one closure and recovery per 30-day run.
+- 50 to 90% of businesses profitable in any 7-day window from day 7 on (the town's first week is left out); at least one closure and recovery per 30-day run.
 - First business in 5 to 10 days on the worker path; first job within 1 game day.
 - Out of stock under 5% of business-hours.
 
@@ -277,4 +277,11 @@ Applied from the approved amendments, following Document 06 v0.2:
 
 - **Gate A, profitable share:** the town's first week is left out; the check covers 7-day windows that start on day 7 or later. In the first week every genesis business opens stocked, with no rivals yet, so every run was 100% profitable there by construction. That said nothing about the balance of the economy. The 50 to 80% band itself is unchanged.
 - **Scenarios:** each new player's starter grant falls due on a seeded day between 5 and 9 days after arrival, not all on day 5, so a crowd that arrives together (Job squeeze) does not open all its stalls on the same day.
+- **Unchanged:** every other gate threshold, scenario and measure.
+
+# 18. Changes in v0.7
+
+**Why:** owner decision, 21 Oct 2026, after the Phase 3 tuning rounds.
+
+- **Gate A, profitable share:** the band is now 50 to 90% (was 50 to 80%). Losing shops close fast (an owner shuts a business after days of losses or a week far slower than its lane), so the businesses still trading in any week are mostly profitable. Even with more newcomers, most weeks sat above 80%.
 - **Unchanged:** every other gate threshold, scenario and measure.

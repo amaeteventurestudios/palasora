@@ -127,6 +127,6 @@ TUNING: dict = {
     "stall_stock_cover": (1.2, "kept: 1.4 (with 5 extra) made out of stock worse (16 of 24 runs over 5% against 3 of 32) because stalls "
                                "held crops other stalls needed; 1.1 (with 2 extra) was also worse"),
     "stall_stock_extra": (3, "kept with the cover above: 2 and 5 were both worse"),
-    "first_wait_days": (3, "50 players who all opened a stall the day they could afford it left the median business losing money "
-                           "(Job squeeze); waiting up to 3 days for room spreads them out and still keeps the first stall within 5 to 10 days"),
+    "first_wait_days": (1, "50 players who all opened a stall the day they could afford it left the median business losing money "
+                           "(Job squeeze); waiting a day for room spreads them a little. 3 days pushed the median first business past 10 days")
 }

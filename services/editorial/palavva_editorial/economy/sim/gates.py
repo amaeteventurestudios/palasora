@@ -68,10 +68,10 @@ def check_run(s: dict) -> dict:
     out["playing_beats_sitting"] = _sitting(s)
     devs = [abs(d["dev"]) for d in s["meal_price"] if d["day"] >= 7]
     out["meal_price"] = (all(x <= 0.25 for x in devs), f"max {max(devs, default=0):.0%} off its 7-day average")
-    # Doc 05 v0.6: the town's first week is left out (windows starting on day 7 or later): every genesis business opens
+    # Doc 05 v0.7: band 50 to 90% (losing shops close fast, so the survivors mostly profit). Doc 05 v0.6: the town's first week is left out (windows starting on day 7 or later): every genesis business opens
     # stocked and without rivals, so the first week is all profitable by construction
     shares = [w["share"] for w in s["profitable_windows"] if w["from"] >= 7]
-    out["profitable_share"] = (bool(shares) and all(0.5 <= x <= 0.8 for x in shares),
+    out["profitable_share"] = (bool(shares) and all(0.5 <= x <= 0.9 for x in shares),
                                f"{min(shares, default=0):.0%} to {max(shares, default=0):.0%} profitable")
     cl = s["closures"]
     out["closure_recovery"] = (cl["closed"] >= 1 and cl["recovered"] >= 1, f"{cl['closed']} closed, {cl['recovered']} recovered")
