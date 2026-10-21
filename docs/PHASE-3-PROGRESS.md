@@ -1,6 +1,6 @@
 # Phase 3 progress: the economy engine and the headless simulation
 
-Branch `phase-3-economy-engine`. Spec: Doc 05 v0.6 (gates A to D), Doc 04 v0.6, Doc 06 sections 7.4, 13, 16.2 and 19.
+Branch `phase-3-economy-engine`. Spec: Doc 05 v0.6 (gates A to D), Doc 04 v0.7, Doc 06 sections 7.4, 13, 16.2 and 19.
 
 ## Done
 
@@ -28,32 +28,36 @@ working capital 1.5 days, genesis mix 5 stalls / 3 farms / 1 workshop / 2 carts.
 
 ## Owner decisions applied (after the first full gate run)
 
-1. Tight payback lane widened to 4 to 10 days (Doc 04 v0.6, Doc 05 v0.5). No other gate threshold changed.
+1. Tight payback lane widened to 4 to 10 days (Doc 04 v0.7, Doc 05 v0.5). No other gate threshold changed.
 2. Starter grant: 80 Sora, once per person (keyed by the person), paid by the Town Hall 5 days after arrival from the
    weekly issuance budget (counts against it), before the day's civic wages. 80 is the float a first stall needs on
    top of the 200 arrival grant. Paid on arrival or at 100 Sora, it put first businesses at a median of 1 day.
 3. New stalls are placed on the free plot with the most residents nearby for each stall already in its street.
 4. Starter grants are spread: each person's falls due on a seeded day 5 to 9 days after arrival.
 5. Profitable share leaves out the town's first week (windows from day 7; Doc 05 v0.6). The band is unchanged.
+6. One tuning round (TUNING in `town/params.py`):
+   - 2 days between newcomers in a trade (was 5).
+   - A trade has room while its payback is at or under the lane's middle (no shortage needed).
+   - A player's first stall waits up to 3 days for room.
+   - Stall stock buffer kept at 1.2x + 3: 1.4x + 5 and 1.1x + 2 were both worse.
+   - Players who start with a scenario endowment (Sitter's runner) are left off the worker path for first business.
 
 ## Gates (final code: 10 scenarios x 10 seeds x 30 days, plus a 180-day Baseline; `docs/evidence/phase-3/`)
 
 - **A, fail.**
   - Pass: conservation, determinism, every cheat refused, growth band (80/80; +19.8 to +20.0% in every 30-day window
     over 180 days), thermostat, meal price, no windfall, closure and recovery, first job.
-  - Profitable share: 80/80 fail. Even from day 7, the worst week is 24 to 83% profitable, but the median run has 71%
-    of its weeks above 80%: after the first closures the survivors are almost all profitable.
-  - Payback lanes: 27/80 fail. Stall on-curve median is 6.3 days, but only 39 of 54 runs are in 1 to 13.
-  - Out of stock: 14/80 fail (8 Sitter, 2 Drought, 2 Cheater, 1 Quiet spell, 1 Price shock).
-  - Playing beats sitting: 10/80 fail, all Job squeeze. About 69 stalls open, so the median business loses 1% of its
-    cost a day.
-  - First business: 5/80 fail, all Sitter (median 4 days).
-- **B, fail.** AI-planned 65.42 Sora a day against rules 42.47; recovery equal; closures 60.6% against 53.4% (fail);
+  - Payback lanes: 19/80 fail (was 27). Stall on-curve median 5.8 days, 51 of 58 runs in lane.
+  - Out of stock: 12/80 fail (was 14): 6 Sitter, 2 Cheater, 2 Job squeeze, 1 Drought, 1 Rush.
+  - First business: 11/80 fail (was 5). The 3-day wait pushes the median to 10.5 to 12 days: 7 Job squeeze,
+    2 Cheater, 2 Quiet spell.
+  - Playing beats sitting: 10/80 fail, all Job squeeze (median business still -1% of its cost a day).
+  - Profitable share: 80/80 fail. From day 7, the median run has 82% of its weeks above 80% profitable (was 71%).
+    More entry did not hold more businesses at the margin.
+- **B, fail.** AI-planned 64.39 Sora a day against rules 36.30; recovery equal; closures 64.8% against 55.3% (fail);
   no stuck agents; recordings cover every prompt. Fixture planner only: Gate B with a real model is blocked (no key).
-- **C, pass.** Every story links records; at least 59% of mornings carry a real event; no padded quiet mornings.
+- **C, pass.** Every story links records; at least 57% of mornings carry a real event; no padded quiet mornings.
 - **D, blocked.** Estimate $0.009 a player a month; no live sample (no key).
-- Harbour floor at 40/60/80% (12 runs each, before the decisions above): out of stock median 2.2/1.8/1.3%, payback
-  in lane 7/8/8 of 12, growth unchanged. Kept at 60%.
 
 ## Tests (final code)
 

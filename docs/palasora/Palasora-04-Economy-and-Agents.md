@@ -1,6 +1,6 @@
 ---
 title: "Palasora · Economy & AI Agent Simulation Specification"
-subtitle: "Document 04 · Working draft v0.6 · 21 Oct 2026 · Amaete Umanah"
+subtitle: "Document 04 · Working draft v0.7 · 21 Oct 2026 · Amaete Umanah"
 ---
 
 **The answer in one line:** one town, one coin (the Sora), four businesses that need each other, and one set of rules that humans and agents both follow. Every coin and every good has a recorded source, so the headless simulation can prove the economy works before anyone sees it.
@@ -32,7 +32,7 @@ Goods only arrive when delivered. An owner can fetch goods themselves, but slowl
 | Item | Starting value |
 |---|---|
 | New player's grant | 200 Sora |
-| Starter grant (once per person, paid after 5 days in town, from the Town Hall's weekly budget) | 80 Sora |
+| Starter grant (once per person, due 5 to 9 days after arrival, from the Town Hall's weekly budget) | 80 Sora |
 | Reference meal price | 5 Sora |
 | Reference crop price | 1.5 Sora |
 | Reference tool price | 20 Sora |
@@ -44,7 +44,7 @@ Goods only arrive when delivered. An owner can fetch goods themselves, but slowl
 | House agents' starting balances (from the Town Hall) | 100 Sora per resident, 200 per business, 300 per entrepreneur |
 | Workers per business | Owner plus up to 2 at level 1, more per level |
 
-**Sanity check:** a worker earns 25 a day and eats 10, so they save 15. With the 200 grant, a first stall is about a week away. The starter grant at the end of the first five days covers the stall's first crops, so a new player can start even when jobs are scarce. A stall selling 40 meals at 5 makes about 100 Sora profit a day after crops, wages, delivery and upkeep, until rivals push prices down.
+**Sanity check:** a worker earns 25 a day and eats 10, so they save 15. With the 200 grant, a first stall is about a week away. The starter grant, due 5 to 9 days after arrival, covers the stall's first crops, so a new player can start even when jobs are scarce. A stall selling 40 meals at 5 makes about 100 Sora profit a day after crops, wages, delivery and upkeep, until rivals push prices down.
 
 **No one gets stuck:** if no business is hiring, the Town Hall's civic job is always open at 20 a day, so a worker still saves 10 a day. On day one, house agents eat from their starting balances until the first wages arrive.
 
@@ -234,3 +234,10 @@ Applied from the approved amendments, following Document 06 v0.2:
 - **4A, Rule 1:** new stalls are placed in the street with the most room (residents nearby for each stall already there).
 - **3 and 4:** new starter grant of 80 Sora, once per person, paid by the Town Hall 5 days after a player arrives. Unlike the new player's grant it counts against the weekly issuance budget, and it is paid before the day's civic wages. It gives a player in a town short of jobs the float for a first stall.
 - **Unchanged:** the other starting values, the two mints, the growth target and the other lanes.
+
+# 16. Changes in v0.7
+
+**Why:** owner decision, 21 Oct 2026, after the Phase 3 gate runs.
+
+- **3:** the starter grant falls due on a day between 5 and 9 days after a player arrives, set per person (seeded), not on day 5 for everyone. Players who arrive together then open their first stalls on different days.
+- **Unchanged:** the grant's size (80 Sora), once per person, paid from the Town Hall's weekly budget.

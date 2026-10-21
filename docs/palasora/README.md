@@ -7,12 +7,12 @@ Current versions, as of 21 Oct 2026. Older versions are kept in `archive/`, with
 | 01 | Game Design Canvas | v0.5 | `Palasora-Game-Design-Canvas.{html,pdf,docx}` |
 | 02 | Core Gameplay Loop & Retention Design | v0.3 | `Palasora-02-Core-Loop-and-Retention.{md,pdf,docx}` |
 | 03 | Lean Game Design Document | v0.4 | `Palasora-03-Lean-Game-Design.{md,pdf,docx}` |
-| 04 | Economy & AI Agent Simulation Specification | v0.6 (md; pdf and docx still v0.5) | `Palasora-04-Economy-and-Agents.{md,pdf,docx}` |
+| 04 | Economy & AI Agent Simulation Specification | v0.7 (md; pdf and docx still v0.5) | `Palasora-04-Economy-and-Agents.{md,pdf,docx}` |
 | 05 | Headless Simulation & Validation Plan | v0.6 (md; pdf and docx still v0.4) | `Palasora-05-Headless-Simulation-Plan.{md,pdf,docx}` |
 | 06 | Unified Platform Architecture & Integration Plan | v0.3 | `Palasora-06-Unified-Platform-Architecture.{md,pdf}` |
 | | Amendments to Documents 01 to 05 | Revision 2 (all applied) | `Palasora-Amendments-to-01-05.{md,pdf}` |
 
-**21 Oct 2026, after the Phase 3 gates:** Document 04 v0.6 widens the tight payback lane to 4 to 10 days, adds an 80 Sora starter grant (once per person, after 5 days, from the Town Hall's weekly budget) and places new stalls where there is room. Document 05 v0.5 follows it (owner decision). Document 05 v0.6 leaves the town's first week out of the profitable-share check and spreads starter grants over days 5 to 9 per person.
+**21 Oct 2026, after the Phase 3 gates:** Document 04 v0.6 widens the tight payback lane to 4 to 10 days, adds an 80 Sora starter grant (once per person, after 5 days, from the Town Hall's weekly budget) and places new stalls where there is room. Document 05 v0.5 follows it (owner decision). Document 05 v0.6 leaves the town's first week out of the profitable-share check and spreads starter grants over days 5 to 9 per person; Document 04 v0.7 says the same.
 
 **21 Oct 2026, balance rules:** Document 04 v0.5 adds section 4A (one payback curve, a money growth target of about 20% a year per resident, playing beats sitting, every change tested first and explained in public Economy notes), learned from how a live player-run city economy fixed its inflation. Document 05 v0.4 adds the matching scenarios, measures and Gate A checks.
 

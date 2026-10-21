@@ -162,6 +162,7 @@ def arrive_player(w: World, pid: str, *, founder: bool = False, endowment: int =
     civic.queue_starter_grant(w, a)
     if endowment:
         civic.population_issue(w, a, endowment, "scenario_endowment")
+        w.flags.setdefault("endowed", []).append(pid)  # starts with money, so not on the worker path (Gate A first business)
     w.event("player_arrived", [pid], f"{pid} arrived in town{' with a Founder Pass' if founder else ''}{label}", visibility="public",
             refs={"agent": pid, "founder_plot": a.founder_plot or ""})
     return a

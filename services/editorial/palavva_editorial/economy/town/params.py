@@ -21,6 +21,12 @@ class Params:
     grant_new_player: int = 200 * C
     starter_grant: int = 80 * C    # once per person, from the Town Hall's weekly budget (owner decision, Phase 3 review)
     starter_grant_after_days: int = 5  # paid at the end of a new player's first working week, not on arrival
+    # -- agent behaviour knobs (not in Doc 04; the first value is what the code did before; TUNING sets the tuned one) ---
+    entry_gap_days: int = 5          # days between newcomers in one trade
+    room_at_mid: bool = False        # True: a trade has room while its payback is at or under the lane's middle
+    stall_stock_cover: float = 1.2   # a stall contracts for this many times its last day's demand
+    stall_stock_extra: int = 3       # plus this many meals' worth of crops
+    first_wait_days: int = 0         # a player's first stall waits this many days for room before building anyway
     starter_grant_spread_days: int = 5  # and spread over days 5 to 9 per person, so newcomers don't all build on one day
     meal_ref: int = 5 * C
     crop_ref: int = 150            # 1.50 Sora
@@ -114,4 +120,13 @@ TUNING: dict = {
     "working_capital_days": (1.5, "three days of costs held in every business tied up a fifth of the money supply"),
     "genesis_mix": ({"stall": 5, "farm": 3, "workshop": 1, "delivery": 2},
                     "the town's demand (2 meals a resident a day) supports about this many at their lanes; 7/6/3/4 left every trade crowded"),
+    "entry_gap_days": (2, "with 5 days between newcomers, trades thinned by closures refilled too slowly and most weeks were over 80% "
+                          "profitable (Gate A wants 50 to 80%): more house businesses at the margin"),
+    "room_at_mid": (True, "a trade paying back faster than its lane's middle has room even without a measured shortage, so entry "
+                          "continues until paybacks sit near the middle of the lane"),
+    "stall_stock_cover": (1.2, "kept: 1.4 (with 5 extra) made out of stock worse (16 of 24 runs over 5% against 3 of 32) because stalls "
+                               "held crops other stalls needed; 1.1 (with 2 extra) was also worse"),
+    "stall_stock_extra": (3, "kept with the cover above: 2 and 5 were both worse"),
+    "first_wait_days": (3, "50 players who all opened a stall the day they could afford it left the median business losing money "
+                           "(Job squeeze); waiting up to 3 days for room spreads them out and still keeps the first stall within 5 to 10 days"),
 }

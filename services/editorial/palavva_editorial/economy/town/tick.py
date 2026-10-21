@@ -178,6 +178,6 @@ def signals(w: World) -> None:
         med = B.median(prof) if prof else None
         pb = (p.build_cost[t] / med) if med and med > 0 else (0.0 if not bs else float("inf"))
         payback[t] = pb
-        room[t] = not bs or (pb <= mid and shortage[t]) or pb < lo + (mid - lo) / 2
+        room[t] = not bs or (pb <= mid and (shortage[t] or p.room_at_mid)) or pb < lo + (mid - lo) / 2
         crowd[t] = "short" if room[t] else "crowded" if pb > hi else "balanced"
     w.signals = {"room": room, "crowd": crowd, "payback": payback}

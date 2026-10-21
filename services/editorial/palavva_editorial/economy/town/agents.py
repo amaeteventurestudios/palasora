@@ -88,7 +88,7 @@ def procurement(w) -> list[Proposal]:
         contracted = B.contracted_in(w, b)
         if b.type == "stall":
             last = b.history[-1] if b.history else {}
-            need = math.ceil(max(use, last.get("sold", 0) + last.get("turned_away", 0)) * 1.2) + 3
+            need = math.ceil(max(use, last.get("sold", 0) + last.get("turned_away", 0)) * p.stall_stock_cover) + p.stall_stock_extra
             gap = need - contracted
             if have > use * (days + 1):
                 gap = min(gap, 0)
@@ -445,7 +445,7 @@ def progression(w) -> list[Proposal]:
     rm = dict(room(w))
     for t in list(rm):
         # wait to see what the last newcomer in a trade did to it before another one opens (signals lag a few days)
-        if any(b.type == t and b.opened_tick > 0 and w.tick - b.opened_tick < 5 * 24 for b in w.open_biz()):
+        if any(b.type == t and b.opened_tick > 0 and w.tick - b.opened_tick < p.entry_gap_days * 24 for b in w.open_biz()):
             rm[t] = False
     for a in w.agents.values():
         owned = [x for x in a.businesses if w.biz[x].status == "open"]
@@ -475,7 +475,11 @@ def progression(w) -> list[Proposal]:
             # the worker path (Doc 04 rule 1, tight lane): work, save, then build a first food stall. One per player, so
             # it does not wait for room; a player in a crowded street sits beside the curve
             if cash + disc >= p.build_cost["stall"] + buffer:
-                out.append((a.id, "build", {"btype": "stall"}, ""))
+                # wait up to first_wait_days for room in the stalls (one newcomer a day takes it), then build anyway
+                ready = w.flags.setdefault(f"ready:{a.id}", w.tick)
+                if rm.get("stall") or w.tick - ready >= p.first_wait_days * 24:
+                    out.append((a.id, "build", {"btype": "stall"}, ""))
+                    rm["stall"] = False
             continue
         choices = _by_room(w, [t for t in ("stall", "delivery", "farm", "workshop") if rm.get(t) and cash + disc >= p.build_cost[t] + buffer])
         if choices:

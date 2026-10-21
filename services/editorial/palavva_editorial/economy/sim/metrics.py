@@ -184,7 +184,7 @@ def player_progress(w) -> dict:
         else:
             jobs.append(math.inf)
         left = w.tick - a.arrived_tick
-        if left >= 10 * 24 and not a.founder_plot:
+        if left >= 10 * 24 and not a.founder_plot and a.id not in w.flags.get("endowed", ()):  # the worker path only
             firsts.append(((a.first_business_tick - a.arrived_tick) / 24) if a.first_business_tick is not None else math.inf)
             afford.append(((a.afford_tick - a.arrived_tick) / 24) if a.afford_tick is not None else math.inf)
     return {"first_job_days": jobs, "first_business_days": firsts, "afford_days": afford}
