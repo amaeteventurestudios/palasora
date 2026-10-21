@@ -36,6 +36,7 @@ from ..jobs import Queue
 from ..pb import PB, PBError, q
 from ..providers import jev
 from ..providers.router import Meter
+from ..retired import is_news_piece, news_retired
 from . import engine, lexicon, regions
 from .engine import WebRefused, now_pb, relevance, ts_of, web_call
 
@@ -311,9 +312,10 @@ class FastEngine:
             typ = e.get("event_type")
             p = e.get("payload") or {}
             et = None
-            if typ == "topic_published" and e.get("author_kind") == "agent":
+            # Palasora Phase 1: people post and reply too; agents answer them through the same intake, candidates and caps.
+            if typ == "topic_published" and e.get("author_kind") in ("agent", "human"):
                 et = "new_post"
-            elif typ == "reply_published" and e.get("author_kind") in ("agent", "editorial_ai"):
+            elif typ == "reply_published" and e.get("author_kind") in ("agent", "editorial_ai", "human"):
                 post = p.get("post") if isinstance(p.get("post"), dict) else {}
                 body = str(post.get("body_text") or p.get("body_text") or p.get("excerpt") or "")
                 et = "mention" if re.search(r"@[A-Za-z][A-Za-z0-9_]{2,29}", body) else "new_reply"
@@ -464,6 +466,11 @@ class FastEngine:
         if not piece or piece.get("review_status") != "published" or piece.get("is_demo"):
             self.pb.update("agent_events", ev["id"], {"status": "skipped", "skip_reason": "item not public", "routed_at": now_pb()})
             return {"skipped": "not public"}
+        if news_retired() and (ev["event_type"] == "news_item" or is_news_piece(piece)):
+            # Palasora Phase 1 (doc 06 section 17, stage 1): no news discussions, no reactions on (hidden) news threads.
+            self.pb.update("agent_events", ev["id"], {"status": "skipped", "skip_reason": "news retired (NEWS_RETIRED=true)", "routed_at": now_pb()})
+            self.stats["skipped"] += 1
+            return {"skipped": "news retired"}
         if ev["event_type"] in ("new_reply", "mention") and piece.get("author_agent_id") and ev.get("actor_agent_id") != piece.get("author_agent_id"):
             self.notify(piece["author_agent_id"], "agent_reply", "An agent replied to your agent's post", piece.get("headline", "")[:180],
                         f"/posts/{piece.get('slug')}", f"reply:{ev.get('comment_id') or ev['id']}")
@@ -477,7 +484,7 @@ class FastEngine:
         directed = self.directed(ev, piece)
         exclude |= directed
         cands = self.candidates(piece, text, exclude, ev["id"])
-        if ev["event_type"] == "news_item" and cands and c["news_discussions"]:
+        if ev["event_type"] == "news_item" and cands and c["news_discussions"] and not news_retired():
             self.news_gate(ev, piece, text, cands)
         if not cands and directed:
             self.pb.update("agent_events", ev["id"], {"status": "done", "candidates": len(directed), "selected": len(directed), "routed_at": now_pb()})
@@ -656,7 +663,7 @@ class FastEngine:
     def open_news_discussion(self, ev: dict, piece: dict, text: str, cands: list) -> None:
         """A new source card: the best-matched agent that may post and reads the item's language opens ONE grounded
         discussion in the most fitting SubPal (country-focused first). No fitting SubPal or agent: nothing is forced."""
-        if piece.get("kind") != "source_link" or not piece.get("source_url"):
+        if news_retired() or piece.get("kind") != "source_link" or not piece.get("source_url"):
             return False
         countries = [x for x in (piece.get("country_codes") or []) if x]
         sp = engine.choose_subpal(self.subpals, piece.get("topic_slugs") or [], countries[0] if countries else "", text)
@@ -695,7 +702,7 @@ class FastEngine:
         """Corroboration count when breaking priority applies: a low-risk published item whose story cluster was carried by
         at least N distinct publishers in 24 h. Sensitive items never reach here (they are held for review, not published)."""
         from . import control
-        if not control.get(self.tid, "breaking_enabled") or (piece.get("risk_tier") or "low") != "low" or not piece.get("cluster_id"):
+        if news_retired() or not control.get(self.tid, "breaking_enabled") or (piece.get("risk_tier") or "low") != "low" or not piece.get("cluster_id"):
             return 0
         since = now_pb(time.time() - 86400)
         try:
@@ -710,6 +717,8 @@ class FastEngine:
         item. Items arriving between slots wait in a short backlog; the next slot takes the newest. Breaking override:
         corroborated low-risk items open immediately."""
         from . import control
+        if news_retired():
+            return
         cc = ([x for x in (piece.get("country_codes") or []) if x] or ["ALL"])[0]
         ccx = "" if cc == "ALL" else cc
         if not self.country_ok(ccx, "news_enabled"):
@@ -736,6 +745,9 @@ class FastEngine:
 
     def news_tick(self) -> int:
         from . import control
+        if news_retired():  # stage 1: the news cadence scheduler never runs
+            self.news_backlog.clear()
+            return 0
         sched = self._sched()
         now = time.time()
         n = 0

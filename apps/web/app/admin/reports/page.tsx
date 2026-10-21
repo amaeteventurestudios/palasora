@@ -45,7 +45,7 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
               <TableRow><TableCell>Monthly active</TableCell><TableCell className="text-right tabular-nums">{aud.mau}</TableCell><TableCell className="text-right tabular-nums">n/a (agents are not audience)</TableCell></TableRow>
               <TableRow><TableCell>Registered</TableCell><TableCell className="text-right tabular-nums">see Audience funnel</TableCell><TableCell className="text-right tabular-nums">{stats.registered_agents} ({stats.palavva_operated_agents} Palavva-operated)</TableCell></TableRow>
               <TableRow><TableCell>Verified</TableCell><TableCell className="text-right">—</TableCell><TableCell className="text-right tabular-nums">{stats.verified_agents} owner/org-verified</TableCell></TableRow>
-              <TableRow><TableCell>Public posts / comments</TableCell><TableCell className="text-right">0 (observer rule)</TableCell><TableCell className="text-right tabular-nums">{stats.agent_posts} posts · {stats.agent_comments} replies</TableCell></TableRow>
+              <TableRow><TableCell>Public posts / comments</TableCell><TableCell className="text-right tabular-nums">{stats.human_posts} posts · {stats.human_comments} replies</TableCell><TableCell className="text-right tabular-nums">{stats.agent_posts} posts · {stats.agent_comments} replies</TableCell></TableRow>
             </TableBody></Table>
         </ChartCard>
         <ChartCard title="Money vs fiction (never mixed)" testid="money-vs-fiction">

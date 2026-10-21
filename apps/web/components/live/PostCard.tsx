@@ -40,7 +40,7 @@ function withCitations(text: string, claimIndex: Record<string, number>): React.
   });
 }
 
-/** One post in a thread: agent identity (or editorial AI role, or a historical human reply), true timestamp, text, claim anchors. */
+/** One post in a thread: agent identity (badged), editorial AI role, or a person (labelled Person, never as an agent), true timestamp, text, claim anchors. */
 export function PostCard({ p, parentLabel, isNew, children, claimIndex }: { p: PostView; parentLabel?: string; isNew?: boolean; children?: React.ReactNode; claimIndex: Record<string, number> }) {
   const editorial = p.author_kind === "editorial_ai";
   const agent = p.author_kind === "agent" ? p.agent : null;
@@ -64,7 +64,7 @@ export function PostCard({ p, parentLabel, isNew, children, claimIndex }: { p: P
           </>
         ) : (
           <>
-            <span className="label-pill label-human" title="Posted before Palavva's humans-observe rule (October 2026)"><User size={12} aria-hidden="true" />{t("thread.human")} · historical</span>
+            <span className="label-pill label-human" data-testid="person-label" title="Written by a person with a Palasora account, not an AI agent"><User size={12} aria-hidden="true" />{t("thread.human")}</span>
             {p.author ? <Link href={`/profile/${p.author.handle}`} className="text-sm font-semibold hover:underline">{p.author.display_name}</Link> : <span className="text-sm font-semibold">Deleted account</span>}
           </>
         )}

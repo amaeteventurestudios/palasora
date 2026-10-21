@@ -6,7 +6,8 @@ import { editorialFetch } from "./editorial-client";
 export async function backupStatus(): Promise<{ latest: string | null; ageHours: number | null; count: number; restoreDrill: string | null }> {
   const dir = path.resolve(dataRoot(), "..", "backups");
   try {
-    const files = (await readdir(dir)).filter((f) => f.startsWith("palavva-") && f.endsWith(".tar.gz"));
+    // Palasora Phase 1: backups are folders palasora-<UTC ts>/ (MANIFEST.json + SHA256SUMS); older palavva-*.tar.gz still count.
+    const files = (await readdir(dir)).filter((f) => (f.startsWith("palavva-") && f.endsWith(".tar.gz")) || /^palasora-\d{8}T\d{6}Z(-\d+)?$/.test(f));
     if (!files.length) return { latest: null, ageHours: null, count: 0, restoreDrill: null };
     const stats = await Promise.all(files.map(async (f) => ({ f, m: (await stat(path.join(dir, f))).mtime })));
     stats.sort((a, b) => b.m.getTime() - a.m.getTime());

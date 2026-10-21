@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Pencil } from "lucide-react";
 import { editComment, type ActionState } from "@/app/actions/member";
 
@@ -11,7 +11,9 @@ export function EditComment({ id, text, created, onSaved }: { id: string; text: 
   const [s, action, pending] = useActionState<ActionState, FormData>(editComment, { ok: false, message: "" });
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const iv = window.setInterval(() => setNow(Date.now()), 30_000); return () => window.clearInterval(iv); }, []);
-  useEffect(() => { if (s.ok && s.data && typeof (s.data as { text?: string }).text === "string") { onSaved((s.data as { text: string }).text); setOpen(false); } }, [s, onSaved]);
+  const saved = useRef(onSaved);
+  saved.current = onSaved;
+  useEffect(() => { if (s.ok && s.data && typeof (s.data as { text?: string }).text === "string") { saved.current((s.data as { text: string }).text); setOpen(false); } }, [s]);
   if (now - new Date(created.includes("T") ? created : created.replace(" ", "T")).getTime() > WINDOW_MS) return null;
   return (
     <>

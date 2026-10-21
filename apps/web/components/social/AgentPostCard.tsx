@@ -1,5 +1,5 @@
-// Feed card (master §8.7). Identity and provenance first; text-first by default (no stock imagery); agent-only score shown
-// read-only to humans; latest reply preview updates from committed events without moving the page.
+// Feed card (master §8.7). Identity and provenance first; text-first by default (no stock imagery). Palasora Phase 1: people
+// vote here too and their own posts carry a Person label (agents keep their badge); latest reply preview follows committed events.
 import Link from "next/link";
 import { Translatable } from "./Translatable";
 import { localeInfo } from "@/lib/i18n/context";
@@ -20,6 +20,7 @@ export const POST_LABELS: Record<string, string> = {
 };
 
 export function statusLabel(c: CardData): string {
+  if (c.p.kind === "human_post") return POST_LABELS[c.p.post_label] ?? "Community Discussion";
   if (c.p.kind === "agent_post") {
     const base = POST_LABELS[c.p.post_label] ?? "Community Discussion";
     return c.agent?.hosting === "external" && !c.p.sources.length ? `${base} · unverified` : base;
@@ -31,25 +32,30 @@ export function statusLabel(c: CardData): string {
 const activeLater = (pub: string, last?: string) => { const a = Date.parse((pub ?? "").replace(" ", "T")), b = Date.parse((last ?? "").replace(" ", "T"));
   return b && a && b - a > 600_000 ? last! : null; };
 
-export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = false, showWhy = false }: { c: CardData; headingLevel?: 2 | 3; signedIn?: boolean; saved?: boolean; showWhy?: boolean }) {
-  const { p, agent, subpal } = c;
+export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = false, showWhy = false, myVote = 0, viewerId }: { c: CardData; headingLevel?: 2 | 3; signedIn?: boolean; saved?: boolean;
+  showWhy?: boolean; myVote?: number; viewerId?: string }) {
+  const { p, agent, subpal, person } = c;
+  const human = p.kind === "human_post";
   const lp = p as Localized;
   const tr = lp.translation as TranslationState | undefined;
   const href = pieceHref(p);
   const H = headingLevel === 2 ? "h2" : "h3";
-  const editorial = p.kind !== "agent_post";
+  const editorial = p.kind !== "agent_post" && !human;
   return (
     <article className="card p-4 sm:p-5" data-testid="story-card" data-card="post" data-piece-id={p.id} data-kind={p.kind}>
       <header className="flex items-start gap-3">
         {agent ? <Link href={`/agents/${agent.handle}`} aria-hidden="true" tabIndex={-1}><AgentAvatar handle={agent.handle} glyph={agent.glyph} avatarUrl={agent.avatar_url} size={38} /></Link>
+          : human ? <span aria-hidden="true" className="inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-card-muted text-[15px] font-bold">{(person?.display_name ?? "?").slice(0, 1).toUpperCase()}</span>
           : <AgentAvatar handle="editorial" editorial size={38} />}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]">
             {/* v1.6: a publisher's item is attributed to the publisher, never to an AI role (no AI wrote it) */}
             {agent ? <Link href={`/agents/${agent.handle}`} className="font-bold hover:underline">{agent.display_name}</Link>
+              : human ? (person ? <Link href={`/profile/${person.handle}`} className="font-bold hover:underline">{person.display_name}</Link> : <span className="font-bold">Deleted account</span>)
               : p.kind === "source_link" && p.sources[0] ? <span className="font-bold">{p.sources[0].name}</span>
               : <span className="font-bold">{c.roleLabel.replace(" · AI", "")}</span>}
             {agent ? <AgentBadge kind={agent.kind} level={agent.verification_level} compact />
+              : human ? <span className="label-pill label-human" data-testid="person-label">Person</span>
               : p.kind === "source_link" ? <span className="label-pill label-human" data-testid="publisher-badge">Publisher</span> : <EditorialBadge />}
             {subpal && <><span className="text-muted-foreground">in</span><Link href={`/p/${subpal.slug}`} className="font-semibold link">p/{subpal.slug}</Link></>}
             <span className="meta">· <Time value={p.published_at} /></span>
@@ -75,11 +81,11 @@ export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = f
           </p>
         ) : editorial && p.sources[0] && <p className="meta mt-1.5">Source: {p.sources.map((s) => s.name).join(", ")}{p.publish_path === "auto_low_risk" ? " · auto-published (low risk, sourced)" : ""}</p>}
         {p.corrected && <p className="meta mt-1">Corrected · see revision history</p>}
-        <LiveThreadSummary pieceId={p.id} href={href} initialCount={p.counts.ai_contributions} initialLatest={c.latest} />
+        <LiveThreadSummary pieceId={p.id} href={href} initialCount={p.counts.ai_contributions + p.counts.human_comments} initialLatest={c.latest} />
         <footer className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[14px] font-semibold text-muted-foreground">
-          <LiveScore kind="piece" id={p.id} up={p.up_votes} down={p.down_votes} />
-          <Link href={`${href}#conversation`} className="inline-flex min-h-[36px] items-center gap-1.5 hover:text-foreground" aria-label={`${p.counts.ai_contributions} AI replies`}>
-            <MessageSquare size={16} aria-hidden="true" /><LiveReplyCount pieceId={p.id} initial={p.counts.ai_contributions} /></Link>
+          <LiveScore kind="piece" id={p.id} up={p.up_votes} down={p.down_votes} signedIn={signedIn} mine={myVote} own={human && !!viewerId && p.author_user_id === viewerId} returnPath={href} />
+          <Link href={`${href}#conversation`} className="inline-flex min-h-[36px] items-center gap-1.5 hover:text-foreground" aria-label={`${p.counts.ai_contributions + p.counts.human_comments} replies`}>
+            <MessageSquare size={16} aria-hidden="true" /><LiveReplyCount pieceId={p.id} initial={p.counts.ai_contributions + p.counts.human_comments} /></Link>
           <CardActions pieceId={p.id} href={href} title={p.headline} signedIn={signedIn} saved={saved} />
         </footer>
       </div>

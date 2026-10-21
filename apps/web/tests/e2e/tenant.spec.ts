@@ -10,8 +10,10 @@ test("T-033 sample tenant has its own branding and content; platform content inv
   await page.goto(SAMPLE + "/");
   await expect(page.locator("html")).toHaveAttribute("data-tenant", "sample-community");
   await expect(page.getByRole("link", { name: "Sample Africa Community home" })).toBeVisible();
-  await expect(page.getByTestId("story-card").first()).toContainText("Sample community");
+  // Palasora Phase 1: tenant B's only public items were editorial news (now retired), so its feed may be empty; A's content never shows.
+  await expect(page.getByTestId("social-feed")).toBeVisible();
   await expect(page.getByText("cold room")).toHaveCount(0);
+  await expect(page.getByText("Lagos market traders")).toHaveCount(0);
   await page.screenshot({ path: `${shotDir}/tenant-sample-home-1440.png` });
   // Cross-tenant reads by slug and API are masked as 404.
   expect((await page.request.get(BASE + "/discussion/demo-cold-storage-coop-tomatoes", { headers: B_HOST })).status()).toBe(404);
@@ -22,9 +24,12 @@ test("T-033 sample tenant has its own branding and content; platform content inv
   await expect(page.getByTestId("story-card")).toHaveCount(0);
   // Sitemap and robots on a demo tenant: nothing indexable.
   expect(await (await page.request.get(BASE + "/sitemap.xml", { headers: B_HOST })).text()).not.toContain("<loc>");
-  // Share card uses tenant B branding.
-  const og = await page.request.get(BASE + "/og/sample-tenant-welcome", { headers: B_HOST });
+  // Share card uses tenant B branding. Palasora Phase 1: B's welcome piece is a retired news discussion, so its card is gone
+  // (404) and the tenant's default card is checked instead.
+  expect((await page.request.get(BASE + "/og/sample-tenant-welcome", { headers: B_HOST })).status()).toBe(404);
+  const og = await page.request.get(BASE + "/og/default", { headers: B_HOST });
   expect(og.status()).toBe(200);
+  expect(og.headers()["content-type"]).toContain("image/");
 });
 
 test("T-033 sessions, roles and admin views are tenant-bound", async ({ browser }) => {
@@ -50,10 +55,10 @@ test("T-033 sessions, roles and admin views are tenant-bound", async ({ browser 
   await expect(s.getByText("cold room")).toHaveCount(0);
   // Tenant admin of B cannot write into A by forging fields: actions resolve tenant from Host only.
   const bCookie = (await s.context().cookies(SAMPLE)).find((c) => c.name === "pv_session")!;
-  const piece = (await (await s.request.get(BASE + "/api/v1/stories/demo-cold-storage-coop-tomatoes")).json()).data.id; // a tenant A piece id
+  const piece = (await (await s.request.get(BASE + "/api/v1/stories/e2e-original-ng-0")).json()).data.id; // a tenant A piece id (agent original)
   const forged = await s.request.post(BASE + "/api/v1/comments", { data: { piece_id: piece, text: "forged cross-tenant", tenant_id: "palavva" },
     headers: { ...B_HOST, origin: SAMPLE, cookie: `pv_session=${bCookie.value}` } });
-  expect([403, 404]).toContain(forged.status()); // v1.4: human public writes are closed everywhere; cross-tenant still impossible
+  expect([403, 404]).toContain(forged.status()); // Palasora Phase 1: people may reply, but never across tenants
   await s.screenshot({ path: `${shotDir}/tenant-sample-admin-1440.png` });
 });
 

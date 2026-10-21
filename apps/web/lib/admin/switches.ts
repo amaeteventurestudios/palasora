@@ -6,7 +6,7 @@ export type SwitchInfo = { label: string; group: "emergency" | "config"; whenOn:
 export const SWITCH_INFO: Record<SwitchKey, SwitchInfo> = {
   PUBLISHING_PAUSED: { label: "All publishing", group: "emergency", onMeansStopped: true, disruptive: true, whenOn: "Nothing new becomes public, including approvals.", whenOff: "Publishing works normally." },
   AI_PAUSED: { label: "AI writing (editorial)", group: "emergency", onMeansStopped: true, disruptive: true, whenOn: "Editorial AI drafting and translation stop.", whenOff: "Editorial AI works normally." },
-  INGEST_PAUSED: { label: "News ingestion", group: "emergency", onMeansStopped: true, disruptive: true, whenOn: "No new items are fetched from publishers.", whenOff: "Feeds are fetched on schedule." },
+  INGEST_PAUSED: { label: "News ingestion", group: "emergency", onMeansStopped: true, disruptive: true, whenOn: "No new items are fetched from publishers.", whenOff: "Feeds are fetched on schedule (unless NEWS_RETIRED=true, the Palasora default: then ingestion never runs)." },
   CITY_PAUSED: { label: "Agent activity (city engine)", group: "emergency", onMeansStopped: true, disruptive: true, whenOn: "Resident agents stop acting; queued work is cancelled before any model call.", whenOff: "Agents act within their limits." },
   AGENT_POSTING_PAUSED: { label: "Agent posting", group: "emergency", onMeansStopped: true, disruptive: true, whenOn: "Agents cannot publish posts or replies.", whenOff: "Agents can post within the rules." },
   AGENT_TASKS_PAUSED: { label: "Owner tasks for agents", group: "emergency", onMeansStopped: true, disruptive: true, whenOn: "Agents stop running tasks their owners gave them.", whenOff: "Owner tasks run." },
@@ -18,6 +18,8 @@ export const SWITCH_INFO: Record<SwitchKey, SwitchInfo> = {
   SUBPAL_AUTO_OPEN_DISABLED: { label: "Automatic opening of agent-proposed SubPals", group: "config", onMeansStopped: true, disruptive: false,
     whenOn: "Every agent-proposed SubPal waits for a person.", whenOff: "Clearly new, rule-passing proposals open automatically (max 3 a day); others wait." },
   GAMES_PAUSED: { label: "Palavva Games", group: "emergency", onMeansStopped: true, disruptive: false, whenOn: "No new matches or moves; live matches freeze where they are (nothing is lost).", whenOff: "Games run: people and agents can start and play matches." },
+  HUMAN_WRITES_PAUSED: { label: "Posting by people", group: "emergency", onMeansStopped: true, disruptive: true,
+    whenOn: "People cannot post, reply or vote (reading, saving and following still work). The database refuses their writes too.", whenOff: "Signed-in people post, reply and vote within the abuse limits." },
   LINK_POLICY_V2: { label: "Refined rules for publisher headlines", group: "config", onMeansStopped: false, disruptive: true, whenOn: "Routine attributed headlines publish automatically; sensitive ones still wait.", whenOff: "Any listed sensitive word holds a headline for a person." },
 };
 export const runningWord = (k: SwitchKey, on: boolean) => { const i = SWITCH_INFO[k]; const active = i.onMeansStopped ? !on : on; return active ? "Running" : "Stopped"; };

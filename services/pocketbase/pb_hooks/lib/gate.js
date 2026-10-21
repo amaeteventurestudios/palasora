@@ -13,6 +13,11 @@
 //     - author_agent_id is an agent of the same tenant with status active and the post permission
 //     - a moderation_decisions row (scope=agent_post, decision=allow) for this piece, with a ruleset version
 //     - PUBLISHING_PAUSED and AGENT_POSTING_PAUSED are not true
+//  3b. HUMAN (Palasora Phase 1): a person's own top-level post. Only when ALL hold, otherwise fail closed:
+//     - kind = human_post, publish_path = human, reviewer "system:human-validator", risk_tier = low
+//     - author_user_id is a user of the same tenant whose account_status is active (not suspended or deleted)
+//     - a moderation_decisions row (scope=human_post, decision=allow) for this piece, with a ruleset version
+//     - PUBLISHING_PAUSED and HUMAN_WRITES_PAUSED are not true
 //  4. SOURCE CARD (v1.5): a rights-cleared publisher item shown verbatim with attribution (no AI text). Only when ALL hold:
 //     - kind = source_link, publish_path = source_card, reviewer "system:source-card-validator", risk_tier low or medium
 //     - source_item_id names a source_items row of the same tenant whose source is rights_status=approved with an
@@ -71,6 +76,21 @@ function assertApproved(app, rec) {
       if (!d.get("ruleset_version")) throw new Error("no ruleset");
     } catch (_) {
       throw new BadRequestError("publish gate: no agent validation record");
+    }
+    return;
+  }
+
+  if (reviewer === "system:human-validator") {
+    if (rec.get("kind") !== "human_post" || rec.get("publish_path") !== "human") throw new BadRequestError("publish gate: human path is only for human posts");
+    if (rec.get("risk_tier") !== "low") throw new BadRequestError("publish gate: human publication requires low risk");
+    if (setting(app, tenant, "HUMAN_WRITES_PAUSED") === true) throw new BadRequestError("publish gate: human posting paused for tenant");
+    assertActiveHuman(app, tenant, rec.get("author_user_id"), "publish gate");
+    try {
+      const d = app.findFirstRecordByFilter("moderation_decisions",
+        "tenant_id = {:t} && piece_id = {:p} && scope = 'human_post' && decision = 'allow' && overridden = false", { t: tenant, p: rec.id });
+      if (!d.get("ruleset_version")) throw new Error("no ruleset");
+    } catch (_) {
+      throw new BadRequestError("publish gate: no human-post validation record");
     }
     return;
   }
@@ -146,4 +166,29 @@ function assertApproved(app, rec) {
   if (!m) throw new BadRequestError("publish gate: reviewer lacks editorial role in tenant");
 }
 
-module.exports = { assertApproved, setting };
+// Palasora Phase 1: a person may write in public only with an active account of the same tenant.
+function assertActiveHuman(app, tenantId, userId, what) {
+  let u = null;
+  try { u = app.findRecordById("users", userId || ""); } catch (_) { u = null; }
+  if (!u || u.get("tenant_id") !== tenantId) throw new BadRequestError(`${what}: unknown author`);
+  const st = u.get("account_status") || "active";
+  if (st !== "active") throw new BadRequestError(`${what}: author account is ${st}`);
+}
+
+function assertHumanVote(app, rec) {
+  const d = rec.get("direction");
+  if (d !== -1 && d !== 1) throw new BadRequestError("vote direction must be -1 or 1");
+  const tenant = rec.get("tenant_id");
+  if (setting(app, tenant, "HUMAN_WRITES_PAUSED") === true) throw new BadRequestError("human writes are paused by staff (HUMAN_WRITES_PAUSED)");
+  assertActiveHuman(app, tenant, rec.get("user_id"), "human vote");
+  // No voting on your own post or reply (also refused by the web service).
+  let target = null;
+  try { target = app.findRecordById(rec.get("target_kind") === "comment" ? "comments" : "editorial_pieces", rec.get("target_id") || ""); } catch (_) { target = null; }
+  if (target) {
+    const own = rec.get("target_kind") === "comment" ? (target.get("author_kind") === "human" && target.get("author_id") === rec.get("user_id"))
+      : target.get("author_user_id") === rec.get("user_id");
+    if (own) throw new BadRequestError("human vote: you cannot vote on your own post or reply");
+  }
+}
+
+module.exports = { assertApproved, setting, assertActiveHuman, assertHumanVote };

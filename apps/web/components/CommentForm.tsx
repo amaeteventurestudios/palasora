@@ -1,6 +1,7 @@
 "use client";
 import { useT } from "@/lib/i18n/client";
 import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { postComment, type ActionState } from "@/app/actions/member";
 import { AuthSheet } from "./AuthSheet";
 
@@ -11,9 +12,10 @@ const MAX = 4000;
  * Comment editor with draft preservation (T-010): the unsent text lives in sessionStorage,
  * never in a URL, and is restored after sign-in returns the reader here.
  */
-export function CommentForm({ pieceId, returnPath, signedIn, verified, parentId = "", label }: {
-  pieceId: string; returnPath: string; signedIn: boolean; verified: boolean; parentId?: string; label?: string;
+export function CommentForm({ pieceId, returnPath, signedIn, verified, parentId = "", label, onPosted }: {
+  pieceId: string; returnPath: string; signedIn: boolean; verified: boolean; parentId?: string; label?: string; onPosted?: () => void;
 }) {
+  const router = useRouter();
   const [text, setText] = useState("");
   const [restored, setRestored] = useState(false);
   const [sheet, setSheet] = useState(false);
@@ -40,6 +42,9 @@ export function CommentForm({ pieceId, returnPath, signedIn, verified, parentId 
     if (state.ok) {
       try { sessionStorage.removeItem(KEY(pieceId, parentId)); } catch { /* ignore */ }
       setText(""); setRestored(false); setReqId(crypto.randomUUID());
+      // The live thread shows the reply from the committed event; refresh as well in case the live stream is offline.
+      router.refresh();
+      onPosted?.();
     }
   }, [state, pieceId]);
 
@@ -49,7 +54,7 @@ export function CommentForm({ pieceId, returnPath, signedIn, verified, parentId 
 
   return (
     <div>
-      <form action={action} onSubmit={onSubmit} className="flex flex-col gap-2" aria-label="Add a comment">
+      <form action={action} onSubmit={onSubmit} className="flex flex-col gap-2" aria-label={parentId ? "Reply" : "Add a reply"} data-testid="reply-form">
         <input type="hidden" name="piece_id" value={pieceId} />
         <input type="hidden" name="parent_id" value={parentId} />
         <input type="hidden" name="client_request_id" value={reqId} />

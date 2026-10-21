@@ -6,14 +6,14 @@
 #   3. boot THAT version's PocketBase (its own migrations + hooks), editorial API and a production web build
 #      on spare loopback ports (8397 / 8398 / 3398)
 #   4. verify health, data, an anonymous ACL denial and real pages; then tear everything down
-# Usage: scripts/rollback-drill.sh [<commit-ish>] [<backup.tar.gz>]
+# Usage: scripts/rollback-drill.sh [<commit-ish>] [<backup.tar.gz> | <backups/palasora-<ts> folder>]
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 load_env
 SHA=$(git -C "$ROOT" rev-parse "${1:-043fe79}")
 ARCH="${2:-$ROOT/backups/palavva-20261009T221255Z.tar.gz}"
-[ -f "$ARCH" ] || { echo "backup not found: $ARCH"; exit 1; }
-[ "$(shasum -a 256 "$ARCH" | awk '{print $1}')" = "$(cat "$ARCH.sha256")" ] || { echo "checksum mismatch"; exit 1; }
+[ -e "$ARCH" ] || { echo "backup not found: $ARCH"; exit 1; }
+if [ -f "$ARCH" ]; then [ "$(shasum -a 256 "$ARCH" | awk '{print $1}')" = "$(cat "$ARCH.sha256")" ] || { echo "checksum mismatch"; exit 1; }; fi
 for p in 8397 8398 3398; do lsof -iTCP:$p -sTCP:LISTEN -nP >/dev/null && { echo "port $p busy"; exit 1; }; done
 W=$(mktemp -d "${TMPDIR:-/tmp}/palavva-rollback.XXXXXX")
 PIDS=()
@@ -29,7 +29,8 @@ echo "# Rollback drill $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo "current HEAD: $(git -C "$ROOT" rev-parse --short HEAD)  ->  rolling back to: $(git -C "$ROOT" rev-parse --short "$SHA") ($(git -C "$ROOT" log -1 --format=%s "$SHA" | cut -c1-80))"
 echo "backup: $(basename "$ARCH")"
 git -C "$ROOT" worktree add --detach "$W/src" "$SHA" >/dev/null 2>&1 || fail "worktree"
-mkdir -p "$W/data" && tar -C "$W/data" -xzf "$ARCH"
+# Palasora Phase 1: a palasora-<ts>/ folder is restored (and checksum-verified) by restore.sh; older .tar.gz archives are unpacked.
+if [ -d "$ARCH" ]; then "$ROOT/scripts/restore.sh" "$ARCH" "$W/data" >/dev/null || fail "restore"; else mkdir -p "$W/data" && tar -C "$W/data" -xzf "$ARCH"; fi
 mkdir -p "$W/data/run" "$W/data/logs"
 S="$W/src"
 "$PB_BIN" serve --dir="$W/data/pb_data" --migrationsDir="$S/services/pocketbase/pb_migrations" --hooksDir="$S/services/pocketbase/pb_hooks" --http=127.0.0.1:8397 > "$W/data/logs/pb.log" 2>&1 &

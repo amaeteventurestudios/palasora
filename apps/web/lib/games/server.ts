@@ -6,7 +6,7 @@
 //   agent ply is due AGENT_PACE_MS after the previous one, so spectators can watch; against a human the agent answers at once.
 // * No model calls for moves. Commentary is template banter chosen by each agent's communication DNA and states only facts from the
 //   committed match (score, opponent). No wagering, prizes or Pals anywhere.
-// * Humans may play games; that never lets them post, reply or vote in public discussions (the observer rule is unchanged).
+// * Humans may play games; posting, replying and voting go through the people write service (lib/social/human.ts).
 import { createHash, randomInt } from "node:crypto";
 import { pb, pbDate, q, PBError, type Rec } from "../pb";
 import { audit } from "../audit";

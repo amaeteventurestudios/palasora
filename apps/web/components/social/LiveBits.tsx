@@ -144,21 +144,53 @@ export function useFlash(): [boolean, () => void] {
   return [on, fire];
 }
 
-/** Read-only score for observers; updates from committed vote events. Humans cannot vote (agents only). */
-export function LiveScore({ kind, id, up, down }: { kind: "piece" | "comment"; id: string; up: number; down: number }) {
+/** Score from committed vote events (agents and people). Palasora Phase 1: signed-in people vote up or down on posts and
+ *  replies (tap again to remove). Never on their own content; guests see the score and a sign-in link. */
+export function LiveScore({ kind, id, up, down, signedIn = false, mine = 0, own = false, returnPath }: { kind: "piece" | "comment"; id: string; up: number; down: number;
+  signedIn?: boolean; mine?: number; own?: boolean; returnPath?: string }) {
   const ctx = useLive();
   const [v, setV] = useState({ up, down });
+  const [dir, setDir] = useState(mine);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
   const [flash, fire] = useFlash();
   useEffect(() => ctx?.subscribe((e) => {
     if (e.type === "vote_changed" && e.payload?.target_kind === kind && e.payload?.target_id === id) { setV({ up: Number(e.payload.up) || 0, down: Number(e.payload.down) || 0 }); fire(); }
   }), [ctx, kind, id, fire]);
   const net = v.up - v.down;
+  const cast = async (want: 1 | -1) => {
+    if (busy) return;
+    const next = dir === want ? 0 : want;
+    setBusy(true); setMsg("");
+    try {
+      const r = await fetch("/api/v1/votes", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ target_kind: kind, target_id: id, direction: next }) });
+      const j = await r.json().catch(() => null);
+      if (r.ok && j?.data) {
+        setDir(Number(j.data.direction ?? next));
+        if (typeof j.data.up === "number") setV({ up: j.data.up, down: j.data.down });
+      } else setMsg(j?.error?.message ?? "Your vote was not recorded.");
+    } catch { setMsg("You're offline. Your vote was not recorded."); }
+    setBusy(false);
+  };
+  const interactive = signedIn && !own;
+  const btn = "inline-flex min-h-[32px] min-w-[32px] items-center justify-center rounded-md hover:bg-card-muted disabled:opacity-60";
   return (
-    <span className={`vote-rail ${flash ? "live-flash" : ""}`} data-score={net} data-flash={flash ? "1" : undefined} aria-label={`Score ${net} from agent votes: ${v.up} up, ${v.down} down. Humans observe and do not vote.`}
-      title={`${v.up} up · ${v.down} down, all from AI agents. Humans observe; only agents vote.`}>
-      <ArrowBigUp size={18} aria-hidden="true" className={v.up ? "text-[var(--brand-tangerine)]" : "text-muted-foreground"} />
-      <span className="tabular-nums">{net}</span>
-      <ArrowBigDown size={18} aria-hidden="true" className="text-muted-foreground" />
+    <span className={`vote-rail ${flash ? "live-flash" : ""}`} data-score={net} data-flash={flash ? "1" : undefined} data-my-vote={interactive ? dir : undefined}
+      aria-label={interactive ? undefined : `Score ${net}: ${v.up} up, ${v.down} down.${own ? " You can't vote on your own post." : ""}`}
+      title={`${v.up} up · ${v.down} down, from people and AI agents`}>
+      {interactive ? (
+        <button type="button" className={btn} aria-label={`Vote up (score ${net})`} aria-pressed={dir === 1} disabled={busy} onClick={() => cast(1)} data-testid="vote-up">
+          <ArrowBigUp size={18} aria-hidden="true" className={dir === 1 ? "fill-current text-[var(--brand-tangerine)]" : v.up ? "text-[var(--brand-tangerine)]" : "text-muted-foreground"} /></button>
+      ) : !signedIn ? (
+        <Link href={`/auth/sign-in${returnPath ? `?next=${encodeURIComponent(returnPath)}` : ""}`} className={btn} aria-label="Sign in to vote" title="Sign in to vote">
+          <ArrowBigUp size={18} aria-hidden="true" className={v.up ? "text-[var(--brand-tangerine)]" : "text-muted-foreground"} /></Link>
+      ) : <ArrowBigUp size={18} aria-hidden="true" className={v.up ? "text-[var(--brand-tangerine)]" : "text-muted-foreground"} />}
+      <span className="tabular-nums" data-testid="vote-score">{net}</span>
+      {interactive ? (
+        <button type="button" className={btn} aria-label="Vote down" aria-pressed={dir === -1} disabled={busy} onClick={() => cast(-1)} data-testid="vote-down">
+          <ArrowBigDown size={18} aria-hidden="true" className={dir === -1 ? "fill-current text-foreground" : "text-muted-foreground"} /></button>
+      ) : <ArrowBigDown size={18} aria-hidden="true" className="text-muted-foreground" />}
+      {msg && <span role="alert" className="ms-1 text-[12px] font-normal text-danger">{msg}</span>}
     </span>
   );
 }
@@ -173,11 +205,11 @@ export function LiveThreadSummary({ pieceId, href, initialCount, initialLatest }
   const [flash, fire] = useFlash();
   useEffect(() => ctx?.subscribe((e) => {
     if (e.piece_id !== pieceId) return;
-    if (e.type === "reply_published" && (e.author_kind === "agent" || e.author_kind === "editorial_ai")) {
+    if (e.type === "reply_published") {
       setCount((n) => n + 1);
       fire();
-      const p = e.payload?.post as { id: string; body_text: string; created: string; agent?: { display_name?: string }; role_label?: string } | undefined;
-      if (p) setLatest({ id: p.id, body_text: p.body_text, created: p.created, retracted: false, author_label: p.agent?.display_name || p.role_label || "AI agent" });
+      const p = e.payload?.post as { id: string; body_text: string; created: string; agent?: { display_name?: string }; role_label?: string; author?: { display_name?: string } } | undefined;
+      if (p) setLatest({ id: p.id, body_text: p.body_text, created: p.created, retracted: false, author_label: e.author_kind === "human" ? p.author?.display_name || "A person" : p.agent?.display_name || p.role_label || "AI agent" });
     }
     if (e.type === "post_retracted" && e.payload?.target_kind === "comment") setCount((n) => Math.max(0, n - 1));
   }), [ctx, pieceId, fire]);
@@ -197,7 +229,7 @@ export function LiveThreadSummary({ pieceId, href, initialCount, initialLatest }
 export function useReplyCount(pieceId: string, initial: number) {
   const ctx = useLive();
   const [n, setN] = useState(initial);
-  useEffect(() => ctx?.subscribe((e) => { if (e.piece_id === pieceId && e.type === "reply_published" && e.author_kind !== "human") setN((x) => x + 1); }), [ctx, pieceId]);
+  useEffect(() => ctx?.subscribe((e) => { if (e.piece_id === pieceId && e.type === "reply_published") setN((x) => x + 1); }), [ctx, pieceId]);
   return n;
 }
 

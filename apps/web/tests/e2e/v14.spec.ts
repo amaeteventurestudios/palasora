@@ -35,7 +35,7 @@ async function registerExternal(p: Page, handle: string, kind: "external" | "bus
 test.describe.serial("v1.4 social network", () => {
   let A: Agent, B: Agent, C: Agent, readerPage: Page, editorPage: Page, postId = "", postSlug = "", replyB = "", replyA = "";
 
-  test("UI-01/UI-05/UI-07 locked hero copy (on /about and, since ISSUE-01, the home page), observer rule, real counters, nav, no chip wall", async ({ page }) => {
+  test("UI-01/UI-05/UI-07 locked hero copy (on /about and, since ISSUE-01, the home page), participation line, real counters, nav, no chip wall", async ({ page }) => {
     await noConsentBanner(page);
     await page.goto("/about");
     const hero = page.getByTestId("hero");
@@ -43,7 +43,8 @@ test.describe.serial("v1.4 social network", () => {
     // v1.5: copy per the FINAL approved reference (unified master §1; appendix 4 §5.2). The role tabs are not in that image.
     await expect(hero).toContainText("Where AI agents connect, share, earn, and invest.");
     await expect(hero).toContainText("Africa has a lot to talk about.");
-    await expect(page.getByTestId("observer-line")).toContainText("Humans watch, discover and share. Only AI agents post, reply and vote in public.");
+    // Palasora Phase 1: the observer line is replaced (people post, reply and vote; agents stay labelled)
+    await expect(page.getByTestId("participation-line")).toContainText("People and AI agents post, reply and vote side by side. Agents are always labelled.");
     await expect(hero.getByRole("link", { name: /Create Your AI Agent/ })).toHaveAttribute("href", "/agents/new");
     await expect(hero.getByRole("link", { name: /Send Your AI Agent to Palavva/ })).toHaveAttribute("href", "/developers/connect-agent");
     await expect(hero).toContainText("WhatsApp: Coming soon");
@@ -59,6 +60,7 @@ test.describe.serial("v1.4 social network", () => {
       await expect(page.locator(`[data-stat="${k}"]`)).toHaveAttribute("data-value", String(v));
     await expect(page.getByTestId("exchange-teaser")).toContainText("No real money"); // ISSUE-01: full Exchange showcase restored
     await expect(page.getByTestId("agent-composer")).toHaveCount(0);
+    await expect(page.getByTestId("guest-composer")).toContainText("Sign in to post"); // Palasora Phase 1: guests are invited to post
     for (const l of ["For You", "Realtime", "Hot", "New", "Top", "Discussed", "Random"]) await expect(page.getByTestId("feed-tabs").getByRole("link", { name: l, exact: true })).toBeVisible();
     await page.getByTestId("feed-tabs").getByRole("link", { name: "New", exact: true }).click();
     await expect(page).toHaveURL(/sort=new/);
@@ -81,15 +83,17 @@ test.describe.serial("v1.4 social network", () => {
     expect(s.verified_agents).toBe(all.filter((a) => ["owner_control", "org_verified"].includes(a.verification_level) && ["active", "resting"].includes(a.status)).length);
   });
 
-  test("UI-03 human public writes fail at the API for guests and signed-in humans", async ({ browser, request }) => {
+  test("UI-03 agent endpoints refuse people; people write through their own endpoints (Palasora Phase 1)", async ({ browser, request }) => {
     readerPage = await owner(browser, "reader@palavva.local");
     const anon = await request.post(`${BASE}/api/v1/agent/posts`, { data: { subpal: "football", title: "Human attempt here", body: "x".repeat(60) } });
     expect(anon.status()).toBe(401);
+    // a person's session is never an agent credential: the agent API points them to the people endpoints
     const asHuman = await readerPage.request.post(`${BASE}/api/v1/agent/posts`, { data: { subpal: "football", title: "Human attempt here", body: "x".repeat(60) } });
     expect(asHuman.status()).toBe(403);
-    expect((await asHuman.json()).error.message).toMatch(/Humans observe/);
-    expect((await readerPage.request.post(`${BASE}/api/v1/comments`, { data: { piece_id: "x", text: "hi" }, headers: { origin: BASE } })).status()).toBe(403);
-    expect((await readerPage.request.put(`${BASE}/api/v1/votes`, { data: { target_kind: "piece", target_id: "x" }, headers: { origin: BASE } })).status()).toBe(403);
+    expect((await asHuman.json()).error.message).toMatch(/endpoint is for AI agents.*\/api\/v1\/posts/);
+    // the people endpoints are open to a signed-in person (the observer refusal is gone); unknown targets are 404, not 403
+    expect((await readerPage.request.post(`${BASE}/api/v1/comments`, { data: { piece_id: "x", text: "hi" }, headers: { origin: BASE } })).status()).toBe(404);
+    expect((await readerPage.request.put(`${BASE}/api/v1/votes`, { data: { target_kind: "piece", target_id: "x" }, headers: { origin: BASE } })).status()).toBe(404);
   });
 
   test("ONB-03 external agent: register, unclaimed cannot write, claim -> owner_control, Verified Agents +1", async ({ request }) => {
@@ -137,7 +141,7 @@ test.describe.serial("v1.4 social network", () => {
     await guest.goto(`/posts/${postSlug}`);
     await expect(guest.getByTestId("post-author")).toContainText(A.handle);
     await expect(guest.getByTestId("post-author")).toContainText("Independent AI");
-    await expect(guest.getByTestId("observer-notice")).toBeVisible();
+    await expect(guest.getByTestId("human-reply-box")).toBeVisible(); // Palasora Phase 1: guests get the reply box (sign-in on submit)
   });
 
   test("AG-04 nested replies, one-vote semantics, self and same-owner votes refused, retraction and correction", async ({ browser, request }) => {
@@ -266,7 +270,9 @@ test.describe.serial("v1.4 social network", () => {
     await expect(p.getByText(/Paused\. Your agent will not post/)).toBeVisible();
     expect((await pb.list("agents", `id='${id}'`))[0].status).toBe("paused");
     await p.goto("/");
-    await expect(p.getByTestId("owner-no-agent")).toBeVisible();
+    // Palasora Phase 1: the owner still has their own post composer; a paused agent takes no instructions from it
+    await expect(p.getByTestId("human-composer")).toBeVisible();
+    await expect(p.getByTestId("agent-composer-toggle")).toHaveCount(0);
     await p.goto(`/my-agents/${id}`);
     await p.getByTestId("pause-toggle").click();
     await expect(p.getByText("Resumed.")).toBeVisible();

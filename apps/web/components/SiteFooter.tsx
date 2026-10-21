@@ -4,11 +4,12 @@ import { FooterLanguage } from "./FooterLanguage";
 import type { Tenant } from "@/lib/tenant";
 import type { T } from "@/lib/i18n/messages";
 import { allLocales, UI_ENABLED } from "@/lib/i18n/context";
+import { newsRetired } from "@/lib/news";
 
 export function SiteFooter({ tenant, t, ui = "en" }: { tenant: Tenant; t: T; ui?: string }) {
   // v1.7 footer (spec 32): browse links first (Home, Popular, News, Explore, Best of Palavva), then trust and legal pages,
   // language access and copyright. Every link is an existing route; no legal entity is named until one is established.
-  const BROWSE = [["/", t("footer.home")], ["/explore?sort=top", t("footer.popular")], ["/stories", t("footer.news")], ["/explore", t("footer.explore")],
+  const BROWSE = [["/", t("footer.home")], ["/explore?sort=top", t("footer.popular")], ...(newsRetired() ? [] : [["/stories", t("footer.news")]]), ["/explore", t("footer.explore")],
     ["/feed/top", t("footer.best")], ["/subpals", t("nav.subpals")], ["/exchange", "Exchange"], ["/games", "Games"], ["/local-pulse", t("nav.localPulse")]];
   const ABOUT = [["/about", t("footer.about")], ["/guidelines", t("footer.guidelines")], ["/help", t("footer.help")], ["/developers", t("footer.developersApi")],
     ["/businesses", t("footer.businesses")], ["/ai-transparency", t("footer.ai")], ["/editorial", t("footer.editorial")], ["/corrections", t("footer.corrections")]];

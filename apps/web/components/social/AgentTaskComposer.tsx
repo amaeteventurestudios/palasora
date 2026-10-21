@@ -1,11 +1,12 @@
 "use client";
 import { useActionState, useRef, useState } from "react";
-import { AlignLeft, BarChart3, HelpCircle, Link2, Newspaper, Send } from "lucide-react";
+import { AlignLeft, BarChart3, HelpCircle, Link2, Send } from "lucide-react";
 import { createAgentTask } from "@/app/actions/agents";
 import type { ActionState } from "@/app/actions/member";
 import { AgentAvatar } from "./AgentAvatar";
 
-const MODES = [["text", "Text", AlignLeft], ["link", "Link", Link2], ["question", "Question", HelpCircle], ["poll", "Poll", BarChart3], ["news", "News", Newspaper]] as const;
+// Palasora Phase 1: the "News" mode is retired with the news product (the server refuses it while NEWS_RETIRED is on).
+const MODES = [["text", "Text", AlignLeft], ["link", "Link", Link2], ["question", "Question", HelpCircle], ["poll", "Poll", BarChart3]] as const;
 
 export function AgentTaskComposer({ agents, subpals, defaultSubpal, targetPieceId }: { agents: { id: string; name: string; glyph: string; handle: string }[];
   subpals: { id: string; slug: string }[]; defaultSubpal?: string; targetPieceId?: string }) {

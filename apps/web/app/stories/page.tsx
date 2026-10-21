@@ -1,4 +1,6 @@
+import { notFound } from "next/navigation";
 import { getTenant } from "@/lib/tenant";
+import { newsRetired } from "@/lib/news";
 import { pb } from "@/lib/pb";
 import { publicFilter, toSummary } from "@/lib/repo/pieces";
 import { taxonomy } from "@/lib/repo/taxonomy";
@@ -8,6 +10,7 @@ export const metadata = { title: "Palavva Stories" };
 export const dynamic = "force-dynamic";
 
 export default async function Stories() {
+  if (newsRetired()) notFound(); // Palasora Phase 1: editorial news stories are retired (archived for staff, not deleted)
   const tenant = await getTenant();
   const rows = await pb.list("editorial_pieces", { filter: `${publicFilter(tenant)} && kind='story'`, sort: "-published_at", perPage: 20 });
   const tax = await taxonomy();

@@ -75,7 +75,7 @@ test("T-021 revision conflict (409-style) and publishing kill switch", async ({ 
   await expect(b.getByTestId("switch-PUBLISHING_PAUSED")).toContainText("OFF");
 });
 
-test("T-021/T-022 medium-risk draft: moderator/reviewer limits, flags need a note, editor publishes; AI roles ≤3 go public with it", async ({ browser }) => {
+test("T-021/T-022 medium-risk draft: moderator/reviewer limits, flags need a note, editor publishes; the retired news page stays hidden", async ({ browser }) => {
   const ed = await (await browser.newContext()).newPage();
   await signIn(ed, "editor@palavva.local", BASE, "/admin/editorial");
   await openDraft(ed, "Fixture");
@@ -94,16 +94,14 @@ test("T-021/T-022 medium-risk draft: moderator/reviewer limits, flags need a not
   await approve.click();
   await expect(ed.getByRole("link", { name: "View public page" })).toBeVisible();
   await expect(ed.getByText(/published · created/)).toBeVisible();
-  await ed.getByRole("link", { name: "View public page" }).click();
-  await expect(ed.getByRole("heading", { level: 1 })).toHaveText(head);
-  await expect(ed.getByRole("heading", { name: "Read the sources" })).toBeVisible();
-  const ai = ed.getByTestId("ai-post");
-  expect(await ai.count()).toBeLessThanOrEqual(3);
-  if (await ai.count()) await expect(ai.first()).toContainText("· AI");
-  await ed.screenshot({ path: `${shotDir}/e2e-published-fixture-story-1440.png`, fullPage: true });
+  // Palasora Phase 1: news is retired. The editorial review flow still works, but a published news piece stays off every
+  // public surface (its page answers 404).
+  expect(head.length).toBeGreaterThan(0);
+  const href = (await ed.getByRole("link", { name: "View public page" }).getAttribute("href"))!;
+  expect((await ed.request.get(BASE + href, { maxRedirects: 0 })).status()).toBe(404);
 });
 
-test("T-024 correction: revision bump, public banner, corrections index, OG version", async ({ page }) => {
+test("T-024 correction: revision bump; retired news stays off the public page and corrections index", async ({ page }) => {
   await signIn(page, "editor@palavva.local", BASE, "/admin/editorial?tab=published");
   await page.getByRole("link", { name: /Fixture/ }).first().click();
   const rev = Number((await page.locator('input[name="expected_revision"]').first().inputValue()));
@@ -113,11 +111,11 @@ test("T-024 correction: revision bump, public banner, corrections index, OG vers
   await expect(page.getByText(/Correction published/)).toBeVisible();
   await page.reload();
   expect(Number(await page.locator('input[name="expected_revision"]').first().inputValue())).toBe(rev + 1);
-  await page.getByRole("link", { name: "View public page" }).click();
-  await expect(page.getByRole("note", { name: "Correction" })).toContainText("misdescribed the fixture source");
-  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", new RegExp(`v=${rev + 1}`));
+  // Palasora Phase 1: the corrected piece is retired news, so neither its page nor the public corrections index shows it.
+  const href = (await page.getByRole("link", { name: "View public page" }).getAttribute("href"))!;
+  expect((await page.request.get(BASE + href, { maxRedirects: 0 })).status()).toBe(404);
   await page.goto("/corrections");
-  await expect(page.getByText("misdescribed the fixture source").first()).toBeVisible();
+  await expect(page.getByText("misdescribed the fixture source")).toHaveCount(0);
 });
 
 test("T-013 rights: pending source test-fetch makes no network request; revoke holds drafts", async ({ page }) => {
@@ -154,13 +152,14 @@ test("T-027/T-028 analytics: consent-gated event written once, opt-out sends not
   const viewed = () => { try { return readdirSync(dir, { recursive: true }).filter((f) => String(f).endsWith(".ndjson"))
     .map((f) => readFileSync(path.join(dir, String(f)), "utf8")).join("").split("\n").filter((l) => l.includes('"story_viewed"')); } catch { return []; } };
   const before = viewed().length;
+  // Palasora Phase 1: news discussions are retired, so story_viewed is checked on an agent original thread.
   // Opt-out: no client events.
   const denied = await browser.newContext();
   await denied.addInitScript(() => localStorage.setItem("pv_consent", "denied"));
   const dp = await denied.newPage();
   let posted = 0;
   dp.on("request", (r) => { if (r.url().includes("/api/v1/analytics/events")) posted++; });
-  await dp.goto(BASE + "/discussion/demo-home-bakery-cost-tracking");
+  await dp.goto(BASE + "/posts/e2e-original-za-4");
   await dp.waitForTimeout(2600);
   expect(posted).toBe(0);
   expect(viewed().length).toBe(before);
@@ -168,7 +167,7 @@ test("T-027/T-028 analytics: consent-gated event written once, opt-out sends not
   const ok = await browser.newContext();
   await ok.addInitScript(() => localStorage.setItem("pv_consent", "granted"));
   const op = await ok.newPage();
-  await op.goto(BASE + "/discussion/demo-home-bakery-cost-tracking");
+  await op.goto(BASE + "/posts/e2e-original-za-4");
   await expect.poll(() => viewed().length, { timeout: 8000 }).toBe(before + 1);
   await op.waitForTimeout(1500);
   expect(viewed().length).toBe(before + 1);

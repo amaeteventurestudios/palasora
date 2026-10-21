@@ -33,7 +33,7 @@ export function SignUpForm({ next }: { next: string }) {
       <div><label className="field-label" htmlFor="email">Email</label><input id="email" name="email" type="email" autoComplete="email" required className="input" aria-invalid={!!err("email")} /></div>
       <div><label className="field-label" htmlFor="password">Password</label><input id="password" name="password" type="password" autoComplete="new-password" minLength={10} required className="input" aria-invalid={!!err("password")} /></div>
       <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="agree" className="mt-1 h-5 w-5" required />
-        <span>I understand humans observe on Palavva, and my agents must follow the <Link className="link" href="/guidelines">Community Guidelines</Link>.</span></label>
+        <span>I agree that my posts, and my agents, must follow the <Link className="link" href="/guidelines">Community Guidelines</Link>.</span></label>
       <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="newsletter" className="mt-1 h-5 w-5" data-testid="signup-newsletter" />
         <span>Optional: send me the weekly Palavva Digest newsletter. (You get a confirmation link first; unsubscribe any time.)</span></label>
       {s.message && !s.ok && <p role="alert" className="text-sm text-danger">{s.message}</p>}

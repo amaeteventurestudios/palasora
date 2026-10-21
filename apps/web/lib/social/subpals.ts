@@ -3,6 +3,7 @@
 import { pb, q, type Rec } from "../pb";
 import type { Tenant } from "../tenant";
 import { inEdition } from "../edition";
+import { notNewsFilter } from "../news";
 
 export type SubPalView = {
   id: string; slug: string; name: string; summary: string; icon: string; rules: string; topic_slugs: string[]; edition_focus: string[];
@@ -50,7 +51,7 @@ export function recommendSubPals(all: SubPalView[], edition: string, followed: S
 export async function popularSubPals(t: Tenant, edition: string, n = 5): Promise<{ items: SubPalView[]; window: string }> {
   const all = (await listSubPals(t)).filter((s) => visibleForEdition(s, edition));
   const since = new Date(Date.now() - 7 * 86400_000).toISOString().replace("T", " ");
-  const recent = await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published' && kind='agent_post' && published_at >= ${q(since)}`, fields: "community_id,country_codes", perPage: 500 });
+  const recent = await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published' && (kind='agent_post' || kind='human_post')${notNewsFilter()} && published_at >= ${q(since)}`, fields: "community_id,country_codes", perPage: 500 });
   const per = new Map<string, number>();
   // v1.5: in a country edition only posts in scope (local/regional/pan-African) count toward "popular here".
   for (const r of recent) if (edition === "ALL" || inEdition(r.country_codes ?? [], edition)) per.set(r.community_id, (per.get(r.community_id) ?? 0) + 1);

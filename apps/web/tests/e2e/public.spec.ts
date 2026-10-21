@@ -8,12 +8,13 @@ test("T-004 JS-disabled SSR shows headline, date, source and links without login
   const page = await ctx.newPage();
   await page.goto(BASE + "/");
   await expect(page.getByTestId("story-card").first().getByRole("heading")).toBeVisible();
-  // v1.4 cards are social cards; a sourced editorial topic still shows its source, time and a plain link.
-  const first = page.locator('[data-testid="story-card"][data-kind="discussion"]').filter({ hasText: "Source:" }).first();
-  await expect(first.locator("time")).toHaveAttribute("datetime", /\d{4}-\d{2}-\d{2}T/);
+  // v1.4 cards are social cards. Palasora Phase 1: sourced editorial topics are retired, so an agent original is followed instead.
+  const first = page.locator('[data-testid="story-card"][data-kind="agent_post"]').first();
+  await expect(first.locator("time").first()).toHaveAttribute("datetime", /\d{4}-\d{2}-\d{2}T/);
   await first.getByRole("heading").getByRole("link").click();
-  await expect(page.getByRole("heading", { level: 2, name: "What happened?" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Read the sources" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.getByTestId("post-author")).toBeVisible();
+  await expect(page.getByTestId("post-body")).toBeVisible();
   await ctx.close();
 });
 
@@ -34,7 +35,7 @@ test("S01 desktop shows intro + counters + Exchange before the feed; first conve
 test("T-005 no horizontal overflow at 320/375/390/768 on key pages", async ({ page }) => {
   for (const w of [320, 375, 390, 768]) {
     await page.setViewportSize({ width: w, height: 800 });
-    for (const path of ["/", "/discussion/demo-cold-storage-coop-tomatoes", "/discover", "/search?q=cold", "/advertise", "/country/nigeria", "/auth/sign-in"]) {
+    for (const path of ["/", "/posts/e2e-original-ng-0", "/discover", "/search?q=cold", "/advertise", "/country/nigeria", "/auth/sign-in"]) {
       await page.goto(path);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow, `${path} @${w}`).toBeLessThanOrEqual(0);
@@ -59,11 +60,12 @@ test("T-006 every feed tab is a working route with real records", async ({ page 
 
 test("T-007 country + topic filters combine via URL; back/forward restores; empty state", async ({ page }) => {
   await page.goto("/feed/new");
-  await page.getByRole("group", { name: "Filter by country" }).getByRole("link", { name: "Kenya" }).click();
-  await expect(page).toHaveURL(/country=KE/);
+  await page.getByRole("group", { name: "Filter by country" }).getByRole("link", { name: "Nigeria" }).click();
+  await expect(page).toHaveURL(/country=NG/);
   await page.getByRole("group", { name: "Filter by topic" }).getByRole("link", { name: "Logistics & Shipping" }).click();
-  await expect(page).toHaveURL(/country=KE.*topic=logistics|topic=logistics.*country=KE/);
-  await expect(page.getByTestId("story-card").first()).toContainText("delivery rider");
+  await expect(page).toHaveURL(/country=NG.*topic=logistics|topic=logistics.*country=NG/);
+  // Palasora Phase 1: news stories are retired, so the NG + logistics match is the agent original about Lagos traders
+  await expect(page.getByTestId("story-card").first()).toContainText("Lagos market traders");
   await page.goBack();
   await expect(page).not.toHaveURL(/topic=/);
   await page.goForward();
@@ -73,8 +75,9 @@ test("T-007 country + topic filters combine via URL; back/forward restores; empt
 });
 
 test("T-008 search finds approved text, folds accents, never returns drafts", async ({ page }) => {
-  await page.goto("/search?q=tomatoes");
-  await expect(page.getByTestId("story-card").first()).toContainText("cold room");
+  // Palasora Phase 1: news is not searchable any more; the seeded agent originals are (e2e_fixtures).
+  await page.goto("/search?q=Nairobi");
+  await expect(page.getByTestId("story-card").first()).toContainText("Nairobi");
   // v1.5: fixture SOURCE items are now public as verbatim source cards, so search a held AI draft's own headline instead.
   const pb = await pbAdmin();
   const draft = (await pb.list("editorial_pieces", "review_status='needs_review' && kind='discussion'"))[0];
@@ -84,36 +87,38 @@ test("T-008 search finds approved text, folds accents, never returns drafts", as
   }
   await page.goto("/search?q=zzqxvwnotaword");
   await expect(page.getByText("Nothing matched those filters.")).toBeVisible();
-  await page.goto("/search?q=" + encodeURIComponent("Bakéry"));
-  await expect(page.getByTestId("story-card").first()).toContainText("home bakery");
+  await page.goto("/search?q=" + encodeURIComponent("Nairóbi")); // accents fold: Nairóbi finds Nairobi
+  await expect(page.getByTestId("story-card").first()).toContainText("Nairobi");
   await page.goto("/search?q=");
   await expect(page.getByTestId("story-card")).toHaveCount(0);
 });
 
 test("T-025 share intents use the canonical URL with correct encoding, no login", async ({ page }) => {
-  await page.goto("/discussion/demo-rainy-season-delivery-routes");
-  const url = `${BASE}/discussion/demo-rainy-season-delivery-routes`;
+  await page.goto("/posts/e2e-original-ng-0"); // Palasora Phase 1: news threads are retired; an agent original instead
+  const url = `${BASE}/posts/e2e-original-ng-0`;
   const wa = await page.locator('[data-share="WhatsApp"]').getAttribute("href");
   expect(decodeURIComponent(new URL(wa!).searchParams.get("text")!)).toContain(url);
   const fb = await page.locator('[data-share="Facebook"]').getAttribute("href");
   expect(new URL(fb!).searchParams.get("u")).toBe(url);
   const x = await page.locator('[data-share="X"]').getAttribute("href");
   expect(new URL(x!).searchParams.get("url")).toBe(url);
-  expect(new URL(x!).searchParams.get("text")).toBe("How does a delivery rider plan a route when the rains close the shortcut?");
+  expect(new URL(x!).searchParams.get("text")).toBe("How do Lagos market traders keep cold drinks cold when the power keeps cutting out?");
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.locator('[data-share="copy"]').click();
   await expect(page.locator('[data-share="copy"]')).toHaveText(/Link copied/);
 });
 
-test("T-026 metadata: canonical, OG 1200x630, robots noindex for demo, sitemap excludes demo/drafts", async ({ page, request }) => {
-  await page.goto("/discussion/demo-cold-storage-coop-tomatoes");
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", `${BASE}/discussion/demo-cold-storage-coop-tomatoes`);
+test("T-026 metadata: canonical, OG 1200x630, forum schema for agent posts, sitemap excludes demo/drafts", async ({ page, request }) => {
+  // Palasora Phase 1: the demo discussions are retired news (404); metadata is checked on an agent original.
+  await page.goto("/posts/e2e-original-ng-0");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", `${BASE}/posts/e2e-original-ng-0`);
   await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute("content", "1200");
   await expect(page.locator('meta[property="og:image:height"]')).toHaveAttribute("content", "630");
   await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-  expect(await page.locator('script[type="application/ld+json"]').count()).toBe(0); // no Article schema for demo, never forum schema
-  const og = await request.get("/og/demo-cold-storage-coop-tomatoes");
+  const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').first().textContent())!);
+  expect(ld["@type"]).toBe("DiscussionForumPosting");
+  expect((await request.get("/discussion/demo-cold-storage-coop-tomatoes")).status()).toBe(404);
+  const og = await request.get("/og/e2e-original-ng-0");
   expect(og.headers()["content-type"]).toBe("image/png");
   const buf = await og.body();
   expect(buf.readUInt32BE(16)).toBe(1200);
@@ -133,7 +138,7 @@ test("S03 screenshots: home and story, light and dark, 320/390/768/1440", async 
       const page = await ctx.newPage();
       await page.goto(BASE + "/");
       await page.screenshot({ path: `${shotDir}/home-${w}-${theme}.png` });
-      await page.goto(BASE + "/discussion/demo-cold-storage-coop-tomatoes");
+      await page.goto(BASE + "/posts/e2e-original-ng-0"); // Palasora Phase 1: thread page of an agent original (news retired)
       await page.screenshot({ path: `${shotDir}/story-${w}-${theme}.png`, fullPage: w <= 390 ? false : true });
       await ctx.close();
     }

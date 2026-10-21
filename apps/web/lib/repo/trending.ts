@@ -6,6 +6,7 @@ import { pb, pbDate, q, type Rec } from "../pb";
 import type { Tenant } from "../tenant";
 import { toSummary, type PieceSummary } from "./pieces";
 import { engagementSince } from "../engagement";
+import { notNewsFilter } from "../news";
 
 export const FORMULA_VERSION = "trend-v2: (2*human_comments + human_votes + 1.5*human_shares + 0.5*log2(1+human_views) + 0.5*(source_count-1) + 1) / (age_h + 2)^1.2; ai_posts excluded; views/shares deduplicated, bots/headless/staff excluded";
 const WINDOW_H = 72;
@@ -47,7 +48,8 @@ export async function computeTrending(t: Tenant, scope: "home" | "africa", editi
   const now = Date.now();
   const since = pbDate(new Date(now - WINDOW_H * 3600_000));
   // Candidates: real (non-demo) published topics, freshest 7 days so stale stories never show as current (L-16).
-  let f = `tenant_id=${q(t.id)} && review_status='published' && is_demo=false && published_at >= ${q(pbDate(new Date(now - 7 * 86400_000)))}`;
+  // Palasora Phase 1: retired news is never trending; human posts, replies and votes count again (people can write now).
+  let f = `tenant_id=${q(t.id)} && review_status='published' && is_demo=false${notNewsFilter()} && published_at >= ${q(pbDate(new Date(now - 7 * 86400_000)))}`;
   if (scope === "home" && edition !== "ALL") f += ` && country_codes~${q(`"${edition}"`)}`;
   if (scope === "africa" && edition !== "ALL") f += ` && country_codes!~${q(`"${edition}"`)}`;
   const rows = (await pb.list("editorial_pieces", { filter: f, sort: "-published_at", perPage: 100 })).filter((r) => scope === "home" || (r.country_codes ?? []).length > 0);

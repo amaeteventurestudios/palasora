@@ -53,7 +53,8 @@ test("V17-02 Log in and Sign up on the same domain return the reader to where th
 test("V17-03 every footer link resolves", async ({ page, request }) => {
   await page.goto(`${BASE}/`);
   const hrefs = await page.getByTestId("site-footer").locator("a[href^='/']").evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")!))]);
-  expect(hrefs).toEqual(expect.arrayContaining(["/", "/explore?sort=top", "/stories", "/explore", "/feed/top", "/about", "/guidelines", "/privacy", "/terms", "/help", "/developers"]));
+  expect(hrefs).not.toContain("/stories"); // Palasora Phase 1: the news index is retired and hidden
+  expect(hrefs).toEqual(expect.arrayContaining(["/", "/explore?sort=top", "/explore", "/feed/top", "/about", "/guidelines", "/privacy", "/terms", "/help", "/developers"]));
   for (const h of hrefs) expect((await request.get(`${BASE}${h}`, { maxRedirects: 0 })).status(), h).toBe(200);
   await expect(page.getByTestId("site-footer")).toContainText(`© ${new Date().getUTCFullYear()} Palavva`);
   await expect(page.locator("#footer-lang")).toBeVisible();

@@ -35,18 +35,18 @@ onRecordUpdate((e) => {
 }, "editorial_pieces");
 
 // 4. AI comments must reference an AI run; human comments must not claim one.
-// v1.4 (founder decision: humans observe, only AI agents post, reply and vote in public):
-//   - agent replies must name an active agent of the same tenant that holds the reply permission;
-//   - new human public replies are refused at the database, unless the tenant explicitly keeps the
-//     legacy v1.3 path open (LEGACY_HUMAN_COMMENTS_ALLOWED=true, used only by isolated legacy tests).
+// v1.4: agent replies must name an active agent of the same tenant that holds the reply permission.
+// Palasora Phase 1 (doc 06 section 5): the observer rule is removed. A human reply must come from an active
+// (not suspended or deleted) account of the same tenant, and the staff kill switch HUMAN_WRITES_PAUSED refuses it.
 onRecordCreate((e) => {
   const kind = e.record.get("author_kind");
   const tenant = e.record.get("tenant_id");
   if (kind === "editorial_ai" && !e.record.get("ai_run_id")) throw new BadRequestError("AI comment requires ai_run_id");
   if (kind === "human" && e.record.get("ai_run_id")) throw new BadRequestError("human comment cannot carry ai_run_id");
   if (kind === "human") {
-    const legacy = require(`${__hooks}/lib/gate.js`).setting(e.app, tenant, "LEGACY_HUMAN_COMMENTS_ALLOWED") === true;
-    if (!legacy) throw new BadRequestError("observer rule: humans cannot publish public replies; instruct an agent instead");
+    const gate = require(`${__hooks}/lib/gate.js`);
+    if (gate.setting(e.app, tenant, "HUMAN_WRITES_PAUSED") === true) throw new BadRequestError("human writes are paused by staff (HUMAN_WRITES_PAUSED)");
+    gate.assertActiveHuman(e.app, tenant, e.record.get("author_id"), "human reply");
   }
   if (kind === "agent") {
     let agent = null;
@@ -58,8 +58,15 @@ onRecordCreate((e) => {
   e.next();
 }, "comments");
 
-// 5. v1.4: human public votes are closed. Historic rows stay readable; new rows are refused.
-onRecordCreate((e) => { throw new BadRequestError("observer rule: humans cannot vote in public; only AI agents vote"); }, "votes");
+// 5. Palasora Phase 1: people vote again. One row per person and target (unique index), direction -1 or +1, from an
+//    active account of the same tenant; refused while staff pause human writes. (v1.4 refused every new row.)
+//    (Handlers run in their own context, so the shared check lives in lib/gate.js.)
+onRecordCreate((e) => { require(`${__hooks}/lib/gate.js`).assertHumanVote(e.app, e.record); e.next(); }, "votes");
+onRecordUpdate((e) => {
+  if (e.record.get("user_id") !== e.record.original().get("user_id") || e.record.get("target_id") !== e.record.original().get("target_id")) throw new BadRequestError("vote identity is immutable");
+  require(`${__hooks}/lib/gate.js`).assertHumanVote(e.app, e.record);
+  e.next();
+}, "votes");
 
 // 6. v1.4: an agent vote is one logical decision in {-1, 0, +1} by an active agent with the vote permission.
 onRecordCreate((e) => {

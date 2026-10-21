@@ -4,7 +4,8 @@ import { Bot, User } from "lucide-react";
 import { getTenant } from "@/lib/tenant";
 import { getSession } from "@/lib/session";
 import { pb, q } from "@/lib/pb";
-import { env } from "@/lib/env";
+import { publicFilter } from "@/lib/repo/pieces";
+import { pieceHref } from "@/components/StoryCard";
 import { FollowButton } from "@/components/MemberButtons";
 import { ReportForm } from "@/components/ReportForm";
 import { Time } from "@/components/Time";
@@ -36,13 +37,14 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const following = session ? await pb.first("follows", `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)} && target_type='member' && target_id=${q(handle)}`) : null;
   const comments = await pb.list("comments", { filter: `tenant_id=${q(tenant.id)} && author_id=${q(u.id)} && approval_state='approved' && moderation_status='visible'`, sort: "-created", perPage: 20 });
   const pieceIds = [...new Set(comments.map((c) => c.piece_id).filter(Boolean))];
-  let pf = `tenant_id=${q(tenant.id)} && review_status='published' && (${pieceIds.map((i) => `id=${q(i)}`).join(" || ") || "id=''"})`;
-  if (!tenant.isDemo && !env.showDemo) pf += " && is_demo=false";
-  const pieces = pieceIds.length ? await pb.list("editorial_pieces", { filter: pf, perPage: 50 }) : [];
+  // publicFilter hides retired news threads (and their replies) and demo fixtures, as on every other public surface.
+  const pf = `${publicFilter(tenant)} && (${pieceIds.map((i) => `id=${q(i)}`).join(" || ") || "id=''"})`;
+  const [pieces, posts] = await Promise.all([pieceIds.length ? pb.list("editorial_pieces", { filter: pf, perPage: 50 }) : Promise.resolve([]),
+    pb.list("editorial_pieces", { filter: `${publicFilter(tenant)} && kind='human_post' && author_user_id=${q(u.id)}`, sort: "-published_at", perPage: 20 })]);
   const pm = new Map(pieces.map((p) => [p.id, p]));
   return (
     <div className="container-pv max-w-3xl py-8">
-      <span className="label-pill label-human"><User size={12} aria-hidden="true" />{u.profile_kind === "organization" ? "Verified organization" : "Human"}</span>
+      <span className="label-pill label-human"><User size={12} aria-hidden="true" />{u.profile_kind === "organization" ? "Verified organization" : "Person"}</span>
       <h1 className="mt-2 text-3xl font-extrabold">{u.display_name}</h1>
       <p className="meta">@{u.handle}</p>
       {u.bio && <p className="mt-3">{u.bio}</p>}
@@ -50,11 +52,17 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
         {session?.user.id !== u.id && <FollowButton type="member" id={u.handle} following={!!following} signedIn={!!session} returnPath={`/profile/${u.handle}`} label="" />}
         <ReportForm type="profile" id={u.id} />
       </div>
-      <h2 className="mt-8 text-xl font-bold">Contributions</h2>
+      <h2 className="mt-8 text-xl font-bold">Posts</h2>
+      {posts.length === 0 ? <p className="mt-2 text-muted-foreground">No posts yet.</p> : (
+        <ul className="mt-2 divide-y divide-border" data-testid="profile-posts">{posts.map((p) => (
+          <li key={p.id} className="py-3"><Link className="font-semibold link" href={pieceHref(p)}>{p.headline}</Link>
+            <p className="meta"><Time value={p.published_at} /> · {p.human_comment_count + (p.ai_post_count || p.ai_contribution_count || 0)} replies</p></li>))}</ul>
+      )}
+      <h2 className="mt-8 text-xl font-bold">Replies</h2>
       {comments.filter((c) => pm.has(c.piece_id)).length === 0 ? <p className="mt-2 text-muted-foreground">No public contributions yet.</p> : (
         <ul className="mt-2 divide-y divide-border">{comments.filter((c) => pm.has(c.piece_id)).map((c) => { const p = pm.get(c.piece_id)!; return (
           <li key={c.id} className="py-3"><p className="line-clamp-3">{c.body_text}</p>
-            <p className="meta">On <Link className="link" href={`/${p.kind === "story" ? "story" : "discussion"}/${p.slug}#comment-${c.id}`}>{p.headline}</Link> · <Time value={c.created} /></p></li>); })}</ul>
+            <p className="meta">On <Link className="link" href={`${pieceHref(p)}#post-${c.id}`}>{p.headline}</Link> · <Time value={c.created} /></p></li>); })}</ul>
       )}
     </div>
   );

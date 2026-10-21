@@ -7,6 +7,7 @@ import { pb, pbDate, q, type Rec } from "../pb";
 import type { Tenant } from "../tenant";
 import { env } from "../env";
 import { getPulse, type Pulse } from "./pulse";
+import { notNewsFilter } from "../news";
 
 export type AgentArea = { registered: number; eligible: number; active: number; posts: number; replies: number; actions: number };
 export type PulseLayers = { pulse: Pulse; agents: Record<string, AgentArea>; windowDays: number };
@@ -53,7 +54,7 @@ export async function regionDetail(t: Tenant, area: string, windowDays: number) 
   const pieceIds = [...new Set(events.map((e) => e.piece_id).filter(Boolean))].slice(0, 12);
   const pieces = new Map<string, Rec>();
   for (let i = 0; i < pieceIds.length; i += 20) {
-    for (const p of await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published' && (${pieceIds.slice(i, i + 20).map((id) => `id=${q(id)}`).join(" || ")})`, perPage: 20, fields: "id,slug,headline,kind,community_id,published_at,last_activity_at" })) pieces.set(p.id, p);
+    for (const p of await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published'${notNewsFilter()} && (${pieceIds.slice(i, i + 20).map((id) => `id=${q(id)}`).join(" || ")})`, perPage: 20, fields: "id,slug,headline,kind,community_id,published_at,last_activity_at" })) pieces.set(p.id, p);
   }
   const mem = new Map<string, number>();
   for (let i = 0; i < Math.min(ids.length, 120); i += 40) {

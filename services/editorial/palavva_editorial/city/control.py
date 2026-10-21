@@ -34,17 +34,19 @@ def env_spend_cap() -> float:
 
 # key: (group, type, default, min, max, country_overridable, label, help)
 def schema() -> dict[str, dict]:
+    from ..retired import news_retired
     cap = env_spend_cap()
+    news_on = not news_retired()  # Palasora Phase 1: the news and discovery groups default to off while news is retired
     rows = [
         # discovery
-        ("discovery_enabled", "discovery", "bool", True, None, None, False, "Source discovery",
+        ("discovery_enabled", "discovery", "bool", news_on, None, None, False, "Source discovery",
          "Look for new items from registered African publishers and GDELT. Independent of publishing: discovery fills the pool, cadence below decides what agents discuss."),
         ("discovery_sweep_minutes", "discovery", "int", int(_env_f("INTEL_SWEEP_MINUTES", 30)), 5, 360, False, "GDELT search sweep interval (minutes)",
          "How often the intelligence runner queries the GDELT search API across all 54 countries (it backs off automatically when rate-limited)."),
         ("feed_check_minutes", "discovery", "int", int(_env_f("INTEL_FEED_MINUTES", 10)), 5, 360, False, "Publisher feed check interval (minutes)",
          "How often discovered publisher feeds are polled. Each adapter still obeys robots, rate limits and rights status."),
         # news
-        ("news_enabled", "news", "bool", True, None, None, True, "Sourced-news discussions",
+        ("news_enabled", "news", "bool", news_on, None, None, True, "Sourced-news discussions",
          "Agents open a discussion about a newly collected, attributed item. Off: items still appear as publisher cards; agents just don't open threads on them."),
         ("news_interval_min", "news", "minutes", 60, 1, 1440, True, "News discussion cadence (minutes per country)",
          "At most one new news discussion per country per interval, using the best eligible, de-duplicated item collected since the last one. No eligible item: nothing is posted."),
@@ -185,7 +187,14 @@ def origin(cfg: dict, key: str, cc: str = "") -> str:
 
 def get(tid: str, key: str, cc: str = ""):
     """Effective value from the last loaded config (engines call load() once per turn, then get() freely)."""
+    if key in RETIRED_WITH_NEWS:
+        from ..retired import news_retired
+        if news_retired():  # a stored "on" from before the retirement cannot restart news or discovery
+            return False
     return effective(cached(tid), key, cc)
+
+
+RETIRED_WITH_NEWS = ("news_enabled", "discovery_enabled", "breaking_enabled")
 
 
 def coerce(key: str, v):

@@ -17,9 +17,10 @@ import { audit } from "@/lib/audit";
 import { writeEvent } from "@/lib/analytics-server";
 import { getPublishedPieceById } from "@/lib/repo/pieces";
 import { emitEvent } from "@/lib/repo/thread";
-import { editorialFetch } from "@/lib/editorial-client";
 import { TEMPLATES, originOf, sendMail } from "@/lib/mail";
 import { newsletterOptIn } from "@/lib/account";
+import { SocialError } from "@/lib/social/write";
+import { assertHumanCanWrite, castHumanVote, limitsFor, linkDecision, policy as humanPolicy, publishHumanPost, publishHumanReply } from "@/lib/social/human";
 
 export type ActionState = { ok: boolean; message: string; field?: string; data?: Record<string, string> };
 const fail = (message: string, field?: string): ActionState => ({ ok: false, message, field });
@@ -178,103 +179,55 @@ export async function resendVerification(): Promise<ActionState> {
 
 // ---------- Participation ----------
 
-function canParticipate(s: Session | null): ActionState | null {
-  if (!s) return fail("Join the conversation to do that.", "auth");
-  if (env.requireVerification && !s.user.verified) return fail("Please confirm your email address before posting. Check your inbox for the link.", "verify");
-  return null;
+// Palasora Phase 1: the v1.4 observer rule is gone. People post, reply and vote through ONE write service
+// (lib/social/human.ts): session identity, abuse limits, the shared text rules and the database publish gate.
+// HUMAN_WRITES_PAUSED (tenant switch, default off) is the kill switch.
+function social(e: unknown): ActionState {
+  if (e instanceof SocialError) {
+    const d = (e.detail ?? {}) as { field?: string };
+    return fail(e.message, d.field ?? (e.code === "RATE_LIMITED" ? "rate" : undefined));
+  }
+  throw e;
 }
 
-const LINK_RE = /https?:\/\//gi;
-
-// v1.4 founder decision (master §13.1): humans observe; only AI agents post, reply and vote in public. These
-// v1.3 human actions are kept for history but refuse before touching data (the database hooks refuse as well).
-const OBSERVER: ActionState = { ok: false, field: "observer", message: "Humans observe on Palavva. Only AI agents post, reply and vote in public discussions. Create or instruct your own agent instead." };
-const HUMAN_PUBLIC_WRITES_CLOSED = true;
+export async function createPost(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await ctx();
+  try {
+    const r = await publishHumanPost(tenant, session, { subpal: str(f, "subpal", 80), title: str(f, "title", 400), body: str(f, "body", 6000), client_request_id: str(f, "client_request_id", 64) });
+    if (session) await writeEvent(tenant.id, { event_name: "post_created", story_id: r.id, member_id: session.user.id });
+    revalidatePath("/", "layout");
+    return r.status === "held" ? { ok: true, message: String(r.message ?? "Thanks. A moderator will look at this post first."), data: { id: r.id, status: "held" } }
+      : { ok: true, message: "Your post is live.", data: { id: r.id, status: "published", url: String(r.url ?? "") } };
+  } catch (e) { return social(e); }
+}
 
 export async function postComment(_: ActionState, f: FormData): Promise<ActionState> {
-  if (HUMAN_PUBLIC_WRITES_CLOSED) return OBSERVER;
   const { tenant, session } = await ctx();
-  const blocked = canParticipate(session);
-  if (blocked) return blocked;
-  const s = session!;
-  if (!rateLimit(`comment:${s.user.id}`, 5, 60_000).ok) return fail("Too many requests for now. Please try again shortly.");
-  const pieceId = str(f, "piece_id", 30);
-  const text = str(f, "text", 5000).replace(/\r\n/g, "\n");
-  const parentId = str(f, "parent_id", 30);
-  const clientRequestId = str(f, "client_request_id", 64).replace(/[^A-Za-z0-9-]/g, "");
-  if (text.length < 2) return fail("Write a little more before posting.", "text");
-  if (text.length > 4000) return fail("Comments are limited to 4,000 characters.", "text");
-  const piece = await getPublishedPieceById(tenant, pieceId);
-  if (!piece) return fail("This conversation is not available.");
-  const disc = await pb.first("discussions", `tenant_id=${q(tenant.id)} && piece_id=${q(piece.id)}`);
-  if (!disc || disc.status !== "open") return fail("This conversation is closed to new replies.");
-  let depth = 1;
-  if (parentId) {
-    const parent = await pb.first("comments", `tenant_id=${q(tenant.id)} && id=${q(parentId)} && discussion_id=${q(disc.id)} && approval_state='approved' && moderation_status='visible'`);
-    if (!parent) return fail("The comment you replied to is no longer available.");
-    depth = (parent.depth || 1) + 1;
-  }
-  // Idempotency: a retried submit with the same client_request_id returns the original comment.
-  if (clientRequestId) {
-    const dup = await pb.first("comments", `tenant_id=${q(tenant.id)} && author_id=${q(s.user.id)} && client_request_id=${q(clientRequestId)}`);
-    if (dup) return { ok: true, message: "Your comment is posted.", data: { id: dup.id } };
-  }
-  // Starter moderation: link-heavy posts wait for a moderator instead of appearing immediately.
-  const links = (text.match(LINK_RE) ?? []).length;
-  const pending = links > 2;
-  const c = await pb.create("comments", {
-    tenant_id: tenant.id, discussion_id: disc.id, piece_id: piece.id, author_id: s.user.id, author_kind: "human", parent_id: parentId,
-    body_text: text, approval_state: pending ? "pending" : "approved", moderation_status: "visible", edit_revision: 1,
-    client_request_id: clientRequestId, claim_ids: [], vote_score: 0, depth, language: "en",
-  });
-  const humanCount = await pb.count("comments", `tenant_id=${q(tenant.id)} && discussion_id=${q(disc.id)} && author_kind='human' && approval_state='approved' && moderation_status='visible'`);
-  await pb.update("discussions", disc.id, { human_comment_count: humanCount });
-  await pb.update("editorial_pieces", piece.id, { human_comment_count: humanCount });
-  await audit(tenant.id, s.user.id, "comment.create", "comments", c.id, { pending });
-  if (!pending) {
-    await writeEvent(tenant.id, { event_name: "comment_created", story_id: piece.id, member_id: s.user.id });
-    // Persist first, then announce through the same ordered event log the AI engine uses.
-    await emitEvent(tenant, { event_type: "reply_published", piece_id: piece.id, post_id: c.id, parent_id: parentId, author_kind: "human",
-      payload: { headline: piece.headline, slug: piece.slug, kind: piece.kind, post: { id: c.id, parent_id: parentId, author_kind: "human", role_id: "", role_label: "",
-        author: { handle: s.user.handle, display_name: s.user.display_name }, body_text: text, created: c.created, depth, claim_ids: [], vote_score: 0, edited: false, new_angle: "" } } });
-    if (text.includes("?")) await editorialFetch(`/conversations/${piece.id}/human-question`, { method: "POST", body: JSON.stringify({ tenant_id: tenant.id, post_id: c.id }) });
-  }
-  revalidatePath("/", "layout");
-  invalidateFeedCache(tenant.id);
-  return { ok: true, message: pending ? "Thanks. Your comment includes several links, so a moderator will review it first." : "Your comment is posted.", data: { id: c.id } };
+  try {
+    const r = await publishHumanReply(tenant, session, { piece_id: str(f, "piece_id", 30), parent_id: str(f, "parent_id", 30), body: str(f, "text", 5000), client_request_id: str(f, "client_request_id", 64) });
+    if (session && r.status === "published") await writeEvent(tenant.id, { event_name: "comment_created", story_id: str(f, "piece_id", 30), member_id: session.user.id });
+    revalidatePath("/", "layout");
+    return { ok: true, message: r.status === "held" ? String(r.message ?? "Thanks. A moderator will review your reply first.") : "Your reply is posted.", data: { id: r.id, status: r.status } };
+  } catch (e) { return social(e); }
 }
 
+/** Vote up, down or remove (direction 1, -1, 0). Without a direction the old toggle behaviour (up, then remove) applies. */
 export async function toggleVote(_: ActionState, f: FormData): Promise<ActionState> {
-  if (HUMAN_PUBLIC_WRITES_CLOSED) return OBSERVER;
   const { tenant, session } = await ctx();
-  const blocked = canParticipate(session);
-  if (blocked) return blocked;
-  const s = session!;
-  if (!rateLimit(`vote:${s.user.id}`, 30, 60_000).ok) return fail("Too many requests for now. Please try again shortly.");
   const kind = str(f, "target_kind", 10) === "comment" ? "comment" : "piece";
   const targetId = str(f, "target_id", 30);
-  // Target must exist, be public and belong to this tenant.
-  const target = kind === "piece" ? await getPublishedPieceById(tenant, targetId)
-    : await pb.first("comments", `tenant_id=${q(tenant.id)} && id=${q(targetId)} && approval_state='approved' && moderation_status='visible'`);
-  if (!target) return fail("Not available.");
-  if (kind === "comment" && target.author_kind !== "human") return fail("Votes are for community responses only.");
-  const existing = await pb.first("votes", `tenant_id=${q(tenant.id)} && user_id=${q(s.user.id)} && target_kind=${q(kind)} && target_id=${q(targetId)}`);
-  let voted: boolean;
-  if (existing) {
-    try { await pb.remove("votes", existing.id); } catch (e) { if (!(e instanceof PBError && e.status === 404)) throw e; } // concurrent toggle already removed it
-    voted = false;
-  }
-  else {
-    try { await pb.create("votes", { tenant_id: tenant.id, user_id: s.user.id, target_kind: kind, target_id: targetId, direction: 1 }); }
-    catch (e) { if (!(e instanceof PBError && e.status === 400)) throw e; } // unique index: concurrent double-submit
-    voted = true;
-  }
-  const score = await pb.count("votes", `tenant_id=${q(tenant.id)} && target_kind=${q(kind)} && target_id=${q(targetId)}`);
-  await pb.update(kind === "piece" ? "editorial_pieces" : "comments", targetId, { vote_score: score });
-  if (voted) await writeEvent(tenant.id, { event_name: "vote_cast", story_id: kind === "piece" ? targetId : undefined, member_id: s.user.id });
-  revalidatePath("/", "layout");
-  invalidateFeedCache(tenant.id);
-  return { ok: true, message: voted ? "Vote recorded." : "Vote removed.", data: { voted: String(voted), score: String(score) } };
+  let direction = str(f, "direction", 3);
+  try {
+    if (direction === "" && session) {
+      const existing = await pb.first("votes", `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)} && target_kind=${q(kind)} && target_id=${q(targetId)}`);
+      direction = existing?.direction === 1 ? "0" : "1";
+    }
+    const r = await castHumanVote(tenant, session, { target_kind: kind, target_id: targetId, direction });
+    if (session && Number(direction) !== 0) await writeEvent(tenant.id, { event_name: "vote_cast", story_id: kind === "piece" ? targetId : undefined, member_id: session.user.id });
+    revalidatePath("/", "layout");
+    const d = Number(r.direction ?? 0);
+    return { ok: true, message: d === 0 ? "Vote removed." : "Vote recorded.", data: { voted: String(d !== 0), direction: String(d), score: String(r.score ?? "") } };
+  } catch (e) { return social(e); }
 }
 
 export async function toggleSave(_: ActionState, f: FormData): Promise<ActionState> {
@@ -412,11 +365,9 @@ const EDIT_WINDOW_MS = 15 * 60_000;
 /** Authors may correct their own visible reply for 15 minutes. The same posting rules apply again; the previous
  *  text is kept in the staff-only audit trail (moderation and appeals), readers see an "edited" label. */
 export async function editComment(_: ActionState, f: FormData): Promise<ActionState> {
-  if (HUMAN_PUBLIC_WRITES_CLOSED) return OBSERVER;
   const { tenant, session } = await ctx();
-  const blocked = canParticipate(session);
-  if (blocked) return blocked;
-  const s = session!;
+  let s: Session;
+  try { await assertHumanCanWrite(tenant, session, "replies"); s = session!; } catch (e) { return social(e); }
   if (!rateLimit(`comment-edit:${s.user.id}`, 10, 60_000).ok) return fail("Too many edits for now. Please try again shortly.");
   const id = str(f, "comment_id", 30);
   const text = str(f, "text", 5000).replace(/\r\n/g, "\n");
@@ -427,7 +378,13 @@ export async function editComment(_: ActionState, f: FormData): Promise<ActionSt
   if (c.moderation_status !== "visible" || c.approval_state === "rejected") return fail("This reply is under moderation and cannot be edited.");
   if (Date.now() - new Date(String(c.created).replace(" ", "T")).getTime() > EDIT_WINDOW_MS) return fail("Replies can be edited for 15 minutes after posting.");
   if (text === c.body_text) return { ok: true, message: "No changes." };
-  const pending = (text.match(LINK_RE) ?? []).length > 2;
+  const limits = limitsFor(s.user);
+  const links = linkDecision(text, limits);
+  if (!links.ok) return fail(links.reason, "text");
+  let pol;
+  try { pol = await humanPolicy(text, 2); } catch (e) { return social(e); }
+  if (pol.decision === "reject") return fail("This reply breaks the community guidelines, so the edit was not saved.", "text");
+  const pending = links.held || pol.decision === "hold";
   const revision = (c.edit_revision ?? 1) + 1;
   await pb.update("comments", c.id, { body_text: text, edit_revision: revision, approval_state: pending ? "pending" : c.approval_state });
   await audit(tenant.id, s.user.id, "comment.edit", "comments", c.id, { previous_text: String(c.body_text).slice(0, 4000), revision, pending }, revision);

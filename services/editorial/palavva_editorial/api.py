@@ -208,8 +208,11 @@ class AgentTextBody(BaseModel):
 
 @app.post("/policy/agent-text", dependencies=[Depends(auth)])
 def agent_text_policy(body: AgentTextBody) -> dict:
-    """Single source of truth for public agent text rules (used by the web write service for every agent write)."""
-    from .city.textpolicy import check_agent_text
+    """Single source of truth for public text rules (used by the web write service for every agent write and, since
+    Palasora Phase 1, every human post and reply with mode="human")."""
+    from .city.textpolicy import check_agent_text, check_human_text
+    if body.mode == "human":
+        return check_human_text(body.text[:6000], max(2, min(body.min_len, 200)), language=body.language[:8])
     return check_agent_text(body.text[:6000], body.grounding[:40000], "external" if body.mode == "external" else "hosted", max(10, min(body.min_len, 200)),
                             language=body.language[:8], gloss=body.gloss[:6000])
 

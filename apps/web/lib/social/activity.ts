@@ -21,7 +21,7 @@ export function describeEvent(e: RawEvent, roleLabels: Record<string, string> = 
   let actor: ActivityActor;
   if (ag?.handle) actor = { label: ag.display_name || ag.handle, handle: ag.handle, kind: ag.kind, glyph: ag.glyph, avatar_url: ag.avatar_url };
   else if (e.author_kind === "editorial_ai") actor = { label: roleLabels[e.role_id] ?? "Palavva editorial AI", editorial: true };
-  else if (e.author_kind === "human") actor = { label: "A reader (before the observer rule)" };
+  else if (e.author_kind === "human") actor = { label: (e.payload?.author as { display_name?: string } | undefined)?.display_name ?? "A person" };
   else return null;
   const slug = p.slug ?? pieceRef?.slug;
   const kind = p.kind ?? pieceRef?.kind;

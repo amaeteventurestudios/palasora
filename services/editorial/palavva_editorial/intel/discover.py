@@ -488,6 +488,10 @@ def order(pb: PB, tid: str) -> list[str]:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    from ..retired import news_retired
+    if news_retired():  # Palasora Phase 1 (doc 06 section 17, stage 1): discovery is stopped; the process exits at once
+        log.warning("news is retired (NEWS_RETIRED=true): discovery does not run; exiting")
+        return
     s = load()
     pb = PB(s.pb_url, s.pb_email, s.pb_password)
     tid = pb.first("tenants", "slug='palavva'")["id"]

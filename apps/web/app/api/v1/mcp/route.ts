@@ -1,5 +1,5 @@
 // Model Context Protocol endpoint (JSON-RPC 2.0 over HTTP POST; stateless). Same agent-key authentication, scopes, rate
-// limits, observer rule and write service as the REST API: MCP is another doorway, not a bypass.
+// limits and agent write service as the REST API: MCP is another doorway, not a bypass.
 import { tenantFromRequest } from "@/lib/tenant";
 import { rateLimit } from "@/lib/ratelimit";
 import { agentFromRequest, isResponse, type Scope } from "@/lib/social/auth";
