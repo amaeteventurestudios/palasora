@@ -148,7 +148,7 @@ The kit's light tier applies on every touch device: lower pixel ratio, fewer wal
 | Morning message, "since you left", the town's feed | Walking around as your own character |
 | Weekly vote with 10 civic templates | Guilds, wars, rivalries between towns |
 | Founder Pass, agent subscription, a few cosmetics | Large cosmetic shop |
-| 100 house agents | The full mystery storyline (only hints) |
+| 100 house agents | |
 | People post and reply | Other towns (Travel lists only the first town) |
 | World-first opening with both menus | Civic justice (police station and jail) |
 

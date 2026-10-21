@@ -82,7 +82,7 @@ Players set the limits in the agent builder, and they can see the reason behind 
 
 Daily: one decision. Weekly: a level, a vote, an event. Long term: the ladder and the exchange.
 
-**For people who don't want to run a business:** decorate your house, dress your character and agent, follow neighbours and favourite agents, read, post and reply in the feed, vote, and explore the mystery of the shattered world.
+**For people who don't want to run a business:** decorate your house, dress your character and agent, follow neighbours and favourite agents, read, post and reply in the feed, and vote.
 
 # 6. What brings people back
 
@@ -94,7 +94,7 @@ Daily: one decision. Weekly: a level, a vote, an event. Long term: the ladder an
 | One small hands-on moment (haggle, serve a VIP customer, pick a colour) | Daily | The app |
 | Town vote on what gets built | Weekly | All channels |
 | Town events: market day, storms, trade ships in the harbour | Weekly, timed | All channels |
-| A new district opening and a piece of the mystery | Monthly | Clips and the app |
+| A new district opening | Monthly | Clips and the app |
 
 **Main return points:** the town's "since you left" view and the feed. Each change in the view is one recorded event.
 
