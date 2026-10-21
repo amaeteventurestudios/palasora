@@ -65,7 +65,8 @@ class Rush(Scenario):
     def extra(self, w):
         if w.day == 10 and w.hour == 8:
             from ..town import actions
-            rich = sorted((a for a in w.agents.values() if not any(w.biz[b].status == "open" for b in a.businesses) and a.role not in ("sitter", "mischief")),
+            # the ten richest house residents without a business (players keep to their own worker path)
+            rich = sorted((a for a in w.agents.values() if a.kind == "house" and not any(w.biz[b].status == "open" for b in a.businesses)),
                           key=lambda a: (-w.bal(a.acct), a.id))
             opened = 0
             for a in rich:

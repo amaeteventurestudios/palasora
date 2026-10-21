@@ -101,11 +101,14 @@ def procurement(w) -> list[Proposal]:
                 continue
             per_day = gap
         else:
-            if contracted > 0 or have >= use * (days + 3):
+            # tools for what the farm's whole crew can grow (it hires before it grows), a little over so one late cart
+            # does not stop the fields
+            need = max(1, math.ceil(max(use, B.daily_capacity(w, b) / p.crops_per_tool) * 1.2))
+            gap = need - contracted
+            if gap < 1 or have >= need * (days + 3):
                 continue
-            per_day = max(1, math.ceil(use * 1.3))  # a little over what it wears out, so one late cart does not stop the fields
+            per_day = gap
             k_days = p.contract_days
-            gap = per_day
         sellers = sorted(farms if good == "crops" else shops, key=lambda s: (s.price, w.dist(s.xy, b.xy), s.id))
         for s in sellers:
             if gap <= 0:
@@ -229,6 +232,9 @@ def review_rules(w, b: Biz) -> list[Proposal]:
             new = int(b.price * (1 + step))
             if len(b.workers) < b.max_hires(p) and _recent(b, 3) > 0:
                 out.append((b.owner, "hire", {"business": b.id}, ""))
+            elif (len(b.workers) >= b.max_hires(p) and w.signals["room"].get(b.type) and b.level < 3
+                  and w.bal(w.agents[b.owner].acct) >= b.cost // 2 + 50 * C):
+                out.append((b.owner, "upgrade", {"business": b.id}, ""))  # full staff, the town short of its goods: grow
         elif committed < 0.5 * cap:
             new = int(b.price * (1 - step))
             if b.workers and committed + p.floor_daily_cap_units[g] < 0.5 * cap and _recent(b, 3) < 0:
@@ -270,8 +276,8 @@ def _close_rule(w, b: Biz) -> list[Proposal]:
 
 
 def _crowded_exit(w, b: Biz) -> list[Proposal]:
-    """Default (recorded in the PR): a house owner shuts a business that has paid back far slower than its lane for a
-    week while others of its kind carry on, so a crowded trade thins out instead of every stall limping along. Only the
+    """Default (recorded in the PR): a house owner shuts a business that has paid back slower than its lane (with the
+    half-lane margin) for a week while others of its kind carry on, so a crowded trade thins out instead of every stall limping along. Only the
     weakest of its trade, only one a day per trade, and never a player's business (players decide for themselves)."""
     p = w.p
     if w.agents[b.owner].kind != "house" or len(b.history) < 10:
@@ -279,7 +285,7 @@ def _crowded_exit(w, b: Biz) -> list[Proposal]:
     hist = b.history[-7:]
     med = B.median([x["profit"] for x in hist])
     hi = p.lane_bounds(b.type)[1]
-    if med > 0 and p.build_cost[b.type] / med <= 2 * hi:
+    if med > 0 and p.build_cost[b.type] / med <= hi:
         return []
     if sum(x.get("out_hours", 0) for x in hist) > len(hist) or (B.output_good(b.type) in ("crops", "tools") and any(not x.get("made") for x in hist)):
         return []  # short of inputs, not of customers: that is a supply problem, not a crowd

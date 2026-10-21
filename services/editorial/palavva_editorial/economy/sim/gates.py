@@ -102,23 +102,30 @@ def _sitting(s: dict) -> tuple:
 
 def _windfall(s: dict, base: dict | None) -> tuple:
     """Price shock (materials +50%, days 10 to 16): no income already owned rises in value by more than the shock. For
-    each business that stood before day 10, its profit during the shock is set against the same business in the
-    Baseline run of the same seed (same town, no shock); build costs are fixed numbers and do not move at all."""
+    each trade, the daily profit of the businesses that stood before day 10 is set against the same trade in the
+    Baseline run of the same seed (same town, no shock). Build costs are fixed numbers and do not move at all."""
     if base is None:
         return False, "no Baseline run of the same seed to compare with"
+    def per_day(run: dict, btype: str) -> tuple[float, float]:
+        tot, n, cost = 0, 0, 0
+        for b in run["businesses"]:
+            if b["type"] != btype or b["opened_day"] >= 10:
+                continue
+            xs = [x for d, x in run["histories"].get(b["id"], []) if 10 <= d <= 16]
+            tot += sum(xs)
+            n += len(xs)
+            cost += b["cost"] if xs else 0
+        return (tot / 7, cost)
     worst, who = 0.0, ""
-    for b in s["businesses"]:
-        if b["opened_day"] >= 10:
+    for t in ("stall", "farm", "workshop", "delivery"):
+        mine, cost_m = per_day(s, t)
+        theirs, cost_b = per_day(base, t)
+        ref = max(abs(theirs), max(cost_m, cost_b) / 10)  # a tenth of the trade's cost a day: tiny baselines do not turn noise into percentages
+        if ref <= 0:
             continue
-        mine = [x for d, x in s["histories"].get(b["id"], []) if 10 <= d <= 16]
-        theirs = [x for d, x in base["histories"].get(b["id"], []) if 10 <= d <= 16]
-        if len(mine) < 4 or len(theirs) < 4:
-            continue
-        ms, bs = sum(mine) / len(mine), sum(theirs) / len(theirs)
-        ref = max(abs(bs), b["cost"] / 10)  # a tenth of its cost a day: tiny baselines do not turn noise into percentages
-        rise = (ms - bs) / ref
+        rise = (mine - theirs) / ref
         if rise > worst:
-            worst, who = rise, b["id"]
+            worst, who = rise, t
     return worst <= 0.5, f"largest rise against the Baseline {worst:+.0%}{' (' + who + ')' if who else ''} (shock +50%)"
 
 

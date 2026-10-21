@@ -133,9 +133,31 @@ def recycled_parts(con: sqlite3.Connection, ts: float | None = None) -> tuple[in
     """(destroyed this week so far, carry from earlier weeks)."""
     ws = week_start(ts)
     this_week = supply(con, before=min(ws + WEEK, db.now() + 1), since=ws)["destroyed"]
-    before = supply(con, before=ws, since=0)["destroyed"]
-    carry = max(0, before - _used_between(con, 0, ws)) if before else 0
-    return this_week, carry
+    return this_week, _carry(con, ws)
+
+
+def _carry(con: sqlite3.Connection, ws: float) -> int:
+    """Destroyed Sora from before week `ws` that was not issued again: everything destroyed, less what the mints issued
+    beyond each week's growth part (the growth part is new money, not recycling). It only depends on weeks that have
+    ended, so it is stored once per week (issuance_carry)."""
+    r = con.execute("SELECT carry FROM issuance_carry WHERE week_start=?", (ws,)).fetchone()
+    if r is not None:
+        return r["carry"]
+    destroyed = supply(con, before=ws, since=0)["destroyed"]
+    first = con.execute("SELECT MIN(created_at) t FROM journal WHERE asset=?", (db.SORA,)).fetchone()["t"]
+    recycled_used = 0
+    if destroyed and first is not None:
+        wk = week_start(first)
+        while wk < ws:
+            u = _used_between(con, wk, wk + WEEK)
+            row = con.execute("SELECT * FROM issuance_budgets WHERE week=? AND mint='town_hall'", (week_label(wk),)).fetchone()
+            part = max(math.ceil(row["formula_budget"] * thermostat(con, wk)), row["floor"]) if row is not None else 0
+            recycled_used += max(0, u - part)
+            wk += WEEK
+    carry = max(0, destroyed - recycled_used)
+    if ws <= db.now():
+        con.execute("INSERT OR IGNORE INTO issuance_carry(week_start, carry) VALUES (?,?)", (ws, carry))
+    return carry
 
 
 def thermostat(con: sqlite3.Connection, ts: float | None = None) -> float:
@@ -153,8 +175,8 @@ def record_growth(con: sqlite3.Connection, week: str, measured: float, band: tup
     nxt = mult
     if prev and prev["band"] == state == "above":
         nxt = mult * THERMOSTAT_DOWN
-    elif state == "below":
-        nxt = mult * THERMOSTAT_UP  # Doc 04 rule 2: "if it runs below, the budget grows" (one week is enough)
+    elif prev and prev["band"] == state == "below":
+        nxt = mult * THERMOSTAT_UP
     nxt = min(max(nxt, THERMOSTAT_RANGE[0]), THERMOSTAT_RANGE[1])
     con.execute("INSERT INTO growth_weeks(week, measured, band, multiplier, next_multiplier) VALUES (?,?,?,?,?) ON CONFLICT(week) DO UPDATE SET "
                 "measured=excluded.measured, band=excluded.band, multiplier=excluded.multiplier, next_multiplier=excluded.next_multiplier",
