@@ -9,7 +9,6 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { dataRoot } from "../analytics-server";
 import { env } from "../env";
-import { newsRetired } from "../news";
 
 const run = promisify(execFile);
 const ROOT = () => path.resolve(dataRoot(), "..");
@@ -107,11 +106,11 @@ export async function inventory(force = false): Promise<Inventory> {
   const services: ServiceRow[] = PROCS.map(([id, purpose, license], i) => {
     const p = procs[i];
     const endpoint = id === "pocketbase" ? pbH : id === "editorial" ? edH : null;
-    const retired = id === "intel" && newsRetired() && !p.running; // Palasora Phase 1: not a failure, the runner is retired with news
+    const retired = id === "intel" && !p.running; // the discovery runner left with news (Palasora Phase 5): not a failure
     const status: Health = retired ? "not_configured" : !p.running ? "down" : endpoint ? (endpoint.ok ? "healthy" : "degraded") : id === "web" ? "healthy" : "running";
     const ver = id === "pocketbase" ? pbVer : id === "web" ? `Next.js ${npmV("next")}, Node ${process.version}` : pyVer;
     return { id, name: id, kind: "process", host: os.hostname(), purpose, version: ver, license, status, pid: p.pid, uptime: p.etime, cpu: p.cpu, rssMb: p.rss ? Math.round(p.rss) : undefined,
-      latencyMs: endpoint?.ms, checkedAt: at, detail: retired ? "retired: news ingestion and discovery are off (NEWS_RETIRED=true)" : !p.running ? "process not running" : endpoint ? (endpoint.ok ? `health endpoint ${endpoint.status}` : "running but health endpoint failed") : "running (no health endpoint; liveness only)" };
+      latencyMs: endpoint?.ms, checkedAt: at, detail: retired ? "removed: news ingestion and discovery left with news in Phase 5" : !p.running ? "process not running" : endpoint ? (endpoint.ok ? `health endpoint ${endpoint.status}` : "running but health endpoint failed") : "running (no health endpoint; liveness only)" };
   });
   services.push({ id: "qwen", name: "Local Qwen (Ollama)", kind: "model", host: "private Tailscale host", purpose: "Local model for translation and fallback writing", version: qwen?.models.map((m) => m.name).join(", ") || "unknown",
     license: "Qwen licence (model) / MIT (Ollama)", status: !qwen ? "not_configured" : qwen.ok ? "healthy" : "down", detail: qwen ? (qwen.ok ? `${qwen.models.length} model(s) listed` : "not reachable") : "OLLAMA_URL not set", checkedAt: at });

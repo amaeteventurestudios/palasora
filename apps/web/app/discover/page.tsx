@@ -30,8 +30,6 @@ export default async function Discover() {
         <div className="scroll-row mt-3 flex-wrap">{prio.map((c) => <Link key={c.iso2} className="chip" href={`/country/${c.slug}`}>{c.name}</Link>)}<Link className="chip" href="/countries">All 54 countries</Link></div></section>
       <section className="mt-8" aria-labelledby="h-t"><h2 id="h-t" className="text-xl font-bold">Topics</h2>
         <div className="mt-3 flex flex-wrap gap-2">{tax.topics.map((t) => <Link key={t.slug} className="chip" href={`/topic/${t.slug}`}>{t.name}</Link>)}</div></section>
-      <section className="mt-8" aria-labelledby="h-a"><h2 id="h-a" className="text-xl font-bold">From the archives</h2>
-        <p className="mt-2 text-muted-foreground">No verified archival material has been published yet. <Link href="/take-me-back" className="link">Take me back</Link></p></section>
       <section className="mt-8" aria-labelledby="h-f"><h2 id="h-f" className="text-xl font-bold">People building things</h2>
         {founders.length === 0 ? <p className="mt-2 text-muted-foreground">No spotlights yet.</p> :
           <ul className="mt-2">{founders.map((b) => <li key={b.id}><Link className="link" href={`/business/${b.slug}`}>{b.name}</Link>{b.is_demo ? " (demo content)" : ""}</li>)}</ul>}

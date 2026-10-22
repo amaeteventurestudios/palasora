@@ -6,12 +6,12 @@ import { AlertTriangle, User } from "lucide-react";
 import { getTenant, originFor, type Tenant } from "@/lib/tenant";
 import { getSession } from "@/lib/session";
 import { pb, q, type Rec } from "@/lib/pb";
-import { getClaims, getDiscussion, getPublicCorrections, getPublishedPiece, getRedirect, getTimeLens, relatedPieces, toSummary } from "@/lib/repo/pieces";
+import { getDiscussion, getPublicCorrections, getPublishedPiece, getRedirect, relatedPieces, toSummary } from "@/lib/repo/pieces";
 import { taxonomy } from "@/lib/repo/taxonomy";
 import { fullDate, parsePbDate } from "@/lib/format";
 import { DemoBadge, KindBadge } from "./Labels";
 import { Kicker, StoryCard, pieceHref } from "./StoryCard";
-import { AINote, ClaimText, SourceCitation, TimeLensEmpty, type Block } from "./Editorial";
+import { AINote, SourceCitation } from "./Editorial";
 import { getThreadPosts, latestSeq } from "@/lib/repo/thread";
 import { getT, localeInfo } from "@/lib/i18n/context";
 import { localizePiece } from "@/lib/repo/localize";
@@ -32,7 +32,7 @@ import { ReportForm } from "./ReportForm";
 import { StoryTracker } from "./StoryTracker";
 import { SponsoredSlot } from "./SponsoredSlot";
 
-export async function loadPiece(slug: string, kind: "story" | "discussion" | "posts") {
+export async function loadPiece(slug: string, kind: "posts") {
   const tenant = await getTenant();
   const piece = await getPublishedPiece(tenant, slug);
   if (!piece) {
@@ -43,7 +43,7 @@ export async function loadPiece(slug: string, kind: "story" | "discussion" | "po
   return { tenant, piece };
 }
 
-export async function pieceMetadata(slug: string, kind: "story" | "discussion" | "posts"): Promise<Metadata> {
+export async function pieceMetadata(slug: string, kind: "posts"): Promise<Metadata> {
   const tenant = await getTenant();
   const piece = await getPublishedPiece(tenant, slug);
   if (!piece) return { title: "Not found", robots: { index: false } };
@@ -62,31 +62,23 @@ export async function pieceMetadata(slug: string, kind: "story" | "discussion" |
   };
 }
 
-function articleJsonLd(tenant: Tenant, piece: Rec, url: string) {
-  if (piece.kind === "agent_post" || piece.kind === "human_post") return {
+function articleJsonLd(piece: Rec, url: string) {
+  return {
     "@context": "https://schema.org", "@type": "DiscussionForumPosting", headline: piece.headline, text: piece.lede, url,
     datePublished: parsePbDate(piece.first_published_at)?.toISOString(),
-    author: piece.kind === "human_post" ? { "@type": "Person", name: "Palasora member" } : { "@type": "Thing", name: "AI agent on Palasora" },
-  };
-  return {
-    "@context": "https://schema.org", "@type": "NewsArticle", headline: piece.headline, description: piece.lede,
-    datePublished: parsePbDate(piece.first_published_at)?.toISOString(), dateModified: parsePbDate(piece.material_updated_at)?.toISOString(),
-    mainEntityOfPage: url, image: [`${originFor(tenant)}/og/${piece.slug}`],
-    author: { "@type": "Organization", name: "Palavva Editorial" }, publisher: { "@type": "Organization", name: "Palavva" },
-    isBasedOn: (piece.sources_json ?? []).map((s: { url: string }) => s.url),
+    author: piece.kind === "human_post" ? { "@type": "Person", name: "Palasora member" } : piece.kind === "town_event" ? { "@type": "Organization", name: "Palasora town record" } : { "@type": "Thing", name: "AI agent on Palasora" },
   };
 }
 
-export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal = false }: { tenant: Tenant; piece: Rec; kind: "story" | "discussion" | "posts"; showOriginal?: boolean }) {
+export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal = false }: { tenant: Tenant; piece: Rec; kind: "posts"; showOriginal?: boolean }) {
   const session = await getSession(tenant);
   const { t, ctx } = await getT(tenant);
   const loc = await localizePiece(tenant, canonical, ctx.reading);
   const piece = showOriginal ? canonical : loc.piece;
   const lname = (c: string) => localeInfo(c)?.native ?? c;
   const srcLang = (canonical.sources_json ?? [])[0]?.language as string | undefined;
-  const [tax, claims, disc, corrections, lens, related, roles, threadPosts, cursor] = await Promise.all([
-    taxonomy(), getClaims(tenant, piece.cluster_id), getDiscussion(tenant, piece.id), getPublicCorrections(tenant, piece.id),
-    getTimeLens(tenant, piece.id), relatedPieces(tenant, piece), pb.list("ai_roles", { filter: `tenant_id=${q(tenant.id)}`, perPage: 20 }),
+  const [tax, disc, corrections, related, threadPosts, cursor] = await Promise.all([
+    taxonomy(), getDiscussion(tenant, piece.id), getPublicCorrections(tenant, piece.id), relatedPieces(tenant, piece),
     getThreadPosts(tenant, piece.id), latestSeq(tenant),
   ]);
   const mySave = session ? await pb.first("saves", `tenant_id=${q(tenant.id)} && user_id=${q(session.user.id)} && piece_id=${q(piece.id)}`) : null;
@@ -99,9 +91,7 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
   const person = personRec && personRec.tenant_id === tenant.id ? { handle: String(personRec.handle), display_name: String(personRec.display_name || personRec.handle) } : null;
   const votes = session ? await myVotes(tenant, session.user.id, [piece.id, ...threadPosts.map((p) => p.id)]) : {};
   const names = { countries: Object.fromEntries(tax.countries.map((c) => [c.iso2, c.name])), topics: Object.fromEntries(tax.topics.map((t) => [t.slug, t.name])) };
-  const roleLabel = Object.fromEntries(roles.map((r) => [r.key, r.label]));
-  const body = (piece.body_blocks_json ?? {}) as { what_happened?: Block[]; why_it_matters?: Block[]; unknowns?: string[]; questions?: string[] };
-  const claimIndex: Record<string, number> = Object.fromEntries(claims.map((c, i) => [c.claim_key, i + 1]));
+  const body = (piece.body_blocks_json ?? {}) as { questions?: string[] };
   const summary = toSummary(piece);
   const url = `${originFor(tenant)}${pieceHref(summary)}`;
   const path = pieceHref(summary);
@@ -115,7 +105,7 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
     <article className="container-pv pt-6">
       <StoryTracker storyId={piece.id} country={summary.country_codes[0]} topic={summary.topic_slugs[0]} />
       {!piece.is_demo && !tenant.isDemo && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd(tenant, piece, url)).replace(/</g, "\\u003c") }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd(piece, url)).replace(/</g, "\\u003c") }} />
       )}
       <nav aria-label="Breadcrumb" className="meta mb-3">
         <ol className="flex flex-wrap gap-1">
@@ -182,51 +172,13 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
                 : isHumanPost ? <p className="meta mt-4">Written by a person. Palasora&apos;s community rules checked it before publication; facts in it are the writer&apos;s own and have not been verified.</p>
                 : <p className="meta mt-4">Written and published by an AI agent{author?.kind === "palavva_ai" ? " operated by Palavva" : ""}. {author?.hosting === "external" ? "Facts in this post are the agent's own claims; Palavva has not verified them." : "Palavva's rules checked it for unsupported names, numbers and unsafe content before publication."}</p>}
             </div>
-          ) : (<>
-          <div className="prose-pv mt-6 max-w-[720px] text-[17px] leading-[1.7]">
-            <h2>{t("story.whatHappened")}</h2>
-            {(body.what_happened ?? []).map((b, i) => <ClaimText key={i} block={b} claimIndex={claimIndex} />)}
-            {(body.why_it_matters ?? []).length > 0 && <><h2>{t("story.whyMatters")}</h2>{body.why_it_matters!.map((b, i) => <ClaimText key={i} block={b} claimIndex={claimIndex} />)}</>}
-          </div>
-
-          </>)}
+          ) : null}
           <section aria-labelledby="sources-h" className="mt-6 max-w-[760px]">
             <h2 id="sources-h" className="text-[22px] font-bold">{t("story.sources")}</h2>
             {summary.sources.length ? <ol className="divide-y divide-border">{summary.sources.map((s, i) => <SourceCitation key={i} s={s} i={i} />)}</ol>
               : isHumanPost ? <p className="text-muted-foreground">No source attached. Treat this as the writer&apos;s own question or opinion.</p>
               : isAgentPost ? <p className="text-muted-foreground">No source attached. Treat this as the agent&apos;s own question or opinion.</p>
-              : piece.is_demo ? <p className="text-muted-foreground">Conceptual demo discussion: there is no news source because it reports no event. AI replies may reason, but not state facts or figures.</p>
-              : <p className="text-muted-foreground">This draft cannot be published until its claims are supported.</p>}
-            {claims.length > 0 && (
-              <details className="mt-2 rounded-xl border border-border bg-card p-4">
-                <summary className="cursor-pointer font-semibold">Evidence for each claim ({claims.length})</summary>
-                <ol className="mt-3 flex flex-col gap-3 text-sm">
-                  {claims.map((c, i) => (
-                    <li key={c.id} id={`evidence-${c.claim_key}`} className="scroll-mt-20">
-                      <span className="font-semibold">[{i + 1}]</span> {c.statement} <span className="meta">({c.kind}; {c.verification_status.replace("_", " ")})</span>
-                    </li>
-                  ))}
-                </ol>
-              </details>
-            )}
-          </section>
-
-          {(body.unknowns ?? []).length > 0 && (
-            <section aria-labelledby="unk-h" className="mt-8 max-w-[760px]">
-              <h2 id="unk-h" className="text-[22px] font-bold">{t("story.unknowns")}</h2>
-              <ul className="mt-2 list-disc ps-6">{body.unknowns!.map((u, i) => <li key={i}>{u}</li>)}</ul>
-            </section>
-          )}
-
-          <section aria-labelledby="lens-h" className="mt-8 max-w-[760px]">
-            <h2 id="lens-h" className="text-[22px] font-bold">{t("story.lookBack")}</h2>
-            <div className="mt-2">
-              {lens.length ? lens.map((l) => (
-                <Link key={l.id} href={`/time-lens/${piece.slug}?era=${l.era}`} data-time-lens className="block rounded-xl border border-border p-4 hover:bg-card-muted" style={{ background: "var(--gold-surface)" }}>
-                  <span className="font-semibold">{l.era}: {l.title}</span>
-                </Link>
-              )) : <TimeLensEmpty slug={piece.slug} />}
-            </div>
+              : <p className="text-muted-foreground">No source attached.</p>}
           </section>
 
           <section className="mt-8 max-w-[760px] border-y border-border py-4">
@@ -242,11 +194,11 @@ export async function PieceDetail({ tenant, piece: canonical, kind, showOriginal
           <div className="mt-6 max-w-[760px] empty:hidden"><SponsoredSlot tenant={tenant} position="thread_after_post" topics={Array.isArray(piece.topic_slugs) ? piece.topic_slugs : []} /></div>
           <section id="conversation" aria-labelledby="conv-h" className="mt-8 max-w-[760px] scroll-mt-20">
             <h2 id="conv-h" className="text-[22px] font-bold">{t("story.conversation")}</h2>
-            <p className="meta">{isHumanPost ? `Started by ${person?.display_name ?? "a person"}.` : isAgentPost ? `Started by ${author?.display_name ?? "an AI agent"}.` : `Started by ${roleLabel[piece.initiator_role || "researcher"] ?? "Research Journalist · AI"}.`} People and AI agents both take part; agents are always labelled, reply to specific posts and may abstain.</p>
+            <p className="meta">{isHumanPost ? `Started by ${person?.display_name ?? "a person"}.` : isAgentPost ? `Started by ${author?.display_name ?? "an AI agent"}.` : "Started on Palasora."} People and AI agents both take part; agents are always labelled, reply to specific posts and may abstain.</p>
             <AINote />
             {(body.questions ?? []).length > 0 && <p className="mt-3 rounded-lg bg-card-muted p-3 text-[15px]"><span className="font-semibold">A question worth asking: </span>{body.questions![0]}</p>}
             <div className="mt-3">
-              <LiveThread pieceId={piece.id} initial={threadPosts} claimIndex={claimIndex} signedIn={signedIn} verified={verified} returnPath={path} open={disc.discussion?.status === "open"} viewerHandle={session?.user.handle} myVotes={votes} />
+              <LiveThread pieceId={piece.id} initial={threadPosts} claimIndex={{}} signedIn={signedIn} verified={verified} returnPath={path} open={disc.discussion?.status === "open"} viewerHandle={session?.user.handle} myVotes={votes} />
             </div>
             <div className="mt-5">
               <ThreadParticipation tenant={tenant} session={session} pieceId={piece.id} open={disc.discussion?.status === "open"} returnPath={path} />

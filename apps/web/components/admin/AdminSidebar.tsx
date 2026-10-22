@@ -3,7 +3,7 @@
 // Economy / Commerce / Operations. Primary workspaces A01-A12 first in each group; existing tools remain as drilldowns.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, Bot, Building2, CandlestickChart, Coins, Cpu, FileBarChart, Globe2, Inbox, Languages, LayoutDashboard, MapPin, Megaphone, MessagesSquare, Rss, Settings, Share2, Shield, ShieldAlert, SlidersHorizontal, TrendingUp, Users, Wallet, HeartPulse, ArrowLeft, UsersRound, Gauge, UserCog, Gamepad2 } from "lucide-react";
+import { Activity, BarChart3, Bot, Building2, CandlestickChart, Coins, Cpu, FileBarChart, Globe2, Languages, LayoutDashboard, MapPin, Megaphone, MessagesSquare, Settings, Shield, SlidersHorizontal, TrendingUp, Users, Wallet, HeartPulse, ArrowLeft, UsersRound, Gauge, UserCog, Gamepad2 } from "lucide-react";
 import { moduleForPath } from "@/lib/access/permissions";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail } from "@/components/ui/sidebar";
 
@@ -11,13 +11,12 @@ const GROUPS: { title: string; items: [string, string, React.ComponentType<{ cla
   { title: "Overview", items: [["/admin", "Overview", LayoutDashboard], ["/admin/reports", "Reports & evidence", FileBarChart]] },
   { title: "Audience", items: [["/admin/audience", "Audience & retention", Users], ["/admin/geography", "Countries & languages", Globe2], ["/admin/analytics", "Event pipeline", BarChart3]] },
   { title: "Agents & AI", items: [["/admin/engine", "AI Engine overview", Globe2], ["/admin/engine/population", "Agent population", UsersRound], ["/admin/engine/controls", "Engine Control Room", Gauge], ["/admin/agent-city", "Agent City", Bot], ["/admin/models", "Models & Jev", Cpu], ["/admin/city", "City controls", SlidersHorizontal],
-    ["/admin/conversations", "Conversations", MessagesSquare], ["/admin/exceptions", "Exceptions", ShieldAlert], ["/admin/ai", "Editorial AI runs", Activity]] },
-  { title: "Content & Regions", items: [["/admin/social", "Social & SubPals", MessagesSquare], ["/admin/sources", "News & sources", Rss], ["/admin/editorial", "Editorial queue", Inbox],
-    ["/admin/translations", "Translations", Languages], ["/admin/geo", "Geo QA", MapPin], ["/admin/regions", "Regional priorities", MapPin], ["/admin/trends", "Trend audit", TrendingUp], ["/admin/moderation", "Moderation", Shield]] },
+    ["/admin/conversations", "Conversations", MessagesSquare], ["/admin/ai", "Editorial AI runs", Activity]] },
+  { title: "Content & Regions", items: [["/admin/social", "Social & SubPals", MessagesSquare],
+    ["/admin/translations", "Translations", Languages], ["/admin/regions", "Regional priorities", MapPin], ["/admin/trends", "Trend audit", TrendingUp], ["/admin/moderation", "Moderation", Shield]] },
   { title: "Community", items: [["/admin/games", "Games", Gamepad2]] },
   { title: "Economy", items: [["/admin/sora", "Sora economy", Coins], ["/admin/exchange", "Virtual Exchange", CandlestickChart], ["/admin/town", "Town events", Building2]] },
-  { title: "Commerce", items: [["/admin/revenue", "Revenue & business", Wallet], ["/admin/sponsors", "Sponsors & inquiries", Megaphone], ["/admin/advertising", "Advertising & inventory", Megaphone], ["/admin/businesses", "Businesses", Building2],
-    ["/admin/distribution", "Distribution & search", Share2]] },
+  { title: "Commerce", items: [["/admin/revenue", "Revenue & business", Wallet], ["/admin/sponsors", "Sponsors & inquiries", Megaphone], ["/admin/advertising", "Advertising & inventory", Megaphone], ["/admin/businesses", "Businesses", Building2]] },
   { title: "Operations", items: [["/admin/ops", "Reliability & security", HeartPulse], ["/admin/infrastructure", "Infrastructure & services", HeartPulse], ["/admin/health", "System health", Activity], ["/admin/settings", "Settings & audit", Settings], ["/admin/users", "Users & access", UserCog]] },
 ];
 

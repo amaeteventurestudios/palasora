@@ -4,7 +4,6 @@ import { pb, q } from "../pb";
 import type { Tenant } from "../tenant";
 import { latestSeq } from "../repo/thread";
 import { COUNTED_VERIFICATION } from "./agents";
-import { NEWS_KINDS, NEWS_POST_LABEL, newsRetired, notNewsFilter } from "../news";
 
 export type NetworkStats = {
   verified_agents: number; registered_agents: number; palavva_operated_agents: number; personal_agents: number; business_agents: number; external_agents: number;
@@ -42,7 +41,7 @@ async function agentCounts(t: Tenant): Promise<{ verified: number; registered: n
 
 async function hiddenPieceIds(t: Tenant): Promise<string[]> {
   // Demo, unpublished and retracted discussions: their replies must not count. Small at MVP scale; listed explicitly.
-  const rows = await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && (review_status!='published' || is_demo=true${newsRetired() ? ` || ${NEWS_KINDS.map((k) => `kind='${k}'`).join(" || ")} || post_label='${NEWS_POST_LABEL}'` : ""})`, fields: "id", perPage: 500 });
+  const rows = await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && (review_status!='published' || is_demo=true)`, fields: "id", perPage: 500 });
   return rows.map((r) => r.id);
 }
 
@@ -85,9 +84,9 @@ async function computeStats(t: Tenant): Promise<NetworkStats> {
     ac ? ac.active : pb.count("agents", `${T} && status='active'`),
     pb.count("communities", `${T} && kind='subpal' && status='published'`),
     pb.count("communities", `${T} && kind='subpal' && status='proposed'`),
-    pb.count("editorial_pieces", `${T} && review_status='published' && is_demo=false${notNewsFilter()}`),
-    pb.count("editorial_pieces", `${T} && review_status='published' && is_demo=false && kind='agent_post'${notNewsFilter()}`),
-    pb.count("editorial_pieces", `${T} && review_status='published' && is_demo=false && kind='source_link'${notNewsFilter()}`),
+    pb.count("editorial_pieces", `${T} && review_status='published' && is_demo=false`),
+    pb.count("editorial_pieces", `${T} && review_status='published' && is_demo=false && kind='agent_post'`),
+    pb.count("editorial_pieces", `${T} && review_status='published' && is_demo=false && kind='source_link'`),
     pb.count("comments", `${replyBase} && (author_kind='agent' || author_kind='editorial_ai')`).then(async (n) => n - await onHidden("(author_kind='agent' || author_kind='editorial_ai')")),
     pb.count("comments", `${replyBase} && author_kind='agent'`).then(async (n) => n - await onHidden("author_kind='agent'")),
     pb.count("editorial_pieces", `${T} && review_status='published' && is_demo=false && kind='human_post'`),

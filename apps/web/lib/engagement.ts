@@ -14,7 +14,6 @@ import path from "node:path";
 import { pb, q } from "./pb";
 import { dataRoot } from "./analytics-server";
 import type { Tenant } from "./tenant";
-import { notNewsFilter } from "./news";
 
 export const SHARE_CHANNELS = ["whatsapp", "x", "facebook", "copy", "native"] as const;
 export type EngagementKind = "view" | "share";
@@ -77,7 +76,7 @@ async function purgeOldKeys() {
 export async function recordEngagement(t: Tenant, pieceId: string, kind: EngagementKind, channel: string, h: Headers, net: string, isStaffSession: boolean): Promise<EngagementResult> {
   if (!/^[a-z0-9]{10,20}$/.test(pieceId)) return { counted: false, reason: "invalid" };
   if (kind === "share" && !(SHARE_CHANNELS as readonly string[]).includes(channel)) return { counted: false, reason: "invalid" };
-  const piece = await pb.first("editorial_pieces", `tenant_id=${q(t.id)} && id=${q(pieceId)} && review_status='published'${notNewsFilter()}`);
+  const piece = await pb.first("editorial_pieces", `tenant_id=${q(t.id)} && id=${q(pieceId)} && review_status='published'`);
   if (!piece) return { counted: false, reason: "not_found" };
   const day = new Date().toISOString().slice(0, 10);
   if (privacySignal(h)) return { counted: false, reason: "privacy_signal" };

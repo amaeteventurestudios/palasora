@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bot, History, MessageSquare, Share2 } from "lucide-react";
+import { Bot, MessageSquare, Share2 } from "lucide-react";
 import { LiveCount } from "./live/LiveEvents";
 import { translator, type T } from "@/lib/i18n/messages";
 import { localeInfo } from "@/lib/i18n/context";
@@ -11,7 +11,7 @@ import { Time } from "./Time";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function pieceHref(p: { [k: string]: any }): string {
-  return p.kind === "story" ? `/story/${p.slug}` : p.kind === "agent_post" || p.kind === "human_post" || p.kind === "town_event" ? `/posts/${p.slug}` : `/discussion/${p.slug}`;
+  return `/posts/${p.slug}`; // Palasora Phase 5: every remaining kind (agent, human and town posts) lives under /posts
 }
 
 export function Kicker({ p, names, onDark = false }: { p: PieceSummary; names: { countries: Record<string, string>; topics: Record<string, string> }; onDark?: boolean }) {
@@ -34,7 +34,6 @@ function Actions({ p, onDark, t }: { p: PieceSummary; onDark?: boolean; t: T }) 
         <LiveCount pieceId={p.id} initial={p.counts.human_comments} kind="human" one={t("card.humanReply")} many={t("card.humanReplies")} />
       </Link>
       <Link href={`${href}#share`} className="inline-flex min-h-[32px] items-center gap-1 underline-offset-2 hover:underline"><Share2 size={14} aria-hidden="true" />{t("card.share")}</Link>
-      <Link href={`/time-lens/${p.slug}`} className="inline-flex min-h-[32px] items-center gap-1 underline-offset-2 hover:underline"><History size={14} aria-hidden="true" />{t("card.timeLens")}</Link>
     </div>
   );
 }

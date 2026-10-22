@@ -50,9 +50,7 @@ export async function SocialFeed({ tenant, session, mode, base, extra = {}, edit
             {(feed.scopeCounts!.regional + feed.scopeCounts!.pan) > 0 && <> Then {regionOf(edition)} and pan-African items, each labelled.</>}
           </p>
           <p className="meta mt-1">
-            {cov.sources} rights-cleared {cov.sources === 1 ? "source covers" : "sources cover"} {countryName(edition)}
-            {cov.lastFetchOk ? <> · last checked <Time value={cov.lastFetchOk} /></> : <> · not fetched yet</>}
-            {cov.newestItemAt ? <> · newest item <Time value={cov.newestItemAt} /></> : <> · no item yet</>}
+            {cov.newestItemAt ? <>Newest item <Time value={cov.newestItemAt} /></> : <>No item yet</>}
             {feed.scopeCounts!.excluded > 0 && <> · {feed.scopeCounts!.excluded} items about other regions are left out (<Link href="/?edition=ALL" className="link">see All Africa</Link>)</>}
           </p>
         </div>

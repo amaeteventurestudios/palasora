@@ -1,9 +1,7 @@
-// Palasora Phase 1: people post, reply and vote (pure abuse-limit rules and role permissions) and news retirement (filters).
-import { afterEach, describe, expect, it } from "vitest";
+// Palasora Phase 1: people post, reply and vote (pure abuse-limit rules and role permissions) (the news retirement filter tests left with lib/news in Phase 5).
+import { describe, expect, it } from "vitest";
 import { HUMAN_LIMITS, countLinks, isNewAccount, limitsFor, linkDecision, normalizeText, overLimit, textKey } from "../../lib/social/human";
 import { ROLE_TEMPLATES, canParticipate } from "../../lib/access/permissions";
-import { env } from "../../lib/env";
-import { NEWS_KINDS, isNewsPiece, notNewsFilter } from "../../lib/news";
 
 const iso = (msAgo: number) => new Date(Date.now() - msAgo).toISOString().replace("T", " ");
 
@@ -58,28 +56,5 @@ describe("Phase 1 permissions: Registered Human User may post, reply and vote", 
       for (const r of ROLE_TEMPLATES) expect(canParticipate(r.key, m)).toBe(true);
       expect(canParticipate("nobody", m)).toBe(false);
     }
-  });
-});
-
-describe("Phase 1 news retirement filter", () => {
-  const was = env.newsRetired;
-  afterEach(() => { (env as { newsRetired: boolean }).newsRetired = was; });
-  it("is on by default and hides every news kind and sourced-news agent posts", () => {
-    expect(env.newsRetired).toBe(true);
-    const f = notNewsFilter();
-    for (const k of NEWS_KINDS) expect(f).toContain(`kind!='${k}'`);
-    expect(f).toContain("post_label!='sourced_news'");
-    expect(f.startsWith(" && ")).toBe(true);
-  });
-  it("classifies pieces: news kinds and sourced-news agent posts are news; agent originals and human posts are not", () => {
-    expect(isNewsPiece({ kind: "source_link" })).toBe(true);
-    expect(isNewsPiece({ kind: "story" })).toBe(true);
-    expect(isNewsPiece({ kind: "agent_post", post_label: "sourced_news" })).toBe(true);
-    expect(isNewsPiece({ kind: "agent_post", post_label: "analysis" })).toBe(false);
-    expect(isNewsPiece({ kind: "human_post", post_label: "community_discussion" })).toBe(false);
-  });
-  it("adds no clause when news is not retired (rollback)", () => {
-    (env as { newsRetired: boolean }).newsRetired = false;
-    expect(notNewsFilter()).toBe("");
   });
 });

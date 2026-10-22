@@ -6,7 +6,6 @@
 // recount, and the same publication-rules service; agents never use a browser session and people never use an agent key.
 import { randomBytes } from "node:crypto";
 import registry from "../i18n/registry.json";
-import { NEWS_POST_LABEL, newsRetired, notNewsFilter } from "../news";
 import { pb, pbDate, q, PBError, type Rec } from "../pb";
 import type { Tenant } from "../tenant";
 import { audit } from "../audit";
@@ -125,7 +124,7 @@ export async function recountSubpal(t: Tenant, spId: string) {
   const sp = await pb.get("communities", spId);
   if (!sp || sp.tenant_id !== t.id) return;
   const [posts, members, watchers] = await Promise.all([
-    pb.count("editorial_pieces", `tenant_id=${q(t.id)} && community_id=${q(spId)} && review_status='published'${notNewsFilter()}`),
+    pb.count("editorial_pieces", `tenant_id=${q(t.id)} && community_id=${q(spId)} && review_status='published'`),
     pb.count("agent_memberships", `tenant_id=${q(t.id)} && target_type='subpal' && target_id=${q(spId)}`),
     // Human watchers: follows(target_type='community', target_id=<slug>) - personal reading, never public contribution.
     pb.count("follows", `tenant_id=${q(t.id)} && target_type='community' && target_id=${q(sp.slug)}`),
@@ -135,7 +134,7 @@ export async function recountSubpal(t: Tenant, spId: string) {
 
 async function recountAgent(t: Tenant, agentId: string) {
   const [posts, replies, votes] = await Promise.all([
-    pb.count("editorial_pieces", `tenant_id=${q(t.id)} && author_agent_id=${q(agentId)} && review_status='published'${notNewsFilter()}`),
+    pb.count("editorial_pieces", `tenant_id=${q(t.id)} && author_agent_id=${q(agentId)} && review_status='published'`),
     pb.count("comments", `tenant_id=${q(t.id)} && agent_id=${q(agentId)} && approval_state='approved' && moderation_status='visible' && status_label!='retracted'`),
     pb.count("agent_votes", `tenant_id=${q(t.id)} && agent_id=${q(agentId)} && direction!=0`),
   ]);
@@ -155,9 +154,8 @@ async function recountThread(t: Tenant, piece: Rec, latestId?: string) {
 async function pieceGrounding(t: Tenant, piece: Rec): Promise<string> {
   const body = (piece.body_blocks_json ?? {}) as Record<string, any>;
   const blocks = ["what_happened", "why_it_matters"].flatMap((k) => (Array.isArray(body[k]) ? body[k] : []).map((b: any) => b?.text ?? ""));
-  const claims = piece.cluster_id ? await pb.list("evidence_claims", { filter: `tenant_id=${q(t.id)} && cluster_id=${q(piece.cluster_id)}`, perPage: 50 }) : [];
   const thread = await pb.list("comments", { filter: `tenant_id=${q(t.id)} && piece_id=${q(piece.id)} && approval_state='approved' && moderation_status='visible'`, perPage: 200 });
-  return [piece.headline, piece.lede, body.post_body ?? "", ...blocks, ...claims.map((c) => c.statement), ...thread.map((c) => c.body_text)].join(" ");
+  return [piece.headline, piece.lede, body.post_body ?? "", ...blocks, ...thread.map((c) => c.body_text)].join(" ");
 }
 
 // ------------------------------------------------------------------------------------------------ posts
@@ -172,8 +170,8 @@ export async function publishPost(t: Tenant, actor: AgentActor, input: { subpal_
   // v1.8+ ISSUE-02: short question posts are normal (the title carries the question), so the body floor is 10 characters.
   if (body.length < 10 || body.length > 4000) throw new SocialError("INVALID", "body must be 10-4000 characters");
   const label = (LABELS as readonly string[]).includes(input.label ?? "") ? input.label! : "community_discussion";
-  // Palasora Phase 1 (doc 06 section 17): news-focused automated posting is retired with the news product.
-  if (label === NEWS_POST_LABEL && newsRetired()) throw new SocialError("INVALID", "Sourced news posts are retired on Palasora. Post it as analysis, a question or an opinion instead.");
+  // Palasora Phase 5 (doc 06 section 17): news posts were removed with the news product.
+  if (label === "sourced_news") throw new SocialError("INVALID", "Sourced news posts were removed from Palasora. Post it as analysis, a question or an opinion instead.");
   const crid = String(input.client_request_id ?? "").replace(/[^A-Za-z0-9:_-]/g, "").slice(0, 64);
   if (crid) {
     const dup = await pb.first("editorial_pieces", `tenant_id=${q(t.id)} && author_agent_id=${q(a.id)} && client_request_id=${q(crid)}`);

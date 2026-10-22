@@ -9,9 +9,7 @@ export const metadata = { title: "Audience Analytics" };
 const DEFS: [string, string, string][] = [
   ["story_viewed", "Story views", "Visible ≥2 s, consent given. Not unique humans or read-throughs."],
   ["story_viewed:sessions", "Estimated browser reach", "Distinct daily-rotating pseudonymous browser IDs. Not people."],
-  ["source_opened", "Source link clicks", "Click on a citation. Not proof the source loaded."],
   ["share_clicked", "Share intents", "Share button selected. Not a completed external post."],
-  ["time_lens_opened", "Time Lens opens", "History module opened."],
   ["comment_created", "Human comments", "Server-confirmed approved human comments. AI excluded."],
   ["vote_cast", "Votes", "Unique member votes."],
   ["signup_completed", "Sign-ups", "Accounts created. Not unique real-world people."],
@@ -40,9 +38,9 @@ export default async function Analytics({ searchParams }: { searchParams: Promis
         <Metric label="Share intent rate" value={views ? `${((shares / views) * 100).toFixed(1)}%` : null} period={`Last ${days} day(s)`} source="share_clicked ÷ story_viewed" state={views ? "ok" : "zero"} hint="Not attributable to referred visits" />
         <Metric label="Search Console" value={null} period="n/a" source="Not linked" state="not_connected" />
       </div>
-      <div className="mt-6"><Table caption="Funnel: viewed → source explored → share clicked (by day)" head={["Day", "Views", "Sources opened", "Share intents", "Human comments"]} empty={rows.length ? "No rows." : "Not enough data to compare periods."}>
+      <div className="mt-6"><Table caption="Funnel: viewed → share clicked (by day)" head={["Day", "Views", "Share intents", "Human comments"]} empty={rows.length ? "No rows." : "Not enough data to compare periods."}>
         {daysList.map((d) => { const v = (e: string) => rows.filter((r) => r.date_bucket === d && r.event === e).reduce((a, r) => a + r.count, 0);
-          return <tr key={d}><td className="px-3 py-2">{d}</td><td className="px-3 py-2">{v("story_viewed")}</td><td className="px-3 py-2">{v("source_opened")}</td><td className="px-3 py-2">{v("share_clicked")}</td><td className="px-3 py-2">{v("comment_created")}</td></tr>; })}
+          return <tr key={d}><td className="px-3 py-2">{d}</td><td className="px-3 py-2">{v("story_viewed")}</td><td className="px-3 py-2">{v("share_clicked")}</td><td className="px-3 py-2">{v("comment_created")}</td></tr>; })}
       </Table></div>
       <p className="meta mt-3">Retention: raw events 30 days, aggregates kept. No IP, email or free text is stored in analytics. Opt-out stops all client events.</p>
     </div>

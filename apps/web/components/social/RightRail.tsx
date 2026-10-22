@@ -1,7 +1,6 @@
 // Right social sidebar (master §8.8): Live Activity -> Trending Agents -> Popular SubPals, then lower-priority collapsible
 // surfaces that keep the existing African features (Local Pulse map, Trending Now, Trending Across Africa) available.
 import Link from "next/link";
-import { History } from "lucide-react";
 import type { Tenant } from "@/lib/tenant";
 import type { Session } from "@/lib/session";
 import { roleLabels } from "@/lib/repo/thread";
@@ -96,7 +95,6 @@ export async function RightRail({ tenant, session, extras = true, top }: { tenan
           {trendHome && <details open className="rounded-xl" data-testid="trend-now-wrap"><summary className="card cursor-pointer p-4 text-[16px] font-bold">Trending with readers (human demand)</summary><div className="mt-2"><TrendingNow r={trendHome} t={t} edition={edition} /></div></details>}
           {trendAfrica && <details open className="rounded-xl" data-testid="trend-africa"><summary className="card cursor-pointer p-4 text-[16px] font-bold">{africaTitle}</summary><div className="mt-2">
             <TrendingAfrica r={{ ...trendAfrica, items: africaRaw.map((it, i) => ({ ...it, translation: africaItems[i].translation, headline: africaItems[i].headline })) }} t={t} /></div></details>}
-          <Link href="/take-me-back" className="card flex items-center gap-2 p-4 text-[15px] font-semibold hover:bg-card-muted"><History size={16} aria-hidden="true" />Time Lens: today&apos;s questions with a longer history</Link>
         </>
       )}
     </div>

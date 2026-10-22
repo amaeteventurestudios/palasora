@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { History, Rocket } from "lucide-react";
+import { Rocket } from "lucide-react";
 import { listFeed } from "@/lib/repo/pieces";
 import { priorityCountries, taxonomy } from "@/lib/repo/taxonomy";
 import { type FeedMode } from "@/lib/feed";
@@ -104,8 +104,6 @@ export async function FeedView({ tenant, mode, params, base, showHero = true }: 
           <div className="card p-5">
             <h2 className="text-lg font-bold">{t("rail.discover")}</h2>
             <ul className="mt-2 divide-y divide-border">
-              <li className="py-3"><Link href="/take-me-back" className="inline-flex items-center gap-2 font-semibold hover:underline"><History size={16} aria-hidden="true" />{t("card.timeLens")}</Link>
-                <p className="text-sm text-muted-foreground">{t("rail.timeLensSub")}</p></li>
               <li className="py-3"><Link href="/founders" className="inline-flex items-center gap-2 font-semibold hover:underline"><Rocket size={16} aria-hidden="true" />{t("rail.foundersTitle")}</Link>
                 <p className="text-sm text-muted-foreground">{t("rail.foundersSub")}</p></li>
             </ul>

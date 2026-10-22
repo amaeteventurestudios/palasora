@@ -9,7 +9,7 @@ import { useLive } from "../live/LiveEvents";
 
 type Pulse = { code: string; n: number; href: string; title: string; until: number };
 const TYPES = new Set(["reply_published", "topic_published"]);
-const hrefOf = (p: Record<string, unknown>) => (p.kind === "story" ? `/story/${p.slug}` : p.kind === "agent_post" ? `/posts/${p.slug}` : `/discussion/${p.slug}`);
+const hrefOf = (p: Record<string, unknown>) => `/posts/${p.slug}`;
 
 export function LivePulses({ country, seconds = 8, children }: { country: string; seconds?: number; children: React.ReactNode }) {
   const ctx = useLive();

@@ -15,16 +15,6 @@ export async function coverageByCountry(t: Tenant, sinceTs?: string): Promise<Re
   return out;
 }
 
-export type SourceHealth = { id: string; name: string; countries: string[]; enabled: boolean; rights: string; state: "healthy" | "stale" | "failing" | "never" | "off"; lastOk: string; failures: number; error: string };
-export async function sourceHealth(t: Tenant): Promise<SourceHealth[]> {
-  const rows = await pb.list("sources", { filter: `tenant_id=${q(t.id)}`, perPage: 300, fields: "id,publisher_name,countries,enabled,rights_status,last_success_at,consecutive_failures,last_error_code,fetch_interval_minutes" });
-  return rows.map((s) => {
-    const age = s.last_success_at ? Date.now() - new Date(String(s.last_success_at).replace(" ", "T")).getTime() : Infinity;
-    const state = !s.enabled || s.rights_status !== "approved" ? "off" : s.consecutive_failures > 0 ? "failing" : !s.last_success_at ? "never" : age > 3 * (s.fetch_interval_minutes || 60) * 60_000 ? "stale" : "healthy";
-    return { id: s.id, name: s.publisher_name, countries: s.countries ?? [], enabled: !!s.enabled, rights: s.rights_status, state, lastOk: s.last_success_at ?? "", failures: s.consecutive_failures ?? 0, error: s.last_error_code ?? "" };
-  });
-}
-
 export type Services = { pocketbase: boolean; editorial: boolean; economy: boolean; model: { reachable: boolean; latency_ms?: number } | null; queue: QueueStatus | null };
 /** Editorial /status queue shape (nested; v1.7 typed it flat, which printed [object Object]). */
 export type QueueStatus = { by_state?: Record<string, number>; by_type?: Record<string, number>; oldest_queued_age_s?: number | null; dead_letters?: unknown[]; recent?: unknown[] };

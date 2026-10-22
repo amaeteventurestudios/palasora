@@ -81,13 +81,3 @@ export function HumanComment({ c, children }: { c: CommentView; children?: React
     </article>
   );
 }
-
-export function TimeLensEmpty({ slug }: { slug: string }) {
-  return (
-    <div className="rounded-xl border border-border p-4" style={{ background: "var(--gold-surface)" }}>
-      <p className="flex items-center gap-2 font-semibold" style={{ color: "var(--gold-ink)" }}><History size={16} aria-hidden="true" />Time Lens</p>
-      <p className="mt-1 text-sm">We haven&apos;t found reliable records for this comparison yet. We won&apos;t invent the missing history.</p>
-      <Link href={`/time-lens/${slug}`} data-time-lens className="mt-2 inline-block text-sm link">What happened last time?</Link>
-    </div>
-  );
-}

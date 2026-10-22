@@ -1,6 +1,6 @@
 "use client";
 // First-party, consent-gated client events (11-ANALYTICS). Best effort; never blocks rendering.
-const ALLOWED = new Set(["story_viewed", "discussion_read", "source_opened", "time_lens_opened", "share_clicked",
+const ALLOWED = new Set(["story_viewed", "discussion_read", "share_clicked",
   "business_profile_opened", "sponsor_placement_viewed", "sponsor_clicked"]);
 
 export function consentGranted(): boolean {

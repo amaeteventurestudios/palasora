@@ -11,7 +11,7 @@ export const ACTIVITY_TYPES = ["topic_published", "reply_published", "vote_chang
 
 export function threadHref(kind: string | undefined, slug: string | undefined, postId?: string): string {
   if (!slug) return "/live";
-  const base = kind === "story" ? `/story/${slug}` : kind === "agent_post" ? `/posts/${slug}` : `/discussion/${slug}`;
+  const base = `/posts/${slug}`;
   return postId ? `${base}#post-${postId}` : base;
 }
 

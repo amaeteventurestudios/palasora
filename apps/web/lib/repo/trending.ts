@@ -6,9 +6,8 @@ import { pb, pbDate, q, type Rec } from "../pb";
 import type { Tenant } from "../tenant";
 import { toSummary, type PieceSummary } from "./pieces";
 import { engagementSince } from "../engagement";
-import { notNewsFilter } from "../news";
 
-export const FORMULA_VERSION = "trend-v2: (2*human_comments + human_votes + 1.5*human_shares + 0.5*log2(1+human_views) + 0.5*(source_count-1) + 1) / (age_h + 2)^1.2; ai_posts excluded; views/shares deduplicated, bots/headless/staff excluded";
+export const FORMULA_VERSION = "trend-v3: (2*human_comments + human_votes + 1.5*human_shares + 0.5*log2(1+human_views) + 1) / (age_h + 2)^1.2; ai_posts excluded; views/shares deduplicated, bots/headless/staff excluded";
 const WINDOW_H = 72;
 export type TrendBasis = "human_activity" | "verified_coverage" | "editorial_selection";
 export type TrendItem = PieceSummary & {
@@ -30,17 +29,6 @@ async function countsSince(t: Tenant, pieceIds: string[], since: string) {
   return { human, ai, votes };
 }
 
-async function sourceCounts(t: Tenant, rows: Rec[]) {
-  const m = new Map<string, number>();
-  const clusters = [...new Set(rows.map((r) => r.cluster_id).filter(Boolean))];
-  if (!clusters.length) return m;
-  const links = await pb.list("cluster_sources", { filter: `tenant_id=${q(t.id)} && (${clusters.map((c) => `cluster_id=${q(c)}`).join(" || ")})`, perPage: 500, fields: "cluster_id" });
-  const byCluster = new Map<string, number>();
-  for (const l of links) byCluster.set(l.cluster_id, (byCluster.get(l.cluster_id) ?? 0) + 1);
-  for (const r of rows) m.set(r.id, byCluster.get(r.cluster_id) ?? 1);
-  return m;
-}
-
 export async function computeTrending(t: Tenant, scope: "home" | "africa", edition: string, n = 5): Promise<TrendResult> {
   const key = `${t.id}:${scope}:${edition}:${n}`;
   const hit = cache.get(key);
@@ -49,21 +37,20 @@ export async function computeTrending(t: Tenant, scope: "home" | "africa", editi
   const since = pbDate(new Date(now - WINDOW_H * 3600_000));
   // Candidates: real (non-demo) published topics, freshest 7 days so stale stories never show as current (L-16).
   // Palasora Phase 1: retired news is never trending; human posts, replies and votes count again (people can write now).
-  let f = `tenant_id=${q(t.id)} && review_status='published' && is_demo=false${notNewsFilter()} && published_at >= ${q(pbDate(new Date(now - 7 * 86400_000)))}`;
+  let f = `tenant_id=${q(t.id)} && review_status='published' && is_demo=false && published_at >= ${q(pbDate(new Date(now - 7 * 86400_000)))}`;
   if (scope === "home" && edition !== "ALL") f += ` && country_codes~${q(`"${edition}"`)}`;
   if (scope === "africa" && edition !== "ALL") f += ` && country_codes!~${q(`"${edition}"`)}`;
   const rows = (await pb.list("editorial_pieces", { filter: f, sort: "-published_at", perPage: 100 })).filter((r) => scope === "home" || (r.country_codes ?? []).length > 0);
-  const [{ human, ai, votes }, sc, eng] = await Promise.all([countsSince(t, rows.map((r) => r.id), since), sourceCounts(t, rows),
+  const [{ human, ai, votes }, eng] = await Promise.all([countsSince(t, rows.map((r) => r.id), since),
     engagementSince(t, rows.map((r) => r.id), since.slice(0, 10)).catch(() => new Map<string, { views: number; shares: number }>())]);
   let items: TrendItem[] = rows.map((r) => {
     const s = toSummary(r);
     const ageH = Math.max(0, (now - new Date(s.published_at.replace(" ", "T")).getTime()) / 3600_000);
     const e = eng.get(r.id) ?? { views: 0, shares: 0 };
-    const m = { human_comments: human.get(r.id) ?? 0, human_votes: votes.get(r.id) ?? 0, source_count: sc.get(r.id) ?? 1, ai_posts: ai.get(r.id) ?? 0, human_views: e.views, human_shares: e.shares };
-    const score = (2 * m.human_comments + m.human_votes + 1.5 * m.human_shares + 0.5 * Math.log2(1 + m.human_views) + 0.5 * (m.source_count - 1) + 1) / Math.pow(ageH + 2, 1.2);
+    const m = { human_comments: human.get(r.id) ?? 0, human_votes: votes.get(r.id) ?? 0, source_count: 1, ai_posts: ai.get(r.id) ?? 0, human_views: e.views, human_shares: e.shares };
+    const score = (2 * m.human_comments + m.human_votes + 1.5 * m.human_shares + 0.5 * Math.log2(1 + m.human_views) + 1) / Math.pow(ageH + 2, 1.2);
     const basis: TrendBasis[] = [];
     if (m.human_comments + m.human_votes + m.human_shares + m.human_views > 0) basis.push("human_activity");
-    if (m.source_count > 1) basis.push("verified_coverage");
     if (!basis.length) basis.push("editorial_selection");
     return { ...s, metrics: m, score, basis, rank: 0 };
   });
