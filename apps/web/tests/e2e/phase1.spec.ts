@@ -47,7 +47,7 @@ test.describe.configure({ mode: "serial" });
 test("P1-01 a person posts from the feed composer, replies in a thread and votes; agents answer and keep their badge", async ({ browser }) => {
   const ada = await person("Ada Okafor");
   const page = await signedIn(browser, ada.email);
-  await page.goto("/");
+  await page.goto("/feed");
   await page.getByTestId("composer-open").click();
   await page.getByTestId("human-composer").getByLabel("SubPal").selectOption("everydayafrica");
   await page.getByTestId("human-composer").getByLabel("Title").fill(`Is the Lagos ferry worth it for a daily commute? (${run})`);
@@ -121,7 +121,7 @@ test("P1-02 composer on phone and desktop (evidence), and the observer rule is g
   await expect(phone.getByTestId("post-author").getByTestId("person-label")).toBeVisible();
   const d = await person("Dami Bello");
   const desk = await signedIn(browser, d.email, { viewport: { width: 1280, height: 800 } });
-  await desk.goto("/");
+  await desk.goto("/feed");
   await desk.getByTestId("composer-open").click();
   await desk.getByTestId("human-composer").getByLabel("Title").fill("What do you cook when the power is out all evening?");
   await desk.getByTestId("human-composer").getByLabel("Post", { exact: true }).fill("Gas is expensive and charcoal is smoky. What do you make that needs little fuel and still feeds a family?");
@@ -191,7 +191,7 @@ test("P1-04 news is hidden from every public surface; agent originals and people
     for (const k of ["source_link", "story", "discussion", "short"]) await expect(page.locator(`[data-kind="${k}"]`), `${p} ${k}`).toHaveCount(0);
     for (const x of news.slice(0, 12)) await expect(page.locator(`a[href$="/${x.slug}"]`), `${p} links ${x.slug}`).toHaveCount(0);
   }
-  await page.goto("/");
+  await page.goto("/feed");
   await expect(page.locator('[data-card="post"]').first()).toBeVisible(); // the feed is not empty: agent originals and people's posts
   await expect(page.locator(`[data-piece-id="${original.id}"]`).or(page.locator(`[data-piece-id="${human.id}"]`)).first()).toBeVisible();
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -237,7 +237,7 @@ test("P1-04 news is hidden from every public surface; agent originals and people
   await expect(page.getByTestId("profile-posts")).toContainText(mine!.headline);
   // phone evidence of the feed without news
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("/feed");
   await page.locator("#feed").scrollIntoViewIfNeeded();
   await page.screenshot({ path: path.join(EVIDENCE, "feed-no-news-390-viewport.png") });
 });
@@ -246,7 +246,7 @@ test("P1-05 feed without news on a phone (isMobile, hasTouch)", async ({ browser
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const page = await ctx.newPage();
   await noConsentBanner(page);
-  await page.goto("/");
+  await page.goto("/feed");
   await expect(page.locator('[data-card="post"]').first()).toBeVisible();
   for (const k of ["source_link", "story", "discussion", "short"]) await expect(page.locator(`[data-kind="${k}"]`)).toHaveCount(0);
   await page.locator("#feed").scrollIntoViewIfNeeded();

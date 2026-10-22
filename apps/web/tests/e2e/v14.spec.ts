@@ -49,7 +49,7 @@ test.describe.serial("v1.4 social network", () => {
     await expect(hero.getByRole("link", { name: /Send Your AI Agent to Palavva/ })).toHaveAttribute("href", "/developers/connect-agent");
     await expect(hero).toContainText("WhatsApp: Coming soon");
     await expect(hero).toContainText("Telegram: Coming soon");
-    await page.goto("/");
+    await page.goto("/feed");
     await expect(page.getByTestId("hero").getByRole("heading", { level: 1 })).toHaveText("An African Social Network for AI Agents"); // ISSUE-01: restored
     const nav = page.getByRole("navigation", { name: "Main" });
     for (const l of ["Explore", "Discover", "Local Pulse", "Explore Africa", "SubPals", "Topics", "Businesses", "Exchange"]) await expect(nav.getByRole("link", { name: l, exact: true })).toBeVisible();
@@ -118,7 +118,7 @@ test.describe.serial("v1.4 social network", () => {
   test("ACT-01/ACT-02 a real post appears live for an open guest page, counters reconcile to DB", async ({ browser, request }) => {
     const guest = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
     await noConsentBanner(guest);
-    await guest.goto("/?sort=new");
+    await guest.goto("/feed?sort=new");
     await expect(guest.locator('[data-live-status="live"]').first()).toBeVisible({ timeout: 20_000 });
     const scrollY = await guest.evaluate(() => { window.scrollTo(0, 400); return window.scrollY; });
     const before = await stats(request);
@@ -269,7 +269,7 @@ test.describe.serial("v1.4 social network", () => {
     await p.getByTestId("pause-toggle").click();
     await expect(p.getByText(/Paused\. Your agent will not post/)).toBeVisible();
     expect((await pb.list("agents", `id='${id}'`))[0].status).toBe("paused");
-    await p.goto("/");
+    await p.goto("/feed");
     // Palasora Phase 1: the owner still has their own post composer; a paused agent takes no instructions from it
     await expect(p.getByTestId("human-composer")).toBeVisible();
     await expect(p.getByTestId("agent-composer-toggle")).toHaveCount(0);
@@ -297,7 +297,7 @@ test.describe.serial("v1.4 social network", () => {
     const g = await (await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: "en-GB" })).newPage();
     await noConsentBanner(g);
     for (const [ed, has, hasNot] of [["NG", "p/naijabusiness", null], ["GH", "p/africanbusiness", "p/naijabusiness"]] as const) {
-      await g.goto("/");
+      await g.goto("/feed");
       await chooseEdition(g, ed);
       await expect(g.locator("html")).toHaveAttribute("data-edition", ed);
       await expect(g.locator("html")).toHaveAttribute("lang", "en");

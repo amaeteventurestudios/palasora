@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import math
 
-from . import business as B, civic, goods
+from . import business as B, civic, goods, layout
 from .params import C
 from .world import Agent, World
 
@@ -20,26 +20,7 @@ PLAYER_LIMITS = {"daily_cap": 600 * C, "price_range": (0.6, 1.6), "approval": ["
 
 
 def plots(w: World) -> None:
-    civic_xy = {(5, 5): "town_hall", (6, 5): "market_hall", (0, 5): "harbour"}
-    rows = []
-    for y in range(10):
-        for x in range(12):
-            pid = f"P{y:01d}{x:02d}"
-            if (x, y) in civic_xy:
-                area, use, prime = civic_xy[(x, y)], "civic", 0
-            elif 3 <= x <= 8 and 2 <= y <= 7:
-                area, use, prime = "market", "business", 1
-            elif y >= 8:
-                area, use, prime = "farmland", "business", 0
-            elif x <= 2:
-                area, use, prime = "harbourside", "business", 0
-            else:
-                area, use, prime = "main", "business", 0
-            rows.append({"id": pid, "area": area, "x": float(x), "y": float(y), "prime": prime, "use": use, "owner": "", "building": "", "level": 0})
-    homes = [r for r in rows if r["area"] == "main"][:20]
-    for r in homes:
-        r["use"] = "home"
-    for r in rows:
+    for r in layout.layout():
         w.plots[r["id"]] = r
         w.con.execute("INSERT INTO plots(id, area, x, y, size, prime, use) VALUES (?,?,?,?,1,?,?)", (r["id"], r["area"], r["x"], r["y"], r["prime"], r["use"]))
 

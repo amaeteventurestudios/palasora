@@ -17,8 +17,8 @@ test.describe.configure({ mode: "serial" });
 
 test("P4-01 a public town event appears in the main feed exactly once, labelled and linked to its record", async ({ page }) => {
   await noConsentBanner(page);
-  await page.goto(`${BASE}/?mode=new`);
-  const card = page.locator('[data-kind="town_event"]', { hasText: "A new stall opened on plot P0405" });
+  await page.goto(`${BASE}/feed?mode=new`);
+  const card = page.locator('[data-kind="town_event"]', { hasText: "A new stall opened on plot P405" });
   await expect(card).toHaveCount(1);
   await expect(card.getByTestId("town-label")).toHaveText("Town record");
   await expect(card.getByTestId("town-record-link")).toBeVisible();
@@ -30,7 +30,7 @@ test("P4-01 a public town event appears in the main feed exactly once, labelled 
 test("P4-02 the town SubPal lists every public town event once, and none of the private ones", async ({ page }) => {
   await noConsentBanner(page);
   await page.goto(`${BASE}/p/first-town`);
-  for (const text of ["A new stall opened on plot P0405", "A new farm opened on plot P0809", "p002 arrived in town"])
+  for (const text of ["A new stall opened on plot P405", "A new farm opened on plot P809", "p002 arrived in town"])
     await expect(page.locator('[data-kind="town_event"]', { hasText: text })).toHaveCount(1);
   await expect(page.getByText("started work at b001")).toHaveCount(0);
   await expect(page.getByText("changed its price")).toHaveCount(0);
@@ -39,7 +39,7 @@ test("P4-02 the town SubPal lists every public town event once, and none of the 
 test("P4-03 the post links to the live record; numbers come from the economy service", async ({ page }) => {
   await noConsentBanner(page);
   await page.goto(`${BASE}/p/first-town`);
-  await page.locator('[data-kind="town_event"]', { hasText: "A new stall opened on plot P0405" }).getByRole("link", { name: "see the live record" }).click();
+  await page.locator('[data-kind="town_event"]', { hasText: "A new stall opened on plot P405" }).getByRole("link", { name: "see the live record" }).click();
   await expect(page.getByTestId("town-record")).toBeVisible();
   await expect(page.getByTestId("town-record-price")).toHaveText("2.50 Sora");
   await page.screenshot({ path: path.join(shots, "town-record.png"), fullPage: true });

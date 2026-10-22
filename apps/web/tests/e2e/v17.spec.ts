@@ -24,7 +24,7 @@ test("V17-01 home: restored intro, counters and Exchange above the feed; phone k
   await noConsentBanner(page);
   for (const [w, h] of [[1440, 900], [390, 844]] as const) {
     await page.setViewportSize({ width: w, height: h });
-    await page.goto(`${BASE}/`);
+    await page.goto(`${BASE}/feed`);
     const top = await firstCardTop(page);
     for (const id of ["hero", "stat-strip", "exchange-teaser"]) expect((await page.getByTestId(id).boundingBox())!.y, `${id} above the feed at ${w}px`).toBeLessThan(top);
     if (w < 640) expect(top, `first post at ${w}px`).toBeLessThan(h - 120);
@@ -42,7 +42,7 @@ test("V17-02 Log in and Sign up on the same domain return the reader to where th
   await expect(page).toHaveURL(/\/auth\/sign-up\?next=%2Fexchange/);
   expect(new URL(page.url()).host).toBe(new URL(BASE).host);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${BASE}/`);
+  await page.goto(`${BASE}/feed`);
   await page.getByTestId("drawer-trigger").click();
   await expect(page.getByTestId("drawer-auth").getByRole("link", { name: "Sign up" })).toBeVisible();
   await expect(page.getByTestId("drawer-auth").getByRole("link", { name: "Log in" })).toBeVisible();
@@ -51,7 +51,7 @@ test("V17-02 Log in and Sign up on the same domain return the reader to where th
 });
 
 test("V17-03 every footer link resolves", async ({ page, request }) => {
-  await page.goto(`${BASE}/`);
+  await page.goto(`${BASE}/feed`);
   const hrefs = await page.getByTestId("site-footer").locator("a[href^='/']").evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")!))]);
   expect(hrefs).not.toContain("/stories"); // Palasora Phase 1: the news index is retired and hidden
   expect(hrefs).toEqual(expect.arrayContaining(["/", "/explore?sort=top", "/explore", "/feed/top", "/about", "/guidelines", "/privacy", "/terms", "/help", "/developers"]));
@@ -155,7 +155,7 @@ test("V17-07 Local Pulse: every country has a clickable ADM1 map with three inde
 
 test("V17-08 Exchange: Explore link works, terms are explained, prices are Sora/share", async ({ page }) => {
   await noConsentBanner(page);
-  await page.goto(`${BASE}/`);
+  await page.goto(`${BASE}/feed`);
   await page.getByTestId("exchange-teaser").getByRole("link", { name: "Explore Exchange" }).click();
   await expect(page).toHaveURL(/\/exchange(\?market=ALL)?$/);
   await expect(page.getByTestId("exchange-page")).toBeVisible();
@@ -167,7 +167,7 @@ test("V17-08 Exchange: Explore link works, terms are explained, prices are Sora/
 
 test("V17-09 a committed agent vote updates the score live with a brief highlight (no reload)", async ({ page }) => {
   await noConsentBanner(page);
-  await page.goto(`${BASE}/`);
+  await page.goto(`${BASE}/feed`);
   const card = page.getByTestId("story-card").first();
   const pieceId = await card.getAttribute("data-piece-id");
   const score = card.locator(".vote-rail");

@@ -51,7 +51,7 @@ export async function SocialFeed({ tenant, session, mode, base, extra = {}, edit
           </p>
           <p className="meta mt-1">
             {cov.newestItemAt ? <>Newest item <Time value={cov.newestItemAt} /></> : <>No item yet</>}
-            {feed.scopeCounts!.excluded > 0 && <> · {feed.scopeCounts!.excluded} items about other regions are left out (<Link href="/?edition=ALL" className="link">see All Africa</Link>)</>}
+            {feed.scopeCounts!.excluded > 0 && <> · {feed.scopeCounts!.excluded} items about other regions are left out (<Link href="/feed?edition=ALL" className="link">see All Africa</Link>)</>}
           </p>
         </div>
       )}

@@ -40,7 +40,7 @@ test("V15-01 country edition scopes feed, banner and API (Liberia never shows So
   lr = await postAs(await agentWith("LR"), LR_TITLE, "LR");
   za = await postAs(await agentWith("ZA"), ZA_TITLE, "ZA");
   await noConsentBanner(page);
-  await page.goto("/?edition=LR&sort=new");
+  await page.goto("/feed?edition=LR&sort=new");
   await expect(page.getByTestId("edition-banner")).toHaveAttribute("data-edition", "LR");
   await expect(page.getByTestId("feed-list").getByText(LR_TITLE)).toBeVisible();
   await expect(page.getByText(ZA_TITLE)).toHaveCount(0);
@@ -51,7 +51,7 @@ test("V15-01 country edition scopes feed, banner and API (Liberia never shows So
   expect(api.data.find((p: { headline: string }) => p.headline === LR_TITLE).scope).toBe("local");
   const all = await (await page.request.get(`/api/v1/feed?mode=new&edition=ALL`)).json();
   expect(all.data.map((p: { headline: string }) => p.headline)).toEqual(expect.arrayContaining([LR_TITLE, ZA_TITLE]));
-  await page.goto("/?edition=ZA&sort=new");
+  await page.goto("/feed?edition=ZA&sort=new");
   await expect(page.getByTestId("feed-list").getByText(ZA_TITLE)).toBeVisible();
   await expect(page.getByText(LR_TITLE)).toHaveCount(0); // Liberia is West Africa, South Africa is Southern Africa: excluded, not "regional"
 });
@@ -59,7 +59,7 @@ test("V15-01 country edition scopes feed, banner and API (Liberia never shows So
 test("V15-02 Senegal → Liberia → Cameroon switching through the UI; rails follow the edition", async ({ page }) => {
   await noConsentBanner(page);
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto("/?edition=SN");
+  await page.goto("/feed?edition=SN");
   for (const [code, name] of [["LR", "Liberia"], ["CM", "Cameroon"]] as const) {
     await page.getByTestId("edition-menu").click();
     await page.getByPlaceholder("Search 54 countries…").fill(name);
@@ -122,7 +122,7 @@ for (const w of [320, 375, 390, 428, 768]) {
   test(`V15-05 mobile shell at ${w}px: no sideways scroll, five-item bottom nav, drawer`, async ({ page }) => {
     await noConsentBanner(page);
     await page.setViewportSize({ width: w, height: 844 });
-    await page.goto("/?edition=ALL");
+    await page.goto("/feed?edition=ALL");
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
     const nav = page.getByTestId("bottom-nav");
     if (w < 768) {
@@ -207,7 +207,7 @@ test("V15-08 human DAU is not moved by agents, bots, headless QA or staff", asyn
   const pb = await pbAdmin();
   const before = (await pb.list("human_activity", "id!=''")).length;
   await noConsentBanner(page);
-  await page.goto("/"); await page.waitForTimeout(2600); await page.goto("/exchange"); await page.waitForTimeout(2600); // headless browser: excluded
+  await page.goto("/feed"); await page.waitForTimeout(2600); await page.goto("/exchange"); await page.waitForTimeout(2600); // headless browser: excluded
   const bot = await request.post("/api/v1/activity", { headers: { origin: BASE, "user-agent": "Googlebot/2.1 (+http://www.google.com/bot.html)", "content-type": "application/json" }, data: { page: "home" } });
   expect((await bot.json()).reason).toBe("bot");
   const human = await request.post("/api/v1/activity", { headers: { origin: BASE, "user-agent": `Mozilla/5.0 (Linux; Android 13; TECNO KJ5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36 run/${run}`, "content-type": "application/json" }, data: { page: "home", edition: "NG", lang: "en" } });

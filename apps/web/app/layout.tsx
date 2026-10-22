@@ -37,7 +37,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const tenant = slug ? await tenantBySlug(slug, host!) : null;
   const session = tenant ? await getSession(tenant) : null;
   const ctx = await getReaderContext(tenant);
-  const isAdmin = (h.get("x-pv-path") ?? "").startsWith("/admin");
+  const path = h.get("x-pv-path") ?? "";
+  const isAdmin = path.startsWith("/admin");
+  // Palasora Phase 6: the town fills the screen; its own menus replace the site header, footer and bottom bar.
+  const isWorld = tenant?.slug === "palavva" && (path === "/" || (/^\/town\/[^/]+$/.test(path) && path !== "/town/event"));
+  const chrome = !!tenant && !isAdmin && !isWorld;
   const t = translator(ctx.ui);
   // Tenant theme tokens: values were validated as 6-digit hex in safeBranding().
   const style = tenant && tenant.slug !== "palavva"
@@ -49,13 +53,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0">
+      <body className={isWorld ? "overflow-hidden" : "pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0"}>
         <I18nProvider locale={ctx.ui} edition={ctx.edition}>
           <TooltipProvider delayDuration={200}>
-            {tenant && !isAdmin && <SiteHeader tenant={tenant} session={session} t={t} ctx={ctx} />}
+            {chrome && <SiteHeader tenant={tenant} session={session} t={t} ctx={ctx} />}
             <main id="main" tabIndex={-1} className="outline-none">{children}</main>
-            {tenant && !isAdmin && <SiteFooter tenant={tenant} t={t} ui={ctx.ui} />}
-            {tenant?.slug === "palavva" && <BottomNav />}
+            {chrome && tenant && <SiteFooter tenant={tenant} t={t} ui={ctx.ui} />}
+            {tenant?.slug === "palavva" && !isWorld && <BottomNav />}
             {tenant && <ActivityBeacon />}
             <ConsentBanner />
             <Toaster position="top-center" />

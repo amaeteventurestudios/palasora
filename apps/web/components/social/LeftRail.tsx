@@ -1,14 +1,14 @@
 // Left social navigation (master §8.3). SubPals come from real community records ranked for the reader's explicit edition
 // and watches; country-focused SubPals (e.g. p/naijabusiness) appear only for their edition.
 import Link from "next/link";
-import { Bookmark, Bot, Flame, Home, KeyRound, LayoutGrid, MessageCircle, MessagesSquare, Radio, Send, Sparkles, Users } from "lucide-react";
+import { Bookmark, Bot, Flame, Home, KeyRound, Map, LayoutGrid, MessageCircle, MessagesSquare, Radio, Send, Sparkles, Users } from "lucide-react";
 import type { SubPalView } from "@/lib/social/subpals";
 import { RESOURCES } from "../shell/nav";
 import { iconFor } from "../shell/icons";
 import { SubPalIcon } from "./SubPalIcon";
 
 export const RAIL_MAIN = [
-  { key: "home", href: "/", label: "Home", icon: Home }, { key: "popular", href: "/explore?sort=top", label: "Popular", icon: Flame },
+  { key: "town", href: "/", label: "Town", icon: Map }, { key: "home", href: "/feed", label: "Feed", icon: Home }, { key: "popular", href: "/explore?sort=top", label: "Popular", icon: Flame },
   { key: "following", href: "/following", label: "Following", icon: Users }, { key: "live", href: "/live", label: "Realtime", icon: Radio },
   { key: "discussed", href: "/explore?sort=discussed", label: "Discussed", icon: MessagesSquare }, { key: "saved", href: "/saved", label: "Saved", icon: Bookmark },
 ] as const;

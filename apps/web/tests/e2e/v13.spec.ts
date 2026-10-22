@@ -78,7 +78,7 @@ test("A-06 (Palasora) an open thread is live for everyone; a signed-in person ge
 });
 
 test("A-09 AI posts never count as human demand: trend audit shows AI posts excluded", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/feed");
   await expect(page.getByTestId("trending-now")).toBeVisible();
   await signIn(page, "editor@palavva.local", BASE, "/admin/trends");
   await expect(page.getByRole("heading", { level: 1, name: "Trend audit" })).toBeVisible();
@@ -91,19 +91,19 @@ test("A-09 AI posts never count as human demand: trend audit shows AI posts excl
 
 test("L-01 Nigeria guest: English UI, Nigeria edition, feed immediately visible; no-country fallback is safe", async ({ browser }) => {
   const ng = await (await guest(browser, "NG", "en-NG")).newPage();
-  await ng.goto("/");
+  await ng.goto("/feed");
   expect(await htmlAttrs(ng)).toMatchObject({ lang: "en", dir: "ltr", edition: "NG" });
   await expect(ng.getByTestId("story-card").first()).toBeVisible();
   await expect(ng.getByRole("dialog")).toHaveCount(0); // no mandatory chooser
   const none = await (await guest(browser, null, "en-US")).newPage();
-  await none.goto("/");
+  await none.goto("/feed");
   expect(await htmlAttrs(none)).toMatchObject({ lang: "en", edition: "ALL" });
   await expect(none.getByTestId("story-card").first()).toBeVisible();
 });
 
 test("L-02 Senegal guest with no conflicting language gets French UI automatically", async ({ browser }) => {
   const p = await (await guest(browser, "SN", "wo-SN") /* Wolof browser: no supported UI language, so the country default applies */).newPage();
-  await p.goto("/");
+  await p.goto("/feed");
   expect(await htmlAttrs(p)).toMatchObject({ lang: "fr", dir: "ltr", edition: "SN" });
   await expect(p.getByRole("navigation", { name: "Main" }).or(p.getByRole("banner")).first()).toBeVisible();
   await expect(p.getByTestId("story-card").first()).toBeVisible();
@@ -113,7 +113,7 @@ test("L-02 Senegal guest with no conflicting language gets French UI automatical
 test("L-03/L-18 Arabic market: RTL UI, usable menus and map, numerals and source URLs legible", async ({ browser }) => {
   const ctx = await guest(browser, "EG", "ar-EG", { viewport: { width: 390, height: 844 } });
   const p = await ctx.newPage();
-  await p.goto("/");
+  await p.goto("/feed");
   expect(await htmlAttrs(p)).toMatchObject({ lang: "ar", dir: "rtl" });
   const font = await p.evaluate(() => getComputedStyle(document.body).fontFamily);
   expect(font).toMatch(/Arabic/i);
@@ -135,17 +135,17 @@ test("L-04 saved explicit English + Nigeria edition survive a trip to Senegal", 
   const ctx = await guest(browser, "SN", "fr-SN");
   await ctx.addCookies([prefsCookie({ ui: "en", reading: "en", edition: "NG" })]);
   const p = await ctx.newPage();
-  await p.goto("/");
+  await p.goto("/feed");
   expect(await htmlAttrs(p)).toMatchObject({ lang: "en", edition: "NG", reading: "en" });
   await p.goto("/local-pulse?country=SN"); // browsing Senegal does not rewrite preferences
-  await p.goto("/");
+  await p.goto("/feed");
   expect(await htmlAttrs(p)).toMatchObject({ lang: "en", edition: "NG", reading: "en" });
 });
 
 test("L-05/L-24 browser French beats coarse English-country default; a visible override persists across refresh and login", async ({ browser }) => {
   const ctx = await guest(browser, "NG", "fr-FR");
   const p = await ctx.newPage();
-  await p.goto("/");
+  await p.goto("/feed");
   expect(await htmlAttrs(p)).toMatchObject({ lang: "fr", edition: "NG" });
   // v1.4: languages and edition are separate header controls (master §8.2); each saves independently.
   await setLanguages(p, "en", "en"); // v1.5 shadcn LanguagePicker (cookie set by server action, then refresh)
@@ -244,7 +244,7 @@ test("L-11/L-14 state drill filters real stories or says Limited reporting; no g
 test("L-15/L-16 home shows two separately labelled trend panels with freshness and origin; cross-border click keeps language", async ({ browser }) => {
   const ctx = await guest(browser, "NG", "en-NG");
   const p = await ctx.newPage();
-  await p.goto("/");
+  await p.goto("/feed");
   await expect(p.getByTestId("trending-now")).toBeVisible();
   await expect(p.getByTestId("trending-africa")).toBeVisible();
   await expect(p.getByTestId("trending-now").getByRole("heading")).not.toHaveText(await p.getByTestId("trending-africa").getByRole("heading").innerText());
@@ -321,7 +321,7 @@ test("L-25 demo content is labelled as fictional and kept out of trend popularit
   test.skip(true, "news retired (NEWS_RETIRED=true): every demo item is an editorial news discussion or story, hidden in Palasora Phase 1");
   await page.goto("/discussion/demo-rainy-season-delivery-routes");
   await expect(page.getByText("Demo content").first()).toBeVisible();
-  await page.goto("/");
+  await page.goto("/feed");
   const demoCards = page.getByTestId("story-card").filter({ hasText: "Demo content" });
   if (await demoCards.count()) await expect(demoCards.first()).toContainText("Demo content");
 });
@@ -372,7 +372,7 @@ test("L-03 header menus stay inside the viewport in RTL and LTR at 320/390", asy
     for (const w of [320, 390]) {
       const ctx = await guest(browser, cc, loc, { viewport: { width: w, height: 800 } });
       const p = await ctx.newPage();
-      await p.goto("/");
+      await p.goto("/feed");
       // The menu is a client component: retry the click until hydration has attached the handler.
       await expect(async () => {
         if (!(await p.getByTestId("prefs-panel").isVisible())) await p.getByTestId("prefs-menu").click();

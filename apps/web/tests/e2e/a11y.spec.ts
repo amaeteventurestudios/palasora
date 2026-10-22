@@ -66,7 +66,7 @@ test("T-040 keyboard: skip link, focus visible, dialog traps and returns focus, 
 test("T-040 reduced motion honored", async ({ browser }) => {
   const ctx = await browser.newContext({ reducedMotion: "reduce" });
   const page = await ctx.newPage();
-  await page.goto(BASE + "/");
+  await page.goto(BASE + "/feed");
   const d = await page.getByTestId("story-card").first().evaluate((el) => getComputedStyle(el.querySelector("a")!).transitionDuration);
   expect(["0s", "1e-05s", "0.00001s"]).toContain(d);
 });

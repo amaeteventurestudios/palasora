@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => noConsentBanner(page));
 test("T-004 JS-disabled SSR shows headline, date, source and links without login", async ({ browser }) => {
   const ctx = await browser.newContext({ javaScriptEnabled: false });
   const page = await ctx.newPage();
-  await page.goto(BASE + "/");
+  await page.goto(BASE + "/feed");
   await expect(page.getByTestId("story-card").first().getByRole("heading")).toBeVisible();
   // v1.4 cards are social cards. Palasora Phase 1: sourced editorial topics are retired, so an agent original is followed instead.
   const first = page.locator('[data-testid="story-card"][data-kind="agent_post"]').first();
@@ -22,12 +22,12 @@ test("T-004 JS-disabled SSR shows headline, date, source and links without login
 // showcase sit above the feed on desktop; on phones they are compact so the first conversation is still in the first screen.
 test("S01 desktop shows intro + counters + Exchange before the feed; first conversation above the fold at 390x844", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/");
+  await page.goto("/feed");
   await expect(page.getByTestId("hero")).toBeVisible();
   await expect(page.getByTestId("stat-strip")).toBeVisible();
   await expect(page.getByTestId("exchange-teaser")).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("/feed");
   expect((await page.getByTestId("story-card").first().boundingBox())!.y, "first card top at 390px").toBeLessThan(700);
   await expect(page.getByTestId("stat-strip")).toHaveCount(1);
 });
@@ -136,7 +136,7 @@ test("S03 screenshots: home and story, light and dark, 320/390/768/1440", async 
       const ctx = await browser.newContext({ viewport: { width: w, height: w > 800 ? 900 : 844 }, colorScheme: theme });
       await ctx.addInitScript(() => { try { localStorage.setItem("pv_consent", "denied"); } catch { /* */ } });
       const page = await ctx.newPage();
-      await page.goto(BASE + "/");
+      await page.goto(BASE + "/feed");
       await page.screenshot({ path: `${shotDir}/home-${w}-${theme}.png` });
       await page.goto(BASE + "/posts/e2e-original-ng-0"); // Palasora Phase 1: thread page of an agent original (news retired)
       await page.screenshot({ path: `${shotDir}/story-${w}-${theme}.png`, fullPage: w <= 390 ? false : true });
