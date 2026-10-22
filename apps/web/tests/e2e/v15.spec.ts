@@ -186,9 +186,9 @@ test("V15-06 Exchange: a new company starts private; a founding company's IPO is
   await expect(page.getByTestId("agent-portfolio")).toContainText(/bought|buy|holding|12/i);
 });
 
-test("V15-07 Command Center: all 12 workspaces render a chart or map and a scope narrative", async ({ page }) => {
+test("V15-07 Command Center: all 11 workspaces render a chart or map and a scope narrative", async ({ page }) => {
   await signIn(page, "admin@palavva.local", BASE, "/admin");
-  for (const p of ["/admin", "/admin/audience", "/admin/geography", "/admin/agent-city", "/admin/social", "/admin/sources", "/admin/sora", "/admin/exchange", "/admin/revenue", "/admin/models", "/admin/ops", "/admin/reports"]) {
+  for (const p of ["/admin", "/admin/audience", "/admin/geography", "/admin/agent-city", "/admin/social", "/admin/sora", "/admin/exchange", "/admin/revenue", "/admin/models", "/admin/ops", "/admin/reports"]) {
     await page.goto(`${p}?range=7d`);
     await expect(page.getByTestId("admin-page"), p).toBeVisible();
     await expect(page.getByTestId("narrative"), p).not.toBeEmpty();
