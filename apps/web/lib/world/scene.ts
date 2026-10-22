@@ -7,6 +7,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Builder, M, createAdaptiveDpr, createRandom, detectQuality, glowMaterial, hashStr } from "./kit";
+import { createLife, type LifeInfo, type Station } from "./life";
 import { COLS, PLOT, ROAD, ROWS, TOWN_D, TOWN_W, plotAt, plotCenter, streets, type WorldBusiness, type WorldData, type WorldPlot } from "./layout";
 
 export type Selection = { kind: "plot"; id: string } | { kind: "landmark"; id: string; title: string; text: string };
@@ -18,8 +19,15 @@ export type WorldOptions = {
 };
 export type WorldHandle = {
   flyTo(plotId: string, zoom?: number): void; select(plotId: string | null): void; setPaused(p: boolean): void; tour(plots: string[], onDone: () => void): void;
-  stopTour(): void; info(): { calls: number; triangles: number; fps: number; dpr: number; lite: boolean; people: number; cars: number }; camera(): CameraState;
-  setHour(h: number): void; dispose(): void;
+  stopTour(): void; camera(): CameraState; setHour(h: number): void; dispose(): void;
+  info(): { calls: number; triangles: number; fps: number; dpr: number; lite: boolean; people: number; cars: number; zoom: number; hour: number; life: LifeInfo };
+  /** On-screen controls: zoom by a factor, fly home (your plot, or the whole town), the compass (heading: where north points
+   *  on screen, clockwise from up, in radians; resetNorth returns to the framed angle). */
+  zoomBy(f: number): void; home(): void; heading(): number; resetNorth(): void;
+  /** Fly to any point of the town (world units) at a zoom. */
+  lookAt(x: number, z: number, zoom: number): void;
+  /** Run the town's life forward by `sec` seconds at once (for checks). */
+  ff(sec: number): void;
 };
 
 const PAL = {
@@ -137,89 +145,14 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     scene.add(flag);
   }
 
-  // ---------- traffic: cars and buses drive loops on the right-hand lane and stop at red lights
-  const { v: VX, h: HZ } = S;
-  type Car = { loop: [number, number][]; seg: number; t: number; speed: number; v: number; bus: boolean; dwell: number; len: number };
-  const carGeo = (() => { const b = new Builder(); b.box(0.62, 0.2, 0.32, C("#ffffff"), M(0, 0.17, 0)); b.box(0.36, 0.16, 0.28, C("#ffffff"), M(-0.04, 0.34, 0));
-    b.box(0.3, 0.12, 0.29, C("#3b4a5a"), M(-0.04, 0.35, 0)); b.box(0.64, 0.06, 0.33, C("#2b2f35"), M(0, 0.06, 0)); return keep(b.geometry()); })();
-  const busGeo = (() => { const b = new Builder(); b.box(1.25, 0.42, 0.38, C("#ffffff"), M(0, 0.3, 0)); b.box(1.2, 0.12, 0.39, C("#2f3d4c"), M(0, 0.38, 0));
-    b.box(1.27, 0.06, 0.39, C("#2b2f35"), M(0, 0.08, 0)); return keep(b.geometry()); })();
-  const carMat = keep(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.1 }));
-  const NCARS = Q.LITE ? 22 : 40, NBUS = 3;
-  const cars: Car[] = [];
-  const loopRect = (i0: number, i1: number, j0: number, j1: number, cw: boolean): [number, number][] => {
-    const pts: [number, number][] = [[VX[i0], HZ[j0]], [VX[i1], HZ[j0]], [VX[i1], HZ[j1]], [VX[i0], HZ[j1]]];
-    return cw ? pts : pts.reverse();
-  };
-  for (let i = 0; i < NCARS + NBUS; i++) {
-    const bus = i >= NCARS;
-    let loop: [number, number][];
-    if (bus) loop = loopRect(0, VX.length - 1, 0, HZ.length - 1, i % 2 === 0);
-    else {
-      const i0 = (R.rng() * (VX.length - 1)) | 0, j0 = (R.rng() * (HZ.length - 1)) | 0;
-      const i1 = Math.min(VX.length - 1, i0 + 1 + ((R.rng() * 3) | 0)), j1 = Math.min(HZ.length - 1, j0 + 1 + ((R.rng() * 3) | 0));
-      loop = loopRect(i0, i1, j0, j1, R.rng() < 0.5);
-    }
-    const len = loop.reduce((s, p, k) => { const q = loop[(k + 1) % 4]; return s + Math.abs(q[0] - p[0]) + Math.abs(q[1] - p[1]); }, 0);
-    cars.push({ loop, seg: (R.rng() * 4) | 0, t: R.rng(), speed: bus ? 1.5 : R.rr(1.9, 2.8), v: 0, bus, dwell: 0, len });
-  }
-  const carMesh = new THREE.InstancedMesh(carGeo, carMat, NCARS);
-  const busMesh = new THREE.InstancedMesh(busGeo, carMat, NBUS);
-  const carCols = ["#e9e4d8", "#c9724f", "#4f7cac", "#2f3540", "#d8a838", "#7a9e7e", "#b9c2cc", "#9a3f3f"];
-  for (let i = 0; i < NCARS; i++) carMesh.setColorAt(i, C(R.pick(carCols)));
-  for (let i = 0; i < NBUS; i++) busMesh.setColorAt(i, C("#3f8f8f"));
-  carMesh.castShadow = busMesh.castShadow = false;
-  carMesh.frustumCulled = busMesh.frustumCulled = false;
-  scene.add(carMesh, busMesh);
-
-  // traffic lights: one bulb per approach; north-south and east-west alternate every 7 s
-  const crossings: { x: number; z: number; ph: number }[] = [];
-  for (let i = 1; i < VX.length - 1; i++) for (let j = 1; j < HZ.length - 1; j++) crossings.push({ x: VX[i], z: HZ[j], ph: (i + j) % 2 });
-  const bulbGeo = keep(new THREE.SphereGeometry(0.075, 8, 6));
-  const bulbs = new THREE.InstancedMesh(bulbGeo, keep(new THREE.MeshBasicMaterial({ toneMapped: false })), crossings.length * 2);
-  crossings.forEach((c, k) => {
-    const o = ROAD / 2 - 0.1;
-    bulbs.setMatrixAt(k * 2, M(c.x + o, 1.02, c.z + o)); bulbs.setMatrixAt(k * 2 + 1, M(c.x - o, 1.02, c.z - o));
-  });
-  bulbs.frustumCulled = false;
-  scene.add(bulbs);
-  const lightGreen = (c: { ph: number }, axis: "x" | "z", time: number) => ((Math.floor(time / 7) + c.ph) % 2 === 0) === (axis === "z");
-
-  // ---------- people on the pavements; agents carry a gold marker
-  const NPEOPLE = Q.LITE ? 150 : 300;
-  const pGeo = (() => { const b = new Builder(); b.cyl(0.07, 0.09, 0.32, 6, C("#ffffff"), M(0, 0.2, 0)); b.sphere(0.075, C("#e8c9a8"), M(0, 0.44, 0), 6, 5); return keep(b.geometry()); })();
-  const people = new THREE.InstancedMesh(pGeo, carMat, NPEOPLE);
-  const agentMarkGeo = keep(new THREE.OctahedronGeometry(0.07));
-  const agentMarks = new THREE.InstancedMesh(agentMarkGeo, keep(new THREE.MeshBasicMaterial({ color: PAL.gold, toneMapped: false })), NPEOPLE);
-  type Walker = { loop: [number, number][]; seg: number; t: number; speed: number; agent: boolean };
-  const walkers: Walker[] = [];
-  const shirt = ["#4f7cac", "#c9724f", "#6f9e7a", "#e0a458", "#f4ecdb", "#6d597a", "#3f8f8f", "#b5838d", "#2f3540"];
-  const off = ROAD / 2 - 0.14;
-  for (let i = 0; i < NPEOPLE; i++) {
-    const bi = (R.rng() * (VX.length - 1)) | 0, bj = (R.rng() * (HZ.length - 1)) | 0;
-    const x0 = VX[bi] + off, x1 = VX[bi + 1] - off, z0 = HZ[bj] - off, z1 = HZ[bj + 1] + off; // HZ decreases northward
-    const loop: [number, number][] = R.rng() < 0.5 ? [[x0, z0], [x1, z0], [x1, z1], [x0, z1]] : [[x0, z1], [x1, z1], [x1, z0], [x0, z0]];
-    walkers.push({ loop, seg: (R.rng() * 4) | 0, t: R.rng(), speed: R.rr(0.22, 0.42), agent: R.rng() < 0.18 });
-    people.setColorAt(i, C(R.pick(shirt)));
-  }
-  people.frustumCulled = agentMarks.frustumCulled = false;
-  scene.add(people, agentMarks);
-
-  // ---------- ferry and monorail
-  const ferry = new THREE.Mesh((() => { const b = new Builder(); b.box(2.2, 0.35, 0.8, C(PAL.white), M(0, 0.1, 0)); b.box(1.2, 0.35, 0.62, C(PAL.cream), M(-0.2, 0.45, 0));
-    b.box(1.1, 0.1, 0.64, C("#3f8f8f"), M(-0.2, 0.5, 0)); b.box(2.25, 0.08, 0.82, C("#c9724f"), M(0, -0.04, 0)); return keep(b.geometry()); })(), mat);
-  ferry.castShadow = true;
-  scene.add(ferry);
+  // ---------- town life: traffic, buses, the monorail, residents, passengers, the ferry and the wind turbines (life.ts)
   const mono = monorailPath();
-  const train = new THREE.Mesh((() => { const b = new Builder(); for (let k = 0; k < 3; k++) { b.box(1.1, 0.42, 0.5, C(PAL.white), M(-k * 1.2, 0, 0)); b.box(0.95, 0.16, 0.51, C("#3f8f8f"), M(-k * 1.2, 0.06, 0)); }
-    return keep(b.geometry()); })(), mat);
-  train.castShadow = true;
-  scene.add(train);
-  const rotorGeo = (() => { const b = new Builder(); for (let k = 0; k < 3; k++) b.box(0.08, 1.5, 0.03, C(PAL.white), M(0, 0, 0, 0, 0, (k * Math.PI * 2) / 3).multiply(M(0, 0.75, 0))); b.sphere(0.1, C(PAL.white)); return keep(b.geometry()); })();
-  const turbines = turbineSpots();
-  const rotors = new THREE.InstancedMesh(rotorGeo, mat, turbines.length);
-  rotors.frustumCulled = false;
-  scene.add(rotors);
+  const [, hz] = plotCenter(0, 5);
+  const life = createLife({
+    scene, mat, keep, rng: R.rng, lite: Q.LITE, streets: S, busStops, plots: data.plots, mono, stations: monoStations(mono),
+    turbines: turbineSpots(),
+    ferry: { dock: [COAST - 5.2, hz + 1.5], out: [[COAST - 7.8, hz + 1.5], [X0 + 1.6, hz - 2.8], [X0 + 1.4, Z0 + 6]], y: SEA_Y + 0.12 },
+  });
 
   // ---------- camera: orthographic, isometric three-quarter view; tilt 25 to 60 degrees; eases back after 4 s idle
   const HOME = { theta: Math.PI / 4 + 0.08, phi: 0.92 };
@@ -227,7 +160,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   const controls = new OrbitControls(cam, canvas);
   controls.enableDamping = !reduceMotion; controls.dampingFactor = 0.09;
   controls.minPolarAngle = THREE.MathUtils.degToRad(30); controls.maxPolarAngle = THREE.MathUtils.degToRad(65);
-  controls.minZoom = 0.8; controls.maxZoom = 6; controls.zoomSpeed = 1.1;
+  controls.minZoom = 0.8; controls.maxZoom = 14; // 14 is street level: a person is about a finger wide on a phone controls.zoomSpeed = 1.1;
   controls.screenSpacePanning = false;
   controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
   controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
@@ -241,7 +174,8 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   }
   const init = opts.initialCamera;
   const portrait = (canvas.clientWidth || 1) < (canvas.clientHeight || 1);
-  placeCamera(init ?? { tx: portrait ? 3.5 : 3, tz: portrait ? 1.5 : 1, zoom: portrait ? 0.9 : 1.35, theta: HOME.theta, phi: HOME.phi });
+  const startCam = (): CameraState => ({ tx: portrait ? 3.5 : 3, tz: portrait ? 1.5 : 1, zoom: portrait ? 0.9 : 1.35, theta: HOME.theta, phi: HOME.phi });
+  placeCamera(init ?? startCam());
   let lastInput = performance.now();
   controls.addEventListener("start", () => { lastInput = performance.now(); stopFly(); });
   controls.addEventListener("change", () => {
@@ -345,86 +279,8 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   const clockTimer = opts.hour == null ? setInterval(() => applyHour(new Date().getHours() + new Date().getMinutes() / 60), 60_000) : null;
 
   // ---------- loop
-  const tmp = new THREE.Matrix4(), q = new THREE.Quaternion(), pos = new THREE.Vector3(), one = new THREE.Vector3(1, 1, 1), yAxis = new THREE.Vector3(0, 1, 0);
   const proj = new THREE.Vector3();
   let raf = 0, last = performance.now(), time = 0, paused = false, lastPaused = 0, frames = 0, readySent = false;
-  function moveOnLoop(loop: [number, number][], seg: number, t: number, laneOff: number): { x: number; z: number; yaw: number } {
-    const a = loop[seg], b = loop[(seg + 1) % 4];
-    const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz) || 1;
-    const nx = dx / L, nz = dz / L;
-    return { x: a[0] + dx * t - nz * laneOff, z: a[1] + dz * t + nx * laneOff, yaw: Math.atan2(-nz, nx) }; // right-hand lane
-  }
-  function stepTraffic(dt: number) {
-    const placed: { x: number; z: number; nx: number; nz: number }[] = [];
-    for (const c of cars) {
-      const a = c.loop[c.seg], b = c.loop[(c.seg + 1) % 4];
-      const L = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]);
-      const p = moveOnLoop(c.loop, c.seg, c.t, 0.3);
-      const nx = Math.sign(b[0] - a[0]), nz = Math.sign(b[1] - a[1]);
-      let target = c.speed;
-      if (c.dwell > 0) { c.dwell -= dt; target = 0; }
-      // red light ahead on this street?
-      const axis: "x" | "z" = nx !== 0 ? "x" : "z";
-      for (const k of crossings) {
-        const ahead = axis === "x" ? (k.x - p.x) * nx : (k.z - p.z) * nz;
-        const lateral = axis === "x" ? Math.abs(k.z - p.z) : Math.abs(k.x - p.x);
-        if (lateral < 0.6 && ahead > ROAD / 2 && ahead < ROAD / 2 + 0.5 && !lightGreen(k, axis, time)) target = 0;
-      }
-      // keep a gap to the car in front
-      for (const o of placed) {
-        if (o.nx !== nx || o.nz !== nz) continue;
-        const ahead = (o.x - p.x) * nx + (o.z - p.z) * nz, lateral = Math.abs((o.x - p.x) * nz) + Math.abs((o.z - p.z) * nx);
-        if (lateral < 0.2 && ahead > 0 && ahead < (c.bus ? 1.3 : 0.85)) target = 0;
-      }
-      // buses pause at stops
-      if (c.bus && c.dwell <= 0) for (const s of busStops) if (Math.hypot(s[0] - p.x, s[1] - p.z) < 0.25) { c.dwell = 2.2; target = 0; }
-      c.v += (target - c.v) * Math.min(1, dt * (target < c.v ? 6 : 1.6));
-      c.t += (c.v * dt) / Math.max(0.01, L);
-      if (c.t >= 1) { c.t -= 1; c.seg = (c.seg + 1) % 4; }
-      placed.push({ x: p.x, z: p.z, nx, nz });
-    }
-    let ci = 0, bi = 0;
-    for (const c of cars) {
-      const p = moveOnLoop(c.loop, c.seg, c.t, 0.3);
-      q.setFromAxisAngle(yAxis, p.yaw); pos.set(p.x, 0.04, p.z);
-      tmp.compose(pos, q, one);
-      if (c.bus) busMesh.setMatrixAt(bi++, tmp); else carMesh.setMatrixAt(ci++, tmp);
-    }
-    carMesh.instanceMatrix.needsUpdate = true; busMesh.instanceMatrix.needsUpdate = true;
-    const on = C("#41d07a"), off = C("#e2483b");
-    crossings.forEach((k, i) => { bulbs.setColorAt(i * 2, lightGreen(k, "x", time) ? on : off); bulbs.setColorAt(i * 2 + 1, lightGreen(k, "z", time) ? on : off); });
-    if (bulbs.instanceColor) bulbs.instanceColor.needsUpdate = true;
-  }
-  function stepPeople(dt: number) {
-    let ai = 0;
-    walkers.forEach((w, i) => {
-      const a = w.loop[w.seg], b = w.loop[(w.seg + 1) % 4];
-      const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
-      w.t += (w.speed * dt) / L;
-      if (w.t >= 1) { w.t -= 1; w.seg = (w.seg + 1) % 4; }
-      const p = moveOnLoop(w.loop, w.seg, w.t, 0);
-      const bob = Math.abs(Math.sin(time * 9 + i)) * 0.025;
-      q.setFromAxisAngle(yAxis, p.yaw); pos.set(p.x, 0.06 + bob, p.z); tmp.compose(pos, q, one);
-      people.setMatrixAt(i, tmp);
-      if (w.agent) { pos.y += 0.62; tmp.compose(pos, q.setFromAxisAngle(yAxis, time * 2), one); agentMarks.setMatrixAt(ai++, tmp); }
-    });
-    agentMarks.count = ai;
-    people.instanceMatrix.needsUpdate = true; agentMarks.instanceMatrix.needsUpdate = true;
-  }
-  function stepRest(dt: number) {
-    // the ferry crosses between the harbour pier and the open sea
-    const [hx, hz] = plotCenter(0, 5);
-    const u = (Math.sin(time * 0.06) + 1) / 2;
-    ferry.position.set(COAST - 3 - u * 7.5, SEA_Y + 0.12, hz - 1.6 + Math.sin(time * 0.06 + 1) * 1.5);
-    ferry.rotation.y = Math.cos(time * 0.06) > 0 ? Math.PI : 0;
-    void hx;
-    const m = mono(time * 0.035);
-    train.position.set(m.x, 2.55, m.z); train.rotation.y = m.yaw;
-    turbines.forEach((t, i) => { tmp.compose(pos.set(t.x, t.y, t.z), q.setFromAxisAngle(new THREE.Vector3(1, 0, 0), time * 1.4 + i), one); rotors.setMatrixAt(i, tmp); });
-    rotors.instanceMatrix.needsUpdate = true;
-    beaconMat.opacity = 0.28 + 0.2 * Math.sin(time * 2.4);
-    void dt;
-  }
   function labels() {
     if (!opts.onLabels) return;
     const out: Label[] = [];
@@ -457,13 +313,16 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
       if (Math.abs(dth) > 0.002 || Math.abs(dph) > 0.002) placeCamera({ ...s, theta: s.theta + dth * Math.min(1, real * 1.2), phi: s.phi + dph * Math.min(1, real * 1.2) });
     }
     controls.update();
-    if (dt > 0) { stepTraffic(dt); stepPeople(dt); stepRest(dt); }
+    if (dt > 0) life.step(dt, hour, time);
+    life.draw(time);
+    beaconMat.opacity = 0.28 + 0.2 * Math.sin(time * 2.4);
     renderer.render(scene, cam);
     dpr.tick(real, now);
     labels();
     if (!readySent && ++frames >= 2) { readySent = true; opts.onReady?.(); }
   }
-  stepTraffic(0.001); stepPeople(0.001); stepRest(0.001);
+  life.settle(hour);
+  life.step(0.001, hour, 0);
   raf = requestAnimationFrame(frame);
   const onVis = () => { if (document.hidden) cancelAnimationFrame(raf); else { last = performance.now(); raf = requestAnimationFrame(frame); } };
   document.addEventListener("visibilitychange", onVis);
@@ -473,8 +332,35 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     setPaused(p) { paused = p; },
     setHour(h) { applyHour(h); },
     camera: camState,
+    zoomBy(f) {
+      const s = camState(), zoom = THREE.MathUtils.clamp(s.zoom * f, controls.minZoom, controls.maxZoom);
+      lastInput = performance.now();
+      if (reduceMotion) placeCamera({ ...s, zoom }); else fly = { from: s, to: { ...s, zoom }, t: 0, dur: 0.35 };
+    },
+    home() {
+      lastInput = performance.now();
+      if (mine) { flyTo(mine.id, 3.2); return; }
+      const to = startCam();
+      if (reduceMotion) placeCamera(to); else fly = { from: camState(), to, t: 0, dur: 0.9 };
+    },
+    lookAt(x, z, zoom) {
+      const to = { tx: x, tz: z, zoom: THREE.MathUtils.clamp(zoom, controls.minZoom, controls.maxZoom), theta: HOME.theta, phi: HOME.phi };
+      lastInput = performance.now();
+      if (reduceMotion) placeCamera(to); else fly = { from: camState(), to, t: 0, dur: 0.9 };
+    },
+    heading() { return camState().theta; }, // the screen angle of north, clockwise from up
+    resetNorth() {
+      const s = camState(), to = { ...s, theta: s.theta + Math.atan2(Math.sin(HOME.theta - s.theta), Math.cos(HOME.theta - s.theta)), phi: HOME.phi };
+      lastInput = performance.now();
+      if (reduceMotion) placeCamera(to); else fly = { from: s, to, t: 0, dur: 0.5 };
+    },
+    ff(sec) {
+      for (let k = 0; k < Math.round(sec * 10); k++) { time += 0.1; life.step(0.1, hour, time); }
+      life.draw(time);
+    },
     info() {
-      return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, fps: dpr.fps, dpr: dpr.dpr, lite: Q.LITE, people: NPEOPLE, cars: NCARS + NBUS };
+      return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, fps: dpr.fps, dpr: dpr.dpr, lite: Q.LITE, ...life.counts,
+        zoom: Math.round(cam.zoom * 100) / 100, hour: Math.round(hour * 100) / 100, life: life.info() };
     },
     dispose() {
       cancelAnimationFrame(raf); stopTour(); if (clockTimer) clearInterval(clockTimer);
@@ -482,7 +368,8 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
       canvas.removeEventListener("pointerdown", onDown); canvas.removeEventListener("pointerup", onUp);
       ro.disconnect(); controls.dispose();
       for (const d of disposables) d.dispose();
-      for (const m of [rings, beacons, carMesh, busMesh, bulbs, people, agentMarks, rotors]) m.dispose();
+      life.dispose();
+      for (const m of [rings, beacons]) m.dispose();
       renderer.dispose();
     },
   };
@@ -830,39 +717,65 @@ function buildDressing(B: Builder, G: Builder, W: Builder, R: Rand, landmarks: {
   // monorail: an elevated loop around the town on white pillars
   const path = monorailPath();
   for (let i = 0; i < 64; i++) {
-    const a = path(i / 64), b = path((i + 1) / 64);
+    const a = path.at((i / 64) * path.total), b = path.at(((i + 1) / 64) * path.total);
     const L = Math.hypot(b.x - a.x, b.z - a.z);
     B.box(L + 0.05, 0.16, 0.36, C(PAL.white), M((a.x + b.x) / 2, 2.25, (a.z + b.z) / 2, Math.atan2(-(b.z - a.z), b.x - a.x)));
     if (i % 2 === 0) B.cyl(0.1, 0.14, 2.2, 6, C(PAL.stone), M(a.x, 1.1, a.z));
   }
+  // stations: a platform on the outer side of the track, a slim canopy, and a stair tower down to the street
+  for (const st of monoStations(path)) {
+    const p = path.at(st.d), nx = -p.dz, nz = p.dx, yaw = p.yaw;
+    const at = (along: number, out: number): [number, number] => [p.x + p.dx * along + nx * out, p.z + p.dz * along + nz * out];
+    let [x, z] = at(0, 0.62);
+    B.box(3.9, 0.12, 0.7, C(PAL.stone), M(x, 2.26, z, yaw));
+    [x, z] = at(0, 0.34);
+    B.box(3.9, 0.02, 0.06, C(PAL.gold), M(x, 2.33, z, yaw)); // the yellow line
+    [x, z] = at(0, 0.98);
+    B.box(3.9, 0.3, 0.04, C(PAL.white), M(x, 2.47, z, yaw)); // railing
+    [x, z] = at(0, 0.84);
+    B.box(3.6, 0.05, 0.36, C("#3f8f8f"), M(x, 3.05, z, yaw)); // canopy over the back of the platform
+    for (const k of [-1.5, 0, 1.5]) { [x, z] = at(k, 0.98); B.cyl(0.03, 0.03, 0.75, 5, C(PAL.white), M(x, 2.7, z)); }
+    for (const k of [-1.2, 1.2]) { [x, z] = at(k, 0.62); B.cyl(0.1, 0.12, 2.2, 6, C(PAL.stone), M(x, 1.1, z)); }
+    [x, z] = at(2.25, 0.62);
+    B.box(0.6, 2.32, 0.7, C(PAL.cream), M(x, 1.16, z, yaw)); B.box(0.66, 0.06, 0.76, C(PAL.slate), M(x, 2.35, z, yaw));
+    [x, z] = at(-2.25, 0.62);
+    B.box(0.6, 2.32, 0.7, C(PAL.cream), M(x, 1.16, z, yaw)); B.box(0.66, 0.06, 0.76, C(PAL.slate), M(x, 2.35, z, yaw));
+  }
 }
 
-/** The monorail loop: a rounded rectangle just outside the ring road. Returns position and heading at u in [0, 1). */
+/** The monorail loop: a rounded rectangle just outside the ring road, measured in world units along the track. It starts
+ *  on the south side heading east and runs anticlockwise seen from above, so the outer side is (-dz, dx). */
 function monorailPath() {
   const hw = TOWN_W / 2 + 0.55, hd = TOWN_D / 2 + 0.55, r = 2.5;
   const segs: { len: number; at(t: number): [number, number] }[] = [];
   const line = (x0: number, z0: number, x1: number, z1: number) => segs.push({ len: Math.hypot(x1 - x0, z1 - z0), at: (t) => [x0 + (x1 - x0) * t, z0 + (z1 - z0) * t] });
-  line(-hw + r, hd, hw - r, hd);
-  segs.push({ len: (Math.PI / 2) * r, at: (t) => { const a = Math.PI / 2 - (t * Math.PI) / 2; return [hw - r + Math.cos(a) * r, hd - r + Math.sin(a) * r]; } });
-  line(hw, hd - r, hw, -hd + r);
-  segs.push({ len: (Math.PI / 2) * r, at: (t) => { const a = -(t * Math.PI) / 2; return [hw - r + Math.cos(a) * r, -hd + r + Math.sin(a) * r]; } });
-  line(hw - r, -hd, -hw + r, -hd);
-  segs.push({ len: (Math.PI / 2) * r, at: (t) => { const a = -Math.PI / 2 - (t * Math.PI) / 2; return [-hw + r + Math.cos(a) * r, -hd + r + Math.sin(a) * r]; } });
-  line(-hw, -hd + r, -hw, hd - r);
-  segs.push({ len: (Math.PI / 2) * r, at: (t) => { const a = Math.PI - (t * Math.PI) / 2; return [-hw + r + Math.cos(a) * r, hd - r + Math.sin(a) * r]; } });
+  const arc = (cx: number, cz: number, a0: number) => segs.push({ len: (Math.PI / 2) * r, at: (t) => { const a = a0 - (t * Math.PI) / 2; return [cx + Math.cos(a) * r, cz + Math.sin(a) * r]; } });
+  line(-hw + r, hd, hw - r, hd); arc(hw - r, hd - r, Math.PI / 2);
+  line(hw, hd - r, hw, -hd + r); arc(hw - r, -hd + r, 0);
+  line(hw - r, -hd, -hw + r, -hd); arc(-hw + r, -hd + r, -Math.PI / 2);
+  line(-hw, -hd + r, -hw, hd - r); arc(-hw + r, hd - r, Math.PI);
   const total = segs.reduce((s, x) => s + x.len, 0);
-  return (u: number) => {
-    let d = (((u % 1) + 1) % 1) * total;
+  const at = (dist: number) => {
+    let d = ((dist % total) + total) % total;
     for (const s of segs) {
       if (d <= s.len) {
-        const t = d / s.len, [x, z] = s.at(t), [x2, z2] = s.at(Math.min(1, t + 0.01));
-        return { x, z, yaw: Math.atan2(-(z2 - z), x2 - x) };
+        const t = d / s.len, [x, z] = s.at(t), e = 0.01 / s.len, [x2, z2] = s.at(Math.min(1, t + e)), [x1, z1] = s.at(Math.max(0, t - e));
+        const L = Math.hypot(x2 - x1, z2 - z1) || 1, dx = (x2 - x1) / L, dz = (z2 - z1) / L;
+        return { x, z, dx, dz, yaw: Math.atan2(-dz, dx) };
       }
       d -= s.len;
     }
     const [x, z] = segs[0].at(0);
-    return { x, z, yaw: 0 };
+    return { x, z, dx: 1, dz: 0, yaw: 0 };
   };
+  // the middle of each straight side, for the stations
+  const mids: number[] = []; let acc = 0;
+  segs.forEach((s, i) => { if (i % 2 === 0) mids.push(acc + s.len / 2); acc += s.len; });
+  return { total, at, mids };
+}
+/** Four monorail stations, one in the middle of each side. */
+function monoStations(path: ReturnType<typeof monorailPath>): Station[] {
+  return ["Campus", "Exchange", "Northfield", "Harbour"].map((name, i) => ({ name, d: path.mids[i] }));
 }
 
 /** Wind turbines: three on the northern hills, three offshore. `y` is the hub height, `base` the foot. */
