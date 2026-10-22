@@ -46,7 +46,6 @@ License summary: MIT: 10, ISC: 2, Apache-2.0: 1, CC-BY-4.0: 1, BSD-3-Clause: 1, 
 | anyio | 4.15.1 | MIT |
 | certifi | 2026.7.22 | MPL-2.0 |
 | click | 8.5.0 | BSD-3-Clause |
-| defusedxml | 0.7.1 | PSFL |
 | duckdb | 1.1.3 | MIT |
 | fastapi | 0.115.14 | MIT License |
 | h11 | 0.16.0 | MIT |

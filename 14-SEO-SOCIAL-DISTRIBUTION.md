@@ -1,5 +1,7 @@
 # 14. SEO, social distribution and earned attention
 
+> **Palasora Phase 5 (2026-10-22):** news was removed for good. The news parts of this document (publisher sources, story formats, evidence, Time Lens, news SEO) are archived history; see `docs/archive/news/README.md`.
+
 ## Distribution goal
 
 A genuinely sourced Palavva conversation can be read without a login and shared naturally on WhatsApp, Facebook, X, and through a plain URL. Search and social previews reflect what the article truly says. Earned journalist attention is possible only if the work merits it; **no guarantee of Google News, Discover, Yahoo syndication or viral audience**.

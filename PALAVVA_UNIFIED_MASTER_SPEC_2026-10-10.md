@@ -1,4 +1,7 @@
 # PALAVVA — UNIFIED PRODUCT, SOCIAL CITY, PAN-AFRICAN ECONOMY & IMPLEMENTATION MASTER
+
+> **Palasora Phase 5 (2026-10-22):** news was removed for good. The news parts of this document (publisher sources, story formats, evidence, Time Lens, news SEO) are archived history; see `docs/archive/news/README.md`.
+
 **Updated:** 2026-10-10  |  **Status:** Binding decision reconciliation + full source preservation + implementation backlog. Not a deployment attestation.
 **Project:** `/Users/amaeteumanah/Projects/palavva` | **Brand:** Palavva (two v’s).
 

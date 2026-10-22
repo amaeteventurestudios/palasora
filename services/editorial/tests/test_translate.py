@@ -5,6 +5,12 @@ from palavva_editorial.pb import q
 from palavva_editorial.providers.fixture import FixtureProvider
 
 
+
+def _piece(pb, t) -> dict:
+    """A published piece to translate (the seeded news demo story it used to borrow left with news in Phase 5)."""
+    from test_city import football_topic
+    return pb.first("editorial_pieces", f"tenant_id={q(t['id'])} && slug='translate-probe'") or football_topic(pb, t, "translate-probe")
+
 def test_fidelity_checks():
     src = {"headline": "President announces R120 billion Free State plan on 9 October 2026 (claim_1)"}
     ok, _ = translate.fidelity(src, {"headline": "Le président annonce un plan de R120 milliards pour le Free State le 9 octobre 2026 (claim_1)"}, "fr")
@@ -22,7 +28,7 @@ def test_disabled_locale_never_generates(seeded, tmp_path):
 
 def test_translate_job_caches_and_versions(seeded, tmp_path):
     pb, t = seeded["pb"], seeded["palavva"]
-    piece = pb.first("editorial_pieces", f"tenant_id={q(t['id'])} && slug='demo-cold-storage-coop-tomatoes'")
+    piece = _piece(pb, t)
     queue, s = Queue(tmp_path / "j.db"), config.load()
     assert translate.enqueue(queue, t["id"], "piece", piece["id"], "fr", piece["revision"])
     job = queue.claim("w")
@@ -62,7 +68,7 @@ def test_arabic_requires_latin_form_of_names():
 
 def test_failed_translation_gets_one_gated_repair_pass(seeded, tmp_path):
     pb, t = seeded["pb"], seeded["palavva"]
-    piece = pb.first("editorial_pieces", f"tenant_id={q(t['id'])} && slug='demo-cold-storage-coop-tomatoes'")
+    piece = _piece(pb, t)
     queue, s = Queue(tmp_path / "r.db"), config.load()
     job = {"job_id": "repair-test", "tenant_id": t["id"], "payload": {"target_type": "piece", "target_id": piece["id"], "locale": "ar", "version": piece["revision"]}}
     old = pb.first("localizations", f"target_id={q(piece['id'])} && locale='ar'")
@@ -77,7 +83,7 @@ def test_failed_translation_gets_one_gated_repair_pass(seeded, tmp_path):
 
 def test_outdated_failures_are_requeued_once(seeded, tmp_path):
     pb, t = seeded["pb"], seeded["palavva"]
-    piece = pb.first("editorial_pieces", f"tenant_id={q(t['id'])} && slug='demo-cold-storage-coop-tomatoes'")
+    piece = _piece(pb, t)
     pb.create("localizations", {"tenant_id": t["id"], "target_type": "piece", "target_id": piece["id"], "piece_id": piece["id"], "locale": "fr", "source_locale": "en",
                                 "source_version": 77, "fields": {}, "status": "failed", "prompt_version": "translate-v1", "qa": {}, "report_count": 0})
     queue = Queue(tmp_path / "o.db")
@@ -96,7 +102,9 @@ def test_title_case_and_institution_words_are_not_treated_as_names():
 
 def test_old_accepted_translation_failing_the_current_gate_is_withdrawn_and_requeued(seeded, tmp_path):
     pb, t = seeded["pb"], seeded["palavva"]
-    piece = pb.first("editorial_pieces", f"tenant_id={q(t['id'])} && slug='demo-rainy-season-delivery-routes'")
+    from test_city import football_topic
+    piece = pb.first("editorial_pieces", f"tenant_id={q(t['id'])} && slug='translate-probe-names'") or \
+        football_topic(pb, t, "translate-probe-names", "Could Kano Pillars press higher with 3 new midfielders from Enugu Rangers?")
     for old in pb.list("localizations", f"target_id={q(piece['id'])} && locale='ar'", per_page=10):
         pb.delete("localizations", old["id"])
     src = translate.piece_fields(piece)
