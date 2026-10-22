@@ -123,7 +123,36 @@ def seed_town(pb: PB, t: dict) -> dict:
                 (13, "player_arrived", ["p002"], "public", {"agent": "p002"}, "p002 arrived in town")]
         for i, (tick, kind, who, vis, refs, text) in enumerate(rows, start=1):
             events.emit(con, seq=i, tick=tick, kind=kind, who=who, visibility=vis, refs=refs, text=text)
+        _seed_books(con)
     return social.relay(con, pb, t["id"])
+
+
+def _seed_books(con) -> None:
+    """Palasora Phase 7: a day of real ledger entries for stall b001 (capital, meals sold, a wage, upkeep), its worker and its
+    stock, so the business card has books to read. Stamped with the town's clock, like the simulation's own entries."""
+    from .economy import db as edb, ledger
+    from .economy.town.world import EPOCH
+    hall = ledger.account(con, *ledger.TOWN_HALL)["id"]
+    acct = lambda kind, oid: ledger.account(con, kind, oid, edb.SORA, "")["id"]  # noqa: E731
+    b001, h010 = acct("company", "b001"), acct("agent", "h010")
+    diners = [acct("agent", f"h0{n:02d}") for n in (11, 12, 13, 14)]
+    n = 0
+
+    def at(tick, **kw):
+        nonlocal n
+        n += 1
+        with edb.clock(lambda: EPOCH + tick * 3600 + n):
+            ledger.transfer(con, idem_key=f"e2e-books-{n}", src_bucket="available", dst_bucket="available", asset=edb.SORA, txn_id=f"t{tick}", **kw)
+
+    at(9, kind="issue", src=hall, dst=b001, amount=40000, rule="genesis")
+    for d in diners:
+        at(9, kind="issue", src=hall, dst=d, amount=3000, rule="starter_grant")
+    for i, tick in enumerate((10, 10, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 13)):
+        at(tick, kind="transfer", src=diners[i % 4], dst=b001, amount=250, rule="meal", ref_type="business", ref_id="b001")
+    at(12, kind="transfer", src=b001, dst=h010, amount=1500, rule="wage", ref_type="business", ref_id="b001")
+    at(13, kind="sink", src=b001, dst=hall, amount=300, rule="plot_upkeep", ref_type="business", ref_id="b001")
+    con.execute("INSERT INTO jobs(employer, worker, wage, start_tick) VALUES ('b001','h010',1500,10)")
+    con.execute("INSERT INTO stock(holder, good, qty, reserved) VALUES ('company:b001','meals',6,0), ('company:b001','crops',14,0)")
 
 
 def main() -> None:

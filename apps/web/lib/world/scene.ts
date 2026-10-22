@@ -81,7 +81,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
 
   buildGround(B, R);
   buildStreets(B, W, R, S, busStops);
-  for (const p of data.plots) buildPlot(B, G, W, p, bizOnPlot.get(p.id), data.founded || data.businesses.length > 0);
+  for (const p of data.plots) buildPlot(B, G, W, p, bizOnPlot.get(p.id), data.founded || data.businesses.length > 0, data.tick);
   buildDressing(B, G, W, R, landmarks);
 
   const mat = keep(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.86, metalness: 0, flatShading: true }));
@@ -582,7 +582,7 @@ function windowRow(W: Builder, x: number, y: number, z: number, w: number, d: nu
   }
 }
 
-function buildPlot(B: Builder, G: Builder, W: Builder, p: WorldPlot, biz: WorldBusiness | undefined, lived: boolean) {
+function buildPlot(B: Builder, G: Builder, W: Builder, p: WorldPlot, biz: WorldBusiness | undefined, lived: boolean, tick = 0) {
   const [cx, cz] = plotCenter(p.x, p.y);
   const R = createRandom(hashStr(p.id));
   const IN = PLOT - 0.24;
@@ -629,7 +629,11 @@ function buildPlot(B: Builder, G: Builder, W: Builder, p: WorldPlot, biz: WorldB
     return;
   }
 
-  if (biz && biz.status === "open") { buildBusiness(sb, sg, sw, 0, 0, biz, R); place(biz.type === "farm" ? 1 : 1.28); sign(B, cx, cz, biz); return; }
+  if (biz && biz.status === "open") {
+    buildBusiness(sb, sg, sw, 0, 0, biz, R);
+    if (biz.type !== "farm" && biz.opened_tick != null && tick - biz.opened_tick < 24) scaffold(sb); // opened in the last day: still being finished
+    place(biz.type === "farm" ? 1 : 1.28); sign(B, cx, cz, biz); return;
+  }
   if (biz) { // closed: the building stands empty and shuttered
     sb.box(1.4, 0.5, 1.2, C("#bdb6a8"), M(0, 0.36, 0)); sb.box(1.5, 0.05, 1.3, C(PAL.slate), M(0, 0.63, 0));
     sb.box(0.7, 0.3, 0.02, C("#8d8678"), M(0, 0.3, 0.61));
@@ -709,6 +713,14 @@ function buildBusiness(B: Builder, G: Builder, W: Builder, cx: number, cz: numbe
     for (let k = 0; k < Math.min(4, lv + 1); k++) { B.box(0.36, 0.18, 0.22, own, M(cx - 0.6 + k * 0.4, 0.2, cz + 0.65)); B.box(0.16, 0.14, 0.2, C(PAL.white), M(cx - 0.68 + k * 0.4, 0.33, cz + 0.65)); }
   }
   void R;
+}
+
+/** Scaffolding on a building opened in the last town day: poles, two decks of planks and a hoist. */
+function scaffold(B: Builder) {
+  const pole = C("#c9a24a"), plank = C("#a87b4f");
+  for (const x of [-0.8, 0, 0.8]) for (const z of [-0.75, 0.55]) B.cyl(0.018, 0.018, 1.1, 4, pole, M(x, 0.66, z));
+  for (const y of [0.55, 0.98]) { B.box(1.7, 0.03, 0.16, plank, M(0, y, 0.55)); B.box(1.7, 0.03, 0.16, plank, M(0, y, -0.75)); B.box(0.02, 0.02, 1.32, pole, M(-0.8, y + 0.2, -0.1)); }
+  B.box(0.04, 0.04, 0.5, pole, M(0.8, 1.22, 0.35)); B.cyl(0.006, 0.006, 0.5, 3, C("#3a4048"), M(0.8, 0.97, 0.58));
 }
 
 /** The shop sign at the plot's corner carries the owner's colour. */

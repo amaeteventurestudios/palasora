@@ -28,11 +28,12 @@ def world(con: sqlite3.Connection, viewer: str = "", since_hours: int = 48) -> d
     by_id = {p["id"]: p for p in plots}
     names = {r["town_agent"]: r["display_name"] for r in con.execute("SELECT town_agent, display_name FROM town_links WHERE display_name != ''")}
     biz = []
-    for b in con.execute("SELECT id, type, plot, owner, price, wage, level, health, status FROM businesses ORDER BY id"):
+    for b in con.execute("SELECT id, type, plot, owner, price, wage, level, health, status, opened_tick FROM businesses ORDER BY id"):
         if b["plot"] not in by_id:
             continue
         row = {"id": b["id"], "type": b["type"], "plot": b["plot"], "owner": b["owner"], "owner_name": names.get(b["owner"], ""),
-               "level": b["level"], "health": b["health"], "status": b["status"], "price_sora": b["price"] / C, "wage_sora": b["wage"] / C}
+               "level": b["level"], "health": b["health"], "status": b["status"], "price_sora": b["price"] / C, "wage_sora": b["wage"] / C,
+               "opened_tick": b["opened_tick"]}
         biz.append(row)
         if b["status"] == "open":
             by_id[b["plot"]]["business"] = b["id"]

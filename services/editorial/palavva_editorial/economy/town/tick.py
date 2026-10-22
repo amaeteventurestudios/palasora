@@ -16,7 +16,7 @@ from __future__ import annotations
 import math
 
 from .. import db
-from . import actions, agents, business as B, civic, contracts, delivery, goods, market, reports
+from . import actions, agents, business as B, card, civic, contracts, delivery, goods, market, reports
 from .world import CIVIC, MEAL_HOURS, WORK_HOURS, World
 
 
@@ -47,7 +47,8 @@ def _steps(w: World) -> None:
         w.scenario.on_tick(w)
     if h == 10 and w.day % 7 == 0:
         civic.weekly_vote(w)
-    # 3. decide, 4. act
+    # 3. decide, 4. act (owners' own requests from the business card first, through the same gate)
+    card.apply_requests(w)
     act(w, agents.decide(w))
     # 5. produce
     if h in WORK_HOURS:

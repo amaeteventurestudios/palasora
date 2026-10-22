@@ -5,7 +5,7 @@
 export type WorldPlot = { id: string; area: string; x: number; y: number; size: number; prime: number; use: "home" | "business" | "civic"; owner: string;
   building: string; level: number; business?: string };
 export type WorldBusiness = { id: string; type: "farm" | "workshop" | "stall" | "delivery"; plot: string; owner: string; owner_name: string; level: number;
-  health: "green" | "yellow" | "orange" | "red"; status: "open" | "closed"; price_sora: number; wage_sora: number };
+  health: "green" | "yellow" | "orange" | "red"; status: "open" | "closed"; price_sora: number; wage_sora: number; opened_tick?: number };
 export type AwayItem = { event: string; kind: string; text: string; tick: number; yours: boolean; plot: string | null };
 export type WorldData = {
   town: { id: string; name: string; slug: string }; tick: number; grid: { w: number; d: number }; founded: boolean; plots: WorldPlot[];
