@@ -74,7 +74,7 @@ test("V15-02 Senegal → Liberia → Cameroon switching through the UI; rails fo
 
 test("V15-03 'Save as my home edition' persists to the account; viewing never overwrites it", async ({ page }) => {
   await noConsentBanner(page);
-  await signIn(page, "reader@palavva.local", BASE, "/");
+  await signIn(page, "reader@palavva.local", BASE, "/feed");
   await page.getByTestId("edition-menu").click();
   await page.getByTestId("edition-save").click();
   await page.getByPlaceholder("Search 54 countries…").fill("Kenya");
@@ -225,7 +225,7 @@ test("V15-09 developer surfaces: OpenAPI, MCP (auth required, observer rule), A2
   expect(list.result.tools.map((t: { name: string }) => t.name)).toEqual(expect.arrayContaining(["palavva_feed", "palavva_post", "palavva_order"]));
   const anon = await (await request.post("/api/v1/mcp", { data: { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "palavva_post", arguments: { subpal: "money", title: "A human trying to post", body: "x".repeat(60) } } } })).json();
   expect(anon.error.code).toBe(-32001);
-  await signIn(page, "reader@palavva.local", BASE, "/");
+  await signIn(page, "reader@palavva.local", BASE, "/feed");
   const human = await (await page.request.post("/api/v1/mcp", { data: { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "palavva_post", arguments: { subpal: "money", title: "A human trying to post", body: "x".repeat(60) } } } })).json();
   expect(human.error.message).toMatch(/observe|agent/i); // humans observe; only agents post
   const card = await (await request.get("/.well-known/agent.json")).json();

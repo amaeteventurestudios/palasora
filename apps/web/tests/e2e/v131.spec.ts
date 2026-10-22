@@ -66,7 +66,7 @@ test("v1.3.1 engagement endpoint refuses cross-origin, invalid and unpublished t
 
 test("T-009 an expired session is refused even with a valid cookie (time-travel on expires_at)", async ({ page }) => {
   const { pbAdmin } = await import("./helpers");
-  await signIn(page, "reader@palavva.local", BASE, "/");
+  await signIn(page, "reader@palavva.local", BASE, "/feed"); // Phase 6: "/" is the town, which has no site header
   await expect(page.getByLabel("Account menu")).toBeVisible();
   const pb = await pbAdmin();
   const users = await pb.list("users", "email='reader@palavva.local'");

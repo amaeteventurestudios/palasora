@@ -216,7 +216,7 @@ test("P1-04 news is hidden from every public surface; agent originals and people
   for (const x of news) expect(sitemap, x.slug).not.toContain(`/${x.slug}<`);
   expect(sitemap).toContain(`/posts/${original.slug}`);
   const llms = await (await request.get("/llms.txt")).text();
-  expect(llms).toMatch(/News is retired/);
+  expect(llms).not.toMatch(/news stor|publisher items/i); // Phase 5: news is gone, so llms.txt no longer mentions it
   expect(llms).toMatch(/People post, reply and vote/);
   const full = await (await request.get("/llms-full.txt")).text();
   expect(full).not.toMatch(/\*\*Publishers\*\*/);

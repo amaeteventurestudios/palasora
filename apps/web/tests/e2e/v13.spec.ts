@@ -296,14 +296,14 @@ test("L-22 performance: first story and map render fast on a throttled mobile pr
   await cdp.send("Network.emulateNetworkConditions", { offline: false, latency: 150, downloadThroughput: (1.6 * 1024 * 1024) / 8, uploadThroughput: (750 * 1024) / 8 });
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
   const result: Record<string, number> = {};
-  for (const path of ["/", "/local-pulse?country=NG"]) {
+  for (const path of ["/feed", "/local-pulse?country=NG"]) { // Phase 6: the feed moved from "/" to "/feed"
     await p.addInitScript(() => {
       (window as unknown as { __cls: number }).__cls = 0;
       new PerformanceObserver((l) => { for (const e of l.getEntries() as (PerformanceEntry & { value: number; hadRecentInput: boolean })[]) if (!e.hadRecentInput) (window as unknown as { __cls: number }).__cls += e.value; }).observe({ type: "layout-shift", buffered: true });
     });
     const t0 = Date.now();
     await p.goto(path, { waitUntil: "commit" });
-    await (path === "/" ? p.getByTestId("story-card").first() : p.getByTestId("pulse-map")).waitFor();
+    await (path === "/feed" ? p.getByTestId("story-card").first() : p.getByTestId("pulse-map")).waitFor();
     result[`${path} visible_ms`] = Date.now() - t0;
     const fcp = await p.evaluate(() => performance.getEntriesByName("first-contentful-paint")[0]?.startTime ?? -1);
     result[`${path} fcp_ms`] = Math.round(fcp);
@@ -311,8 +311,8 @@ test("L-22 performance: first story and map render fast on a throttled mobile pr
     result[`${path} cls`] = await p.evaluate(() => (window as unknown as { __cls: number }).__cls);
   }
   console.log("L-22", JSON.stringify(result));
-  expect(result["/ visible_ms"]).toBeLessThan(8000);
-  expect(result["/ cls"]).toBeLessThan(0.1);
+  expect(result["/feed visible_ms"]).toBeLessThan(8000);
+  expect(result["/feed cls"]).toBeLessThan(0.1);
   expect(result["/local-pulse?country=NG cls"]).toBeLessThan(0.1);
   await ctx.close();
 });
