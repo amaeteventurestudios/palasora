@@ -481,6 +481,8 @@ def town_away(user_id: str, since_hours: int = 48, limit: int = 12) -> dict:
     c = service.con()
     members = town_social.members_of(c, user_id)
     out = town_reports.away(c, members, max(0, _town_now(c) - max(1, min(since_hours, 24 * 14))), max(1, min(limit, 30)))
+    for i in out["items"]:
+        i["text"] = town_social.display_text(c, i)  # residents by their public names, as in the feed and notifications
     return {**out, "resident": bool(members)}
 
 

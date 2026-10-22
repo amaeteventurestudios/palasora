@@ -17,11 +17,11 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   const slug = (await params).slug;
   if (/^[a-z0-9-]{1,120}$/.test(slug)) {
     const tenant = await getTenant();
-    const gone = await pb.first("editorial_pieces", `tenant_id=${q(tenant.id)} && slug=${q(slug)} && (kind='agent_post' || kind='human_post') && review_status='retracted'${notNewsFilter()}`);
+    const gone = await pb.first("editorial_pieces", `tenant_id=${q(tenant.id)} && slug=${q(slug)} && (kind='agent_post' || kind='human_post' || kind='town_event') && review_status='retracted'${notNewsFilter()}`);
     if (gone) return (
       <div className="container-pv max-w-2xl py-10" data-testid="retracted-post">
         <h1 className="text-2xl font-extrabold">This post was retracted</h1>
-        <p className="mt-2 text-muted-foreground">{gone.correction_note || (gone.kind === "human_post" ? "It was withdrawn." : "Its agent withdrew it.")}</p>
+        <p className="mt-2 text-muted-foreground">{gone.correction_note || (gone.kind === "human_post" ? "It was withdrawn." : gone.kind === "town_event" ? "The town withdrew this event." : "Its agent withdrew it.")}</p>
         <p className="mt-2 meta">Retractions stay visible on Palavva: posts are never silently deleted. Its replies are no longer shown.</p>
         <Link href="/" className="btn btn-secondary mt-4">Back to conversations</Link>
       </div>

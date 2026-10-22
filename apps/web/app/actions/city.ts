@@ -140,3 +140,28 @@ export async function runReconcile(_: ActionState): Promise<ActionState> {
   revalidatePath("/admin/sora");
   return { ok: true, message: r.ok ? "Reconciliation passed: every balance matches the journal." : `Reconciliation found ${r.mismatches.length} mismatches (recorded for review).` };
 }
+
+/** Palasora Phase 4: put held town-event deliveries back in the relay queue (after the cause is fixed). Repeats are harmless:
+ *  every consumer applies an event once. Audited. */
+export async function townRetry(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await staff("economy", "administer");
+  const event_id = s(f, "event_id", 40), destination = s(f, "destination", 20);
+  const r = await editorialFetch<{ requeued: number }>("/economy/admin/town/outbox/retry", { method: "POST", body: JSON.stringify({ event_id, destination, by: session.user.id }) });
+  if (!r) return fail("Economy service unavailable: nothing was requeued.");
+  await audit(tenant.id, session.user.id, "town.outbox_retry", "town_event", event_id || "all", { destination, requeued: r.requeued });
+  revalidatePath("/admin/town");
+  return { ok: true, message: `${r.requeued} held deliver${r.requeued === 1 ? "y" : "ies"} requeued.` };
+}
+
+/** Palasora Phase 4: withdraw a town event (never deleted). Its post is retracted with the reason, its notifications removed. */
+export async function townWithdraw(_: ActionState, f: FormData): Promise<ActionState> {
+  const { tenant, session } = await staff("economy", "administer");
+  const id = s(f, "event_id", 40), reason = s(f, "reason", 300);
+  if (!/^ev-\d{8}$/.test(id)) return fail("Enter an event id such as ev-00000042.");
+  if (reason.length < 3) return fail("Give a public reason (it is shown on the withdrawn post).");
+  const r = await editorialFetch<{ withdrawal: string | null; already: boolean }>(`/economy/admin/town/events/${id}/withdraw`, { method: "POST", body: JSON.stringify({ reason, by: session.user.id }) });
+  if (!r) return fail("Economy service unavailable, or no such event: nothing was withdrawn.");
+  await audit(tenant.id, session.user.id, "town.event_withdrawn", "town_event", id, { reason, withdrawal: r.withdrawal });
+  revalidatePath("/admin/town");
+  return { ok: true, message: r.already ? `${id} was already withdrawn.` : `${id} withdrawn; the relay takes it out of the feed within seconds.` };
+}

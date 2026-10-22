@@ -22,6 +22,8 @@ export type PieceSummary = {
   up_votes: number; down_votes: number; rank_votes: number; agent_replies: number;
   /** Palasora Phase 1: the person who wrote a human_post (empty otherwise). */
   author_user_id?: string;
+  /** Palasora Phase 4: the stored economy event a town_event post shows, and where it is listed ("main" or "place"). */
+  town_event_id?: string; feed_scope?: string;
   /** v1.5: relevance to the edition being viewed (set by listFeed when an edition scope applies). */
   scope?: Scope;
 };
@@ -50,7 +52,7 @@ export function toSummary(r: Rec): PieceSummary {
     initiator_role: r.initiator_role ?? "", thread_state: r.thread_state ?? "", publish_path: r.publish_path ?? "", origin_country: r.origin_country ?? "",
     original_language: r.original_language || r.language || "en", area_ids: Array.isArray(r.area_ids) ? r.area_ids : [],
     revision: r.revision ?? 1, source_language: (Array.isArray(r.sources_json) && r.sources_json[0]?.language) || "en",
-    author_agent_id: r.author_agent_id ?? "", author_user_id: r.author_user_id ?? "", community_id: r.community_id ?? "", post_label: r.post_label ?? "", source_url: r.source_url ?? "",
+    author_agent_id: r.author_agent_id ?? "", author_user_id: r.author_user_id ?? "", town_event_id: r.town_event_id ?? "", feed_scope: r.feed_scope ?? "", community_id: r.community_id ?? "", post_label: r.post_label ?? "", source_url: r.source_url ?? "",
     last_activity_at: r.last_activity_at || r.material_updated_at || r.published_at, latest_reply_id: r.latest_reply_id ?? "",
     up_votes: r.up_votes ?? 0, down_votes: r.down_votes ?? 0, rank_votes: r.rank_votes ?? 0, agent_replies: r.agent_reply_count ?? 0,
   };
@@ -75,6 +77,12 @@ export function invalidateFeedCache(tenantId?: string) {
   for (const k of feedCache.keys()) if (!tenantId || k.includes(tenantId)) feedCache.delete(k);
 }
 
+/** Palasora Phase 4: a town event that is only "public" (not public enough) stays in its town's SubPal; the main feed
+ *  shows the ones marked feed_scope='main' (openings, closings, sales, the weekly vote). */
+export function townScopeFilter(fq: { community?: string }): string {
+  return fq.community ? "" : " && (kind!='town_event' || feed_scope='main')";
+}
+
 export type FeedQuery = { mode: FeedMode; country?: string; topic?: string; lang?: string; cursor?: string; limit?: number; seed?: string; area?: string;
   /** The edition being viewed. A country edition SCOPES the feed (v1.5): local items, then labelled regional and
    *  pan-African items; items only about other regions are excluded. "ALL" = continental feed with country diversity. */
@@ -95,7 +103,8 @@ export async function listFeed(t: Tenant, fq: FeedQuery): Promise<{ items: Piece
   if (fq.area && /^[A-Z]{2}-[A-Z0-9]{1,3}$/.test(fq.area)) f += ` && area_ids~${q(`"${fq.area}"`)}`;
   if (fq.community && /^[a-z0-9]{10,20}$/.test(fq.community)) f += ` && community_id=${q(fq.community)}`;
   if (fq.agent && /^[a-z0-9]{10,20}$/.test(fq.agent)) f += ` && author_agent_id=${q(fq.agent)}`;
-  if (fq.kind === "agent_post") f += " && (kind='agent_post' || kind='human_post')"; // community posts: agents and people
+  if (fq.kind === "agent_post") f += " && (kind='agent_post' || kind='human_post' || kind='town_event')"; // community posts: agents, people and the town
+  f += townScopeFilter(fq);
   // Bounded candidate window (MVP scale); ranking happens in feed.ts. Published-only rows are
   // micro-cached per tenant+filter for 5 s (keyed by tenant id, so no cross-tenant reuse).
   const rows = await cachedList(f);
