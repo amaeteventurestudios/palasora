@@ -179,8 +179,9 @@ test("P1-03 abuse controls: moderation blocks a bad post, rate limits trigger, l
 test("P1-04 news is hidden from every public surface; agent originals and people's posts remain", async ({ page, request }) => {
   await noConsentBanner(page);
   const pb = await pbAdmin();
+  // Phase 5: news pieces were moved to news_archive by the removal migration; none are published.
   const news = await pb.list("editorial_pieces", "review_status='published' && (kind='source_link' || kind='story' || kind='discussion' || kind='short' || post_label='sourced_news')");
-  expect(news.length).toBeGreaterThan(0); // the archived news is still stored (nothing deleted)
+  expect(news).toEqual([]);
   const original = (await pb.list("editorial_pieces", "review_status='published' && kind='agent_post' && post_label!='sourced_news'"))[0];
   const human = (await pb.list("editorial_pieces", "review_status='published' && kind='human_post'"))[0];
   // feed (every sort), Hot right now, SubPal and country pages carry no news card

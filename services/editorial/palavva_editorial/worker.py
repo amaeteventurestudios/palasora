@@ -1,4 +1,4 @@
-"""Background worker: schedules due source fetches and processes the durable queue.
+"""Background worker: processes the durable queue (agent city, owner tasks, translation, search) and relays town events.
 
 Single process, one model request in flight. Never busy-loops: sleeps when idle, defers
 on Qwen outage or budget exhaustion. Ctrl-C / SIGTERM finish the current step and exit.
@@ -10,49 +10,23 @@ import logging
 import os
 import signal
 import time
-from datetime import datetime, timezone
 
-from . import analytics_etl, config, conversation, search as fts, translate
+from . import analytics_etl, config, search as fts, translate
 from .jobs import Queue
 from .pb import PB, PBError, q
-from .pipeline import Deferred, draft_cluster, ingest_source, pbdate
+from .common import Deferred
 from .providers import make_provider
-from .retired import is_news_piece, news_retired, not_news_filter
 
 log = logging.getLogger("palavva.worker")
 STOP = False
 
 
 def reindex_all(pb: PB, s: config.Settings) -> int:
-    # Palasora Phase 1: retired news pieces are not searchable (they stay stored and visible to staff).
-    pieces = pb.list_all("editorial_pieces", "review_status='published'" + not_news_filter())
+    pieces = pb.list_all("editorial_pieces", "review_status='published'")
     return fts.reindex(s.search_db, pieces)
 
 
-def schedule_due_sources(pb: PB, queue: Queue) -> int:
-    if news_retired():  # Palasora Phase 1 (doc 06 section 17, stage 1): RSS ingestion is stopped; nothing is scheduled
-        return 0
-    now = datetime.now(timezone.utc)
-    n = 0
-    for src in pb.list_all("sources", "enabled=true && rights_status='approved'"):
-        due = src.get("next_fetch_at") or ""
-        if due and due > pbdate(now):
-            continue
-        bucket = int(time.time() // (60 * max(15, int(src.get("fetch_interval_minutes") or 60))))
-        _, created = queue.enqueue(src["tenant_id"], "fetch_source", {"source_id": src["id"]}, f"sched:{src['id']}:{bucket}")
-        n += int(created)
-    return n
-
-
 NEWS_JOBS = ("fetch_source", "draft_cluster", "converse", "retry_auto_publish")
-
-
-def _converse_on_news(pb: PB, job: dict) -> bool:
-    pid = (job.get("payload") or {}).get("piece_id") or ""
-    try:
-        return not pid or is_news_piece(pb.get("editorial_pieces", pid))
-    except PBError:
-        return True
 
 
 def process_one(pb: PB, queue: Queue, s: config.Settings, provider, owner: str) -> bool:
@@ -61,26 +35,7 @@ def process_one(pb: PB, queue: Queue, s: config.Settings, provider, owner: str) 
     if not job:
         return False
     try:
-        if job["type"] in NEWS_JOBS and news_retired():
-            # Stage 1: queued news jobs (RSS fetch, story drafting, evidence-thread turns on news pieces) finish as skipped, untouched.
-            if job["type"] != "converse" or _converse_on_news(pb, job):
-                queue.complete(job["job_id"], owner, {"skipped": "news retired (NEWS_RETIRED=true)"})
-                return True
-        if job["type"] == "fetch_source":
-            src = pb.get("sources", job["payload"]["source_id"])
-            if src["tenant_id"] != job["tenant_id"]:
-                raise ValueError("tenant mismatch")
-            res = ingest_source(pb, queue, s, src)
-            queue.complete(job["job_id"], owner, dict(res))
-        elif job["type"] == "draft_cluster":
-            res = draft_cluster(pb, queue, s, provider, job)
-            queue.complete(job["job_id"], owner, res)
-        elif job["type"] == "converse":
-            res = conversation.converse_step(pb, queue, s, provider, job)
-            queue.complete(job["job_id"], owner, res)
-        elif job["type"] == "retry_auto_publish":
-            queue.complete(job["job_id"], owner, conversation.retry_auto_publish(pb, queue, s, job))
-        elif job["type"] == "translate":
+        if job["type"] == "translate":
             queue.complete(job["job_id"], owner, translate.translate_job(pb, queue, s, provider, job))
         elif job["type"] == "city_tick":
             from .city import engine as city
@@ -93,6 +48,8 @@ def process_one(pb: PB, queue: Queue, s: config.Settings, provider, owner: str) 
             queue.complete(job["job_id"], owner, city.owner_task(pb, queue, s, provider, job))
         elif job["type"] == "reindex_search":
             queue.complete(job["job_id"], owner, {"indexed": reindex_all(pb, s)})
+        elif job["type"] in NEWS_JOBS:  # Palasora Phase 5: news is removed; a job queued before the upgrade finishes as skipped
+            queue.complete(job["job_id"], owner, {"skipped": "news removed"})
         else:
             queue.fail(job["job_id"], owner, "UNKNOWN_TYPE", job["type"], retryable=False)
     except Deferred as d:
@@ -149,14 +106,11 @@ def main() -> None:
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
     log.info("worker started provider=%s model=%s", provider.name, provider.model)
-    last_sched = last_index = last_etl = last_rest = last_city = last_town = 0.0
+    last_index = last_etl = last_rest = last_city = last_town = 0.0
     from .city import engine as city
     while not STOP:
         now = time.time()
         try:
-            if now - last_sched > 60:
-                schedule_due_sources(pb, queue)
-                last_sched = now
             if now - last_city > 60:
                 # Owner instructions are always picked up (bounded by their own caps); the seed city's bounded
                 # evaluation window is only scheduled when CITY_ENABLED=true (one tick per window, idempotent).
@@ -172,7 +126,6 @@ def main() -> None:
                 reindex_all(pb, s)
                 last_index = now
             if now - last_rest > 600:
-                conversation.rest_idle_threads(pb, queue)
                 translate.retry_outdated_failures(pb, queue)
                 translate.revalidate_outdated(pb, queue)
                 last_rest = now

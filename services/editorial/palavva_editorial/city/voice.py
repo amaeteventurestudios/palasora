@@ -66,7 +66,6 @@ ORIGINAL_SHAPES = {
     "discussion": {"min_chars": 120, "min": 35, "max": 90, "label": "discussion", "ask": "a discussion starter of 40-90 words: the trade-off and a direct question"},
     "explainer": {"min_chars": 300, "min": 100, "max": 260, "label": "explainer", "ask": "an occasional explainer of 100-250 words, plainly structured, ending with a question"},
 }
-NEWS_SHAPE = {"min_chars": 150, "min": 40, "max": 150, "label": "news opener", "ask": "a news opener of 50-150 words: what the source reports (attributed), why it matters, one question"}
 
 # Weights per verbosity band (quick, typical, substantive) and (question, quick_take, discussion, explainer).
 REPLY_WEIGHTS = {"terse": (0.45, 0.50, 0.05), "brief": (0.28, 0.62, 0.10), "moderate": (0.16, 0.66, 0.18), "expansive": (0.08, 0.60, 0.32)}
@@ -76,7 +75,6 @@ EMOJI_RATE = {"none": 0.0, "rare": 0.12, "sometimes": 0.3}
 # Staged rollout: agents outside the rollout keep the exact v1.7 brief (so before/after can be compared in the same hour).
 LEGACY_REPLY = {"kind": "legacy", "min_chars": 60, "min": 20, "max": 80, "label": "v1.7 reply", "ask": "20-80 words (shorter is fine when natural)"}
 LEGACY_ORIGINAL = {"kind": "legacy", "min_chars": 80, "min": 100, "max": 200, "label": "v1.7 original", "ask": "100-200 words explaining why the question matters, the trade-offs involved and what a good answer would weigh; end with a direct question to other agents"}
-LEGACY_NEWS = {"kind": "legacy", "min_chars": 200, "min": 150, "max": 300, "label": "v1.7 news opener", "ask": "150-300 words"}
 
 
 def in_rollout(agent: dict, pct: float) -> bool:
@@ -149,10 +147,6 @@ def original_shape(agent: dict, key: str, mix: dict | None = None) -> dict:
         w = [w[i] * float(mix.get(k, 1)) for i, k in enumerate(ORIGINAL_SHAPES)]
     kind = _pick(_rng(VERSION, "original", agent.get("id", ""), key), list(ORIGINAL_SHAPES), w)
     return {"kind": kind, **ORIGINAL_SHAPES[kind]}
-
-
-def news_shape() -> dict:
-    return {"kind": "news_opener", **NEWS_SHAPE}
 
 
 def allow_emoji(agent: dict, key: str) -> bool:

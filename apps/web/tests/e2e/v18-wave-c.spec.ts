@@ -45,12 +45,12 @@ test("ISSUE-20 Markdown exists for Palavva-original posts only, with canonical l
   expect((await request.get(`${BASE}/md/..%2Fadmin`)).status()).toBe(404);
 });
 
-test("ISSUE-21 Infrastructure & services: all 8 processes, running vs healthy, packages with licences, impact view, jobs without [object Object]", async ({ page }) => {
+test("ISSUE-21 Infrastructure & services: all 7 processes, running vs healthy, packages with licences, impact view, jobs without [object Object]", async ({ page }) => {
   await page.addInitScript(() => { try { localStorage.setItem("pv_consent", "denied"); } catch { /* */ } });
   const { signIn } = await import("./helpers");
   await signIn(page, "admin@palavva.local", BASE, "/admin/infrastructure");
   const svc = page.getByTestId("infra-services");
-  for (const n of ["pocketbase", "editorial", "worker", "fast", "writers", "intel", "population", "web"]) await expect(svc.locator(`[data-row="${n}"]`)).toBeVisible();
+  for (const n of ["pocketbase", "editorial", "worker", "fast", "writers", "population", "web"]) await expect(svc.locator(`[data-row="${n}"]`)).toBeVisible();
   await expect(svc.locator('[data-row="espocrm"]')).toContainText("Not configured");
   await page.getByRole("button", { name: "Installed software" }).click();
   await page.getByTestId("infra-packages-size-100").click();
@@ -101,23 +101,6 @@ test("ISSUE-13 Trust & safety: honest zero states, automatic decisions charted, 
   await expect(page.getByTestId("refusal-reasons")).toBeVisible();
   await page.getByTestId("ts-tabs").getByRole("link", { name: "Service health" }).click();
   await expect(page.getByTestId("ts-health")).toContainText("Publication rules service: answering");
-});
-
-test("ISSUE-09 Source registry: compact grid, actionable view by default, archived discoveries kept but hidden, details drawer with rights evidence", async ({ page }) => {
-  await page.addInitScript(() => { try { localStorage.setItem("pv_consent", "denied"); } catch { /* */ } });
-  const { signIn } = await import("./helpers");
-  await signIn(page, "admin@palavva.local", BASE, "/admin/sources");
-  const grid = page.getByTestId("source-grid");
-  await expect(page.getByTestId("source-view-actionable")).toHaveAttribute("aria-pressed", "true");
-  expect(await grid.locator('[data-testid="source-row"][data-group="archived"]').count()).toBe(0);
-  await page.getByTestId("source-search").fill("AllAfrica");
-  const card = grid.getByTestId("source-row").first();
-  await expect(card).toContainText("Rights:");
-  await card.getByRole("button", { name: "View details" }).click();
-  await expect(page.getByTestId("source-detail")).toContainText("never inferred from directory data");
-  const box = await grid.locator("ul").first().boundingBox();
-  const first = await grid.getByTestId("source-row").first().boundingBox();
-  expect(box && first && first.width < box.width / 2.5).toBeTruthy(); // several cards per row at 1280+, not one long column
 });
 
 test("ISSUE-06 a clearly new, rule-passing SubPal proposal opens automatically; a near-duplicate waits with a stated reason", async () => {

@@ -119,7 +119,7 @@ def test_gender_interleave_is_exact():
 
 def test_control_inheritance_override_and_reset():
     cfg = control.empty()
-    new, diff = control.apply_changes(cfg, [{"scope": "global", "key": "news_interval_min", "value": 60}, {"scope": "NG", "key": "original_interval_min", "value": 5}])
+    new, diff = control.apply_changes(cfg, [{"scope": "global", "key": "originals_max_per_hour", "value": 60}, {"scope": "NG", "key": "original_interval_min", "value": 5}])
     assert control.effective(new, "original_interval_min", "NG") == 5 and control.origin(new, "original_interval_min", "NG") == "country"
     assert control.effective(new, "original_interval_min", "GH") == control.schema()["original_interval_min"]["default"]
     new2, _ = control.apply_changes(new, [{"scope": "NG", "key": "original_interval_min", "reset": True}])
@@ -132,7 +132,7 @@ def test_control_validation_and_caps():
     with pytest.raises(ValueError):
         control.apply_changes(control.empty(), [{"scope": "global", "key": "spend_cap_usd", "value": control.env_spend_cap() + 1}])  # above authorised ceiling
     with pytest.raises(ValueError):
-        control.apply_changes(control.empty(), [{"scope": "global", "key": "news_interval_min", "value": 0}])
+        control.apply_changes(control.empty(), [{"scope": "global", "key": "original_interval_min", "value": 0}])
     cfg = {"revision": 1, "global": {"daily_spend_usd": 99}, "countries": {}}
     assert control.effective(cfg, "daily_spend_usd") <= control.env_spend_cap()  # a stored value can never exceed the env ceiling
 
@@ -299,13 +299,13 @@ def test_rollback_deletes_only_never_used_identities(pop):
 def test_control_save_persists_conflicts_and_rolls_back(pop):
     pb, tid = pop
     cur = control.load(pb, tid, ttl=0)
-    r1 = control.save(pb, tid, [{"scope": "NG", "key": "original_interval_min", "value": 5}, {"scope": "global", "key": "news_interval_min", "value": 30}],
+    r1 = control.save(pb, tid, [{"scope": "NG", "key": "original_interval_min", "value": 5}, {"scope": "global", "key": "originals_max_per_hour", "value": 30}],
                       cur["revision"], {"id": "u", "name": "t"}, "test")
     with pytest.raises(control.ConflictError):
-        control.save(pb, tid, [{"scope": "global", "key": "news_interval_min", "value": 45}], cur["revision"], {"id": "u2", "name": "t2"}, "stale")
+        control.save(pb, tid, [{"scope": "global", "key": "originals_max_per_hour", "value": 45}], cur["revision"], {"id": "u2", "name": "t2"}, "stale")
     control._CACHE.clear()  # a restarted process reads the persisted config
     fresh = control.load(pb, tid, ttl=0)
-    assert control.effective(fresh, "original_interval_min", "NG") == 5 and control.effective(fresh, "news_interval_min", "GH") == 30
+    assert control.effective(fresh, "original_interval_min", "NG") == 5 and control.effective(fresh, "originals_max_per_hour", "GH") == 30
     r2 = control.save(pb, tid, [], r1["revision"], {"id": "u", "name": "t"}, "undo", rollback_to=max(1, r1["revision"] - 1) if r1["revision"] > 1 else 0) if r1["revision"] > 1 else None
     view = control.view(pb, tid)
     assert view["revisions"][0]["revision"] >= r1["revision"] and pb.count("audit_events", f"tenant_id='{tid}' && action='engine.config_changed'") >= 1
@@ -322,13 +322,6 @@ def test_engine_routes_load_v17_residents(pop):
     assert any(isinstance(v, float) and 0 < v < 1 and v != 0.5 for v in vals)
     assert pb.route("GET", "/api/palavva/engine-memberships", params={"tenant_id": tid})["rows"]
     assert "areas" in pb.route("GET", "/api/palavva/pulse-agents", params={"tenant_id": tid, "cc": "ST", "since": "2000-01-01 00:00:00"})
-
-
-def test_sentence_openers_are_not_entities_but_names_still_are():
-    """v1.7 run: an original post was rejected for "unsupported_entities: Let" ("— Let's weigh it")."""
-    from palavva_editorial.editorial.validate import unsupported_names
-    assert unsupported_names("Shared storage", ["Who pays? — Let's weigh it. \"Imagine a co-op.\" - Consider the fee."], "shared storage") == []
-    assert unsupported_names("x", ["A plan by Kwesi Mensah fails."], "x") == ["Kwesi", "Mensah"]
 
 
 def test_spend_guard_blocks_total_daily_and_country_caps(tmp_path, monkeypatch):

@@ -3,7 +3,7 @@
 A separate, model-free process (`python -m palavva_editorial.city.fast`) so cheap decisions never wait behind a 15 s
 local-model generation. Layers, matching the founder's list:
 
-  1. intake     committed rows only: new source cards (`agent_events` news_item, created at ingest), new agent posts,
+  1. intake     committed rows only: new agent and human posts,
                 replies and @mentions read from the ordered `thread_events` log (cursor survives restarts).
   2. eligibility deterministic SQL-free matching over the cached active population: subject keywords, SubPal
                 membership, and country affinity against the item's SUBJECT countries. Top-K candidates only.
@@ -36,7 +36,6 @@ from ..jobs import Queue
 from ..pb import PB, PBError, q
 from ..providers import jev
 from ..providers.router import Meter
-from ..retired import is_news_piece, news_retired
 from . import engine, lexicon, regions
 from .engine import WebRefused, now_pb, relevance, ts_of, web_call
 
@@ -97,7 +96,6 @@ def _env_cfg() -> dict:
         "reply_back_turns": _i("FAST_REPLY_BACK_TURNS", 4),      # max turns one agent takes in one thread via reply-backs
         "reply_back_p": float(os.environ.get("FAST_REPLY_BACK_P", "0.75")),  # chance an agent answers a reply to it (agents don't always answer)
         "author_answer_p": float(os.environ.get("FAST_AUTHOR_ANSWER_P", "0.7")),  # chance a post's author answers a top-level reply
-        "news_discussions": os.environ.get("FAST_NEWS_DISCUSSIONS", "true").lower() == "true",
         "rhythm": os.environ.get("FAST_RHYTHM", "true").lower() == "true",
         "subpal_demand_every_sec": _i("FAST_SUBPAL_DEMAND_SEC", 1800),
         "reaction": os.environ.get("FAST_REACTION", "true").lower() == "true",
@@ -179,7 +177,6 @@ class FastEngine:
         self.full_at = 0.0
         self.sched: dict = {}
         self.sched_loaded = False
-        self.news_backlog: dict[str, list[tuple[float, dict, dict, str, list]]] = {}
         self.members: dict[str, set[str]] = {}
         self.follows: dict[str, set[str]] = {}
         self.subpals: dict[str, dict] = {}
@@ -193,7 +190,7 @@ class FastEngine:
         self.pending: list[tuple[float, int, object]] = []  # (due, seq, callable): reactions waiting for their agent's reading time
         self.pending_seq = 0
         self.trade_cursor = 0
-        self.stats = {"events": 0, "skipped": 0, "votes": 0, "follows": 0, "joins": 0, "replies_queued": 0, "decisions": 0, "turns_queued": 0, "news_queued": 0}
+        self.stats = {"events": 0, "skipped": 0, "votes": 0, "follows": 0, "joins": 0, "replies_queued": 0, "decisions": 0, "turns_queued": 0}
 
     # ------------------------------------------------------------------ state
     def refresh(self, force: bool = False) -> None:
@@ -466,11 +463,10 @@ class FastEngine:
         if not piece or piece.get("review_status") != "published" or piece.get("is_demo"):
             self.pb.update("agent_events", ev["id"], {"status": "skipped", "skip_reason": "item not public", "routed_at": now_pb()})
             return {"skipped": "not public"}
-        if news_retired() and (ev["event_type"] == "news_item" or is_news_piece(piece)):
-            # Palasora Phase 1 (doc 06 section 17, stage 1): no news discussions, no reactions on (hidden) news threads.
-            self.pb.update("agent_events", ev["id"], {"status": "skipped", "skip_reason": "news retired (NEWS_RETIRED=true)", "routed_at": now_pb()})
+        if ev["event_type"] == "news_item":  # Palasora Phase 5: news is removed; a leftover queued news event is skipped
+            self.pb.update("agent_events", ev["id"], {"status": "skipped", "skip_reason": "news removed", "routed_at": now_pb()})
             self.stats["skipped"] += 1
-            return {"skipped": "news retired"}
+            return {"skipped": "news removed"}
         if ev["event_type"] in ("new_reply", "mention") and piece.get("author_agent_id") and ev.get("actor_agent_id") != piece.get("author_agent_id"):
             self.notify(piece["author_agent_id"], "agent_reply", "An agent replied to your agent's post", piece.get("headline", "")[:180],
                         f"/posts/{piece.get('slug')}", f"reply:{ev.get('comment_id') or ev['id']}")
@@ -484,8 +480,6 @@ class FastEngine:
         directed = self.directed(ev, piece)
         exclude |= directed
         cands = self.candidates(piece, text, exclude, ev["id"])
-        if ev["event_type"] == "news_item" and cands and c["news_discussions"] and not news_retired():
-            self.news_gate(ev, piece, text, cands)
         if not cands and directed:
             self.pb.update("agent_events", ev["id"], {"status": "done", "candidates": len(directed), "selected": len(directed), "routed_at": now_pb()})
             self.stats["events"] += 1
@@ -511,7 +505,7 @@ class FastEngine:
             if d["reply"] and replies < c["replies_per_event"] and thread_replies < engine.cfg()["thread_agent_cap"] and perms.get("reply", True) \
                     and self.country_ok(home, "replies_enabled"):
                 key = f"city:{a['id']}:piece:{piece['id']}"
-                _, created = self.queue.enqueue(self.tid, "city_act", {"agent_id": a["id"], "trigger": "rss_topic" if ev["event_type"] == "news_item" else "thread_update",
+                _, created = self.queue.enqueue(self.tid, "city_act", {"agent_id": a["id"], "trigger": "thread_update",
                                                                         "target_kind": "piece", "target_id": piece["id"], "piece_id": piece["id"], "score": sc, "why": why,
                                                                         "original": False, "reason": f"fast-engine:{ev['event_type']}", "subpal_id": piece.get("community_id") or ""},
                                                 key, max_attempts=2)
@@ -660,114 +654,17 @@ class FastEngine:
                 done.add(aid)
         return done
 
-    def open_news_discussion(self, ev: dict, piece: dict, text: str, cands: list) -> None:
-        """A new source card: the best-matched agent that may post and reads the item's language opens ONE grounded
-        discussion in the most fitting SubPal (country-focused first). No fitting SubPal or agent: nothing is forced."""
-        if news_retired() or piece.get("kind") != "source_link" or not piece.get("source_url"):
-            return False
-        countries = [x for x in (piece.get("country_codes") or []) if x]
-        sp = engine.choose_subpal(self.subpals, piece.get("topic_slugs") or [], countries[0] if countries else "", text)
-        if not sp:
-            self.record(ev, cands[0][1], piece, "abstain", "no SubPal fits this source's topics, so no discussion was opened", "deterministic-news-v1", 0)
-            return False
-        lang = (piece.get("language") or "en").split("-")[0]
-        for sc, a, why in cands:
-            perms = a.get("permissions") or {}
-            if perms.get("post") is False or not reads(a, lang):
-                continue
-            key = f"city:{a['id']}:news:{piece['id']}"
-            _, created = self.queue.enqueue(self.tid, "city_act", {"agent_id": a["id"], "trigger": "news_item", "target_kind": "piece", "target_id": piece["id"],
-                                                                  "piece_id": piece["id"], "news": True, "subpal_id": sp["id"], "country": countries[0] if countries else "",
-                                                                  "score": sc, "why": why, "reason": "fast-engine:news_item"}, key, max_attempts=2)
-            if created:
-                self.stats["news_queued"] = self.stats.get("news_queued", 0) + 1
-                self.record(ev, a, piece, "deferred", f"asked to open the discussion in p/{sp['slug']} ({'; '.join(why)})", "deterministic-news-v1", 0)
-            return created
-        return False
-
     # ------------------------------------------------------------------ v1.7 schedulers (Control Room cadences)
     def _sched(self) -> dict:
         if not self.sched_loaded:
             self.sched = setting(self.pb, self.tid, "ENGINE_SCHEDULE", {}) or {}
             self.sched_loaded = True
         self.sched.setdefault("originals", {})
-        self.sched.setdefault("news", {})
         self.sched.setdefault("orig_hour", [])
         return self.sched
 
     def _save_sched(self) -> None:
         set_setting(self.pb, self.tid, "ENGINE_SCHEDULE", self.sched)
-
-    def is_breaking(self, piece: dict) -> int:
-        """Corroboration count when breaking priority applies: a low-risk published item whose story cluster was carried by
-        at least N distinct publishers in 24 h. Sensitive items never reach here (they are held for review, not published)."""
-        from . import control
-        if news_retired() or not control.get(self.tid, "breaking_enabled") or (piece.get("risk_tier") or "low") != "low" or not piece.get("cluster_id"):
-            return 0
-        since = now_pb(time.time() - 86400)
-        try:
-            items = self.pb.list("source_items", f"tenant_id={q(self.tid)} && cluster_id={q(piece['cluster_id'])} && created >= {q(since)}", per_page=100)
-        except PBError:
-            return 0
-        n = len({i.get("source_id") for i in items if i.get("source_id")})
-        return n if n >= int(control.get(self.tid, "breaking_min_sources")) else 0
-
-    def news_gate(self, ev: dict, piece: dict, text: str, cands: list) -> None:
-        """v1.7: news discussions follow the per-country cadence (Control Room `news_interval_min`) instead of opening on every
-        item. Items arriving between slots wait in a short backlog; the next slot takes the newest. Breaking override:
-        corroborated low-risk items open immediately."""
-        from . import control
-        if news_retired():
-            return
-        cc = ([x for x in (piece.get("country_codes") or []) if x] or ["ALL"])[0]
-        ccx = "" if cc == "ALL" else cc
-        if not self.country_ok(ccx, "news_enabled"):
-            self.record(ev, cands[0][1], piece, "abstain", f"news discussions are switched off for {cc} in the Control Room", "control-room", 0)
-            return
-        sched = self._sched()
-        now = time.time()
-        interval = float(control.get(self.tid, "news_interval_min", ccx)) * 60
-        last = float(sched["news"].get(cc, 0))
-        corroborated = self.is_breaking(piece)
-        if corroborated or now - last >= interval:
-            if self.open_news_discussion(ev, piece, text, cands):
-                sched["news"][cc] = now
-                self.stats["news_breaking" if corroborated and now - last < interval else "news_on_cadence"] = \
-                    self.stats.get("news_breaking" if corroborated and now - last < interval else "news_on_cadence", 0) + 1
-                self._save_sched()
-            return
-        q_ = self.news_backlog.setdefault(cc, [])
-        q_.append((now, ev, piece, text, cands))
-        del q_[:-20]
-        self.stats["news_waiting"] = sum(len(v) for v in self.news_backlog.values())
-        self.record(ev, cands[0][1], piece, "deferred", f"news cadence: next {cc} discussion slot in {int((interval - (now - last)) / 60) + 1} min "
-                    f"(every {int(interval / 60)} min); the newest waiting item takes it", "control-room", 0)
-
-    def news_tick(self) -> int:
-        from . import control
-        if news_retired():  # stage 1: the news cadence scheduler never runs
-            self.news_backlog.clear()
-            return 0
-        sched = self._sched()
-        now = time.time()
-        n = 0
-        for cc, q_ in list(self.news_backlog.items()):
-            q_[:] = [x for x in q_ if now - x[0] < 86400]
-            ccx = "" if cc == "ALL" else cc
-            if not q_ or not self.country_ok(ccx, "news_enabled"):
-                continue
-            if now - float(sched["news"].get(cc, 0)) < float(control.get(self.tid, "news_interval_min", ccx)) * 60:
-                continue
-            while q_:
-                _, ev, piece, text, cands = q_.pop()  # newest first
-                if self.open_news_discussion(ev, piece, text, cands):
-                    sched["news"][cc] = now
-                    n += 1
-                    self.stats["news_on_cadence"] = self.stats.get("news_on_cadence", 0) + 1
-                    break
-        if n:
-            self._save_sched()
-        return n
 
     def originals_tick(self) -> int:
         """v1.7: original agent discussions WITHOUT news. Each country with eligible agents gets at most one new discussion per
@@ -912,7 +809,7 @@ class FastEngine:
                 log.warning("notify failed: %s", e)
 
     def _emit_economy(self, event_type: str, agent_id: str, payload: dict) -> None:
-        from ..conversation import emit
+        from ..common import emit
         a = self.agents.get(agent_id) or {}
         try:
             emit(self.pb, self.tid, event_type, "", author_kind="agent",
@@ -1163,7 +1060,6 @@ class FastEngine:
         now = time.time()
         try:
             res["originals"] = self.originals_tick()
-            res["news"] = self.news_tick()
         except (PBError, httpx.HTTPError) as e:
             log.warning("scheduler turn failed: %s", e)
         if now - self.last_reward >= cfg()["reward_every_sec"]:

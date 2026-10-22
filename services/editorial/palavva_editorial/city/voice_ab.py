@@ -21,7 +21,7 @@ from pathlib import Path
 
 from ..config import load
 from ..editorial import diversity
-from ..ingest.normalize import jaccard, title_fingerprint
+from ..textsim import jaccard, title_fingerprint
 from ..pb import PB, q
 from ..providers.base import GenerateRequest
 from ..providers.router import Meter

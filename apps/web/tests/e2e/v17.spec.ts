@@ -116,13 +116,11 @@ test("V17-06 Control Room: a country override is reviewed, applied with a reason
   await page.goto(`${BASE}/admin/engine/controls`);
   // Re-runnable: pick cadences that differ from Ghana's current values on this stack.
   const cur = (await (await page.request.get(`${BASE}/api/admin/engine-config`)).json()).data.countries.GH;
-  const news = [30, 45, 20].find((v) => v !== cur.news_interval_min.value)!;
   const orig = [5, 10, 15].find((v) => v !== cur.original_interval_min.value)!;
   await page.getByTestId("scope-countries").click();
   await page.getByTestId("country-combobox").click();
   await page.getByTestId("pick-GH").click();
   await page.keyboard.press("Escape");
-  await page.getByTestId(`set-news_interval_min-${news}`).click();
   await page.getByTestId(`set-original_interval_min-${orig}`).click();
   await page.getByTestId("cr-review").click();
   await expect(page.getByTestId("cr-dialog")).toContainText("Ghana");
@@ -131,12 +129,11 @@ test("V17-06 Control Room: a country override is reviewed, applied with a reason
   await page.getByTestId("cr-apply").click();
   await expect(page.getByTestId("cr-overrides")).toContainText("Ghana", { timeout: 15_000 });
   await page.reload();
-  await expect(page.getByTestId("cr-overrides")).toContainText(`News discussion cadence (minutes per country): ${news} min`);
+  await expect(page.getByTestId("cr-overrides")).toContainText(`Original discussion cadence (minutes per country): ${orig} min`);
   const r = await page.request.get(`${BASE}/api/admin/engine-config`);
   const view = (await r.json()).data;
-  expect(view.countries.GH.news_interval_min).toEqual({ value: news, origin: "country" });
   expect(view.countries.GH.original_interval_min).toEqual({ value: orig, origin: "country" });
-  expect(view.countries.NG.news_interval_min.origin).not.toBe("country");
+  expect(view.countries.NG.original_interval_min.origin).not.toBe("country");
   await page.screenshot({ path: path.join(shots, "v17-e2e-control-room.png"), fullPage: true });
 });
 

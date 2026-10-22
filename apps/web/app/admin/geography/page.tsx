@@ -1,11 +1,10 @@
 // A03 Countries & localization (docs/specs/25 §A03): 54-country coverage map, source health per market, original-language
-// mix, human edition views, and the release-blocker country panel (local items, newest item, sources) with API links.
+// mix, human edition views, and the release-blocker country panel (local items, newest item) with API links.
 import Link from "next/link";
 import { getTenant } from "@/lib/tenant";
 import { q } from "@/lib/pb";
 import { parseScope, pbTs } from "@/lib/admin/scope";
 import { listAll } from "@/lib/admin/fetchall";
-import { sourceHealth } from "@/lib/admin/common";
 import { activityRows } from "@/lib/admin/audience";
 import { countryCodes, countryName, flag, regionOf } from "@/lib/edition";
 import { AdminPage } from "@/components/admin/AdminPage";
@@ -25,9 +24,9 @@ export default async function Geography({ searchParams }: { searchParams: Promis
   const s = parseScope(await searchParams);
   const T = `tenant_id=${q(t.id)}`;
   const since = pbTs(s.since);
-  const [pieces, src, human] = await Promise.all([
+  const [pieces, human] = await Promise.all([
     listAll("editorial_pieces", `${T} && review_status='published' && is_demo=false`, "country_codes,language,published_at,kind", 20000),
-    sourceHealth(t), activityRows(t, s.sinceDay, "ALL"),
+    activityRows(t, s.sinceDay, "ALL"),
   ]);
   const codes = countryCodes();
   const names = Object.fromEntries(codes.map((c) => [c, countryName(c)]));
@@ -36,8 +35,6 @@ export default async function Geography({ searchParams }: { searchParams: Promis
   const covWin = per(win), covAll = per(pieces);
   const newest: Record<string, string> = {};
   for (const p of pieces) for (const c of p.country_codes ?? []) if (!newest[c] || p.published_at > newest[c]) newest[c] = p.published_at;
-  const srcBy: Record<string, { n: number; ok: number }> = {};
-  for (const x of src) for (const c of x.countries) { srcBy[c] ??= { n: 0, ok: 0 }; if (x.state !== "off") { srcBy[c].n++; if (x.state === "healthy") srcBy[c].ok++; } }
   const withCov = codes.filter((c) => covWin[c] > 0).length;
   const langs = [...new Set(win.map((p) => p.language || "en"))];
   const regions = ["North Africa", "West Africa", "Central Africa", "East Africa", "Southern Africa"];
@@ -45,11 +42,10 @@ export default async function Geography({ searchParams }: { searchParams: Promis
   const sel = s.country !== "ALL" ? s.country : null;
   return (
     <AdminPage title="Countries & languages" scope={s}
-      narrative={`${withCov} of 54 countries had at least one published item in this window; ${codes.filter((c) => !covAll[c]).length} have none at all yet. Coverage follows real rights-cleared sources: nothing is invented for sparse editions.`}>
+      narrative={`${withCov} of 54 countries had at least one published item in this window; ${codes.filter((c) => !covAll[c]).length} have none at all yet. Nothing is invented for sparse editions.`}>
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <MetricCard label="Countries with items" value={`${withCov}/54`} definition="Countries that are the subject of at least one published item in the window." source="editorial_pieces.country_codes" />
-        <MetricCard label="Items in window" value={win.length.toLocaleString("en")} definition="Published, non-demo items (source cards, agent posts, editorial topics)." source="editorial_pieces" slot={2} />
-        <MetricCard label="Healthy sources" value={`${src.filter((x) => x.state === "healthy").length}/${src.filter((x) => x.state !== "off").length}`} definition="Enabled, rights-approved sources that fetched successfully within 3 fetch intervals." source="sources" slot={3} />
+        <MetricCard label="Items in window" value={win.length.toLocaleString("en")} definition="Published, non-demo items (agent, human and town posts)." source="editorial_pieces" slot={2} />
         <MetricCard label="Original languages" value={String(langs.length)} definition="Distinct original languages among published items in the window." source="editorial_pieces.language" slot={4} sub={langs.map((l) => LANG[l] ?? l).join(", ")} />
       </section>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
@@ -57,12 +53,11 @@ export default async function Geography({ searchParams }: { searchParams: Promis
           <AfricaMap values={covWin} names={names} label="Published items per country in the selected window" selected={sel ?? undefined} />
         </ChartCard>
         <ChartCard title={sel ? `${flag(sel)} ${countryName(sel)}` : "Release-blocker countries"} description={sel ? "Edition detail" : "Liberia, Cameroon, Senegal, Kenya, Ghana, Egypt, Nigeria, Rwanda, South Africa and Côte d'Ivoire"}>
-          <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Country</TableHead><TableHead className="text-right">Items (win)</TableHead><TableHead className="text-right">All time</TableHead><TableHead>Newest</TableHead><TableHead className="text-right">Sources ok</TableHead></TableRow></TableHeader>
+          <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Country</TableHead><TableHead className="text-right">Items (win)</TableHead><TableHead className="text-right">All time</TableHead><TableHead>Newest</TableHead></TableRow></TableHeader>
             <TableBody>{(sel ? [sel] : BLOCKERS).map((c) => (
               <TableRow key={c}><TableCell><Link className="link" href={`/?edition=${c}`} target="_blank">{flag(c)} {countryName(c)}</Link> <Link className="ms-1 text-xs text-muted-foreground underline" href={`/api/v1/feed?mode=new&edition=${c}`} target="_blank">API</Link></TableCell>
                 <TableCell className="text-right tabular-nums">{covWin[c]}</TableCell><TableCell className="text-right tabular-nums">{covAll[c]}</TableCell>
-                <TableCell className="text-xs">{newest[c] ? <Time value={newest[c]} /> : <Badge variant="outline">none</Badge>}</TableCell>
-                <TableCell className="text-right tabular-nums">{srcBy[c] ? `${srcBy[c].ok}/${srcBy[c].n}` : "0/0"}</TableCell></TableRow>))}</TableBody></Table></div>
+                <TableCell className="text-xs">{newest[c] ? <Time value={newest[c]} /> : <Badge variant="outline">none</Badge>}</TableCell></TableRow>))}</TableBody></Table></div>
           <p className="mt-2 text-xs text-muted-foreground">Each edition shows its local items first, then labelled {sel ? regionOf(sel) : "regional"} and pan-African items; items only about other regions are excluded. Verified by tests/e2e/v15-country.spec.ts.</p>
         </ChartCard>
       </div>

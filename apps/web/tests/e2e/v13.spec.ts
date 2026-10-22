@@ -87,23 +87,6 @@ test("A-09 AI posts never count as human demand: trend audit shows AI posts excl
   await expect(page.getByTestId("narrative")).toContainText("never change the score");
 });
 
-test("A-02/A-10 held or rejected candidates emit no public event and are visible to editors with risk basis", async ({ page }) => {
-  await signIn(page, "editor@palavva.local", BASE, "/admin/exceptions");
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await page.screenshot({ path: `${shotDir}/v13-admin-exceptions-1440.png` });
-  const r = await (await page.request.get("/api/v1/events/replay")).json();
-  const held = await page.request.get("/api/v1/events/replay");
-  expect(held.ok()).toBeTruthy();
-  // No event in the public log points at an unpublished piece.
-  const NEWS = ["source_link", "short", "discussion", "story", "spotlight"]; // Palasora Phase 1: retired news pages answer 404
-  for (const e of r.data as { type: string; payload: { slug?: string; kind?: string; label?: string } }[]) {
-    if (e.type !== "topic_published" || !e.payload.slug) continue;
-    const res = await page.request.get(`/discussion/${e.payload.slug}`);
-    const news = NEWS.includes(e.payload.kind ?? "discussion") || e.payload.label === "sourced_news";
-    expect(news ? [404] : [200, 410]).toContain(res.status());
-  }
-});
-
 // ---------------- Locale resolution ----------------
 
 test("L-01 Nigeria guest: English UI, Nigeria edition, feed immediately visible; no-country fallback is safe", async ({ browser }) => {
@@ -205,7 +188,7 @@ test("L-08/L-09/L-17 French reading: honest pending → machine label with origi
   await ctx.close();
 });
 
-test("L-08/L-23 editor can see, correct and block translations; geography evidence and coverage gaps are inspectable", async ({ page }) => {
+test("L-08 editor can see, correct and block translations", async ({ page }) => {
   await signIn(page, "editor@palavva.local", BASE, "/admin/translations");
   await expect(page.getByRole("heading", { level: 1, name: "Translations" })).toBeVisible();
   await expect(page.getByTestId("language-registry")).toContainText("Naijá");
@@ -224,13 +207,6 @@ test("L-08/L-23 editor can see, correct and block translations; geography eviden
     await expect(page.locator(`[data-row="${id}"]`)).toBeVisible();
   }
   await page.screenshot({ path: `${shotDir}/v13-admin-translations-1440.png`, fullPage: true });
-  await page.goto("/admin/geo");
-  await expect(page.getByRole("heading", { level: 1, name: "Geography & coverage" })).toBeVisible();
-  // v1.8+ ISSUE-11: regions table (all 37 Nigerian units) and the evidence workspace replace the v1.3 tables.
-  await expect(page.getByTestId("geo-regions")).toContainText("NG-KN");
-  await expect(page.getByTestId("geo-regions").locator("tbody tr")).toHaveCount(37);
-  await expect(page.getByTestId("geo-regions")).toContainText(/No verified story yet|Has verified reporting|Only held links/);
-  await page.screenshot({ path: `${shotDir}/v13-admin-geo-1440.png` });
 });
 
 // ---------------- Maps / Local Pulse ----------------

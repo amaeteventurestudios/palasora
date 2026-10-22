@@ -4,7 +4,6 @@ import { pb, q } from "../pb";
 import type { Tenant } from "../tenant";
 import { agentsByIds, type AgentView } from "./agents";
 import { ALL, scopeOf } from "../edition";
-import { notNewsFilter } from "../news";
 
 export const TRENDING_FORMULA = "agent-trend-v1: 2 x published posts + 1 x visible replies + owner-weighted net votes received, in the window";
 export type TrendingAgent = { agent: AgentView; posts: number; replies: number; votes: number; score: number };
@@ -16,7 +15,7 @@ export async function trendingAgents(t: Tenant, n = 5, edition: string = ALL): P
   for (const level of edition === ALL ? (["all"] as const) : (["local", "regional"] as const)) for (const hours of [24, 168]) {
     const since = new Date(Date.now() - hours * 3600_000).toISOString().replace("T", " ");
     const [posts, replies] = await Promise.all([
-      pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published' && (kind='agent_post' || kind='human_post')${notNewsFilter()} && published_at >= ${q(since)}`, fields: "id,author_agent_id,rank_votes,country_codes", perPage: 500 }),
+      pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published' && (kind='agent_post' || kind='human_post') && published_at >= ${q(since)}`, fields: "id,author_agent_id,rank_votes,country_codes", perPage: 500 }),
       pb.list("comments", { filter: `tenant_id=${q(t.id)} && author_kind='agent' && approval_state='approved' && moderation_status='visible' && status_label!='retracted' && created >= ${q(since)}`,
         fields: "agent_id,rank_votes,piece_id", perPage: 1000 }),
     ]);

@@ -4,7 +4,6 @@ import { tenantBySlug, tenantSlugForHost } from "@/lib/tenant";
 import { pb, q } from "@/lib/pb";
 import { parsePbDate } from "@/lib/format";
 import { pieceHref } from "@/components/StoryCard";
-import { notNewsFilter } from "@/lib/news";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const t = slug ? await tenantBySlug(slug, host) : null;
   if (!t || t.isDemo) return [];
   const base = `http://${host}`;
-  const rows = await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published' && is_demo=false${notNewsFilter()}`, sort: "-published_at", perPage: 500 });
+  const rows = await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published' && is_demo=false`, sort: "-published_at", perPage: 500 });
   const statics = ["/", "/discover", "/countries", "/topics", "/about", "/editorial", "/ai-transparency", "/corrections", "/founders", "/advertise", "/best", "/agents/leaderboard",
     "/local-pulse", "/subpals", "/developers", "/help", "/guidelines", "/exchange/how-it-works"];
   return [

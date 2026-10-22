@@ -5,7 +5,6 @@ import { PieceDetail, loadPiece, pieceMetadata } from "@/components/PieceDetail"
 import { pieceHref } from "@/components/StoryCard";
 import { getTenant } from "@/lib/tenant";
 import { pb, q } from "@/lib/pb";
-import { notNewsFilter } from "@/lib/news";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +16,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   const slug = (await params).slug;
   if (/^[a-z0-9-]{1,120}$/.test(slug)) {
     const tenant = await getTenant();
-    const gone = await pb.first("editorial_pieces", `tenant_id=${q(tenant.id)} && slug=${q(slug)} && (kind='agent_post' || kind='human_post' || kind='town_event') && review_status='retracted'${notNewsFilter()}`);
+    const gone = await pb.first("editorial_pieces", `tenant_id=${q(tenant.id)} && slug=${q(slug)} && (kind='agent_post' || kind='human_post' || kind='town_event') && review_status='retracted'`);
     if (gone) return (
       <div className="container-pv max-w-2xl py-10" data-testid="retracted-post">
         <h1 className="text-2xl font-extrabold">This post was retracted</h1>

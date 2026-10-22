@@ -71,31 +71,3 @@ test("V16-03 Command Center engine page diagnoses all 54 countries and keeps hum
   await page.goto("/admin/engine?w=24h&country=SN");
   await expect(page.getByTestId("diagnosis")).toContainText("Senegal");
 });
-
-test("V16-04 DB gate path 5: a link-only card cannot carry an excerpt or come from a revoked publisher", async () => {
-  const pb = await pbAdmin();
-  const envVal = (k: string) => new RegExp(`^${k}=(.*)$`, "m").exec(envText)?.[1].trim().replace(/^'|'$/g, "") ?? "";
-  const PB = envVal("PB_URL") || "http://127.0.0.1:8390";
-  const auth = await (await fetch(`${PB}/api/collections/_superusers/auth-with-password`, { method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ identity: envVal("PB_SERVICE_EMAIL"), password: envVal("PB_SERVICE_PASSWORD") }) })).json();
-  const h = { authorization: auth.token, "content-type": "application/json" };
-  const create = async (coll: string, data: Record<string, unknown>) => (await fetch(`${PB}/api/collections/${coll}/records`, { method: "POST", headers: h, body: JSON.stringify(data) })).json();
-  const patch = (coll: string, id: string, data: Record<string, unknown>) => fetch(`${PB}/api/collections/${coll}/records/${id}`, { method: "PATCH", headers: h, body: JSON.stringify(data) });
-  const [tenant] = await pb.list("tenants", "slug='palavva'");
-  const src = await create("sources", { tenant_id: tenant.id, publisher_name: `e2e-${run}.example`, homepage_url: `https://e2e-${run}.example`, endpoint_type: "manual", source_class: "discovery",
-    trust_tier: "discovery", rights_status: "pending", usage_policy: "link_only", enabled: false, countries: ["GH"], languages: ["en"], is_fixture: true });
-  const link = `https://e2e-${run}.example/story`;
-  const item = await create("source_items", { tenant_id: tenant.id, source_id: src.id, guid: link, canonical_url: link, title: "Accra market traders test a shared cold room", license_state: "link_only", status: "classified", is_fixture: true });
-  const card = await create("editorial_pieces", { tenant_id: tenant.id, slug: `e2e16-link-${run}`, kind: "source_link", headline: "Accra market traders test a shared cold room", lede: "", review_status: "needs_review",
-    risk_tier: "low", revision: 1, is_demo: false, publish_path: "link_signal", source_url: link, source_item_id: item.id, country_codes: ["GH"], author_type: "source" });
-  // an excerpt on a link-only card is refused by the database gate
-  await patch("editorial_pieces", card.id, { lede: "The publisher's paragraph copied verbatim." });
-  expect((await patch("editorial_pieces", card.id, { review_status: "published", reviewer_id: "system:link-signal-validator" })).status).toBe(400);
-  await patch("editorial_pieces", card.id, { lede: "" });
-  // revoked publisher: refused
-  await patch("sources", src.id, { rights_status: "revoked" });
-  expect((await patch("editorial_pieces", card.id, { review_status: "published", reviewer_id: "system:link-signal-validator" })).status).toBe(400);
-  // pending discovery source, no excerpt, low risk: allowed
-  await patch("sources", src.id, { rights_status: "pending" });
-  expect((await patch("editorial_pieces", card.id, { review_status: "published", reviewer_id: "system:link-signal-validator" })).status).toBe(200);
-});

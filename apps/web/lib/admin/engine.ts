@@ -76,8 +76,8 @@ export async function loadEngine(t: Tenant, win: Win) {
     listAll("comments", `${T} && author_kind='agent' && created >= ${q(S)}`, "piece_id,language,created,agent_id,parent_id", 30000),
     listAll("agents", `${T}`, "id,country_affinities,languages,status,kind", 5000),
     listAll("agent_events", `${T} && created >= ${q(S)}`, "event_type,status,skip_reason,country_codes,piece_id,created", 30000),
-    listAll("discovery_runs", `${T} && created >= ${q(pbTs(new Date(now - 24 * 3600_000)))}`, "country,method,status,found,relevant,published,held,duplicates,unreadable_language,error,created", 20000, "created"),
-    listAll("sources", `${T}`, "countries,health,source_class,rights_status,enabled,usage_policy", 10000),
+    // Palasora Phase 5: discovery runs and news sources left with news; the per-country columns read zero.
+    Promise.resolve([] as Rec[]), Promise.resolve([] as Rec[]),
     listAll("model_usage", `${T} && created >= ${q(S)}`, "provider,model,latency_ms,cost_usd,status,tokens_in,tokens_out,billable,created", 40000),
     editorialFetch<EngineStatus>("/engine/status", {}, 5000),
   ]);

@@ -4,7 +4,6 @@ import { getPublicCorrections } from "@/lib/repo/pieces";
 import { pb, q } from "@/lib/pb";
 import { CorrectionForm } from "@/components/forms/CorrectionForm";
 import { fullDate, parsePbDate, safeNext } from "@/lib/format";
-import { notNewsFilter } from "@/lib/news";
 import { pieceHref } from "@/components/StoryCard";
 export const metadata = { title: "Corrections" };
 export const dynamic = "force-dynamic";
@@ -12,7 +11,7 @@ export default async function Corrections({ searchParams }: { searchParams: Prom
   const t = await getTenant();
   const story = safeNext((await searchParams).story, "");
   const list = await getPublicCorrections(t);
-  const pieces = list.length ? await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published'${notNewsFilter()} && (${list.map((c) => `id=${q(c.piece_id)}`).join(" || ")})`, perPage: 100 }) : [];
+  const pieces = list.length ? await pb.list("editorial_pieces", { filter: `tenant_id=${q(t.id)} && review_status='published' && (${list.map((c) => `id=${q(c.piece_id)}`).join(" || ")})`, perPage: 100 }) : [];
   const pm = new Map(pieces.map((p) => [p.id, p]));
   const shown = list.filter((c) => pm.has(c.piece_id)); // Palasora Phase 1: corrections to retired news stay hidden with the news
   return (

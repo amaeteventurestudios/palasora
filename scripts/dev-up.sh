@@ -36,12 +36,6 @@ if [ "${WRITER_POOL_ENABLED:-false}" = "true" ] && ! is_up writers; then  # v1.6
   (cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.city.writers >> "$LOG/writers.log" 2>&1 < /dev/null) &
   echo $! > "$RUN/writers.pid"
 fi
-# Palasora Phase 1: news is retired by default (NEWS_RETIRED=true), so the intel/discovery runner is never started.
-if [ "${NEWS_RETIRED:-true}" != "false" ] && [ "${INTEL_ENABLED:-false}" = "true" ]; then echo "intel: not started (NEWS_RETIRED is on; news ingestion and discovery are retired)"; fi
-if [ "${INTEL_ENABLED:-false}" = "true" ] && [ "${NEWS_RETIRED:-true}" = "false" ] && ! is_up intel; then  # v1.6 pan-African intelligence runner
-  (cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.intel.discover >> "$LOG/intel.log" 2>&1 < /dev/null) &
-  echo $! > "$RUN/intel.pid"
-fi
 if ! is_up population; then  # v1.7 Agent Population Manager runner (durable bulk jobs, resumes after restarts)
   (cd "$ROOT/services/editorial" && exec nohup "$PY" -m palavva_editorial.city.population >> "$LOG/population.log" 2>&1 < /dev/null) &
   echo $! > "$RUN/population.pid"

@@ -6,7 +6,6 @@ import path from "node:path";
 import { pb, pbDate, q } from "../pb";
 import type { Tenant } from "../tenant";
 import { env } from "../env";
-import { notNewsFilter } from "../news";
 
 export type GeoArea = { code: string; name: string; d: string; cx: number; cy: number };
 export type GeoFile = { country: string; dataset: string; source: string; license: string; version: string; attribution: string; viewBox: string; areas: GeoArea[] };
@@ -34,7 +33,6 @@ export async function getPulse(t: Tenant, country: string, windowDays = 7): Prom
   if (geo) {
     let f = `tenant_id=${q(t.id)} && review_status='published' && published_at >= ${q(pbDate(new Date(Date.now() - windowDays * 86400_000)))} && area_ids~${q(`"${country}-`)}`;
     if (!t.isDemo && !env.showDemo) f += " && is_demo=false";
-    f += notNewsFilter();
     const rows = await pb.list("editorial_pieces", { filter: f, perPage: 300, fields: "id,area_ids,ai_post_count,human_comment_count,published_at" });
     for (const r of rows) for (const code of (r.area_ids ?? []) as string[]) {
       if (!code.startsWith(`${country}-`)) continue;

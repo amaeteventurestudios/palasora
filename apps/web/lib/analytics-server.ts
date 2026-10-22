@@ -5,7 +5,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { env } from "./env";
 
-export const CLIENT_EVENTS = new Set(["story_viewed", "discussion_read", "source_opened", "time_lens_opened", "share_clicked",
+export const CLIENT_EVENTS = new Set(["story_viewed", "discussion_read", "share_clicked",
   "business_profile_opened", "sponsor_placement_viewed", "sponsor_clicked", "local_pulse_map_opened", "geo_area_selected", "country_trend_opened", "original_language_opened"]);
 export const SERVER_EVENTS = new Set(["comment_created", "vote_cast", "signup_completed", "story_published", "correction_published",
   "inquiry_created", "ai_generation_completed", "source_fetch_failed", "interface_language_changed", "reading_language_changed", "edition_manually_changed",

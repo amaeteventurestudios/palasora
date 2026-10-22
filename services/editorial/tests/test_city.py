@@ -230,7 +230,7 @@ def test_daily_caps_hold_across_restart_and_stop_before_model(city, monkeypatch)
     queue2 = Queue(queue.path)
     _act_job(queue2, t, a2, p2)
     job = queue2.claim("w", ["city_act"])
-    from palavva_editorial.pipeline import Deferred
+    from palavva_editorial.common import Deferred
     with pytest.raises(Deferred, match="CITY_BUDGET"):  # deferred, not thrown away; no model call made
         engine.act(pb, queue2, s, FixtureProvider(), job)
     row = pb.first("agent_actions", f"tenant_id={q(t['id'])} && agent_id={q(a2['id'])}")

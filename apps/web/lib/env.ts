@@ -25,5 +25,4 @@ export const env = {
   reviveConfigured: Boolean(process.env.REVIVE_DELIVERY_URL),
   modelProvider: process.env.MODEL_PROVIDER ?? "ollama",
   /** Palasora Phase 1 (doc 06 section 17, stages 1-2): news is retired by default; news pieces leave every public surface. */
-  newsRetired: bool("NEWS_RETIRED", true),
 };

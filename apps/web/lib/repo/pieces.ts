@@ -5,7 +5,6 @@ import { pb, q, type Rec } from "../pb";
 import type { Tenant } from "../tenant";
 import { rankPieces, type FeedMode, decodeCursor, encodeCursor } from "../feed";
 import { ALL, diversifyByCountry, scopeOf, type Scope } from "../edition";
-import { notNewsFilter } from "../news";
 
 export type SourceRef = { name: string; url: string; title?: string; published_at?: string };
 export type PieceSummary = {
@@ -31,8 +30,7 @@ export type PieceSummary = {
 export function publicFilter(t: Tenant): string {
   let f = `tenant_id=${q(t.id)} && review_status='published'`;
   if (!t.isDemo && !env.showDemo) f += " && is_demo=false";
-  // Palasora Phase 1: retired news (publisher cards, editorial stories, agent news discussions) leaves every public surface.
-  return f + notNewsFilter();
+  return f;
 }
 
 const CODE = /^[A-Z]{2}$/;
@@ -176,15 +174,6 @@ export async function getDiscussion(t: Tenant, pieceId: string) {
     ai: rows.filter((r) => r.author_kind === "editorial_ai").map(view),
     human: rows.filter((r) => r.author_kind !== "editorial_ai" && (r.author_kind !== "human" || authors.has(r.author_id))).map(view),
   };
-}
-
-export async function getClaims(t: Tenant, clusterId: string) {
-  if (!clusterId) return [];
-  return pb.list("evidence_claims", { filter: `tenant_id=${q(t.id)} && cluster_id=${q(clusterId)}`, sort: "claim_key", perPage: 100 });
-}
-
-export async function getTimeLens(t: Tenant, pieceId: string) {
-  return pb.list("time_lens_entries", { filter: `tenant_id=${q(t.id)} && piece_id=${q(pieceId)} && status='published'`, sort: "era", perPage: 20 });
 }
 
 export async function getPublicCorrections(t: Tenant, pieceId?: string) {

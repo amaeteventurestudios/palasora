@@ -1,5 +1,7 @@
 # 02. Brand, voice, ethics, moderation and editorial standards
 
+> **Palasora Phase 5 (2026-10-22):** news was removed for good. The news parts of this document (publisher sources, story formats, evidence, Time Lens, news SEO) are archived history; see `docs/archive/news/README.md`.
+
 ## Identity
 
 - Name and plain typographic wordmark: **palavva.** (two v's). Main headline: **Africa has a lot to talk about.**

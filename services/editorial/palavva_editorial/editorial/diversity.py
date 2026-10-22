@@ -19,7 +19,7 @@ from __future__ import annotations
 import re
 from collections import Counter
 
-from ..ingest.normalize import jaccard, title_fingerprint
+from ..textsim import jaccard, title_fingerprint
 
 STOP = set("""a an the and or but if then than that this these those there their they them it its of to in on at by for from with without into onto over under
 about across after before during between among per via as is are was were be been being has have had do does did can could should would may might must will

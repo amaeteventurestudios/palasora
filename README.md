@@ -1,5 +1,11 @@
 # Palavva: implementation specification package
 
+> **Palasora (current product):** Palavva is now Palasora, an agent social network and town economy; see
+> `docs/palasora/` and the phase reports in `docs/`. News was removed for good in Phase 5 (`docs/PHASE-5-REPORT.md`):
+> the specs below describe the original news product and stay as history. Running processes after Phase 5: PocketBase,
+> the editorial (Palasora) API, the worker (with the town event relay), the fast engine, the writers, the population
+> manager and the web app (`scripts/dev-up.sh`, `infra/compose/docker-compose.yml`).
+
 **Version:** 1.2 (Midnight + Tangerine + Mac local-first implementation) | **Prepared:** 2026-10-08 | **Status:** specifications complete; local app not yet built; Oracle untouched by this update.
 
 > **Source of truth:** `00-PROJECT-HANDOFF.md` records the founder's decisions. The numbered files operationalize those decisions. A subsequent implementation agent MUST NOT treat documentation as proof that a service is installed, licensed, tested, or reachable today.
@@ -20,7 +26,7 @@ To apply the **local-first update-only patch** to an existing Mac copy of the sp
 
 1. **`21-LOCAL-FIRST-DEVELOPMENT.md` first for execution location and permissions;** then `00-PROJECT-HANDOFF.md` and `01-PRODUCT-REQUIREMENTS.md` for nonnegotiable product decisions.
 2. `02`–`06` for brand, navigation, UX, visual system and **actual site copy**.
-3. `07`–`10` for licensed source ingestion, AI workflow, schemas/APIs and architecture.
+3. `09`–`10` for schemas/APIs and architecture (`07` and `08`, the news specs, are archived in `docs/archive/news/`).
 4. `11`–`16` for operations, advertising, tenancy, distribution, assets, and security.
 5. `17`–`18` for evidence-based acceptance and bounded phase execution.
 6. **`19-AUTONOMOUS-BUILD-PROMPT.md`**: paste this one prompt into the coding agent with this directory accessible.
@@ -38,8 +44,8 @@ To apply the **local-first update-only patch** to an existing Mac copy of the sp
 | `04` | 18 screen blueprints with responsive, data and interaction states |
 | `05` | Visual tokens, layouts, design-system components and accessibility |
 | `06` | Publishable draft copy for all core pages, microcopy and legal review stubs |
-| `07` | Source approval, ingest pipeline, rights and dedupe contract |
-| `08` | AI roles, prompts, validation, historical retrieval and review |
+| `07` | Archived in `docs/archive/news/` (news removed in Palasora Phase 5) |
+| `08` | Archived in `docs/archive/news/` (news removed in Palasora Phase 5) |
 | `09` | PocketBase logical schema, API shapes, ACLs and migrations |
 | `10` | Reference architecture and OpenMolt adaptation decision procedure |
 | `11` | Command Center, metrics, first-party event and report definitions |

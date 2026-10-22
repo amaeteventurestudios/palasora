@@ -1,27 +1,19 @@
 """E2E fixture scenario for the isolated TEST stack only (refuses to run unless PALAVVA_ENV=test).
 
-Ingests the synthetic fixture feed from disk (no network), drafts with the deterministic
-FIXTURE provider, and creates an unverified member. All output is is_fixture/is_demo.
+Seeds deterministic agent originals, the founding company and the town's stored events, and creates an unverified
+member. All output is is_fixture/is_demo. (The synthetic news feed it used to ingest was removed with news in Phase 5.)
 """
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
-from pathlib import Path
 
 from . import config
-from .ingest.fetch import FetchResult
-from .jobs import Queue
 from .pb import PB, q
-from .pipeline import draft_cluster, ingest_source
-from .providers.fixture import FixtureProvider
 from .seed import ensure_user
 from .worker import reindex_all
 
-FX = Path(__file__).resolve().parents[1] / "tests" / "fixtures"
 
-# Palasora Phase 1: news is retired (NEWS_RETIRED=true), so the synthetic news above is hidden from public pages. Doc 06
-# section 17.2 requires agent originals to be flowing before news stops; on the test stack these deterministic agent
+# Doc 06 section 17.2: agent originals carry the feed without news. On the test stack these deterministic agent
 # originals (one per edition the suites use) stand in for the fast engine's output, published through the agent gate path.
 ORIGINALS = [
     ("NG", "naijabusiness", "question", "How do Lagos market traders keep cold drinks cold when the power keeps cutting out?",
@@ -132,19 +124,9 @@ def main() -> None:
     s = config.load()
     pb = PB(s.pb_url, os.environ["PB_SERVICE_EMAIL"], os.environ["PB_SERVICE_PASSWORD"])
     t = pb.first("tenants", "slug='palavva'")
-    if pb.first("sources", f"tenant_id={q(t['id'])} && publisher_name='Fixture Wire (synthetic)'"):
+    if pb.first("users", "email='unverified@palavva.local'"):
         print("fixtures present")
         return
-    src = pb.create("sources", {"tenant_id": t["id"], "publisher_name": "Fixture Wire (synthetic)", "endpoint_url": "https://fixture.example/feed.xml", "endpoint_type": "rss",
-                                "rights_status": "approved", "usage_policy": "permitted_excerpt", "enabled": False, "source_class": "media", "trust_tier": "corroborated",
-                                "fetch_interval_minutes": 60, "request_timeout_sec": 5, "allowed_hosts": ["fixture.example"], "is_fixture": True, "consecutive_failures": 0,
-                                "rights_notes": "Synthetic test fixture; not a real publisher.", "license_url": "https://fixture.example/terms"})
-    now = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S +0000").encode()
-    body = (FX / "rss_good.xml").read_bytes().replace(b"{NOW}", now)
-    queue = Queue(s.jobs_db)
-    ingest_source(pb, queue, s, src, fetcher=lambda url, allowed=None, **kw: FetchResult(200, body, url, "application/rss+xml"), force=True)
-    while (job := queue.claim("e2e", ["draft_cluster"])):
-        queue.complete(job["job_id"], "e2e", draft_cluster(pb, queue, s, FixtureProvider(), job))
     seed_agent_originals(pb, t)
     seed_founding_company(pb, t)
     print("town", seed_town(pb, t))

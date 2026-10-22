@@ -5,7 +5,6 @@ import { getT, allCountries, countryInfo } from "@/lib/i18n/context";
 import { computeTrending } from "@/lib/repo/trending";
 import { localizeSummaries } from "@/lib/repo/localize";
 import { TrendingAfrica } from "@/components/discovery/TrendPanels";
-import { notNewsFilter } from "@/lib/news";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Explore Africa" };
@@ -14,7 +13,7 @@ export const metadata = { title: "Explore Africa" };
 export default async function ExploreAfrica() {
   const tenant = await getTenant();
   const { t, ctx } = await getT(tenant);
-  const rows = await pb.list("editorial_pieces", { filter: `tenant_id=${q(tenant.id)} && review_status='published' && is_demo=false${notNewsFilter()} && published_at >= ${q(pbDate(new Date(Date.now() - 30 * 86400_000)))}`, perPage: 500, fields: "country_codes" });
+  const rows = await pb.list("editorial_pieces", { filter: `tenant_id=${q(tenant.id)} && review_status='published' && is_demo=false && published_at >= ${q(pbDate(new Date(Date.now() - 30 * 86400_000)))}`, perPage: 500, fields: "country_codes" });
   const counts = new Map<string, number>();
   for (const r of rows) for (const c of (r.country_codes ?? []) as string[]) counts.set(c, (counts.get(c) ?? 0) + 1);
   const trend = await computeTrending(tenant, "africa", ctx.edition, 8);

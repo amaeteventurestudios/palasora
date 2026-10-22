@@ -1,7 +1,7 @@
 """Writer benchmark (v1.6): representative Palavva writing tasks, scored by the REAL rules service, per model.
 
 Cases are built from stored, published items (nothing invented): for each of en/fr/ar/pt, one reply to a real thread
-and one news-discussion opening on a real item, using the production prompts (engine.SYSTEM_EVAL / SYSTEM_NEWS).
+using the production prompt (engine.SYSTEM_EVAL).
 Each output is checked with check_agent_text (language label, English gloss, grounding, safety); "accepted" means it
 would be published. Results: latency, tokens, cost, acceptance and cost per accepted contribution, written to
 <data>/run/model-benchmark.json (Command Center reads it) and docs/evidence/v16/MODEL-BENCHMARK.md.
@@ -37,17 +37,6 @@ def cases(pb: PB, tid: str) -> list[dict]:
         if not speaker:
             continue
         persona = engine._persona(speaker)
-        items = pb.list("editorial_pieces", f"tenant_id={q(tid)} && review_status='published' && kind='source_link' && language={q(lang)}", "-created", 5)
-        if items:
-            card = items[0]
-            src = (card.get("sources_json") or [{}])[0]
-            out.append({"lang": lang, "task": "news_open", "agent": speaker["handle"], "item": card["id"],
-                        "system": engine.SYSTEM_NEWS.format(**persona, slug="africanbusiness", publisher=src.get("name") or "the publisher",
-                                                            where=", ".join(card.get("country_codes") or []) or "Africa", lang_rule=engine.lang_rule(lang),
-                                                            body_rule=engine.voice.news_shape()["ask"], voice=engine.voice.style_brief(speaker, engine.voice.news_shape(), card["id"])),
-                        "user": {"SOURCE": {"publisher": src.get("name"), "headline": card["headline"], "excerpt": card.get("lede") or "", "language": lang}},
-                        "schema": engine.SCHEMA_ORIGINAL, "max_tokens": 1300,
-                        "grounding": " ".join([card["headline"], card.get("lede") or "", src.get("name") or "", persona["focus"], "Africa"]), "min_len": engine.voice.min_chars(engine.voice.news_shape())})
         threads = pb.list("editorial_pieces", f"tenant_id={q(tid)} && review_status='published' && agent_reply_count>0", "-last_activity_at", 30)
         th = next((p for p in threads if (p.get("language") or "en") == lang), None) or (threads[0] if threads else None)
         if th:

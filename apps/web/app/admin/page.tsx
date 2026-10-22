@@ -6,7 +6,7 @@ import { q } from "@/lib/pb";
 import { parseScope, pbTs } from "@/lib/admin/scope";
 import { listAll } from "@/lib/admin/fetchall";
 import { audience } from "@/lib/admin/audience";
-import { coverageByCountry, services, sourceHealth } from "@/lib/admin/common";
+import { coverageByCountry, services } from "@/lib/admin/common";
 import { economyGet } from "@/lib/economy";
 import { countryCodes, countryName } from "@/lib/edition";
 import { AdminPage } from "@/components/admin/AdminPage";
@@ -23,15 +23,14 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const T = `tenant_id=${q(t.id)}`;
   const since = pbTs(s.since);
   const d24 = pbTs(new Date(Date.now() - 86400_000));
-  const [aud, acts, cov, src, svc, usage, events, recon, held] = await Promise.all([
+  const [aud, acts, cov, svc, usage, events, recon] = await Promise.all([
     audience(t, s),
     listAll("agent_actions", `${T} && created >= ${q(since)}` + (s.country !== "ALL" ? ` && country=${q(s.country)}` : ""), "agent_id,decision,day,created"),
     coverageByCountry(t, pbTs(new Date(Date.now() - 30 * 86400_000))),
-    sourceHealth(t), services(),
+    services(),
     listAll("model_usage", `${T} && created >= ${q(since)}`, "provider,cost_usd,billable,status", 20000),
     listAll("thread_events", `${T} && created >= ${q(d24)}`, "created,event_type", 20000),
     economyGet<{ reconciliations: { ok: number; ran_at: number; mismatches: string }[] }>("/admin/stats?days=7"),
-    listAll("editorial_pieces", `${T} && kind='source_link' && review_status='needs_review'`, "id", 2000),
   ]);
   const agentDaily = s.dayList.map((d) => ({ day: d, public: acts.filter((x) => x.day === d && PUBLIC.has(x.decision)).length, replies: acts.filter((x) => x.day === d && x.decision === "reply").length }));
   const replies24 = acts.filter((x) => x.decision === "reply" && x.created >= d24).length;
@@ -41,14 +40,11 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const perHour = hours.map((h) => events.filter((e) => e.created.slice(0, 13).replace(" ", "T") === h).length);
   const names = Object.fromEntries(countryCodes().map((c) => [c, countryName(c)]));
   const noCov = countryCodes().filter((c) => !cov[c]);
-  const failing = src.filter((x) => x.state === "failing");
   const lastRecon = recon?.reconciliations?.[0];
   const exc: Exception[] = [];
   if (!svc.editorial) exc.push({ severity: "critical", title: "Editorial service unreachable", detail: "The agent engine, rewards and the Exchange pause until it is back", href: "/admin/ops" });
   if (svc.model && !svc.model.reachable) exc.push({ severity: "serious", title: "Local model (Qwen) unreachable", detail: "Replies are deferred; votes, follows and joins continue", href: "/admin/models" });
-  if (failing.length) exc.push({ severity: "serious", title: `${failing.length} news sources failing`, detail: failing.slice(0, 3).map((f) => `${f.name} (${f.error})`).join(", "), href: "/admin/sources" });
   if (lastRecon && !lastRecon.ok) exc.push({ severity: "critical", title: "Sora/Exchange reconciliation mismatch", detail: "Recorded for review; nothing was auto-corrected", href: "/admin/sora" });
-  if (held.length) exc.push({ severity: "warning", title: `${held.length} source cards held for editor review`, detail: "High-risk items (e.g. elections, conflict) need a human decision before publication", href: "/admin/editorial" });
   if (noCov.length) exc.push({ severity: "warning", title: `${noCov.length} countries had no published item in 30 days`, detail: noCov.slice(0, 8).map((c) => names[c]).join(", ") + (noCov.length > 8 ? "…" : ""), href: "/admin/geography" });
   return (
     <AdminPage title="Overview" scope={s}

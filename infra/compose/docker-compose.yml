@@ -26,6 +26,34 @@ services:
     networks: [internal, egress]
     depends_on: [pocketbase]
     restart: unless-stopped
+  # Palasora Phase 5: every process after news retirement (doc 06 section 18). The worker also runs the town event relay.
+  fast:
+    build: { context: ../.., dockerfile: infra/docker/editorial.Dockerfile }
+    command: ["python", "-m", "palavva_editorial.city.fast"]
+    env_file: ../../.env.compose
+    environment: { PB_URL: "http://pocketbase:8090", PALAVVA_DATA_DIR: /data }
+    volumes: ["editorial_data:/data"]
+    networks: [internal]
+    depends_on: [pocketbase]
+    restart: unless-stopped
+  writers:
+    build: { context: ../.., dockerfile: infra/docker/editorial.Dockerfile }
+    command: ["python", "-m", "palavva_editorial.city.writers"]
+    env_file: ../../.env.compose
+    environment: { PB_URL: "http://pocketbase:8090", PALAVVA_DATA_DIR: /data }
+    volumes: ["editorial_data:/data"]
+    networks: [internal, egress]
+    depends_on: [pocketbase]
+    restart: unless-stopped
+  population:
+    build: { context: ../.., dockerfile: infra/docker/editorial.Dockerfile }
+    command: ["python", "-m", "palavva_editorial.city.population"]
+    env_file: ../../.env.compose
+    environment: { PB_URL: "http://pocketbase:8090", PALAVVA_DATA_DIR: /data }
+    volumes: ["editorial_data:/data"]
+    networks: [internal]
+    depends_on: [pocketbase]
+    restart: unless-stopped
   web:
     build: { context: ../.., dockerfile: infra/docker/web.Dockerfile }
     env_file: ../../.env.compose
@@ -38,5 +66,5 @@ services:
 networks:
   internal: { internal: true }
   edge: {}     # web only: lets Docker publish 127.0.0.1:3000 (internal networks cannot publish ports)
-  egress: {}   # worker only: rights-approved feeds + private Qwen over the host's Tailscale
+  egress: {}   # worker and writers: the private Qwen over the host's Tailscale and the capped paid writer
 volumes: { pb_data: {}, editorial_data: {} }

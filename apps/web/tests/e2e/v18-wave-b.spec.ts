@@ -170,20 +170,6 @@ test("ISSUE-12 Trend audit separates humans from agents, explains the score, and
   for (let i = 1; i < ordered.length; i++) expect(ordered[i], "consecutive snapshots must differ").not.toBe(ordered[i - 1]);
 });
 
-test("ISSUE-11 Geography & coverage: publisher location never counts as the story's place; evidence opens with review actions", async ({ page }) => {
-  await noConsentBanner(page);
-  await signIn(page, "editor@palavva.local", BASE, "/admin/geo?country=NG");
-  await expect(page.getByTestId("narrative")).toContainText("36 states + FCT (37 administrative units)");
-  await expect(page.locator('[data-metric="Accuracy of reviewed links"]')).toBeVisible();
-  await expect(page.getByTestId("geo-regions").locator("tbody tr")).toHaveCount(37);
-  const first = page.getByTestId("geo-evidence").locator("tbody tr[data-row]").first();
-  if (await first.count()) {
-    await first.click();
-    await expect(page.getByTestId("geo-detail")).toContainText("Why this link exists");
-    await expect(page.getByTestId("geo-detail").getByRole("button", { name: "Confirm the link" })).toBeVisible();
-  }
-});
-
 test("ISSUE-26 owner performance is owner-only (empty state, own agent analytics, no cross-owner view) and the leaderboard explains its anti-gaming rules", async ({ browser, request }) => {
   const ownerEmail = "reader@palavva.local";
   const p = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
@@ -211,38 +197,4 @@ test("ISSUE-26 owner performance is owner-only (empty state, own agent analytics
   const board = await request.get(`${BASE}/agents/leaderboard?period=30`);
   expect(board.status()).toBe(200);
   expect(await board.text()).toContain("Only the first 3 replies an agent makes in one thread count");
-});
-
-test("ISSUE-07 Editorial queue explains holds, previews the refined rules, and releases a checked batch through human approval only", async ({ page }) => {
-  await noConsentBanner(page);
-  const pb = await pbAdmin();
-  // A held link card exactly like the live backlog (v1 keyword rule), created through the database the way intel does.
-  const t = (await pb.list("tenants", "slug='palavva'"))[0];
-  const src = (await pb.list("sources", "usage_policy='link_only'"))[0] ?? await pb.create("sources", { tenant_id: t.id, publisher_name: "E2E Link Daily", endpoint_url: "https://e2e.example/f.xml",
-    endpoint_type: "rss", rights_status: "pending", usage_policy: "link_only", enabled: true, source_class: "discovery", trust_tier: "corroborated", fetch_interval_minutes: 60,
-    request_timeout_sec: 5, countries: ["BW"], topic_ids: [], allowed_hosts: ["e2e.example"], is_fixture: true, consecutive_failures: 0 });
-  const slug = `e2e-court-${Math.random().toString(36).replace(/[^a-z]/g, "").slice(0, 8)}`;
-  const card = await pb.create("editorial_pieces", { tenant_id: t.id, slug, kind: "source_link", headline: "Court dismisses council chair challenge in Palapye", lede: "", body_blocks_json: { card: "link-signal-v1" },
-    author_type: "source", risk_tier: "high", review_status: "needs_review", revision: 1, is_demo: false, country_codes: ["BW"], topic_slugs: [], language: "en", original_language: "en",
-    sources_json: [{ name: "E2E Link Daily", url: `https://e2e.example/${slug}` }], evidence_state: "link_only", claim_check_status: "NOT_APPLICABLE", publish_path: "link_signal",
-    source_url: `https://e2e.example/${slug}`, post_label: "sourced_news", risk_basis: "classifier risk tier high: needs editor review", editor_pick: false, still_developing: false, thread_state: "active",
-    human_comment_count: 0, ai_contribution_count: 0, vote_score: 0, save_count: 0 });
-  expect(card.id, JSON.stringify(card)).toBeTruthy();
-  await signIn(page, "editor@palavva.local", BASE, "/admin/editorial");
-  await expect(page.getByTestId("refined-switch")).toContainText("OFF");
-  const row = page.locator(`[data-row="${card.id}"]`);
-  await page.getByTestId("queue-search").fill("Palapye");
-  await expect(row).toContainText("Keyword rule (v1)");
-  await expect(row).toContainText("Nothing to check (publisher's own words)");
-  await expect(row).toContainText("Publish");
-  await row.getByTestId("queue-select").check();
-  page.once("dialog", (d) => d.accept());
-  await page.getByLabel("Reason (required)").last().fill("e2e: checked routine court headline");
-  await page.getByRole("button", { name: /Release 1 selected/ }).click();
-  await expect(page.getByText(/Released 1 of 1/)).toBeVisible();
-  const after = (await pb.list("editorial_pieces", `id='${card.id}'`))[0];
-  expect(after.review_status).toBe("published");
-  const rev = (await pb.list("editorial_reviews", `piece_id='${card.id}'`))[0];
-  expect(rev.reason).toContain("card-disposition-v2 routine_attributed");
-  expect(rev.reviewer_id).not.toContain("system:");
 });
