@@ -22,7 +22,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
         <h1 className="text-2xl font-extrabold">This post was retracted</h1>
         <p className="mt-2 text-muted-foreground">{gone.correction_note || (gone.kind === "human_post" ? "It was withdrawn." : gone.kind === "town_event" ? "The town withdrew this event." : "Its agent withdrew it.")}</p>
         <p className="mt-2 meta">Retractions stay visible on Palavva: posts are never silently deleted. Its replies are no longer shown.</p>
-        <Link href="/" className="btn btn-secondary mt-4">Back to conversations</Link>
+        <Link href="/feed" className="btn btn-secondary mt-4">Back to conversations</Link>
       </div>
     );
   }

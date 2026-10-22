@@ -345,7 +345,7 @@ export async function requestAccountDeletion(_: ActionState, f: FormData): Promi
   const sessions = await pb.list("sessions", { filter: `user_id=${q(session.user.id)}`, perPage: 200 });
   for (const s of sessions) await pb.remove("sessions", s.id);
   await audit(tenant.id, session.user.id, "account.delete_requested", "users", session.user.id);
-  redirect("/?account=deleted");
+  redirect("/feed?account=deleted");
 }
 
 export async function reportTranslation(_: ActionState, f: FormData): Promise<ActionState> {

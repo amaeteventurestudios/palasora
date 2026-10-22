@@ -12,7 +12,7 @@ const RES = [["About", "/about"], ["Advertise", "/advertise"], ["Developer Platf
 test("ISSUE-27 desktop rail Resources: all seven links, stage labels, no Careers/Press, all resolve", async ({ page, request }) => {
   await noConsentBanner(page);
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`${BASE}/`);
+  await page.goto(`${BASE}/feed`);
   const res = page.getByTestId("rail-resources");
   await expect(res).toBeVisible();
   for (const [label, href] of RES) await expect(res.getByRole("link", { name: new RegExp(`^${label.replace(/[/]/g, "\\/")}`) })).toHaveAttribute("href", href);
@@ -27,7 +27,7 @@ test("ISSUE-27 desktop rail Resources: all seven links, stage labels, no Careers
 test("ISSUE-27 mobile drawer has the same Resources group", async ({ page }) => {
   await noConsentBanner(page);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${BASE}/`);
+  await page.goto(`${BASE}/feed`);
   await page.getByTestId("drawer-trigger").click();
   const drawer = page.getByTestId("mobile-menu");
   await expect(drawer.getByText("Resources", { exact: true })).toBeVisible();
@@ -55,7 +55,7 @@ test("ISSUE-27 staged pages say so; Best of Palavva filters by period and SubPal
 
 test("ISSUE-25 tabs: Realtime (with connection dot), Hot, Random are real distinct sorts; live status is honest", async ({ page }) => {
   await noConsentBanner(page);
-  await page.goto(`${BASE}/`);
+  await page.goto(`${BASE}/feed`);
   const tabs = page.getByTestId("feed-tabs");
   for (const l of ["For You", "Realtime", "Hot", "New", "Top", "Discussed", "Random"]) await expect(tabs.getByRole("link", { name: l, exact: true })).toBeVisible();
   await expect(tabs.getByRole("link", { name: "Live", exact: true })).toHaveCount(0);
@@ -71,7 +71,7 @@ test("ISSUE-25 tabs: Realtime (with connection dot), Hot, Random are real distin
 test("ISSUE-25 a failed live connection is shown as not live (no fake heartbeat)", async ({ page }) => {
   await noConsentBanner(page);
   await page.route("**/api/v1/events**", (r) => r.abort());
-  await page.goto(`${BASE}/`);
+  await page.goto(`${BASE}/feed`);
   await expect(page.getByTestId("realtime-status")).toHaveAttribute("data-status", /reconnecting|offline/, { timeout: 15_000 });
   await expect(page.getByTestId("feed-tabs").getByTestId("realtime-dot")).not.toHaveAttribute("data-status", "live");
   await expect(page.getByTestId("realtime-status")).not.toContainText("LIVE");
@@ -79,7 +79,7 @@ test("ISSUE-25 a failed live connection is shown as not live (no fake heartbeat)
 
 test("ISSUE-25 Hot right now reacts to genuine committed agent votes from different agents, without reload", async ({ page }) => {
   await noConsentBanner(page);
-  await page.goto(`${BASE}/`);
+  await page.goto(`${BASE}/feed`);
   await expect(page.getByTestId("hot-now")).toBeVisible();
   await expect(page.getByTestId("realtime-status")).toHaveAttribute("data-status", "live", { timeout: 15_000 });
   const card = page.getByTestId("story-card").first();

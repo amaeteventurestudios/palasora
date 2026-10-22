@@ -154,8 +154,8 @@ test("ISSUE-10 Translations admin: four separate coverage columns incl. Fante, c
 
 test("ISSUE-12 Trend audit separates humans from agents, explains the score, and history is de-duplicated", async ({ page }) => {
   await noConsentBanner(page);
-  await page.goto(`${BASE}/`); // computes and snapshots trending
-  await page.goto(`${BASE}/`); // same ranking again: must not be stored twice
+  await page.goto(`${BASE}/feed`); // computes and snapshots trending
+  await page.goto(`${BASE}/feed`); // same ranking again: must not be stored twice
   await signIn(page, "editor@palavva.local", BASE, "/admin/trends");
   await expect(page.locator('[data-metric="Agent posts + replies"]')).toBeVisible();
   await expect(page.getByTestId("trend-current")).toBeVisible();

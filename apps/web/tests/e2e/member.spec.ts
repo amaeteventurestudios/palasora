@@ -63,6 +63,8 @@ test("T-009 auth: wrong password, logout, anonymous/cross-origin writes refused,
   await signIn(page, "reader@palavva.local");
   await page.getByLabel("Account menu").click();
   await page.getByRole("button", { name: "Log out" }).click();
+  await page.waitForURL((u) => u.pathname === "/"); // Phase 6: logging out lands on the town, which has no site header
+  await page.goto("/feed");
   await expect(page.getByRole("link", { name: "Log in" })).toBeVisible();
   await page.goto("/account");
   await expect(page).toHaveURL(/\/auth\/sign-in/);

@@ -98,20 +98,28 @@ def seed_town(pb: PB, t: dict) -> dict:
     """Palasora Phase 4: a few stored town events (no simulation run, no coins moved) linked to the local reader, relayed into
     the feed exactly as the worker would. reader@palavva.local plays p001, which owns stall b001."""
     from .economy import db as edb, service as economy
-    from .economy.town import events, social
+    from .economy.town import events, layout, social
     con = economy.con()
     if con.execute("SELECT 1 FROM world_events LIMIT 1").fetchone():
         return {"seeded": False}
     reader = pb.first("users", f"tenant_id={q(t['id'])} && email='reader@palavva.local'")
     with edb.tx(con):
+        # Phase 6: the founded town's plot grid, so the world viewer draws the same plots the ledger knows.
+        con.executemany("INSERT OR IGNORE INTO plots(id, area, x, y, size, prime, use) VALUES (?,?,?,?,1,?,?)",
+                        [(p["id"], p["area"], p["x"], p["y"], p["prime"], p["use"]) for p in layout.layout()])
         con.execute("""INSERT INTO businesses(id, type, plot, owner, price, wage, status, cost, opened_tick) VALUES
-                       ('b001','stall','P0405','p001',250,1500,'open',40000,9), ('b002','farm','P0809','h020',180,1400,'open',30000,12)""")
+                       ('b001','stall','P405','p001',250,1500,'open',40000,9), ('b002','farm','P809','h020',180,1400,'open',30000,12)""")
+        # house agents' businesses from day 0 (no events: genesis businesses are not news)
+        con.execute("""INSERT INTO businesses(id, type, plot, owner, price, wage, status, cost, opened_tick, health) VALUES
+                       ('b003','workshop','P101','h021',400,1600,'open',50000,0,'green'), ('b004','delivery','P201','h022',300,1500,'open',45000,0,'yellow'),
+                       ('b005','stall','P406','h023',240,1400,'open',40000,0,'green'), ('b006','stall','P307','h024',260,1400,'open',40000,0,'orange'),
+                       ('b007','farm','P903','h025',170,1300,'open',30000,0,'green'), ('b008','workshop','P706','h026',380,1600,'open',50000,0,'green')""")
         social.link(con, "p001", user_id=reader["id"] if reader else "", display_name="Local Reader's agent")
         rows = [(8, "player_arrived", ["p001"], "public", {"agent": "p001"}, "p001 arrived in town"),
-                (9, "business_opened", ["p001", "b001"], "public", {"business": "b001", "plot": "P0405"}, "A new stall opened on plot P0405 (run by p001)"),
+                (9, "business_opened", ["p001", "b001"], "public", {"business": "b001", "plot": "P405"}, "A new stall opened on plot P405 (run by p001)"),
                 (10, "hired", ["h010", "p001", "b001"], "owner", {"business": "b001"}, "h010 started work at b001 for 15 Sora a day"),
                 (11, "price_changed", ["p001", "b001"], "town", {"business": "b001"}, "b001 changed its price from 2.20 to 2.50 Sora"),
-                (12, "business_opened", ["h020", "b002"], "public", {"business": "b002", "plot": "P0809"}, "A new farm opened on plot P0809"),
+                (12, "business_opened", ["h020", "b002"], "public", {"business": "b002", "plot": "P809"}, "A new farm opened on plot P809"),
                 (13, "player_arrived", ["p002"], "public", {"agent": "p002"}, "p002 arrived in town")]
         for i, (tick, kind, who, vis, refs, text) in enumerate(rows, start=1):
             events.emit(con, seq=i, tick=tick, kind=kind, who=who, visibility=vis, refs=refs, text=text)

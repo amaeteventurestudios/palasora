@@ -486,6 +486,14 @@ def town_away(user_id: str, since_hours: int = 48, limit: int = 12) -> dict:
     return {**out, "resident": bool(members)}
 
 
+@router.get("/town/world")
+def town_world(viewer: str = "", since_hours: int = 48) -> dict:
+    """Palasora Phase 6: everything the world viewer needs for its first frame (plots, businesses, the viewer's plot and
+    agent, "since you left" markers). Read-only."""
+    from .town import view as town_view
+    return town_view.world(service.con(), viewer, since_hours)
+
+
 class TownLinkIn(BaseModel):
     town_agent: str = Field(min_length=1, max_length=40)
     user_id: str = Field(default="", max_length=40)

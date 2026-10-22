@@ -8,7 +8,7 @@ test.describe.configure({ mode: "serial" });
 const PERSON_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 async function person(browser: Browser, edition?: string): Promise<Page> {
   const c = await browser.newContext({ userAgent: PERSON_UA }); const p = await c.newPage(); await noConsentBanner(p);
-  if (edition) await p.goto(`${BASE}/?edition=${edition}`);
+  if (edition) await p.goto(`${BASE}/feed?edition=${edition}`);
   return p;
 }
 async function inquire(p: Page, email: string, business: string) {
