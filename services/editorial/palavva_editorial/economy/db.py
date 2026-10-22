@@ -84,6 +84,12 @@ CREATE INDEX IF NOT EXISTS idx_companies_market ON companies (market, status);
 # stock = made + imported - eaten - worn - exported for every good, holder and tick (Doc 04 section 5, invariant 2).
 # Holders are 'kind:id' keys matching ledger accounts (company:b001, agent:h001, human:p001) plus platform:transit.
 TOWN_SCHEMA = """
+CREATE TABLE IF NOT EXISTS owner_requests (
+  id INTEGER PRIMARY KEY, business TEXT NOT NULL, actor TEXT NOT NULL, user_id TEXT NOT NULL, kind TEXT NOT NULL, inputs TEXT NOT NULL DEFAULT '{}',
+  status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued','done','refused','withdrawn')), refusal TEXT NOT NULL DEFAULT '', detail TEXT NOT NULL DEFAULT '',
+  created_at REAL NOT NULL, done_tick INTEGER, action_id INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_owner_requests_status ON owner_requests (status, id);
 CREATE TABLE IF NOT EXISTS issuance_carry (week_start REAL PRIMARY KEY, carry INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS starter_grants (
   person TEXT PRIMARY KEY, agent TEXT NOT NULL, amount INTEGER NOT NULL CHECK (amount > 0), queued_tick INTEGER NOT NULL, due_tick INTEGER NOT NULL,

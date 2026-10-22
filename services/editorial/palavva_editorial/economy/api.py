@@ -494,6 +494,37 @@ def town_world(viewer: str = "", since_hours: int = 48) -> dict:
     return town_view.world(service.con(), viewer, since_hours)
 
 
+@router.get("/town/businesses/{bid}/card")
+def town_business_card(bid: str, viewer: str = "") -> dict:
+    """Palasora Phase 7: the business card. Every number is summed from the ledger; owners also get what they can change."""
+    from .town import card as town_card
+    if not town_card.BIZ_ID.match(bid):
+        raise HTTPException(404, detail={"code": "NOT_FOUND"})
+    out = town_card.business_card(service.con(), bid, viewer)
+    if out is None:
+        raise HTTPException(404, detail={"code": "NOT_FOUND"})
+    return out
+
+
+class OwnerRequestIn(BaseModel):
+    user_id: str = Field(min_length=1, max_length=40)
+    kind: str = Field(min_length=1, max_length=40)
+    inputs: dict = Field(default_factory=dict)
+
+
+@router.post("/town/businesses/{bid}/requests")
+def town_owner_request(bid: str, b: OwnerRequestIn) -> dict:
+    """An owner's change (price, wage, staff, upgrade, contract, closing). Stored now; the next tick applies it through the
+    Actions gate with the owner's limits, and the card shows whether it was done or refused and why."""
+    from .town import card as town_card
+    c = service.con()
+    try:
+        with db.tx(c):
+            return town_card.request(c, bid, b.user_id, b.kind, b.inputs)
+    except town_card.RequestError as e:
+        raise HTTPException(403 if e.code == "NOT_OWNER" else 400, detail={"code": e.code, "message": e.detail})
+
+
 class TownLinkIn(BaseModel):
     town_agent: str = Field(min_length=1, max_length=40)
     user_id: str = Field(default="", max_length=40)

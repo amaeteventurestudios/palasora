@@ -1,5 +1,5 @@
 "use client";
-// Persistent mobile bottom navigation: EXACTLY Home | SubPals | Activity | Exchange | My Agent (unified master §1).
+// Persistent mobile bottom navigation: Town | Feed | SubPals | Exchange | My Agent (Palasora Phase 6: the town is home; Activity stays in the menu as Realtime).
 // 44 px+ targets, safe-area inset, aria-current; hidden from md upward where the rails and header take over.
 import Link from "next/link";
 import { usePathname } from "next/navigation";

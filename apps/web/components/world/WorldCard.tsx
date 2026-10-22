@@ -1,12 +1,13 @@
 "use client";
 // Cards over the world (Doc 06 section 9.3): a half-height sheet in portrait, a slim right panel in landscape.
-// Phase 6 shows what the town's records say about a place; Phase 7 adds the business numbers from the ledger.
+// Phase 6 shows what the town's records say about a place; Phase 7 adds the business numbers from the ledger (BusinessCard).
 import { useRef } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { AREA_LABEL, BUSINESS_LABEL, HEALTH_LABEL, plotTitle, townTime, type WorldData } from "@/lib/world/layout";
 import type { Viewer } from "./WorldApp";
 import { useTrap } from "./useTrap";
+import { BusinessCard } from "./BusinessCard";
 
 export type CardState =
   | { kind: "plot"; id: string } | { kind: "landmark"; title: string; text: string } | { kind: "away" } | { kind: "agent" }
@@ -48,6 +49,7 @@ export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onC
             <dt className="text-[#4b5566]">Wage</dt><dd>{sora(b.wage_sora)} a day</dd>
           </dl>
         )}
+        {b && <BusinessCard key={b.id} bid={b.id} head={false} />}
         {!b && p.use === "civic" && <p className="mt-3 text-sm">{p.area === "town_hall" ? "Votes and civic jobs. The weekly vote is decided here." : p.area === "market_hall" ? "Prices for crops, tools and materials are set here by real orders." : "Imports and exports arrive here by boat."}</p>}
         {!b && p.use === "home" && <p className="mt-3 text-sm">Homes for the town&apos;s residents.</p>}
         {!b && p.use === "business" && <p className="mt-3 text-sm">No business on this plot yet.</p>}
