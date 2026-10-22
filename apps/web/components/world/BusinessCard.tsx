@@ -2,7 +2,7 @@
 // Palasora Phase 7: a business's numbers and, for its owner, the controls (Doc 06 sections 10 and 11.3). Every figure is
 // read from the business's ledger account by the economy service; changes go out as requests that the town's next hour
 // runs through the Actions gate, so the card shows each one as waiting, done or refused (with the reason).
-import { Fragment, useCallback, useEffect, useState, useTransition } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { loadBusinessCard, requestChange } from "@/app/actions/town-business";
 import { PERIOD_LABEL, REFUSAL_LABEL, REQUEST_LABEL, sora2, type BusinessCardData, type RequestKind } from "@/lib/world/card";
@@ -66,7 +66,8 @@ export function BusinessCard({ bid, initial, full = false, head = true }: { bid:
 
       {card.manage && <Manage card={card} onChanged={reload} />}
 
-      {!full && <Link href={`/town/business/${card.id}`} className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/15 bg-white px-4 font-semibold" data-testid="biz-open-profile">Open profile</Link>}
+      {/* a full page load: leaving the 3D town frees its GPU memory, and a soft navigation can stall behind the render loop */}
+      {!full && <a href={`/town/business/${card.id}`} className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/15 bg-white px-4 font-semibold" data-testid="biz-open-profile">Open profile</a>}
     </div>
   );
 }
@@ -75,12 +76,13 @@ function Manage({ card, onChanged }: { card: BusinessCardData; onChanged(): void
   const g = card.manage!;
   const [msg, setMsg] = useState<{ ok: boolean; message: string } | null>(null);
   const [confirm, setConfirm] = useState<RequestKind | null>(null);
-  const [pending, start] = useTransition();
-  const send = (kind: RequestKind, inputs: Record<string, number | string> = {}) => start(async () => {
-    const r = await requestChange(card.id, kind, inputs);
-    setMsg(r); setConfirm(null);
+  const [pending, setPending] = useState(false);
+  const send = async (kind: RequestKind, inputs: Record<string, number | string> = {}) => {
+    setPending(true);
+    const r = await requestChange(card.id, kind, inputs).catch(() => ({ ok: false, message: "The town is unreachable right now: nothing was changed." }));
+    setPending(false); setMsg(r); setConfirm(null);
     if (r.ok) onChanged();
-  });
+  };
   const field = "min-h-11 w-24 rounded-lg border border-black/15 px-2 tabular-nums";
   const btn = "inline-flex min-h-11 items-center justify-center rounded-full px-4 font-semibold disabled:opacity-50";
   const price = card.products[0]?.price ?? 0;

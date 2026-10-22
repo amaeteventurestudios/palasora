@@ -49,7 +49,7 @@ test("P7-02 Open profile shows the full business page with the same numbers and 
   await page.setViewportSize({ width: 1280, height: 800 });
   const card = await openStall(page);
   await card.getByTestId("biz-open-profile").click();
-  await expect(page).toHaveURL(/\/town\/business\/b001$/);
+  await expect(page).toHaveURL(/\/town\/business\/b001$/, { timeout: 30_000 });
   const prof = page.getByTestId("biz-profile");
   await expect(prof).toContainText("Food stall");
   await expect(prof.getByTestId("biz-price")).toContainText("meals at 2.50 Sora each");
@@ -79,8 +79,9 @@ test("P7-03 the owner manages through requests: price and upgrade are queued for
   // every control is a 44 pt target on a phone
   const heights = await manage.locator("button, input").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height));
   for (const h of heights) expect(h).toBeGreaterThanOrEqual(44);
+  await expect(manage.getByTestId("biz-set-price-go")).toBeEnabled();
   await manage.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(2500);
   await page.screenshot({ path: path.join(shots, "owner-phone.png") });
   await page.goto(`${BASE}/town/business/b001`);
   await page.screenshot({ path: path.join(shots, "profile-owner-phone.png"), fullPage: true });

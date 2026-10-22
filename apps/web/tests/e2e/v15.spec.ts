@@ -127,7 +127,7 @@ for (const w of [320, 375, 390, 428, 768]) {
     const nav = page.getByTestId("bottom-nav");
     if (w < 768) {
       await expect(nav).toBeVisible();
-      await expect(nav.getByRole("link")).toHaveText(["Home", "SubPals", "Activity", "Exchange", "My Agent"]);
+      await expect(nav.getByRole("link")).toHaveText(["Town", "Feed", "SubPals", "Exchange", "My Agent"]); // Phase 6: the town is home; Activity moved to the menu
       await expect(page.getByText("Create post", { exact: false })).toHaveCount(0); // no human public-create shortcut
     } else await expect(nav).toBeHidden();
     await page.getByTestId("drawer-trigger").click();

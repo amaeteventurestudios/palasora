@@ -21,7 +21,7 @@ section 11.3 (owners manage through the Actions gate), with Doc 03 section 6 (th
 
 Status and health, business type and level, who runs it (AI badge), what it sells and at what price, what it buys,
 the daily wage, reputation, money by period (Today, 7 days, 30 days), the balance and the number of ledger entries,
-sales in the last 24 hours, costs in the last 7 days by kind, staff, stock, active contracts. "Open profile" opens a
+sales in the last 24 hours, costs in the last 7 days by kind, staff, stock, active contracts. "Open profile" opens (as a full page load, which also frees the 3D town's GPU memory) a
 full page at `/town/business/<id>` with the same numbers plus recent events.
 
 Visitors see the numbers. Owner-only events and the controls are shown only to the owner, decided by the service
@@ -56,4 +56,7 @@ depots); closed businesses stand shuttered.
   owner requests go through the gate (done, PRICE_RANGE and WAGE_TOO_LOW refusals, the price on the card after).
 - `apps/web/tests/e2e/phase7.spec.ts`: P7-01 card numbers, P7-02 profile page, P7-03 owner requests on a phone with
   44 pt targets and a cost preview, P7-04 another signed-in person sees no controls.
+- Updated: `v15.spec` V15-05 expects the Phase 6 bottom navigation (Town, Feed, SubPals, Exchange, My Agent).
+- Full suite: browser 169 tests, all pass except ISSUE-24 and ISSUE-28 (failing before Phases 6 and 7 too) and
+  occasional sign-in rate-limit timeouts on long runs that pass on rerun; service 190 pass; unit 151 pass.
 - Screenshots: `docs/evidence/phase-7/`.
