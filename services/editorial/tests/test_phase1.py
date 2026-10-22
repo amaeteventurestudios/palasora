@@ -1,15 +1,16 @@
 """Palasora Phase 1 (architecture doc 06, sections 5 and 17): people post, reply and vote again; news is retired.
 
 Database side (PocketBase hooks and the publish gate's human path), the shared human text rules, the fast engine and city
-engine treating human activity as conversation opportunities, and the news stop: no ingestion scheduling, no discovery,
-no news jobs, Control Room news/discovery off."""
+engine treating human activity as conversation opportunities, and what is left of the news stop after Phase 5 removed
+the news code: leftover news events and jobs finish as skipped, and the Control Room has no news settings."""
 from __future__ import annotations
 
 import time
 
 import pytest
 
-from palavva_editorial import config, retired, worker
+from palavva_editorial import config, worker
+from palavva_editorial.common import emit
 from palavva_editorial.city import control, engine
 from palavva_editorial.city.textpolicy import check_human_text
 from palavva_editorial.jobs import Queue
@@ -196,22 +197,21 @@ def test_human_posts_and_questions_are_agent_opportunities_and_agents_reply_to_t
 
 
 def test_fast_engine_takes_in_human_events_and_skips_news(city):
-    from palavva_editorial import conversation
     from palavva_editorial.city import fast
     pb, t, s, queue, calls = city
     fe = fast.FastEngine(pb, s, queue, t["id"])
     person = _user(pb, t, "Dami")
     post = _publish(pb, (lambda p: (_allow(pb, t, p), p)[1])(_human_post(pb, t, person, "Which midfield shape suits a promoted football club?")))
-    conversation.emit(pb, t["id"], "thread_resumed", post["id"])  # ensure a head exists: the first intake only sets the cursor there
+    emit(pb, t["id"], "thread_resumed", post["id"])  # ensure a head exists: the first intake only sets the cursor there
     fast.set_setting(pb, t["id"], "FAST_ENGINE_CURSOR", 0)
     assert fe.intake() == 0
     c = _reply(pb, t, post, person, "Would a back three help @TacticsDesk?")
-    conversation.emit(pb, t["id"], "topic_published", post["id"], author_kind="human", payload={"headline": post["headline"]})
-    conversation.emit(pb, t["id"], "reply_published", post["id"], post_id=c["id"], author_kind="human", payload={"post": {"body_text": c["body_text"]}})
+    emit(pb, t["id"], "topic_published", post["id"], author_kind="human", payload={"headline": post["headline"]})
+    emit(pb, t["id"], "reply_published", post["id"], post_id=c["id"], author_kind="human", payload={"post": {"body_text": c["body_text"]}})
     assert fe.intake() == 2
     evs = pb.list("agent_events", f"tenant_id={q(t['id'])} && piece_id={q(post['id'])}", "thread_seq")
     assert [e["event_type"] for e in evs] == ["new_post", "mention"]
-    # a news piece (editorial discussion) is never routed while news is retired
+    # a leftover queued news event is never routed
     news = pb.list("editorial_pieces", f"tenant_id={q(t['id'])} && review_status='published' && is_demo=false && kind='discussion'", per_page=1)
     if not news:
         from test_city import football_topic
@@ -219,30 +219,12 @@ def test_fast_engine_takes_in_human_events_and_skips_news(city):
     ev = pb.create("agent_events", {"tenant_id": t["id"], "event_key": f"phase1:{news[0]['id']}:{time.time()}", "event_type": "news_item", "source_kind": "thread_event",
                                     "source_id": "0", "piece_id": news[0]["id"], "status": "queued", "payload": {}})
     out = fe.route(ev)
-    assert out == {"skipped": "news retired"}
-    assert pb.get("agent_events", ev["id"])["skip_reason"].startswith("news retired")
-    # the news schedulers are off
-    assert fe.news_tick() == 0
-    assert fe.is_breaking(news[0]) == 0
+    assert out == {"skipped": "news removed"}
+    assert pb.get("agent_events", ev["id"])["skip_reason"] == "news removed"
+    assert not hasattr(fe, "news_tick") and not hasattr(fe, "is_breaking")
 
 
-# ------------------------------------------------------------------ news stop: ingestion, discovery, jobs, Control Room
-
-def test_ingestion_does_not_schedule_while_news_is_retired(seeded, tmp_path, monkeypatch):
-    pb, t = seeded["pb"], seeded["palavva"]
-    assert retired.news_retired() is True  # default
-    src = pb.create("sources", {"tenant_id": t["id"], "publisher_name": "Phase 1 probe", "endpoint_url": "https://example.test/feed.xml", "homepage_url": "https://example.test",
-                                "endpoint_type": "rss", "enabled": True, "rights_status": "approved", "fetch_interval_minutes": 60, "next_fetch_at": ""})
-    try:
-        queue = Queue(tmp_path / "jobs.db")
-        assert worker.schedule_due_sources(pb, queue) == 0
-        assert not any(k.startswith("fetch_source") for k in queue.stats()["by_type"])
-        # the gate is the flag: the legacy scheduler still works when news is explicitly un-retired (rollback path)
-        monkeypatch.setenv("NEWS_RETIRED", "false")
-        assert worker.schedule_due_sources(pb, queue) >= 1
-    finally:
-        pb.update("sources", src["id"], {"enabled": False})
-
+# ------------------------------------------------------------------ after Phase 5: leftovers finish quietly, no news settings
 
 def test_queued_news_jobs_complete_as_skipped_without_work(seeded, tmp_path):
     pb, t = seeded["pb"], seeded["palavva"]
@@ -256,35 +238,13 @@ def test_queued_news_jobs_complete_as_skipped_without_work(seeded, tmp_path):
     assert st.get("done", 0) >= 2 and not st.get("dead") and not st.get("failed")
 
 
-def test_discovery_exits_immediately(monkeypatch):
-    from palavva_editorial.intel import discover
-
-    def boom(*a, **k):
-        raise AssertionError("discovery must not load settings or touch PocketBase while news is retired")
-    monkeypatch.setattr(discover, "load", boom)
-    monkeypatch.setattr(discover, "PB", boom)
-    t0 = time.time()
-    assert discover.main() is None
-    assert time.time() - t0 < 2
-
-
-def test_control_room_news_and_discovery_default_off(seeded):
+def test_control_room_has_no_news_or_discovery_settings():
     sc = control.schema()
-    assert sc["news_enabled"]["default"] is False and sc["discovery_enabled"]["default"] is False
-    tid = seeded["palavva"]["id"]
-    control._CACHE[tid] = (time.time(), {"revision": 1, "global": {"news_enabled": True, "discovery_enabled": True, "breaking_enabled": True}, "countries": {}})
-    try:  # a stored "on" from before the retirement cannot restart news or discovery
-        assert control.get(tid, "news_enabled") is False and control.get(tid, "discovery_enabled") is False and control.get(tid, "breaking_enabled") is False
-    finally:
-        control._CACHE.pop(tid, None)
+    assert not {"news_enabled", "discovery_enabled", "breaking_enabled", "news_interval_min"} & set(sc)
+    assert "price_discovery_enabled" in sc  # the Exchange's price rules are not news
 
 
-def test_search_index_leaves_out_news(seeded, tmp_path):
-    from palavva_editorial import search as fts
-    pb, t = seeded["pb"], seeded["palavva"]
+def test_search_index_holds_every_published_piece(seeded, tmp_path):
+    pb = seeded["pb"]
     s = config.load()
-    n = worker.reindex_all(pb, s)
-    assert n == len(pb.list_all("editorial_pieces", "review_status='published'" + retired.not_news_filter()))
-    news_ids = {p["id"] for p in pb.list_all("editorial_pieces", f"tenant_id={q(t['id'])} && review_status='published' && (kind='discussion' || kind='story' || kind='source_link')")}
-    hits = set(fts.search(s.search_db, t["id"], "football")) | set(fts.search(s.search_db, t["id"], "market"))
-    assert not (hits & news_ids)
+    assert worker.reindex_all(pb, s) == len(pb.list_all("editorial_pieces", "review_status='published'"))

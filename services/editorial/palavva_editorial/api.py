@@ -7,11 +7,10 @@ import time
 from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
-from . import analytics_etl, config, conversation, search as fts, translate
-from .ingest.fetch import FetchError, safe_fetch
-from .ingest.parse import ParseError, parse_feed
+from . import analytics_etl, config, search as fts, translate
+from .common import emit
 from .jobs import Queue
-from .pb import PB, q
+from .pb import PB
 from .providers import make_provider
 from .worker import reindex_all
 
@@ -51,7 +50,7 @@ def status(tenant_id: str = "") -> dict:
     return {
         "queue": queue.stats(), "provider": provider_health(), "budget_used_today": queue.budget_used(tenant_id) if tenant_id else None,
         "budget_limit": S.model_daily_budget, "max_concurrency": S.model_max_concurrency, "timeout_sec": S.model_timeout_sec,
-        "flags": {"AI_PAUSED_ENV": S.ai_paused, "INGEST_PAUSED_ENV": S.ingest_paused, "AUTO_PUBLISH_DISABLED": S.auto_publish_disabled, "PAID_FALLBACKS_ENABLED": S.paid_fallbacks_enabled},
+        "flags": {"AI_PAUSED_ENV": S.ai_paused, "AUTO_PUBLISH_DISABLED": S.auto_publish_disabled, "PAID_FALLBACKS_ENABLED": S.paid_fallbacks_enabled},
         "cloud_providers": {"openai": "disabled", "anthropic": "disabled", "openrouter": "disabled"}, "pocketbase": pb().health(),
     }
 
@@ -75,33 +74,6 @@ class TenantBody(BaseModel):
     tenant_id: str
 
 
-@app.post("/sources/{source_id}/test", dependencies=[Depends(auth)])
-def test_source(source_id: str, body: TenantBody) -> dict:
-    src = pb().get("sources", source_id)
-    if src["tenant_id"] != body.tenant_id:
-        raise HTTPException(404, "not found")
-    if src.get("rights_status") != "approved":
-        return {"ok": False, "network_request_made": False, "message": "Rights not approved: no network request was made."}
-    if not src.get("endpoint_url"):
-        return {"ok": False, "network_request_made": False, "message": "No endpoint configured."}
-    try:
-        fr = safe_fetch(src["endpoint_url"], set(src.get("allowed_hosts") or []) or None, timeout=float(src.get("request_timeout_sec") or 15))
-        items = parse_feed(fr.body) if fr.status != 304 else []
-        return {"ok": True, "network_request_made": True, "status": fr.status, "content_type": fr.content_type, "bytes": len(fr.body), "items": len(items),
-                "sample": [{"title": i.title, "published": i.published.isoformat() if i.published else None, "link": i.link} for i in items[:3]], "hops": fr.hops}
-    except (FetchError, ParseError) as e:
-        return {"ok": False, "network_request_made": True, "error": e.code}
-
-
-@app.post("/sources/{source_id}/ingest", dependencies=[Depends(auth)])
-def ingest_now(source_id: str, body: TenantBody) -> dict:
-    src = pb().get("sources", source_id)
-    if src["tenant_id"] != body.tenant_id:
-        raise HTTPException(404, "not found")
-    jid, created = queue.enqueue(body.tenant_id, "fetch_source", {"source_id": source_id}, f"manual:{source_id}:{int(time.time() // 60)}")
-    return {"job_id": jid, "created": created}
-
-
 @app.post("/jobs/{job_id}/requeue", dependencies=[Depends(auth)])
 def requeue(job_id: str) -> dict:
     return {"requeued": queue.requeue_dead(job_id)}
@@ -112,24 +84,7 @@ def etl() -> dict:
     return analytics_etl.run(S, pb())
 
 
-# ---------------- v1.3 conversations ----------------
-
-@app.post("/conversations/demo", dependencies=[Depends(auth)])
-def demo_conversation(body: TenantBody) -> dict:
-    """Admin: Run safe demo conversation (labeled, local-only, evergreen)."""
-    return conversation.create_demo_topic(pb(), queue, S, body.tenant_id)
-
-
-class HumanQuestion(BaseModel):
-    tenant_id: str
-    post_id: str
-
-
-@app.post("/conversations/{piece_id}/human-question", dependencies=[Depends(auth)])
-def human_question(piece_id: str, body: HumanQuestion) -> dict:
-    ok, info = conversation.schedule_human_question(queue, pb(), body.tenant_id, piece_id, body.post_id)
-    return {"scheduled": ok, "info": info}
-
+# ---------------- threads ----------------
 
 class PauseBody(BaseModel):
     tenant_id: str
@@ -143,14 +98,14 @@ def pause_thread(piece_id: str, body: PauseBody) -> dict:
     if p["tenant_id"] != body.tenant_id:
         raise HTTPException(404, "not found")
     pb().update("editorial_pieces", piece_id, {"thread_state": "closed" if body.paused else "resting"})
-    conversation.emit(pb(), body.tenant_id, "thread_paused" if body.paused else "thread_resumed", piece_id, payload={"reason": body.reason[:200]})
+    emit(pb(), body.tenant_id, "thread_paused" if body.paused else "thread_resumed", piece_id, payload={"reason": body.reason[:200]})
     return {"ok": True}
 
 
 @app.get("/conversations/stats", dependencies=[Depends(auth)])
 def conversation_stats(tenant_id: str) -> dict:
     return {"reply_budget_used_today": queue.budget_used(f"{tenant_id}:reply"), "reply_budget_limit": S.reply_daily_budget,
-            "converse_pending": queue.pending_for("converse:"), "queue": queue.stats()["by_type"]}
+            "queue": queue.stats()["by_type"]}
 
 
 class TranslateBody(BaseModel):
@@ -167,32 +122,6 @@ def request_translation(body: TranslateBody) -> dict:
         raise HTTPException(422, "bad target")
     return {"queued": translate.enqueue(queue, body.tenant_id, body.target_type, body.target_id, body.locale, body.version),
             "machine_translation_enabled": body.locale in translate.MT_ENABLED}
-
-
-# ---------------- v1.8+ ISSUE-07 refined card rules: preview (read-only) ----------------
-
-class CardPreviewBody(BaseModel):
-    tenant_id: str
-    ids: list[str] = []
-
-
-@app.post("/cards/preview", dependencies=[Depends(auth)])
-def card_preview(body: CardPreviewBody) -> dict:
-    """What the refined card rules (card-disposition-v2) would decide for held publisher cards. Changes nothing."""
-    from .editorial.disposition import POLICY_VERSION, card_disposition
-    from .pipeline import tenant_switch
-    db = pb()
-    flt = f"tenant_id={q(body.tenant_id)} && kind='source_link' && (review_status='needs_review' || review_status='held')"
-    rows = [db.get("editorial_pieces", i) for i in body.ids[:500]] if body.ids else db.list_all("editorial_pieces", flt)
-    out = []
-    for r in rows:
-        if not r or r.get("tenant_id") != body.tenant_id or r.get("kind") != "source_link":
-            continue
-        src = (r.get("sources_json") or [{}])[0]
-        rights_ok = bool(src) and "withdrawn" not in (r.get("risk_basis") or "")
-        d = card_disposition(r.get("headline") or "", r.get("lede") or "", rights_ok=rights_ok)
-        out.append({"id": r["id"], "decision": d.decision, "rule": d.rule, "reason": d.reason, "matched": d.matched[:6]})
-    return {"policy": POLICY_VERSION, "switch_on": bool(tenant_switch(db, body.tenant_id, "LINK_POLICY_V2")), "items": out}
 
 
 # ---------------- v1.4 agent social network ----------------

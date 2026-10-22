@@ -46,10 +46,9 @@ def ensure_tenant(pb: PB, slug: str, data: dict) -> dict:
 
 
 def seed_geo(pb: PB) -> int:
-    """geo_areas from versioned boundary files + gazetteer aliases (country -> admin1)."""
+    """geo_areas from versioned boundary files (country -> admin1). Aliases stay empty: the news gazetteer that filled
+    them was removed in Palasora Phase 5."""
     import json
-    from pathlib import Path
-    from . import geo
     d = shared_path("public/geo")
     n = 0
     for f in sorted(d.glob("*.json")) if d.exists() else []:
@@ -59,10 +58,9 @@ def seed_geo(pb: PB) -> int:
         pb.upsert("geo_areas", f"code={q(cc)}", {"code": cc, "country": cc, "level": "country", "kind": "country", "name": name, "names": {"en": name}, "aliases": [],
                                                   "ambiguous_aliases": [], "parent_code": "", "dataset": j["dataset"], "dataset_version": j["version"], "geometry_available": True})
         kind = {"NG": "state", "ZA": "province", "KE": "county", "GH": "region", "SN": "region"}.get(cc, "admin1")
-        gaz = {"NG": geo.NG, "ZA": geo.ZA}.get(cc, {})
         for a in j["areas"]:
-            g = gaz.get(a["code"])
-            aliases = g[1] if g else ({"GH": geo.GH_ALIASES, "SN": geo.SN_ALIASES}.get(cc, {}).get(a["code"], []))
+            g = None
+            aliases: list[str] = []
             pb.upsert("geo_areas", f"code={q(a['code'])}", {"code": a["code"], "country": cc, "level": "admin1", "kind": "federal capital territory" if a["code"] == "NG-FC" else kind,
                                                             "name": g[0] if g else a["name"], "names": {"en": g[0] if g else a["name"]}, "aliases": aliases,
                                                             "ambiguous_aliases": g[2] if g else [], "parent_code": cc, "centroid": [a["cx"], a["cy"]],
@@ -92,7 +90,7 @@ def seed_tenants(pb: PB) -> dict[str, dict]:
     for t in (palavva, sample):
         pb.upsert("tenant_entitlements", f"tenant_id={q(t['id'])}", {"tenant_id": t["id"], "plan_key": "platform" if t["slug"] == "palavva" else "sample",
                                                                    "cycle": "monthly", "billing_status": "not_enabled", "feature_flags_json": {}})
-        for key, val in {"INGEST_PAUSED": False, "AI_PAUSED": False, "AUTO_PUBLISH_DISABLED": False, "AD_SLOTS_DISABLED": False,
+        for key, val in {"AI_PAUSED": False, "AUTO_PUBLISH_DISABLED": False, "AD_SLOTS_DISABLED": False,
                          "PUBLISHING_PAUSED": False, "ANALYTICS_ENABLED": True, "DEMO_THREADS_ENABLED": True}.items():
             if not pb.first("tenant_settings", f"tenant_id={q(t['id'])} && key={q(key)}"):
                 pb.create("tenant_settings", {"tenant_id": t["id"], "key": key, "value": val, "changed_by": "seed", "reason": "initial default"})

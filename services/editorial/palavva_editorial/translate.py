@@ -147,7 +147,7 @@ def enqueue(queue: Queue, tenant_id: str, target_type: str, target_id: str, loca
 
 
 def translate_job(pb: PB, queue: Queue, settings: Settings, provider: ModelProvider, job: dict) -> dict:
-    from .pipeline import Deferred
+    from .common import Deferred
     tid = job["tenant_id"]
     pl = job["payload"]
     loc = pl["locale"]

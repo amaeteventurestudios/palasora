@@ -59,7 +59,7 @@ def _rate_ok(tid: str) -> bool:
 
 
 def work(n: int, s, queue: Queue, tid: str = "") -> None:
-    from ..pipeline import Deferred
+    from ..common import Deferred
     from . import control
     pb = PB(s.pb_url, s.pb_email, s.pb_password)
     provider = make_provider(s)
