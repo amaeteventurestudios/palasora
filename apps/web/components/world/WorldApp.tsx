@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Bell, Bot, CircleHelp, Coins, Gamepad2, Home, LayoutList, LineChart, Map as MapIcon, MessageSquare, MoreHorizontal, Plus,
-  Settings, Shield, Trophy, User, Users, X, Store, Navigation } from "lucide-react";
+  Settings, Shield, Trophy, User, Users, X, Store, Navigation, ZoomIn, ZoomOut, LocateFixed } from "lucide-react";
 import type { WorldData } from "@/lib/world/layout";
 import { townTime } from "@/lib/world/layout";
 import type { WorldHandle, Selection, Label } from "@/lib/world/scene";
@@ -154,6 +154,8 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
       <QuickMenu open={menu === "quick"} btn={quickBtn} leftHanded={lh} viewer={viewer} onToggle={() => setMenu(menu === "quick" ? null : "quick")}
         onClose={() => { setMenu(null); quickBtn.current?.focus(); }} onPick={quick} />
 
+      {view === "3d" && <MapControls world={world} leftHanded={lh} mine={!!data?.mine.plot} />}
+
       {card && data && (
         <WorldCard card={card} data={data} viewer={viewer} prefs={prefs} reduceMotion={reduce || view !== "3d"} reason={reason}
           onClose={() => { setCard(null); setSelected(null); world.current?.select(null); world.current?.stopTour(); }}
@@ -161,6 +163,35 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
           onTour={() => { const ids = data.markers.map((m) => m.plot); setCard(null); world.current?.tour(ids, () => setCard({ kind: "away" })); }} />
       )}
       {covered && <div className="sr-only" aria-live="polite">{card ? "Card open" : "Menu open"}</div>}
+    </div>
+  );
+}
+
+/** Map controls under the top corner opposite the main menu: compass, zoom in, zoom out, and back to your home. */
+function MapControls({ world, leftHanded, mine }: { world: React.RefObject<WorldHandle | null>; leftHanded: boolean; mine: boolean }) {
+  const [north, setNorth] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => { const h = world.current?.heading(); if (h != null) setNorth((n) => (Math.abs(n - h) > 0.01 ? h : n)); }, 200);
+    return () => clearInterval(t);
+  }, [world]);
+  const btn = "flex size-11 items-center justify-center bg-white/95 text-[#1d2433] active:bg-[#eef1f4]";
+  return (
+    <div className={`absolute top-[calc(max(10px,env(safe-area-inset-top))+56px)] z-20 flex flex-col items-center gap-2 ${leftHanded ? "left-[max(10px,env(safe-area-inset-left))]" : "right-[max(10px,env(safe-area-inset-right))]"}`}
+      data-testid="map-controls">
+      <button type="button" className={`${btn} rounded-full shadow-md`} onClick={() => world.current?.resetNorth()} aria-label="Compass: turn back to the usual view" data-testid="map-compass">
+        <svg viewBox="0 0 24 24" className="size-7" style={{ transform: `rotate(${north}rad)` }} aria-hidden data-testid="map-needle">
+          <path d="M12 2.5 15.5 12h-7z" fill="#c9724f" /><path d="M12 21.5 8.5 12h7z" fill="#9aa3ae" />
+          <text x="12" y="10.4" textAnchor="middle" fontSize="5" fontWeight="700" fill="#fff">N</text>
+        </svg>
+      </button>
+      <div className="flex flex-col overflow-hidden rounded-full shadow-md">
+        <button type="button" className={btn} onClick={() => world.current?.zoomBy(1.6)} aria-label="Zoom in" data-testid="map-zoom-in"><ZoomIn className="size-5" aria-hidden /></button>
+        <div className="h-px bg-[#e3e6ea]" />
+        <button type="button" className={btn} onClick={() => world.current?.zoomBy(1 / 1.6)} aria-label="Zoom out" data-testid="map-zoom-out"><ZoomOut className="size-5" aria-hidden /></button>
+      </div>
+      <button type="button" className={`${btn} rounded-full shadow-md`} onClick={() => world.current?.home()} aria-label={mine ? "Back to your home" : "Back to the whole town"} data-testid="map-home">
+        <LocateFixed className="size-5" aria-hidden />
+      </button>
     </div>
   );
 }

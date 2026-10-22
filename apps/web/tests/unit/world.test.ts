@@ -1,5 +1,6 @@
 // Palasora Phase 6: the world viewer's street grid. Pure functions shared by the 3D town, the 2D map and the list view.
 import { describe, expect, it } from "vitest";
+import { SPEED, busy, outdoors } from "../../lib/world/life";
 import { COLS, PLOT, ROAD, ROWS, TOWN_D, TOWN_W, X_STREETS, Y_STREETS, plotAt, plotCenter, plotTitle, streets, townTime, type WorldPlot } from "../../lib/world/layout";
 
 describe("Phase 6 town grid", () => {
@@ -33,5 +34,25 @@ describe("Phase 6 town grid", () => {
     expect(plotTitle(p({}), { id: "b1", type: "stall", plot: "P000", owner: "a", owner_name: "", level: 1, health: "green", status: "closed", price_sora: 1, wage_sora: 1 })).toBe("Plot for sale");
     expect(townTime(0)).toBe("Day 1, 00:00");
     expect(townTime(49)).toBe("Day 3, 01:00");
+  });
+});
+
+describe("Town life follows the clock at believable speeds", () => {
+  const kmh = (u: number) => u * 10 * 3.6; // one world unit is ten metres
+  it("cars, buses, people and the monorail move at real-world speeds", () => {
+    expect(kmh(SPEED.car[1])).toBeLessThanOrEqual(35);
+    expect(kmh(SPEED.bus)).toBeLessThanOrEqual(30);
+    expect(kmh(SPEED.walk[0])).toBeGreaterThanOrEqual(3.5);
+    expect(kmh(SPEED.walk[1])).toBeLessThanOrEqual(6.5);
+    expect(kmh(SPEED.train)).toBeLessThanOrEqual(45);
+  });
+  it("streets are busiest at 8 and 18, lighter at midday, nearly empty at night", () => {
+    expect(busy(8)).toBeGreaterThan(0.85);
+    expect(busy(18)).toBeGreaterThan(0.85);
+    expect(busy(12.5)).toBeLessThan(busy(8));
+    expect(busy(12.5)).toBeGreaterThan(busy(3));
+    expect(busy(3)).toBeLessThan(0.15);
+    expect(outdoors(3)).toBeLessThan(0.05);
+    expect(outdoors(8)).toBeGreaterThan(outdoors(14));
   });
 });
