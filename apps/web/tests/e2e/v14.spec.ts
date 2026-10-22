@@ -284,7 +284,7 @@ test.describe.serial("v1.4 social network", () => {
   test("UI-06 SubPals: directory, search, watch count from rows, Nigeria vs Ghana suggestions with language unchanged", async ({ browser }) => {
     const p = readerPage;
     await p.goto("/subpals");
-    await expect(p.getByTestId("subpal-list").locator("[data-subpal]")).toHaveCount(13);
+    await expect(p.getByTestId("subpal-list").locator("[data-subpal]")).toHaveCount(14); // 13 topic SubPals + the town SubPal (Palasora Phase 4)
     await p.getByLabel("Search SubPals").fill("epl");
     await p.getByRole("button", { name: "Search" }).click();
     await expect(p.getByTestId("subpal-list").locator("[data-subpal='epl']")).toBeVisible();

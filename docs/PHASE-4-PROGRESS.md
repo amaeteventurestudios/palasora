@@ -22,8 +22,9 @@ Branch `claude/project-thread-410plq`. Spec: Doc 06 sections 5, 13, 14 and 19; h
 - **Worker**: one relay pass every 10 s when the outbox has pending rows (`TOWN_RELAY_ENABLED`, `PALASORA_TOWN_TENANT`).
 - **Tests**: `tests/test_phase4_town_events.py` (11, against a real PocketBase with the production hooks).
 
-## Next
+## Then
 
-- Web: feed card label and main-feed scope, town record page (live numbers), notifications icon and "while you were
-  away", Command Center held list.
-- Full suite re-run, Playwright, `scripts/sim gates` (Gate C), PR.
+- Web: feed card ("Town record" label, live-record link), main-feed scope, `/town/event/[id]`, notifications icon and
+  "While you were away", Command Center `/admin/town`.
+- e2e fixture `seed_town` (six stored events, no coins moved) and `tests/e2e/phase4.spec.ts` (6).
+- Gate C gained a no-duplicates check. Final results in `docs/PHASE-4-REPORT.md`.
