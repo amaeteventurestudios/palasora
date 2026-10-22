@@ -30,6 +30,9 @@ onRecordCreate((e) => {
 onRecordUpdate((e) => {
   const before = e.record.original().get("review_status");
   const after = e.record.get("review_status");
+  // Palasora Phase 4: a town event post stays tied to its event (the link the publish gate checked).
+  const evBefore = e.record.original().get("town_event_id") || "";
+  if (evBefore && e.record.get("town_event_id") !== evBefore) throw new BadRequestError("town_event_id is immutable");
   if (after !== before) require(`${__hooks}/lib/gate.js`).assertApproved(e.app, e.record);
   e.next();
 }, "editorial_pieces");

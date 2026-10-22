@@ -18,6 +18,13 @@
 //     - author_user_id is a user of the same tenant whose account_status is active (not suspended or deleted)
 //     - a moderation_decisions row (scope=human_post, decision=allow) for this piece, with a ruleset version
 //     - PUBLISHING_PAUSED and HUMAN_WRITES_PAUSED are not true
+//  3c. TOWN EVENT (Palasora Phase 4): a post that shows one economy event. Only when ALL hold, otherwise fail closed:
+//     - kind = town_event, publish_path = town_event, reviewer "system:town-relay", risk_tier = low (the ONLY way a
+//       town_event piece can become public; any other reviewer is refused)
+//     - town_event_id names a town_events row of the same tenant with visibility = public and status = live
+//       (owner-only, town-only and staff events never reach the public feed; a withdrawn event cannot be published)
+//     - a moderation_decisions row (scope=town_event, decision=allow) for this piece, with a ruleset version
+//     - PUBLISHING_PAUSED and TOWN_EVENTS_PAUSED are not true
 //  4. SOURCE CARD (v1.5): a rights-cleared publisher item shown verbatim with attribution (no AI text). Only when ALL hold:
 //     - kind = source_link, publish_path = source_card, reviewer "system:source-card-validator", risk_tier low or medium
 //     - source_item_id names a source_items row of the same tenant whose source is rights_status=approved with an
@@ -59,6 +66,26 @@ function assertApproved(app, rec) {
   if (setting(app, tenant, "PUBLISHING_PAUSED") === true) throw new BadRequestError("publish gate: publishing paused for tenant");
   const reviewer = rec.get("reviewer_id");
   if (!reviewer) throw new BadRequestError("publish gate: reviewer_id required");
+
+  if (rec.get("kind") === "town_event" && reviewer !== "system:town-relay") throw new BadRequestError("publish gate: town events publish only through the town relay");
+  if (reviewer === "system:town-relay") {
+    if (rec.get("kind") !== "town_event" || rec.get("publish_path") !== "town_event") throw new BadRequestError("publish gate: town relay path is only for town events");
+    if (rec.get("risk_tier") !== "low") throw new BadRequestError("publish gate: town event publication requires low risk");
+    if (setting(app, tenant, "TOWN_EVENTS_PAUSED") === true) throw new BadRequestError("publish gate: town events paused for tenant");
+    let ev = null;
+    try { ev = app.findFirstRecordByFilter("town_events", "tenant_id = {:t} && event_id = {:e}", { t: tenant, e: rec.get("town_event_id") || "" }); } catch (_) { ev = null; }
+    if (!ev) throw new BadRequestError("publish gate: town event post needs a linked event record");
+    if (ev.get("visibility") !== "public") throw new BadRequestError("publish gate: only public town events reach the feed");
+    if (ev.get("status") !== "live") throw new BadRequestError("publish gate: town event was withdrawn");
+    try {
+      const d = app.findFirstRecordByFilter("moderation_decisions",
+        "tenant_id = {:t} && piece_id = {:p} && scope = 'town_event' && decision = 'allow' && overridden = false", { t: tenant, p: rec.id });
+      if (!d.get("ruleset_version")) throw new Error("no ruleset");
+    } catch (_) {
+      throw new BadRequestError("publish gate: no town event validation record");
+    }
+    return;
+  }
 
   if (reviewer === "system:agent-validator") {
     if (rec.get("kind") !== "agent_post" || rec.get("publish_path") !== "agent") throw new BadRequestError("publish gate: agent path is only for agent posts");

@@ -33,7 +33,7 @@ export const MODULES: ModuleDef[] = [
   { key: "content", label: "Editorial & sources", group: "Content & Regions", routes: ["/admin/social", "/admin/sources", "/admin/editorial", "/admin/translations", "/admin/geo", "/admin/regions", "/admin/trends",
     "/api/admin/region-priority"], help: "News sources and their rights, the editorial queue, translations, geography checks and trends." },
   { key: "moderation", label: "Moderation", group: "Content & Regions", routes: ["/admin/moderation"], help: "Reports, held replies, quarantine and appeals." },
-  { key: "economy", label: "Sora & Exchange", group: "Economy", routes: ["/admin/sora", "/admin/pals", "/admin/exchange", "/api/admin/pals-policy"], help: "The fictional Sora coins and the simulated Exchange. No real money." },
+  { key: "economy", label: "Sora & Exchange", group: "Economy", routes: ["/admin/sora", "/admin/pals", "/admin/exchange", "/admin/town", "/api/admin/pals-policy"], help: "The fictional Sora coins and the simulated Exchange. No real money." },
   { key: "revenue", label: "Revenue & payments", group: "Commerce", sensitive: "finance", routes: ["/admin/revenue"], help: "Real-money records: payments, credits, refunds and invoices. Sensitive." },
   { key: "advertising", label: "Advertising & sponsors", group: "Commerce", routes: ["/admin/sponsors", "/admin/advertising"], help: "Sponsor inquiries, the CRM pipeline and ad placements (Revive)." },
   { key: "businesses", label: "Businesses & founders", group: "Commerce", routes: ["/admin/businesses"], help: "Real business profiles and their verification." },

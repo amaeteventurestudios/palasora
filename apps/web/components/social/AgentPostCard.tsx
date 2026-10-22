@@ -20,6 +20,7 @@ export const POST_LABELS: Record<string, string> = {
 };
 
 export function statusLabel(c: CardData): string {
+  if (c.p.kind === "town_event") return "Town event";
   if (c.p.kind === "human_post") return POST_LABELS[c.p.post_label] ?? "Community Discussion";
   if (c.p.kind === "agent_post") {
     const base = POST_LABELS[c.p.post_label] ?? "Community Discussion";
@@ -40,21 +41,25 @@ export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = f
   const tr = lp.translation as TranslationState | undefined;
   const href = pieceHref(p);
   const H = headingLevel === 2 ? "h2" : "h3";
-  const editorial = p.kind !== "agent_post" && !human;
+  const town = p.kind === "town_event";
+  const editorial = p.kind !== "agent_post" && !human && !town;
   return (
     <article className="card p-4 sm:p-5" data-testid="story-card" data-card="post" data-piece-id={p.id} data-kind={p.kind}>
       <header className="flex items-start gap-3">
         {agent ? <Link href={`/agents/${agent.handle}`} aria-hidden="true" tabIndex={-1}><AgentAvatar handle={agent.handle} glyph={agent.glyph} avatarUrl={agent.avatar_url} size={38} /></Link>
+          : town ? <span aria-hidden="true" className="inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-card-muted text-[18px]">{c.subpal?.icon || "🏘"}</span>
           : human ? <span aria-hidden="true" className="inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-card-muted text-[15px] font-bold">{(person?.display_name ?? "?").slice(0, 1).toUpperCase()}</span>
           : <AgentAvatar handle="editorial" editorial size={38} />}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]">
             {/* v1.6: a publisher's item is attributed to the publisher, never to an AI role (no AI wrote it) */}
             {agent ? <Link href={`/agents/${agent.handle}`} className="font-bold hover:underline">{agent.display_name}</Link>
+              : town ? <span className="font-bold">{c.subpal?.name ?? "The town"}</span>
               : human ? (person ? <Link href={`/profile/${person.handle}`} className="font-bold hover:underline">{person.display_name}</Link> : <span className="font-bold">Deleted account</span>)
               : p.kind === "source_link" && p.sources[0] ? <span className="font-bold">{p.sources[0].name}</span>
               : <span className="font-bold">{c.roleLabel.replace(" · AI", "")}</span>}
             {agent ? <AgentBadge kind={agent.kind} level={agent.verification_level} compact />
+              : town ? <span className="label-pill label-human" data-testid="town-label">Town record</span>
               : human ? <span className="label-pill label-human" data-testid="person-label">Person</span>
               : p.kind === "source_link" ? <span className="label-pill label-human" data-testid="publisher-badge">Publisher</span> : <EditorialBadge />}
             {subpal && <><span className="text-muted-foreground">in</span><Link href={`/p/${subpal.slug}`} className="font-semibold link">p/{subpal.slug}</Link></>}
@@ -80,6 +85,7 @@ export function AgentPostCard({ c, headingLevel = 3, signedIn = false, saved = f
             {p.sources.length > 1 ? ` · also in ${p.sources.length - 1} more feed${p.sources.length > 2 ? "s" : ""}` : ""}
           </p>
         ) : editorial && p.sources[0] && <p className="meta mt-1.5">Source: {p.sources.map((s) => s.name).join(", ")}{p.publish_path === "auto_low_risk" ? " · auto-published (low risk, sourced)" : ""}</p>}
+        {town && p.town_event_id && <p className="meta mt-1.5" data-testid="town-record-link">From the town&apos;s records · <Link href={`/town/event/${p.town_event_id}`} className="link">see the live record</Link></p>}
         {p.corrected && <p className="meta mt-1">Corrected · see revision history</p>}
         <LiveThreadSummary pieceId={p.id} href={href} initialCount={p.counts.ai_contributions + p.counts.human_comments} initialLatest={c.latest} />
         <footer className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[14px] font-semibold text-muted-foreground">

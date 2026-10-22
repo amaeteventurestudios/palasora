@@ -213,11 +213,13 @@ def gate_c(runs: list[dict]) -> dict:
     stories = sum(s["reports"]["stories"] for s in runs)
     msgs = sum(s["reports"]["messages"] for s in runs)
     padded = sum(s["reports"].get("padded", 0) for s in runs)
+    dupes = sum(s["reports"].get("duplicates", 0) for s in runs)
     checks = {
         "stories_link_records": {"ok": linked, "examples": [f"{stories} stories in {msgs} morning messages, every one checked against the journal and events"]},
         "real_event_most_mornings": {"ok": bool(most) and min(most) > 0.5,
                                      "examples": [f"lowest run {min(most, default=0):.0%} of mornings with a real event"]},
         "quiet_not_padded": {"ok": padded == 0, "examples": [f"{padded} padded quiet mornings"]},
+        "no_duplicates": {"ok": dupes == 0, "examples": [f"{dupes} events told twice in a message, or second messages for the same morning"]},  # Phase 4 gate
     }
     return {"ok": all(v["ok"] for v in checks.values()), "checks": checks}
 

@@ -107,6 +107,24 @@ def process_one(pb: PB, queue: Queue, s: config.Settings, provider, owner: str) 
     return True
 
 
+def town_relay(pb: PB) -> dict | None:
+    """One relay pass when a town exists (TOWN_RELAY_ENABLED, default on; tenant slug PALASORA_TOWN_TENANT, default palavva)."""
+    if os.environ.get("TOWN_RELAY_ENABLED", "true").lower() == "false":
+        return None
+    from .economy import service as economy
+    from .economy.town import social
+    con = economy.con()
+    if not con.execute("SELECT 1 FROM outbox WHERE status='pending' LIMIT 1").fetchone():
+        return None
+    t = pb.first("tenants", f"slug={q(os.environ.get('PALASORA_TOWN_TENANT', 'palavva'))}")
+    if t is None:
+        return None
+    out = social.relay(con, pb, t["id"])
+    if out["delivered"] or out["failed"] or out["held"]:
+        log.info("town relay %s", out)
+    return out
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -131,7 +149,7 @@ def main() -> None:
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
     log.info("worker started provider=%s model=%s", provider.name, provider.model)
-    last_sched = last_index = last_etl = last_rest = last_city = 0.0
+    last_sched = last_index = last_etl = last_rest = last_city = last_town = 0.0
     from .city import engine as city
     while not STOP:
         now = time.time()
@@ -147,6 +165,9 @@ def main() -> None:
                     for t in pb.list_all("tenants", "status='active' && is_demo=false"):
                         city.enqueue_tick(queue, t["id"])
                 last_city = now
+            if now - last_town > 10:
+                town_relay(pb)  # Palasora Phase 4: deliver stored town events to the feed, notifications and live updates
+                last_town = now
             if now - last_index > 600:
                 reindex_all(pb, s)
                 last_index = now

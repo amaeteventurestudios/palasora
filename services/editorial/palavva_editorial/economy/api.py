@@ -450,3 +450,89 @@ def founder_pool() -> list[dict]:
                      "FROM rewards r WHERE r.status='issued' GROUP BY r.agent_id HAVING earned >= ?", (ex.MIN_LIFETIME_EARNED,)).fetchall()
     return [{"agent_id": r["agent_id"], "earned": r["earned"] / 100, "available": r["bal"] / 100, "can_pay_fee": r["bal"] >= ex.LISTING_FEE}
             for r in rows if r["agent_id"] not in founders]
+
+
+# ---- Palasora Phase 4: town events in the feed, notifications and reports (Doc 06 sections 13 and 14)
+from .town import events as town_events, reports as town_reports, social as town_social  # noqa: E402
+
+
+def _town_now(c) -> int:
+    return c.execute("SELECT COALESCE(MAX(tick), 0) t FROM world_events").fetchone()["t"]
+
+
+@router.get("/town/events/{eid}")
+def town_event(eid: str, viewer: str = "") -> dict:
+    """One event with the live numbers of what it links to. Public events for anyone; town and owner events only for the
+    people they are about (`viewer` = the signed-in person's user id, resolved by the web layer); staff events never."""
+    c = service.con()
+    r = town_social.record(c, eid)
+    if r is None or r["visibility"] == "staff":
+        raise HTTPException(404, detail={"code": "NOT_FOUND"})
+    if r["visibility"] != "public":
+        mine = town_social.members_of(c, viewer) if viewer else set()
+        if not (mine & set(r["who"])) and not (r["visibility"] == "town" and mine):
+            raise HTTPException(404, detail={"code": "NOT_FOUND"})
+    return r
+
+
+@router.get("/town/away")
+def town_away(user_id: str, since_hours: int = 48, limit: int = 12) -> dict:
+    """"While you were away" from stored events (no AI call). A quiet stretch is reported as quiet."""
+    c = service.con()
+    members = town_social.members_of(c, user_id)
+    out = town_reports.away(c, members, max(0, _town_now(c) - max(1, min(since_hours, 24 * 14))), max(1, min(limit, 30)))
+    for i in out["items"]:
+        i["text"] = town_social.display_text(c, i)  # residents by their public names, as in the feed and notifications
+    return {**out, "resident": bool(members)}
+
+
+class TownLinkIn(BaseModel):
+    town_agent: str = Field(min_length=1, max_length=40)
+    user_id: str = Field(default="", max_length=40)
+    agent_id: str = Field(default="", max_length=40)
+    display_name: str = Field(default="", max_length=80)
+
+
+@router.post("/town/links")
+def town_link(b: TownLinkIn) -> dict:
+    c = service.con()
+    with db.tx(c):
+        town_social.link(c, b.town_agent, user_id=b.user_id, agent_id=b.agent_id, display_name=b.display_name)
+    return {"ok": True}
+
+
+@router.get("/admin/town/outbox")
+def town_outbox(limit: int = 200) -> dict:
+    c = service.con()
+    return {"counts": town_events.outbox_counts(c), "held": town_events.held(c, max(1, min(limit, 500))), "max_attempts": town_events.MAX_ATTEMPTS}
+
+
+class TownRetryIn(BaseModel):
+    event_id: str = ""
+    destination: str = ""
+    by: str = Field(min_length=1, max_length=120)
+
+
+@router.post("/admin/town/outbox/retry")
+def town_retry(b: TownRetryIn) -> dict:
+    c = service.con()
+    with db.tx(c):
+        n = town_events.retry_held(c, b.event_id or None, b.destination or None)
+    return {"requeued": n, "by": b.by}
+
+
+class TownWithdrawIn(BaseModel):
+    reason: str = Field(min_length=3, max_length=300)
+    by: str = Field(min_length=1, max_length=120)
+
+
+@router.post("/admin/town/events/{eid}/withdraw")
+def town_withdraw(eid: str, b: TownWithdrawIn) -> dict:
+    c = service.con()
+    with db.tx(c):
+        nxt = c.execute("SELECT COALESCE(MAX(seq), 0) + 1 s FROM world_events").fetchone()["s"]
+        try:
+            wid = town_events.withdraw(c, eid, b.reason, seq=nxt, tick=_town_now(c))  # `by` goes to the web audit log, not the public note
+        except KeyError:
+            raise HTTPException(404, detail={"code": "NOT_FOUND"}) from None
+    return {"withdrawal": wid, "already": wid is None}
