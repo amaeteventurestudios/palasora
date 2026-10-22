@@ -1,13 +1,7 @@
 // Publish gate helper (loaded with require() inside hook handlers).
-// Two ways a piece may become public:
+// The ways a piece may become public (Palasora Phase 5 removed the news paths: automated story drafts, source cards,
+// link signals and the refined card rules; any of those reviewers now falls through to the editor check and is refused):
 //  1. HUMAN: an approval by a user holding an editorial role in the same tenant (any risk tier).
-//  2. AUTOMATED (v1.3, 22 §2): only when ALL hold, otherwise fail closed:
-//     - publish_path is auto_low_risk (or demo for an is_demo piece)
-//     - risk_tier = low and claim_check_status = PASS
-//     - an editorial_reviews row decision=auto_publish by reviewer "system:auto-validator"
-//     - a moderation_decisions row (scope=topic, decision=allow) for this piece, with a ruleset version
-//     - tenant switch AUTO_PUBLISH_DISABLED is not true (DEMO_THREADS_ENABLED for demo topics)
-//     - PUBLISHING_PAUSED is not true
 //  3. AGENT (v1.4): an AI agent's own post. Only when ALL hold, otherwise fail closed:
 //     - kind = agent_post, publish_path = agent, reviewer "system:agent-validator", risk_tier = low
 //     - author_agent_id is an agent of the same tenant with status active and the post permission
@@ -25,32 +19,8 @@
 //       (owner-only, town-only and staff events never reach the public feed; a withdrawn event cannot be published)
 //     - a moderation_decisions row (scope=town_event, decision=allow) for this piece, with a ruleset version
 //     - PUBLISHING_PAUSED and TOWN_EVENTS_PAUSED are not true
-//  4. SOURCE CARD (v1.5): a rights-cleared publisher item shown verbatim with attribution (no AI text). Only when ALL hold:
-//     - kind = source_link, publish_path = source_card, reviewer "system:source-card-validator", risk_tier low or medium
-//     - source_item_id names a source_items row of the same tenant whose source is rights_status=approved with an
-//       excerpt-permitting usage_policy (permitted_excerpt | licensed_full), and the card's source_url matches it
-//     - PUBLISHING_PAUSED and SOURCE_CARDS_PAUSED are not true
-//  5. LINK SIGNAL (v1.6): a DISCOVERED publisher's headline + link-out only (no excerpt, no AI text). Only when ALL hold:
-//     - kind = source_link, publish_path = link_signal, reviewer "system:link-signal-validator", risk_tier low
-//     - the card carries no excerpt (lede empty) and source_url matches a stored source_items row of the same tenant
-//     - that row's source is source_class=discovery, usage_policy=link_only, rights_status pending or approved
-//       (restricted/revoked = the publisher opted out or an operator withdrew it: never shown)
-//     - PUBLISHING_PAUSED, SOURCE_CARDS_PAUSED and LINK_SIGNALS_PAUSED are not true
-//  4b/5b. REFINED CARD RULES (v1.8+ ISSUE-07): a source card or link signal ABOVE its v1 risk threshold may publish only
-//     when the tenant switch LINK_POLICY_V2 is true AND a moderation_decisions row (scope=card, decision=allow,
-//     ruleset_version=card-disposition-v2, target_id = this card) exists. All other conditions above still apply.
 // JSON field values are not plain JS booleans inside the JSVM (`get("value") === true` was never true, so before v1.4
 // the DB-level PUBLISHING_PAUSED check silently did nothing). Read the raw JSON text and parse it.
-// v1.8+ ISSUE-07: refined card rules are on for this tenant and the engine recorded a named allow decision for THIS card.
-function refinedAllow(app, tenantId, rec) {
-  if (setting(app, tenantId, "LINK_POLICY_V2") !== true) return false;
-  try {
-    app.findFirstRecordByFilter("moderation_decisions", "tenant_id = {:t} && scope = 'card' && decision = 'allow' && ruleset_version = 'card-disposition-v2' && target_id = {:id}",
-      { t: tenantId, id: rec.id });
-    return true;
-  } catch (_) { return false; }
-}
-
 function setting(app, tenantId, key) {
   try {
     const r = app.findFirstRecordByFilter("tenant_settings", "tenant_id = {:t} && key = {:k}", { t: tenantId, k: key });
@@ -118,56 +88,6 @@ function assertApproved(app, rec) {
       if (!d.get("ruleset_version")) throw new Error("no ruleset");
     } catch (_) {
       throw new BadRequestError("publish gate: no human-post validation record");
-    }
-    return;
-  }
-
-  if (reviewer === "system:source-card-validator") {
-    if (rec.get("kind") !== "source_link" || rec.get("publish_path") !== "source_card") throw new BadRequestError("publish gate: source-card path is only for source cards");
-    const risk = rec.get("risk_tier");
-    if (risk !== "low" && risk !== "medium" && !refinedAllow(app, tenant, rec)) throw new BadRequestError("publish gate: source cards above medium risk need an editor");
-    if (setting(app, tenant, "SOURCE_CARDS_PAUSED") === true) throw new BadRequestError("publish gate: source cards paused for tenant");
-    let item = null, src = null;
-    try { item = app.findRecordById("source_items", rec.get("source_item_id")); src = app.findRecordById("sources", item.get("source_id")); } catch (_) { item = null; }
-    if (!item || item.get("tenant_id") !== tenant || !src || src.get("tenant_id") !== tenant) throw new BadRequestError("publish gate: source card needs a stored source item");
-    if (src.get("rights_status") !== "approved") throw new BadRequestError("publish gate: source rights not approved");
-    const policy = src.get("usage_policy");
-    if (policy !== "permitted_excerpt" && policy !== "licensed_full") throw new BadRequestError("publish gate: source does not permit excerpts");
-    if (item.get("canonical_url") !== rec.get("source_url")) throw new BadRequestError("publish gate: source card URL mismatch");
-    return;
-  }
-
-  if (reviewer === "system:link-signal-validator") {
-    if (rec.get("kind") !== "source_link" || rec.get("publish_path") !== "link_signal") throw new BadRequestError("publish gate: link-signal path is only for link signals");
-    if (rec.get("risk_tier") !== "low" && !refinedAllow(app, tenant, rec)) throw new BadRequestError("publish gate: link signals above low risk need an editor");
-    if (setting(app, tenant, "SOURCE_CARDS_PAUSED") === true || setting(app, tenant, "LINK_SIGNALS_PAUSED") === true) throw new BadRequestError("publish gate: link signals paused for tenant");
-    if (String(rec.get("lede") || "").trim() !== "") throw new BadRequestError("publish gate: a link signal carries no excerpt");
-    let item = null, src = null;
-    try { item = app.findRecordById("source_items", rec.get("source_item_id")); src = app.findRecordById("sources", item.get("source_id")); } catch (_) { item = null; }
-    if (!item || item.get("tenant_id") !== tenant || !src || src.get("tenant_id") !== tenant) throw new BadRequestError("publish gate: link signal needs a stored source item");
-    const rs = src.get("rights_status");
-    if (rs !== "pending" && rs !== "approved") throw new BadRequestError("publish gate: publisher restricted or revoked");
-    if (src.get("usage_policy") !== "link_only" || src.get("source_class") !== "discovery") throw new BadRequestError("publish gate: link signals need a link-only discovery source");
-    if (item.get("canonical_url") !== rec.get("source_url")) throw new BadRequestError("publish gate: link signal URL mismatch");
-    return;
-  }
-
-  if (reviewer === "system:auto-validator") {
-    const path = rec.get("publish_path");
-    const isDemo = rec.get("is_demo") === true;
-    if (!(path === "auto_low_risk" || (path === "demo" && isDemo))) throw new BadRequestError("publish gate: automated path not allowed for this piece");
-    if (rec.get("risk_tier") !== "low") throw new BadRequestError("publish gate: automated publication requires low risk");
-    if (rec.get("claim_check_status") !== "PASS") throw new BadRequestError("publish gate: automated publication requires claim check PASS");
-    if (path === "auto_low_risk" && setting(app, tenant, "AUTO_PUBLISH_DISABLED") === true) throw new BadRequestError("publish gate: auto-publication disabled");
-    if (path === "demo" && setting(app, tenant, "DEMO_THREADS_ENABLED") === false) throw new BadRequestError("publish gate: demo threads disabled");
-    try {
-      app.findFirstRecordByFilter("editorial_reviews",
-        "tenant_id = {:t} && piece_id = {:p} && reviewer_id = 'system:auto-validator' && decision = 'auto_publish'", { t: tenant, p: rec.id });
-      const d = app.findFirstRecordByFilter("moderation_decisions",
-        "tenant_id = {:t} && piece_id = {:p} && scope = 'topic' && decision = 'allow' && overridden = false", { t: tenant, p: rec.id });
-      if (!d.get("ruleset_version")) throw new Error("no ruleset");
-    } catch (_) {
-      throw new BadRequestError("publish gate: no automated validation record");
     }
     return;
   }
