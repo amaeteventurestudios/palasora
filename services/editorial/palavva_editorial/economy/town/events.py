@@ -9,8 +9,11 @@
   never reaches the public feed).
 * Never sends anything during tests: the simulation writes outbox rows but does not run the relay.
 
-Phase 3 has consumers for the `records` and `report` views (both in economy.db). The `world`, `profile`, `feed` and
-`notifications` views get their outbox rows now and their consumers in phases 4 and 6, so nothing written today is lost.
+Phase 3 has consumers for the `records` and `report` views (both in economy.db). Phase 4 adds the `feed`,
+`notifications`, `world` (live SSE) and `profile` (place SubPals) consumers in `social.py`.
+
+* Withdrawn, never deleted: `withdraw()` marks an event and writes an `event_withdrawn` event that follows the same
+  views, so each consumer takes back what it showed (a feed item is retracted, a notification removed).
 """
 from __future__ import annotations
 
@@ -32,14 +35,52 @@ MAX_ATTEMPTS = 5
 BACKOFF_SEC = (5, 30, 120, 600, 1800)
 
 
-def emit(con: sqlite3.Connection, *, seq: int, tick: int, kind: str, who: list[str], visibility: str, refs: dict, text: str) -> str:
+def emit(con: sqlite3.Connection, *, seq: int, tick: int, kind: str, who: list[str], visibility: str, refs: dict, text: str, town: str = "") -> str:
     if visibility not in ALLOWED:
         raise ValueError(f"bad visibility {visibility}")
     eid = f"ev-{seq:08d}"
-    con.execute("INSERT INTO world_events(id, seq, tick, kind, who, visibility, refs, text) VALUES (?,?,?,?,?,?,?,?)",
-                (eid, seq, tick, kind, json.dumps(sorted(set(who))), visibility, json.dumps(refs, sort_keys=True), text[:400]))
+    con.execute("INSERT INTO world_events(id, seq, tick, kind, who, visibility, refs, text, town) VALUES (?,?,?,?,?,?,?,?,?)",
+                (eid, seq, tick, kind, json.dumps(sorted(set(who))), visibility, json.dumps(refs, sort_keys=True), text[:400], town))
     con.executemany("INSERT INTO outbox(event_id, destination, status) VALUES (?,?,'pending')", [(eid, v) for v in ALLOWED[visibility]])
     return eid
+
+
+def withdraw(con: sqlite3.Connection, event_id: str, reason: str, *, seq: int, tick: int) -> str | None:
+    """Withdraw an event (staff correction, or a record that turned out wrong). Returns the withdrawal event id, or None
+    when it was already withdrawn. Call inside the caller's transaction, like `emit`."""
+    ev = con.execute("SELECT * FROM world_events WHERE id=?", (event_id,)).fetchone()
+    if ev is None:
+        raise KeyError(event_id)
+    if ev["withdrawn"] or ev["kind"] == "event_withdrawn":
+        return None
+    con.execute("UPDATE world_events SET withdrawn=1, withdrawn_reason=? WHERE id=?", (reason[:300], event_id))
+    return emit(con, seq=seq, tick=tick, kind="event_withdrawn", who=json.loads(ev["who"]), visibility=ev["visibility"],
+                refs={"event": event_id}, text=f"Withdrawn: {reason}"[:400], town=ev["town"])
+
+
+def held(con: sqlite3.Connection, limit: int = 200) -> list[dict]:
+    """The Command Center's held list: deliveries that failed MAX_ATTEMPTS times."""
+    return [dict(r) for r in con.execute("""SELECT o.event_id, o.destination, o.attempts, o.last_error, e.kind, e.visibility, e.text, e.tick
+                                            FROM outbox o JOIN world_events e ON e.id=o.event_id WHERE o.status='held' ORDER BY e.seq LIMIT ?""", (limit,))]
+
+
+def retry_held(con: sqlite3.Connection, event_id: str | None = None, destination: str | None = None) -> int:
+    """Put held deliveries back in the queue (staff, after fixing the cause). Repeats stay harmless: consumers apply once."""
+    sql, args = "UPDATE outbox SET status='pending', attempts=0, next_try=0, last_error='' WHERE status='held'", []
+    if event_id:
+        sql += " AND event_id=?"
+        args.append(event_id)
+    if destination:
+        sql += " AND destination=?"
+        args.append(destination)
+    return con.execute(sql, args).rowcount
+
+
+def outbox_counts(con: sqlite3.Connection) -> dict:
+    out: dict = {}
+    for r in con.execute("SELECT destination, status, COUNT(*) n FROM outbox GROUP BY destination, status"):
+        out.setdefault(r["destination"], {})[r["status"]] = r["n"]
+    return out
 
 
 def apply_once(con: sqlite3.Connection, consumer: str, event_id: str, fn: Callable[[], None]) -> bool:

@@ -163,6 +163,10 @@ CREATE TABLE IF NOT EXISTS outbox (
 );
 CREATE INDEX IF NOT EXISTS idx_outbox_status ON outbox (status, destination);
 CREATE TABLE IF NOT EXISTS event_receipts (consumer TEXT NOT NULL, event_id TEXT NOT NULL, applied_at REAL NOT NULL, PRIMARY KEY (consumer, event_id));
+CREATE TABLE IF NOT EXISTS towns (id TEXT PRIMARY KEY, name TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, created_at REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS town_links (
+  town_agent TEXT PRIMARY KEY, user_id TEXT NOT NULL DEFAULT '', agent_id TEXT NOT NULL DEFAULT '', display_name TEXT NOT NULL DEFAULT ''
+);
 CREATE TABLE IF NOT EXISTS violations (
   id INTEGER PRIMARY KEY, rule TEXT NOT NULL, accused TEXT NOT NULL, detecting_rule TEXT NOT NULL, evidence TEXT NOT NULL DEFAULT '{}',
   opened_tick INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'candidate' CHECK (status IN ('candidate'))
@@ -328,11 +332,26 @@ def upgrade(con: sqlite3.Connection) -> bool:
     return True
 
 
+# Columns added after a table first shipped (additive; old rows take the default).
+ADDED_COLUMNS = (
+    ("world_events", "town", "TEXT NOT NULL DEFAULT ''"),           # Phase 4: the town an event happened in
+    ("world_events", "withdrawn", "INTEGER NOT NULL DEFAULT 0"),    # Phase 4: an event later withdrawn (never deleted)
+    ("world_events", "withdrawn_reason", "TEXT NOT NULL DEFAULT ''"),
+)
+
+
+def _add_columns(con: sqlite3.Connection) -> None:
+    for table, col, ddl in ADDED_COLUMNS:
+        if col not in {r["name"] for r in con.execute(f"PRAGMA table_info({table})")}:
+            con.execute(f"ALTER TABLE {table} ADD COLUMN {col} {ddl}")
+
+
 def init(con: sqlite3.Connection) -> None:
     exists = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='accounts'").fetchone() is not None
     if exists:
         upgrade(con)  # before SCHEMA: its new indexes name columns that only exist after the upgrade
     con.executescript(SCHEMA)
+    _add_columns(con)
     con.execute("INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', ?)", (str(SCHEMA_VERSION),))
     # A ledger that never held Pals starts in Sora. One that did stays 'pending' until migration.py converts it.
     if not con.execute("SELECT 1 FROM meta WHERE key='currency'").fetchone():
