@@ -7,11 +7,13 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Builder, M, createAdaptiveDpr, createRandom, detectQuality, glowMaterial, hashStr } from "./kit";
+import { createChunks } from "./chunks";
+import { COAST, DISTRICTS, EAST, SEA_Y, WORLD_R, X0, X1, Z0, Z1, ZONE_COLOR, ZONE_LABEL, districtAt, districtStatus, plotZone, zoneAt } from "./districts";
 import { createLife, type LifeInfo, type Station } from "./life";
 import { COLS, PLOT, ROAD, ROWS, TOWN_D, TOWN_W, plotAt, plotCenter, streets, type WorldBusiness, type WorldData, type WorldPlot } from "./layout";
 
 export type Selection = { kind: "plot"; id: string } | { kind: "landmark"; id: string; title: string; text: string };
-export type Label = { id: string; text: string; x: number; y: number; tone: "mine" | "selected" | "marker" };
+export type Label = { id: string; text: string; x: number; y: number; tone: "mine" | "selected" | "marker" | "district"; color?: string };
 export type CameraState = { tx: number; tz: number; zoom: number; theta: number; phi: number };
 export type WorldOptions = {
   reduceMotion?: boolean; hour?: number; initialCamera?: CameraState | null;
@@ -20,12 +22,14 @@ export type WorldOptions = {
 export type WorldHandle = {
   flyTo(plotId: string, zoom?: number): void; select(plotId: string | null): void; setPaused(p: boolean): void; tour(plots: string[], onDone: () => void): void;
   stopTour(): void; camera(): CameraState; setHour(h: number): void; dispose(): void;
-  info(): { calls: number; triangles: number; fps: number; dpr: number; lite: boolean; people: number; cars: number; zoom: number; hour: number; life: LifeInfo };
+  info(): { calls: number; triangles: number; fps: number; dpr: number; lite: boolean; people: number; cars: number; zoom: number; hour: number; life: LifeInfo; chunks: number; outerCars: number };
   /** On-screen controls: zoom by a factor, fly home (your plot, or the whole town), the compass (heading: where north points
    *  on screen, clockwise from up, in radians; resetNorth returns to the framed angle). */
   zoomBy(f: number): void; home(): void; heading(): number; resetNorth(): void;
   /** Fly to any point of the town (world units) at a zoom. */
   lookAt(x: number, z: number, zoom: number): void;
+  /** Show or hide the district tint and names. */
+  districts(on: boolean): void;
   /** Run the town's life forward by `sec` seconds at once (for checks). */
   ff(sec: number): void;
 };
@@ -40,12 +44,6 @@ const OWNER = ["#4f7cac", "#c9724f", "#6f9e7a", "#b5838d", "#e0a458", "#6d597a",
 const HEALTH: Record<string, string> = { green: "#3fae6a", yellow: "#e8c33c", orange: "#ec8a3a", red: "#d9483b" };
 const C = (h: string) => new THREE.Color(h);
 
-// Block extents around the town grid: sea and beach to the west, the Exchange quarter east, campus and arena south,
-// farms and wind turbines north.
-const WEST = 15, EAST = 13, NORTH = 11, SOUTH = 12;
-const X0 = -TOWN_W / 2 - WEST, X1 = TOWN_W / 2 + EAST, Z0 = -TOWN_D / 2 - NORTH, Z1 = TOWN_D / 2 + SOUTH;
-const COAST = -TOWN_W / 2 - 3.2; // land starts here; sea to the west
-const SEA_Y = -0.42;
 
 export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: WorldOptions): WorldHandle {
   const Q = detectQuality();
@@ -101,13 +99,32 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   const glow = new THREE.Mesh(keep(W.geometry()), keep(glowMaterial(uGlow)));
   scene.add(town, glass, glow);
 
-  // the sea: one gently lit surface inside the block
-  const seaGeo = keep(new THREE.BoxGeometry(COAST - X0 - 0.5, 0.1, Z1 - Z0 - 1));
+  // the open map: the sea runs under everything (land covers it), a sea floor below it, and a lawn east of the coast so
+  // the ground is never empty while the land beyond the town is still being built
+  const R2 = 2 * WORLD_R + 400;
   const seaMat = keep(new THREE.MeshStandardMaterial({ color: PAL.sea, roughness: 0.25, metalness: 0.1, transparent: true, opacity: 0.92 }));
-  const sea = new THREE.Mesh(seaGeo, seaMat);
-  sea.position.set((X0 + 0.25 + COAST) / 2, SEA_Y - 0.05, (Z0 + Z1) / 2);
+  const sea = new THREE.Mesh(keep(new THREE.PlaneGeometry(R2, R2).rotateX(-Math.PI / 2)), seaMat);
+  sea.position.set(0, SEA_Y, 0);
   sea.receiveShadow = true;
-  scene.add(sea);
+  const seaFloor = new THREE.Mesh(keep(new THREE.PlaneGeometry(R2, R2).rotateX(-Math.PI / 2)), keep(new THREE.MeshBasicMaterial({ color: "#2f6f78" })));
+  seaFloor.position.set(0, -0.7, 0);
+  const lawnMat = keep(new THREE.MeshStandardMaterial({ color: PAL.lawn, roughness: 0.95 }));
+  const lawn = new THREE.Mesh(keep(new THREE.PlaneGeometry(R2, R2).rotateX(-Math.PI / 2)), lawnMat);
+  lawn.position.set(COAST + 6 + R2 / 2, -0.01, 0);
+  lawn.receiveShadow = true;
+  scene.add(seaFloor, sea, lawn);
+
+  // the land beyond the town, built in chunks around the camera
+  const chunks = createChunks({ scene, mat, glowMat: glow.material as THREE.Material, lite: Q.LITE });
+
+  // districts: a tint over each district and over the town's plots by zone, shown with the Districts button
+  const zoneB = new Builder();
+  for (const d of DISTRICTS) if (d.id !== "old-town") zoneB.box(d.x1 - d.x0 - 0.6, 0.02, d.z1 - d.z0 - 0.6, C(ZONE_COLOR[d.zone]), M((d.x0 + d.x1) / 2, 0.14, (d.z0 + d.z1) / 2));
+  for (const p of data.plots) { const [x, z] = plotCenter(p.x, p.y); zoneB.box(PLOT - 0.2, 0.02, PLOT - 0.2, C(ZONE_COLOR[plotZone(p)]), M(x, 0.2, z)); }
+  const zoneMesh = new THREE.Mesh(keep(zoneB.geometry()), keep(new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.38, depthWrite: false })));
+  zoneMesh.visible = false; zoneMesh.renderOrder = 2;
+  scene.add(zoneMesh);
+  const population = data.population ?? 0;
 
   // ---------- health rings, "since you left" beacons, selection ring, your plot
   const ringGeo = keep(new THREE.RingGeometry(1.02, 1.2, 32).rotateX(-Math.PI / 2));
@@ -156,18 +173,18 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
 
   // ---------- camera: orthographic, isometric three-quarter view; tilt 25 to 60 degrees; eases back after 4 s idle
   const HOME = { theta: Math.PI / 4 + 0.08, phi: 0.92 };
-  const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
+  const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 3000);
   const controls = new OrbitControls(cam, canvas);
   controls.enableDamping = !reduceMotion; controls.dampingFactor = 0.09;
   controls.minPolarAngle = THREE.MathUtils.degToRad(30); controls.maxPolarAngle = THREE.MathUtils.degToRad(65);
-  controls.minZoom = 0.8; controls.maxZoom = 14; // 14 is street level: a person is about a finger wide on a phone controls.zoomSpeed = 1.1;
+  controls.minZoom = 0.55; controls.maxZoom = 14; controls.zoomSpeed = 1.1; // 14 is street level: a person is about a finger wide on a phone
   controls.screenSpacePanning = false;
   controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
   controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
   const sph = new THREE.Spherical();
   function placeCamera(s: CameraState) {
     controls.target.set(s.tx, 0, s.tz);
-    sph.set(120, s.phi, s.theta);
+    sph.set(400, s.phi, s.theta); // far enough back that the near edge of a zoomed-out view is never clipped
     cam.position.setFromSpherical(sph).add(controls.target);
     cam.zoom = s.zoom; cam.updateProjectionMatrix();
     controls.update();
@@ -179,8 +196,8 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   let lastInput = performance.now();
   controls.addEventListener("start", () => { lastInput = performance.now(); stopFly(); });
   controls.addEventListener("change", () => {
-    const t = controls.target; // keep the target over the block
-    t.x = THREE.MathUtils.clamp(t.x, X0 + 6, X1 - 6); t.z = THREE.MathUtils.clamp(t.z, Z0 + 6, Z1 - 6);
+    const t = controls.target; // the map has no edge, only a limit far out
+    t.x = THREE.MathUtils.clamp(t.x, -WORLD_R, WORLD_R); t.z = THREE.MathUtils.clamp(t.z, -WORLD_R, WORLD_R);
   });
 
   function resize() {
@@ -243,7 +260,8 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     }
     const lm = landmarks.find((l) => hit.x >= l.x0 && hit.x <= l.x1 && hit.z >= l.z0 && hit.z <= l.z1);
     select(null);
-    opts.onSelect(lm ? { kind: "landmark", id: lm.id, title: lm.title, text: lm.text } : null);
+    if (lm) { opts.onSelect({ kind: "landmark", id: lm.id, title: lm.title, text: lm.text }); return; }
+    opts.onSelect(placeCard(hit.x, hit.z));
   };
   canvas.addEventListener("pointerdown", onDown);
   canvas.addEventListener("pointerup", onUp);
@@ -254,16 +272,58 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     if (p) { const [x, z] = plotCenter(p.x, p.y); selRing.position.set(x, 0.12, z); }
   }
 
+  /** A card for any point beyond the town's plots: its district, or the countryside. */
+  function placeCard(x: number, z: number): Selection | null {
+    const d = districtAt(x, z);
+    if (d && d.id !== "old-town") {
+      const st = districtStatus(d, population);
+      return { kind: "landmark", id: `district-${d.id}`, title: d.name, text: `${ZONE_LABEL[d.zone]} district. ${d.text} ${st.text}.` };
+    }
+    const zone = zoneAt(x, z);
+    if (zone === "sea" || d) return null;
+    const what: Partial<Record<string, string>> = {
+      residential: "A village of homes and gardens.", industrial: "A farm co-op with sheds and a depot.", farmland: "Fields and a farmyard.",
+      countryside: "Woods and meadows.",
+    };
+    return { kind: "landmark", id: "countryside", title: "Countryside", text: `${what[zone] ?? ""} Land out here opens after the districts are full.`.trim() };
+  }
+
   // ---------- time of day: the real clock (or ?hour= for checks)
   let hour = opts.hour ?? new Date().getHours() + new Date().getMinutes() / 60;
   const sky = new THREE.Color();
+  // the shadow camera follows the view in steps, so the land beyond the town gets shadows too
+  const sunOff = new THREE.Vector3(), sunAt = new THREE.Vector2(NaN, NaN);
+  function placeSun() {
+    sun.target.position.set(sunAt.x || 0, 0, sunAt.y || 0); sun.target.updateMatrixWorld();
+    sun.position.copy(sun.target.position).add(sunOff);
+    renderer.shadowMap.needsUpdate = true;
+  }
+  function followSun() {
+    const sx = Math.round(controls.target.x / 12) * 12, sz = Math.round(controls.target.z / 12) * 12;
+    if (sx !== sunAt.x || sz !== sunAt.y) { sunAt.set(sx, sz); placeSun(); }
+  }
+  followSun();
+  /** The patch of ground the camera sees, with a margin. */
+  const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]], fp = new THREE.Vector3();
+  function footprint() {
+    let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+    for (const [cx, cy] of corners) {
+      ndc.set(cx, cy); ray.setFromCamera(ndc, cam);
+      if (!ray.ray.intersectPlane(ground, fp)) continue;
+      x0 = Math.min(x0, fp.x); x1 = Math.max(x1, fp.x); z0 = Math.min(z0, fp.z); z1 = Math.max(z1, fp.z);
+    }
+    if (!Number.isFinite(x0)) { const t = controls.target; return { x0: t.x - 40, x1: t.x + 40, z0: t.z - 40, z1: t.z + 40 }; }
+    const c = (v: number) => THREE.MathUtils.clamp(v, -WORLD_R - 30, WORLD_R + 30);
+    return { x0: c(x0 - 4), x1: c(x1 + 4), z0: c(z0 - 4), z1: c(z1 + 4) };
+  }
   function applyHour(h: number) {
     hour = ((h % 24) + 24) % 24;
     const day = THREE.MathUtils.smoothstep(Math.sin(((hour - 6) / 12) * Math.PI), -0.15, 0.35);
     const golden = Math.exp(-Math.pow((hour - 6.5) / 1.2, 2)) + Math.exp(-Math.pow((hour - 18.3) / 1.2, 2));
     const az = ((hour - 6) / 12) * Math.PI;
     const el = Math.max(0.18, Math.sin(az) * 1.05);
-    sun.position.set(Math.cos(az) * 60, 25 + el * 50, -30 + Math.sin(az) * 10);
+    sunOff.set(Math.cos(az) * 60, 25 + el * 50, -30 + Math.sin(az) * 10);
+    placeSun();
     sun.intensity = 0.7 + 1.95 * day;
     sun.color.set(0xfff1dc).lerp(C("#ffb27a"), Math.min(1, golden * 0.8)).lerp(C("#8fa3d8"), 1 - day);
     hemi.intensity = 1.0 + 0.3 * day;
@@ -293,6 +353,13 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     if (mine) put(mine, "Your plot", "mine", "mine");
     const s = selected ? plotsById.get(selected) : undefined;
     if (s && s !== mine) put(s, s.id, "selected", "sel");
+    if (zoneMesh.visible) for (const d of DISTRICTS) {
+      proj.set((d.x0 + d.x1) / 2, 0.5, d.id === "old-town" ? Z0 + 3 : (d.z0 + d.z1) / 2).project(cam);
+      if (proj.x < -0.95 || proj.x > 0.95 || proj.y < -0.95 || proj.y > 0.95) continue;
+      const st = districtStatus(d, population);
+      out.push({ id: `d-${d.id}`, text: `${d.name} · ${st.open ? "open" : `opens at ${d.opensAt.toLocaleString("en")} residents`}`, x: ((proj.x + 1) / 2) * w, y: ((1 - proj.y) / 2) * h,
+        tone: "district", color: ZONE_COLOR[d.zone] });
+    }
     opts.onLabels(out);
   }
   function frame(now: number) {
@@ -313,6 +380,8 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
       if (Math.abs(dth) > 0.002 || Math.abs(dph) > 0.002) placeCamera({ ...s, theta: s.theta + dth * Math.min(1, real * 1.2), phi: s.phi + dph * Math.min(1, real * 1.2) });
     }
     controls.update();
+    followSun();
+    if (chunks.update(footprint(), time, hour, Q.LITE ? 1 : 2) > 0) renderer.shadowMap.needsUpdate = true;
     if (dt > 0) life.step(dt, hour, time);
     life.draw(time);
     beaconMat.opacity = 0.28 + 0.2 * Math.sin(time * 2.4);
@@ -331,6 +400,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     flyTo, select, tour, stopTour,
     setPaused(p) { paused = p; },
     setHour(h) { applyHour(h); },
+    districts(on) { zoneMesh.visible = on; },
     camera: camState,
     zoomBy(f) {
       const s = camState(), zoom = THREE.MathUtils.clamp(s.zoom * f, controls.minZoom, controls.maxZoom);
@@ -359,7 +429,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
       life.draw(time);
     },
     info() {
-      return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, fps: dpr.fps, dpr: dpr.dpr, lite: Q.LITE, ...life.counts,
+      return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, fps: dpr.fps, dpr: dpr.dpr, lite: Q.LITE, ...life.counts, ...chunks.info(),
         zoom: Math.round(cam.zoom * 100) / 100, hour: Math.round(hour * 100) / 100, life: life.info() };
     },
     dispose() {
@@ -368,7 +438,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
       canvas.removeEventListener("pointerdown", onDown); canvas.removeEventListener("pointerup", onUp);
       ro.disconnect(); controls.dispose();
       for (const d of disposables) d.dispose();
-      life.dispose();
+      life.dispose(); chunks.dispose();
       for (const m of [rings, beacons]) m.dispose();
       renderer.dispose();
     },
@@ -382,14 +452,9 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
 type Rand = ReturnType<typeof createRandom>;
 
 function buildGround(B: Builder, R: Rand) {
-  const W = X1 - X0, D = Z1 - Z0, cx = (X0 + X1) / 2, cz = (Z0 + Z1) / 2;
-  // the block: soil skirt (darker toward the bottom), then lawn on land and a sea floor under the water
-  B.box(W, 2.2, D, (_x, y) => C(PAL.soil).lerp(C(PAL.soilDark), THREE.MathUtils.clamp(-y / 2.2 + 0.5, 0, 1)), M(cx, -1.1 - 0.62, cz));
+  const D = Z1 - Z0, cz = (Z0 + Z1) / 2;
+  // land from the coast to the east edge of the core; the open map's sea and lawn carry on beyond it
   B.box(X1 - COAST, 0.62, D, C(PAL.lawn), M((COAST + X1) / 2, -0.31, cz));
-  B.box(COAST - X0, 0.12, D, C("#3f7f86"), M((X0 + COAST) / 2, -0.62 + 0.06, cz)); // sea floor
-  B.box(COAST - X0, 0.5, 0.3, C(PAL.soil), M((X0 + COAST) / 2, -0.62 + 0.25, Z1 - 0.15)); // sea wall at the block's edges
-  B.box(COAST - X0, 0.5, 0.3, C(PAL.soil), M((X0 + COAST) / 2, -0.62 + 0.25, Z0 + 0.15));
-  B.box(0.3, 0.5, D, C(PAL.soil), M(X0 + 0.15, -0.62 + 0.25, cz));
   // the town base: pavement under the whole grid
   B.box(TOWN_W, 0.06, TOWN_D, C(PAL.pavement), M(0, 0.03, 0));
   // beach (south-west) sloping into the sea, promenade north of it
@@ -787,4 +852,4 @@ function turbineSpots() {
   ].map((t) => ({ ...t, x: t.x, z: t.z }));
 }
 
-export const WORLD_BOUNDS = { X0, X1, Z0, Z1, COLS, ROWS };
+export const WORLD_BOUNDS = { X0, X1, Z0, Z1, COLS, ROWS, R: WORLD_R };

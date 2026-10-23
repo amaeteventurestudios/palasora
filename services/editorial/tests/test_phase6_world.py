@@ -42,6 +42,8 @@ def test_world_for_a_resident_has_their_plot_agent_and_markers_from_real_events(
     for m in w["markers"]:
         assert m["event"] in events and m["plot"] in plots
     assert len({m["plot"] for m in w["markers"]}) == len(w["markers"])  # one marker per place
+    active = town.execute("SELECT COUNT(*) FROM town_agents WHERE status='active'").fetchone()[0]
+    assert w["population"] == active > 0  # districts open as this grows
 
 
 def test_world_for_a_visitor_has_no_private_parts(town):
@@ -54,4 +56,5 @@ def test_unfounded_town_uses_the_fixed_layout():
     db.init(con)
     w = view.world(con, "")
     assert not w["founded"] and [p["id"] for p in w["plots"]] == [p["id"] for p in layout.layout()]
+    assert w["population"] == 0
     assert w["town"] == {"id": "first-town", "name": "First Town", "slug": "first-town"}

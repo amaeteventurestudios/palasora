@@ -54,6 +54,7 @@ def world(con: sqlite3.Connection, viewer: str = "", since_hours: int = 48) -> d
             i["plot"] = plot
             if plot and not any(m["plot"] == plot for m in markers):
                 markers.append({"plot": plot, "event": i["event"], "kind": i["kind"], "yours": i["yours"]})
-    return {"town": _town(con), "tick": now, "grid": {"w": layout.WIDTH, "d": layout.DEPTH}, "founded": bool(stored), "plots": plots,
+    population = con.execute("SELECT COUNT(*) n FROM town_agents WHERE status='active'").fetchone()["n"]
+    return {"town": _town(con), "tick": now, "population": population, "grid": {"w": layout.WIDTH, "d": layout.DEPTH}, "founded": bool(stored), "plots": plots,
             "businesses": biz, "mine": {"plot": my_plot, "agents": agents, "businesses": [b["id"] for b in mine_biz], "resident": bool(members)},
             "away": away, "markers": markers}
