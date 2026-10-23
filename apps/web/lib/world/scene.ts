@@ -10,10 +10,10 @@ import { Builder, M, createAdaptiveDpr, createRandom, detectQuality, glowMateria
 import { createChunks } from "./chunks";
 import { COAST, DISTRICTS, EAST, SEA_Y, WORLD_R, X0, X1, Z0, Z1, ZONE_COLOR, ZONE_LABEL, districtAt, districtStatus, plotZone, zoneAt } from "./districts";
 import { createLife, type LifeInfo, type Station } from "./life";
-import { COLS, PLOT, ROAD, ROWS, TOWN_D, TOWN_W, plotAt, plotCenter, streets, type WorldBusiness, type WorldData, type WorldPlot } from "./layout";
+import { COLS, PLOT, ROAD, ROWS, TOWN_D, TOWN_W, plotAt, plotCenter, streets, Y_STREETS, type WorldBusiness, type WorldData, type WorldPlot } from "./layout";
 
 export type Selection = { kind: "plot"; id: string } | { kind: "landmark"; id: string; title: string; text: string };
-export type Label = { id: string; text: string; x: number; y: number; tone: "mine" | "selected" | "marker" | "district"; color?: string };
+export type Label = { id: string; text: string; x: number; y: number; tone: "mine" | "selected" | "marker" | "district" | "pick"; color?: string };
 export type CameraState = { tx: number; tz: number; zoom: number; theta: number; phi: number };
 export type WorldOptions = {
   reduceMotion?: boolean; hour?: number; initialCamera?: CameraState | null;
@@ -30,6 +30,10 @@ export type WorldHandle = {
   lookAt(x: number, z: number, zoom: number): void;
   /** Show or hide the district tint and names. */
   districts(on: boolean): void;
+  /** Light up plots a person can pick (free homes, plots for sale) with a short label each; null clears them. */
+  pick(plots: { id: string; text: string }[] | null): void;
+  /** Keep the middle of the view clear of a sheet covering the bottom `px` of the screen (a card on a phone). */
+  inset(px: number): void;
   /** Run the town's life forward by `sec` seconds at once (for checks). */
   ff(sec: number): void;
 };
@@ -77,7 +81,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   const plotsById = new Map(data.plots.map((p) => [p.id, p]));
   const bizById = new Map(data.businesses.map((b) => [b.id, b]));
   const bizOnPlot = new Map<string, WorldBusiness>();
-  for (const b of data.businesses) if (b.status === "open" || !bizOnPlot.has(b.plot)) bizOnPlot.set(b.plot, b);
+  for (const b of data.businesses) if (!b.cart && (b.status === "open" || !bizOnPlot.has(b.plot))) bizOnPlot.set(b.plot, b);
   const B = new Builder(), G = new Builder(), W = new Builder();
   const R = createRandom(20261022);
   const uGlow = { value: 0 };
@@ -88,6 +92,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   buildGround(B, R);
   buildStreets(B, W, R, S, busStops);
   for (const p of data.plots) buildPlot(B, G, W, p, bizOnPlot.get(p.id), data.founded || data.businesses.length > 0, data.tick);
+  for (const b of data.businesses) { const p = plotsById.get(b.plot); if (b.cart && b.status === "open" && p) foodCart(B, p, b); }
   buildDressing(B, G, W, R, landmarks);
 
   const mat = keep(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.86, metalness: 0, flatShading: true }));
@@ -128,7 +133,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
 
   // ---------- health rings, "since you left" beacons, selection ring, your plot
   const ringGeo = keep(new THREE.RingGeometry(1.02, 1.2, 32).rotateX(-Math.PI / 2));
-  const open = data.businesses.filter((b) => b.status === "open" && plotsById.has(b.plot));
+  const open = data.businesses.filter((b) => b.status === "open" && !b.cart && plotsById.has(b.plot));
   const rings = new THREE.InstancedMesh(ringGeo, keep(new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.85, depthWrite: false })), Math.max(1, open.length));
   rings.count = open.length;
   open.forEach((b, i) => {
@@ -146,6 +151,13 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   markerPlots.forEach((p, i) => { const [x, z] = plotCenter(p.x, p.y); beacons.setMatrixAt(i, M(x, 0, z)); });
   beacons.frustumCulled = false;
   scene.add(beacons);
+
+  // plots a person can pick ("Find a place"): pulsing gold rings and, close up, a label each
+  const pickMat = keep(new THREE.MeshBasicMaterial({ color: PAL.gold, transparent: true, opacity: 0.8, depthWrite: false }));
+  const picks = new THREE.InstancedMesh(keep(new THREE.RingGeometry(0.86, 1.12, 32).rotateX(-Math.PI / 2)), pickMat, Math.max(1, data.plots.length));
+  picks.count = 0; picks.frustumCulled = false; picks.renderOrder = 3;
+  scene.add(picks);
+  let picked: { p: WorldPlot; text: string }[] = [];
 
   const selRing = new THREE.Mesh(keep(new THREE.RingGeometry(1.3, 1.46, 40).rotateX(-Math.PI / 2)),
     keep(new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, depthWrite: false })));
@@ -200,11 +212,18 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     t.x = THREE.MathUtils.clamp(t.x, -WORLD_R, WORLD_R); t.z = THREE.MathUtils.clamp(t.z, -WORLD_R, WORLD_R);
   });
 
+  // a sheet over the bottom of the screen: the view's centre moves up to the middle of what stays visible
+  const sheet = { cur: 0, to: 0 };
+  function offset() {
+    const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1;
+    if (sheet.cur > 0.5) cam.setViewOffset(w, h, 0, sheet.cur / 2, w, h); else cam.clearViewOffset();
+    cam.updateProjectionMatrix();
+  }
   function resize() {
     const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1, a = w / h;
     // portrait screens see the whole town grid; landscape and desktop frame the town with some of the ring
     const V = a >= 1 ? 50 : Math.min(110, 50 / a * 0.62);
-    cam.left = (-V * a) / 2; cam.right = (V * a) / 2; cam.top = V / 2; cam.bottom = -V / 2; cam.updateProjectionMatrix();
+    cam.left = (-V * a) / 2; cam.right = (V * a) / 2; cam.top = V / 2; cam.bottom = -V / 2; offset();
     renderer.setPixelRatio(dpr.dpr);
     renderer.setSize(w, h, false);
   }
@@ -351,6 +370,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
       out.push({ id, text, x: ((proj.x + 1) / 2) * w, y: ((1 - proj.y) / 2) * h, tone });
     };
     if (mine) put(mine, "Your plot", "mine", "mine");
+    if (picked.length && cam.zoom >= 1.5) { let n = 0; for (const k of picked) { if (k.p.id === selected || n > 40) continue; const before = out.length; put(k.p, k.text, "pick", `pick-${k.p.id}`); n += out.length - before; } }
     const s = selected ? plotsById.get(selected) : undefined;
     if (s && s !== mine) put(s, s.id, "selected", "sel");
     if (zoneMesh.visible) for (const d of DISTRICTS) {
@@ -379,12 +399,14 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
       const dth = Math.atan2(Math.sin(HOME.theta - s.theta), Math.cos(HOME.theta - s.theta)), dph = HOME.phi - s.phi;
       if (Math.abs(dth) > 0.002 || Math.abs(dph) > 0.002) placeCamera({ ...s, theta: s.theta + dth * Math.min(1, real * 1.2), phi: s.phi + dph * Math.min(1, real * 1.2) });
     }
+    if (sheet.cur !== sheet.to) { sheet.cur = reduceMotion || Math.abs(sheet.to - sheet.cur) < 1 ? sheet.to : sheet.cur + (sheet.to - sheet.cur) * Math.min(1, real * 8); offset(); }
     controls.update();
     followSun();
     if (chunks.update(footprint(), time, hour, Q.LITE ? 1 : 2) > 0) renderer.shadowMap.needsUpdate = true;
     if (dt > 0) life.step(dt, hour, time);
     life.draw(time);
     beaconMat.opacity = 0.28 + 0.2 * Math.sin(time * 2.4);
+    if (picks.count) pickMat.opacity = 0.6 + 0.3 * Math.sin(time * 3.2);
     renderer.render(scene, cam);
     dpr.tick(real, now);
     labels();
@@ -401,6 +423,12 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     setPaused(p) { paused = p; },
     setHour(h) { applyHour(h); },
     districts(on) { zoneMesh.visible = on; },
+    inset(px) { sheet.to = Math.max(0, px); },
+    pick(list) {
+      picked = (list ?? []).map((k) => ({ p: plotsById.get(k.id)!, text: k.text })).filter((k) => k.p);
+      picked.forEach((k, i) => { const [x, z] = plotCenter(k.p.x, k.p.y); picks.setMatrixAt(i, M(x, 0.15, z)); });
+      picks.count = picked.length; picks.instanceMatrix.needsUpdate = true;
+    },
     camera: camState,
     zoomBy(f) {
       const s = camState(), zoom = THREE.MathUtils.clamp(s.zoom * f, controls.minZoom, controls.maxZoom);
@@ -439,7 +467,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
       ro.disconnect(); controls.dispose();
       for (const d of disposables) d.dispose();
       life.dispose(); chunks.dispose();
-      for (const m of [rings, beacons]) m.dispose();
+      for (const m of [rings, beacons, picks]) m.dispose();
       renderer.dispose();
     },
   };
@@ -665,6 +693,24 @@ function buildBusiness(B: Builder, G: Builder, W: Builder, cx: number, cz: numbe
     for (let k = 0; k < Math.min(4, lv + 1); k++) { B.box(0.36, 0.18, 0.22, own, M(cx - 0.6 + k * 0.4, 0.2, cz + 0.65)); B.box(0.16, 0.14, 0.2, C(PAL.white), M(cx - 0.68 + k * 0.4, 0.33, cz + 0.65)); }
   }
   void R;
+}
+
+/** A food cart at the kerb in front of a free plot (step 3): a small barrow with an awning in the owner's colour, a
+ *  parasol and a stool. Carts hold no plot of their own; the plot behind stays for sale. */
+function foodCart(T: Builder, p: WorldPlot, b: WorldBusiness) {
+  const own = C(OWNER[hashStr(b.owner) % OWNER.length]);
+  const [px, pz] = plotCenter(p.x, p.y);
+  // the kerb on the plot's street side: blocks are two rows deep, with a street south of row 0 and of every row in Y_STREETS
+  const south = p.y === 0 || Y_STREETS.includes(p.y);
+  const B = new Builder(), cx = 0, cz = 0;
+  B.box(0.62, 0.26, 0.34, C(PAL.cream), M(cx, 0.32, cz));
+  B.box(0.66, 0.04, 0.38, own, M(cx, 0.47, cz));
+  for (const dx of [-0.22, 0.22]) B.cyl(0.08, 0.08, 0.04, 10, C("#3a4048"), M(cx + dx, 0.17, cz + 0.19, 0, Math.PI / 2));
+  B.box(0.02, 0.36, 0.02, C(PAL.white), M(cx - 0.3, 0.64, cz - 0.15)); B.box(0.02, 0.36, 0.02, C(PAL.white), M(cx + 0.3, 0.64, cz - 0.15));
+  for (let k = 0; k < 4; k++) B.box(0.17, 0.02, 0.3, k % 2 ? C(PAL.white) : own, M(cx - 0.25 + k * 0.17, 0.83, cz - 0.04, 0, 0.25));
+  B.cyl(0.012, 0.012, 0.7, 4, C(PAL.white), M(cx + 0.55, 0.47, cz + 0.05)); B.cone(0.3, 0.14, 8, own, M(cx + 0.55, 0.86, cz + 0.05));
+  B.cyl(0.07, 0.07, 0.16, 8, C(PAL.wood), M(cx + 0.5, 0.2, cz + 0.2));
+  T.absorb(B, M(px - 0.35, 0, pz + (south ? 1 : -1) * (PLOT / 2 + 0.22), south ? 0 : Math.PI));
 }
 
 /** Scaffolding on a building opened in the last town day: poles, two decks of planks and a hoist. */

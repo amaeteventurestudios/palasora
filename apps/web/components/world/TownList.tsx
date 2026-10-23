@@ -5,7 +5,7 @@ import { AREA_LABEL, BUSINESS_LABEL, HEALTH_LABEL, plotTitle, type WorldData } f
 
 export function TownList({ data, visible, onShow }: { data: WorldData | null; visible: boolean; onShow(id: string): void }) {
   if (!data) return null;
-  const biz = new Map(data.businesses.map((b) => [b.plot, b]));
+  const biz = new Map(data.businesses.filter((b) => !b.cart).map((b) => [b.plot, b]));
   const groups = new Map<string, typeof data.plots>();
   for (const p of data.plots) { const k = AREA_LABEL[p.area] ?? p.area; groups.set(k, [...(groups.get(k) ?? []), p]); }
   const built = (p: (typeof data.plots)[number]) => p.use === "civic" || biz.has(p.id) || p.id === data.mine.plot;

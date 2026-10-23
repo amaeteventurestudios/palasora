@@ -525,6 +525,31 @@ def town_owner_request(bid: str, b: OwnerRequestIn) -> dict:
         raise HTTPException(403 if e.code == "NOT_OWNER" else 400, detail={"code": e.code, "message": e.detail})
 
 
+@router.get("/town/me")
+def town_me(user_id: str = "") -> dict:
+    """Step 3: the "Find a place" panel: the person's resident, home, carts and businesses, free homes and plots for sale."""
+    from .town import place
+    return place.me(service.con(), user_id)
+
+
+class PlaceRequestIn(BaseModel):
+    user_id: str = Field(min_length=1, max_length=40)
+    kind: str = Field(min_length=1, max_length=40)
+    inputs: dict = Field(default_factory=dict)
+
+
+@router.post("/town/me/requests")
+def town_place_request(b: PlaceRequestIn) -> dict:
+    """Step 3: move in, start a cart or buy a plot. Stored now; the next tick applies it through the Actions gate."""
+    from .town import place
+    c = service.con()
+    try:
+        with db.tx(c):
+            return place.request(c, b.user_id, b.kind, b.inputs)
+    except place.PlaceError as e:
+        raise HTTPException(400, detail={"code": e.code, "message": e.detail})
+
+
 class TownLinkIn(BaseModel):
     town_agent: str = Field(min_length=1, max_length=40)
     user_id: str = Field(default="", max_length=40)

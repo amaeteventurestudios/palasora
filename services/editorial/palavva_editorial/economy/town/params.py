@@ -64,6 +64,11 @@ class Params:
     savings_interest: float = 0.0  # Rule 3: none in v0.1
     rent: bool = False             # default: no rent yet
     max_businesses_per_player: int = 3  # default before the Exchange opens
+    # -- step 3: finding a place (a home, a cart, a plot) ---------------------------------------------------------------
+    cart_cost: int = 40 * C        # a food cart: the cheapest way to start trading, parked at a free plot's kerb
+    carts_per_player: int = 1
+    plot_price_factor: dict = field(default_factory=lambda: {"market": 1.6, "main": 1.2, "harbourside": 1.0, "farmland": 0.6})
+    prime_factor: float = 1.5      # a prime plot (on the market square) costs this much more
     # -- behaviour (rules agents) ----------------------------------------------------------------------------------------
     price_step: float = 0.04       # a stall or seller moves its price by at most 4% a day
     price_range: tuple = (0.6, 1.6)   # owner's default price range, x reference
@@ -91,6 +96,11 @@ class Params:
         lo, hi = self.lanes[self.lane_of[btype]]
         half = (hi - lo) / 2
         return max(0.0, lo - half), hi + half
+
+    def plot_price(self, pl: dict) -> int:
+        """What a free business plot costs: the plot share, by area, more on a prime plot (paid to the Town Hall)."""
+        f = self.plot_price_factor.get(pl["area"], 1.0) * (self.prime_factor if pl.get("prime") else 1.0)
+        return int(round(self.plot_share * f / C)) * C
 
     def as_dict(self) -> dict:
         return asdict(self)

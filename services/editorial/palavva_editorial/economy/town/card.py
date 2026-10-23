@@ -168,11 +168,14 @@ def request(con: sqlite3.Connection, bid: str, user_id: str, kind: str, inputs: 
 
 def apply_requests(w) -> int:
     """Run every queued owner request through the Actions gate, oldest first (called by the tick before agents act)."""
-    from . import actions
+    from . import actions, place
     rows = w.con.execute("SELECT * FROM owner_requests WHERE status='queued' ORDER BY id").fetchall()
     for r in rows:
         inp = json.loads(r["inputs"])
-        res = actions.submit(w, r["actor"], r["kind"], via="human", **inp)
+        if r["kind"] == "move_in":
+            res = place.apply_move_in(w, r)
+        else:
+            res = actions.submit(w, r["actor"], r["kind"], via="human", **inp)
         w.con.execute("UPDATE owner_requests SET status=?, refusal=?, detail=?, done_tick=?, action_id=? WHERE id=?",
                       ("done" if res.ok else "refused", "" if res.ok else res.code, (res.detail or "")[:300], w.tick, res.action_id, r["id"]))
         b = w.biz.get(r["business"])

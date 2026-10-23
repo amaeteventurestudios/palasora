@@ -48,7 +48,7 @@ def test_world_for_a_resident_has_their_plot_agent_and_markers_from_real_events(
 
 def test_world_for_a_visitor_has_no_private_parts(town):
     w = view.world(town, "")
-    assert w["away"] is None and w["markers"] == [] and w["mine"] == {"plot": None, "agents": [], "businesses": [], "resident": False}
+    assert w["away"] is None and w["markers"] == [] and w["mine"] == {"plot": None, "agents": [], "businesses": [], "resident": False, "home": None}
 
 
 def test_unfounded_town_uses_the_fixed_layout():
