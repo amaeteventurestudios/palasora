@@ -13,13 +13,15 @@ import { ResidentCard, ResidentsPanel } from "./ResidentsPanel";
 import { ExchangePanel, ListingCard } from "./ExchangePanel";
 import { GoodCard, MarketPanel } from "./MarketPanel";
 import { JobsPanel } from "./JobsPanel";
+import { PathPanel } from "./PathPanel";
 import type { Good } from "@/lib/world/market";
 import { ZONE_TAKES, soraWhole } from "@/lib/world/place";
+import { lotPlace } from "@/lib/world/districts";
 
 export type CardState =
   | { kind: "plot"; id: string } | { kind: "landmark"; title: string; text: string } | { kind: "away" } | { kind: "agent" }
   | { kind: "place"; plot?: string } | { kind: "travel" } | { kind: "settings" } | { kind: "residents" } | { kind: "resident"; id: string }
-  | { kind: "exchange" } | { kind: "listing"; id: string } | { kind: "market" } | { kind: "good"; good: Good } | { kind: "jobs" };
+  | { kind: "exchange" } | { kind: "listing"; id: string } | { kind: "market" } | { kind: "good"; good: Good } | { kind: "jobs" } | { kind: "path" };
 
 const KIND: Record<string, string> = {
   business_opened: "Opened", business_closed: "Closed", business_sold: "Sold", vote_result: "Town vote", player_arrived: "Arrival", hired: "Hired",
@@ -51,7 +53,7 @@ export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onC
     title = p ? plotTitle(p, b) : "Plot";
     body = !p ? <p>This plot is not on the town map.</p> : (
       <>
-        <p className="text-sm text-[#4b5566]">Plot {p.id} · {AREA_LABEL[p.area] ?? p.area}{p.prime ? " · prime" : ""}{p.id === data.mine.plot ? " · your plot" : ""}</p>
+        <p className="text-sm text-[#4b5566]" data-testid="card-where">{p.area === "suburb" ? lotPlace(p.id) : `Plot ${p.id} · ${AREA_LABEL[p.area] ?? p.area}`}{p.prime ? " · prime" : ""}{p.id === data.mine.plot ? " · your plot" : ""}</p>
         {b && (
           <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm" data-testid="card-business">
             <dt className="text-[#4b5566]">Status</dt>
@@ -67,7 +69,7 @@ export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onC
         {!b && p.area === "town_hall" && <div className="mt-2"><button type="button" className={primary} onClick={onJobs} data-testid="card-open-jobs">See the job board</button></div>}
         {!b && p.area === "market_hall" && <div className="mt-2"><button type="button" className={primary} onClick={() => onMarket()} data-testid="card-open-market">Walk round the stalls</button></div>}
         {!b && p.use === "home" && (p.owner ? <p className="mt-3 text-sm">{p.id === data.mine.home ? "Your home." : "A resident's home."}</p> : (
-          <div className="mt-3 text-sm" data-testid="card-free-home"><p>Free to move into. Homes cost nothing, one each.</p>
+          <div className="mt-3 text-sm" data-testid="card-free-home"><p>{p.area === "suburb" ? "A new lot, laid out for the next person to arrive. Move in and a house goes up here that day; homes cost nothing, one each." : "Free to move into. Homes cost nothing, one each."}</p>
             {!data.mine.home && <div className="mt-2"><button type="button" className={primary} onClick={() => onPlace(p.id)} data-testid="card-move-in">{data.mine.resident ? "Make this my home" : "Move in here"}</button></div>}</div>))}
         {!b && p.auction && (
           <div className="mt-3 text-sm" data-testid="card-auction"><p><span className="font-semibold">At auction · {p.auction.bids ? `highest bid ${soraWhole(p.auction.high)} (${p.auction.bids} bid${p.auction.bids > 1 ? "s" : ""})` : `from ${soraWhole(p.auction.reserve)}`}</span>.
@@ -130,6 +132,9 @@ export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onC
   } else if (card.kind === "good") {
     title = who;
     body = <GoodCard good={card.good} onBack={() => onMarket()} onPlot={onPlot} onTitle={setWho} />;
+  } else if (card.kind === "path") {
+    title = "Your path";
+    body = <PathPanel onGo={(g) => g === "place" ? onPlace() : g === "jobs" ? onJobs() : g === "market" ? onMarket() : onExchange()} />;
   } else if (card.kind === "jobs") {
     title = "Job board";
     body = <JobsPanel onPlot={onPlot} />;

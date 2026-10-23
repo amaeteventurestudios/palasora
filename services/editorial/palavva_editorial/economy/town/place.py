@@ -84,13 +84,18 @@ def me(con: sqlite3.Connection, user_id: str) -> dict:
     p = tuned()
     agent = _resident(con, user_id)
     pending_homes = _queued_plots(con, ("move_in", "claim_home"), user_id)
-    free_homes = [{"plot": r["id"], "x": r["x"], "y": r["y"]} for r in con.execute("SELECT id, x, y FROM plots WHERE use='home' AND owner='' ORDER BY id")
+    from .growth import address
+    # new homes in the suburbs first (a house is built for whoever moves in), then the free homes in the old town
+    free_homes = [{"plot": r["id"], "x": r["x"], "y": r["y"], "area": r["area"], "address": address(r["id"]), "new": r["area"] == "suburb"}
+                  for r in con.execute("SELECT id, x, y, area FROM plots WHERE use='home' AND owner='' ORDER BY area='suburb' DESC, id")
                   if r["id"] not in pending_homes]
     out: dict = {"resident": agent is not None, "agent": agent, "home": None, "balance": 0.0, "businesses": [], "carts": [],
                  "free_homes": free_homes, "for_sale": for_sale(con), "requests": [], "auctions": auction_rows(con, agent), "my_plots": [],
                  "prices": {"cart": p.cart_cost / C, "grant": p.grant_new_player / C, "plot_share": p.plot_share / C,
                             "build": {t: p.build_cost[t] / C for t in TYPES}, "max_businesses": p.max_businesses_per_player},
                  "labels": LABEL}
+    from .path import progress
+    out["path"] = progress(con, agent)
     if user_id:
         out["requests"] = [dict(r) | {"inputs": json.loads(r["inputs"])} for r in con.execute(
             f"SELECT id, kind, inputs, status, refusal, detail, done_tick FROM owner_requests WHERE user_id=? AND kind IN ({','.join('?' * len(PLACE_KINDS))}) "
@@ -226,7 +231,7 @@ def apply_move_in(w, r):
     social.link(w.con, pid, user_id=r["user_id"], display_name=inp.get("name", ""))
     want = inp.get("plot", "")
     if not (want in w.plots and w.plots[want]["use"] == "home" and not w.plots[want]["owner"]):
-        want = next((p["id"] for p in sorted(w.plots.values(), key=lambda p: p["id"]) if p["use"] == "home" and not p["owner"]), "")
+        want = next((p["id"] for p in sorted(w.plots.values(), key=lambda p: (p["area"] != "suburb", p["id"])) if p["use"] == "home" and not p["owner"]), "")
     if not want:
         return actions.Result(True, detail="moved in; no free home yet", data={"agent": pid})
     res = actions.submit(w, pid, "claim_home", via="human", plot=want)

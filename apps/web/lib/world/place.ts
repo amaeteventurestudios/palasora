@@ -9,10 +9,14 @@ export type PlaceData = {
   resident: boolean; agent: string | null; home: string | null; balance: number;
   businesses: { id: string; type: BizType; plot: string; cart: boolean; level: number }[];
   carts: { id: string; type: BizType; plot: string; cart: boolean; level: number }[];
-  free_homes: { plot: string; x: number; y: number }[]; for_sale: ForSale[]; requests: OwnerRequest[]; held?: number;
+  free_homes: { plot: string; x: number; y: number; area?: string; address?: string; new?: boolean }[]; for_sale: ForSale[]; requests: OwnerRequest[]; held?: number;
   auctions: Auction[]; my_plots: { plot: string; area: string; prime: boolean; allowed: BizType[]; total: Partial<Record<BizType, number>> }[];
   prices: { cart: number; grant: number; plot_share: number; build: Record<BizType, number>; max_businesses: number };
+  path?: PathProgress;
 };
+/** Your path: the ladder from newcomer to company owner, read from the town's records (town/path.py). */
+export type PathStep = { key: "home" | "earn" | "business" | "staff" | "trade" | "bigger" | "listed"; title: string; how: string; done: boolean };
+export type PathProgress = { steps: PathStep[]; next: PathStep["key"] | null; done: number; total: number };
 export type Auction = { id: number; plot: string; area: string; prime: boolean; reserve: number; high: number; bids: number; min_bid: number; ends_tick: number;
   hours_left: number; leading: boolean; my_bid: number };
 export type PlaceKind = "move_in" | "claim_home" | "start_cart" | "buy_plot" | "bid" | "build";

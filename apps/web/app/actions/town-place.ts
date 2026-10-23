@@ -10,7 +10,7 @@ import { audit } from "@/lib/audit";
 import type { PlaceData, PlaceKind } from "@/lib/world/place";
 
 const KINDS: PlaceKind[] = ["move_in", "claim_home", "start_cart", "buy_plot", "bid", "build"];
-const PLOT = /^P\d{3}$/, BIZ = /^b\d{3,}$/, TYPES = ["farm", "workshop", "stall", "delivery", "factory"];
+const PLOT = /^[PS]\d{3}$/, BIZ = /^b\d{3,}$/, TYPES = ["farm", "workshop", "stall", "delivery", "factory"];
 
 export async function loadPlace(): Promise<{ signedIn: boolean; data: PlaceData | null }> {
   const session = await getSession(await getTenant());

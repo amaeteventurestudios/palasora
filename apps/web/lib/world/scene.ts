@@ -7,8 +7,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Builder, M, createAdaptiveDpr, createRandom, detectQuality, glowMaterial, hashStr } from "./kit";
-import { createChunks } from "./chunks";
-import { COAST, DISTRICTS, EAST, SEA_Y, WORLD_R, X0, X1, Z0, Z1, ZONE_COLOR, ZONE_LABEL, districtAt, districtStatus, plotZone, zoneAt } from "./districts";
+import { createChunks, type LotState } from "./chunks";
+import { COAST, DISTRICTS, EAST, lotIndex, plotXZ, suburbLots, SEA_Y, WORLD_R, X0, X1, Z0, Z1, ZONE_COLOR, ZONE_LABEL, districtAt, districtStatus, plotZone, zoneAt } from "./districts";
 import { createLife, type LifeInfo, type Station } from "./life";
 import { createGoods } from "./goods";
 import { COLS, PLOT, ROAD, ROWS, TOWN_D, TOWN_W, plotAt, plotCenter, streets, Y_STREETS, type WorldBusiness, type WorldData, type WorldPlot } from "./layout";
@@ -83,6 +83,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
 
   // ---------- static town
   const plotsById = new Map(data.plots.map((p) => [p.id, p]));
+  const suburbPlots = data.plots.filter((p) => p.area === "suburb");
   const bizById = new Map(data.businesses.map((b) => [b.id, b]));
   const bizOnPlot = new Map<string, WorldBusiness>();
   for (const b of data.businesses) if (!b.cart && (b.status === "open" || !bizOnPlot.has(b.plot))) bizOnPlot.set(b.plot, b);
@@ -127,12 +128,15 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   const goods = createGoods({ scene, flows: data.flows ?? [], plots: plotsById, lite: Q.LITE });
 
   // the land beyond the town, built in chunks around the camera
-  const chunks = createChunks({ scene, mat, glowMat: glow.material as THREE.Material, lite: Q.LITE });
+  // Meadowvale growth: the suburb lots laid out so far, which have a house, and which were moved into in the last day
+  const recent = new Set(data.suburb?.recent ?? []);
+  const lotState = new Map(suburbPlots.map((p) => [lotIndex(p.id), (p.owner ? (recent.has(p.id) ? "new" : "home") : "free") as LotState]));
+  const chunks = createChunks({ scene, mat, glowMat: glow.material as THREE.Material, lite: Q.LITE, lots: lotState, population: data.population ?? 0 });
 
   // districts: a tint over each district and over the town's plots by zone, shown with the Districts button
   const zoneB = new Builder();
   for (const d of DISTRICTS) if (d.id !== "old-town") zoneB.box(d.x1 - d.x0 - 0.6, 0.02, d.z1 - d.z0 - 0.6, C(ZONE_COLOR[d.zone]), M((d.x0 + d.x1) / 2, 0.14, (d.z0 + d.z1) / 2));
-  for (const p of data.plots) { const [x, z] = plotCenter(p.x, p.y); zoneB.box(PLOT - 0.2, 0.02, PLOT - 0.2, C(ZONE_COLOR[plotZone(p)]), M(x, 0.2, z)); }
+  for (const p of data.plots) { const [x, z] = plotXZ(p); zoneB.box(PLOT - 0.2, 0.02, PLOT - 0.2, C(ZONE_COLOR[plotZone(p)]), M(x, 0.2, z)); }
   const zoneMesh = new THREE.Mesh(keep(zoneB.geometry()), keep(new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.38, depthWrite: false })));
   zoneMesh.visible = false; zoneMesh.renderOrder = 2;
   scene.add(zoneMesh);
@@ -144,7 +148,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   const rings = new THREE.InstancedMesh(ringGeo, keep(new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.85, depthWrite: false })), Math.max(1, open.length));
   rings.count = open.length;
   open.forEach((b, i) => {
-    const p = plotsById.get(b.plot)!; const [x, z] = plotCenter(p.x, p.y);
+    const p = plotsById.get(b.plot)!; const [x, z] = plotXZ(p);
     rings.setMatrixAt(i, M(x, 0.1, z)); rings.setColorAt(i, C(HEALTH[b.health] ?? HEALTH.green));
   });
   rings.frustumCulled = false;
@@ -155,7 +159,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   const beaconMat = keep(new THREE.MeshBasicMaterial({ color: PAL.gold, transparent: true, opacity: 0.4, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
   const beacons = new THREE.InstancedMesh(beaconGeo, beaconMat, Math.max(1, markerPlots.length));
   beacons.count = markerPlots.length;
-  markerPlots.forEach((p, i) => { const [x, z] = plotCenter(p.x, p.y); beacons.setMatrixAt(i, M(x, 0, z)); });
+  markerPlots.forEach((p, i) => { const [x, z] = plotXZ(p); beacons.setMatrixAt(i, M(x, 0, z)); });
   beacons.frustumCulled = false;
   scene.add(beacons);
 
@@ -173,7 +177,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
 
   const mine = data.mine.plot ? plotsById.get(data.mine.plot) : undefined;
   if (mine) {
-    const fb = new Builder(); const [x, z] = plotCenter(mine.x, mine.y);
+    const fb = new Builder(); const [x, z] = plotXZ(mine);
     fb.cyl(0.035, 0.035, 2.2, 6, C(PAL.white), M(x + 0.95, 1.1, z - 0.95));
     fb.box(0.62, 0.38, 0.03, C(PAL.gold), M(x + 0.95 + 0.31, 1.98, z - 0.95));
     const flag = new THREE.Mesh(keep(fb.geometry()), mat);
@@ -248,7 +252,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   function stopFly() { fly = null; }
   function flyTo(id: string, zoom = 2.4) {
     const p = plotsById.get(id); if (!p) return;
-    const [x, z] = plotCenter(p.x, p.y);
+    const [x, z] = plotXZ(p);
     const to = { tx: x, tz: z, zoom, theta: HOME.theta, phi: HOME.phi };
     if (reduceMotion) { placeCamera(to); return; }
     fly = { from: camState(), to, t: 0, dur: 0.9 };
@@ -284,6 +288,8 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
       const p = data.plots.find((q) => q.x === c.x && q.y === c.y);
       if (p) { select(p.id); opts.onSelect({ kind: "plot", id: p.id }); return; }
     }
+    const lot = suburbPlots.find((q) => { const l = suburbLots()[lotIndex(q.id)]; return l && Math.abs(hit.x - l.x) <= l.w / 2 && Math.abs(hit.z - l.z) <= l.d / 2; });
+    if (lot) { select(lot.id); opts.onSelect({ kind: "plot", id: lot.id }); return; }
     const lm = landmarks.find((l) => hit.x >= l.x0 && hit.x <= l.x1 && hit.z >= l.z0 && hit.z <= l.z1);
     select(null);
     if (lm) { opts.onSelect({ kind: "landmark", id: lm.id, title: lm.title, text: lm.text }); return; }
@@ -295,7 +301,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     selected = id;
     const p = id ? plotsById.get(id) : undefined;
     selRing.visible = !!p;
-    if (p) { const [x, z] = plotCenter(p.x, p.y); selRing.position.set(x, 0.12, z); }
+    if (p) { const [x, z] = plotXZ(p); selRing.position.set(x, 0.12, z); }
   }
 
   /** A card for any point beyond the town's plots: its district, or the countryside. */
@@ -372,7 +378,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     const out: Label[] = [];
     const w = canvas.clientWidth, h = canvas.clientHeight;
     const put = (p: WorldPlot, text: string, tone: Label["tone"], id: string) => {
-      const [x, z] = plotCenter(p.x, p.y); proj.set(x, 1.6, z).project(cam);
+      const [x, z] = plotXZ(p); proj.set(x, 1.6, z).project(cam);
       if (proj.x < -1 || proj.x > 1 || proj.y < -1 || proj.y > 1) return;
       out.push({ id, text, x: ((proj.x + 1) / 2) * w, y: ((1 - proj.y) / 2) * h, tone });
     };
@@ -440,7 +446,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     goods(on) { goods.show(on); },
     pick(list) {
       picked = (list ?? []).map((k) => ({ p: plotsById.get(k.id)!, text: k.text })).filter((k) => k.p);
-      picked.forEach((k, i) => { const [x, z] = plotCenter(k.p.x, k.p.y); picks.setMatrixAt(i, M(x, 0.15, z)); });
+      picked.forEach((k, i) => { const [x, z] = plotXZ(k.p); picks.setMatrixAt(i, M(x, 0.15, z)); });
       picks.count = picked.length; picks.instanceMatrix.needsUpdate = true;
     },
     camera: camState,
@@ -578,6 +584,7 @@ function windowRow(W: Builder, x: number, y: number, z: number, w: number, d: nu
 }
 
 function buildPlot(B: Builder, G: Builder, W: Builder, p: WorldPlot, biz: WorldBusiness | undefined, lived: boolean, tick = 0, stalls = 5) {
+  if (p.area === "suburb") return; // suburb lots are built with their street (chunks.ts)
   const [cx, cz] = plotCenter(p.x, p.y);
   const R = createRandom(hashStr(p.id));
   const IN = PLOT - 0.24;

@@ -21,7 +21,8 @@ def town():
 
 
 def test_layout_matches_genesis_plots(town):
-    stored = {r["id"]: (r["area"], r["x"], r["y"], r["prime"], r["use"]) for r in town.execute("SELECT * FROM plots")}
+    # the town's grid; suburb lots (Meadowvale growth, test_growth.py) are laid out beyond it street by street
+    stored = {r["id"]: (r["area"], r["x"], r["y"], r["prime"], r["use"]) for r in town.execute("SELECT * FROM plots WHERE area != 'suburb'")}
     fixed = {p["id"]: (p["area"], p["x"], p["y"], p["prime"], p["use"]) for p in layout.layout()}
     assert stored == fixed and len(fixed) == layout.WIDTH * layout.DEPTH
     assert sum(1 for p in fixed.values() if p[4] == "home") == layout.HOMES
@@ -30,7 +31,7 @@ def test_layout_matches_genesis_plots(town):
 
 def test_world_for_a_resident_has_their_plot_agent_and_markers_from_real_events(town):
     w = view.world(town, "user-ada")
-    assert w["founded"] and len(w["plots"]) == 120 and w["town"]["slug"]
+    assert w["founded"] and sum(1 for p in w["plots"] if p["area"] != "suburb") == 120 and w["town"]["slug"]
     assert w["mine"]["resident"] and w["mine"]["agents"] == ["p001"]
     plots = {p["id"] for p in w["plots"]}
     for b in w["businesses"]:

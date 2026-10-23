@@ -418,7 +418,9 @@ def h_claim_home(w, a: Agent, plot: str) -> dict:
     w.con.execute("UPDATE plots SET owner=? WHERE id=?", (a.id, plot))
     a.home = (pl["x"], pl["y"])
     w.save_agent(a)
-    w.event("moved_in", [a.id], f"{a.id} moved into the home on plot {plot}", visibility="public", refs={"agent": a.id, "plot": plot})
+    from .growth import address
+    where = f"a new house at {address(plot)}" if pl.get("area") == "suburb" else f"the home on plot {plot}"
+    w.event("moved_in", [a.id], f"{a.id} moved into {where}", visibility="public", refs={"agent": a.id, "plot": plot})
     return {"plot": plot}
 
 
