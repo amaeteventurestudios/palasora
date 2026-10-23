@@ -11,5 +11,5 @@ export default async function Home(props: { searchParams: Promise<Record<string,
   const tenant = await getTenant();
   if (tenant.slug !== "palavva") return <Feed {...props} />;
   const sp = await props.searchParams;
-  return <WorldPage at={typeof sp.at === "string" ? sp.at : undefined} />;
+  return <WorldPage at={typeof sp.at === "string" ? sp.at : undefined} resident={typeof sp.resident === "string" ? sp.resident : undefined} />;
 }

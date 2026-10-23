@@ -9,5 +9,5 @@ export default async function TownPage({ params, searchParams }: { params: Promi
   const { slug } = await params;
   if (!/^[a-z0-9-]{1,60}$/.test(slug)) notFound();
   const sp = await searchParams;
-  return <WorldPage slug={slug} at={typeof sp.at === "string" ? sp.at : undefined} />;
+  return <WorldPage slug={slug} at={typeof sp.at === "string" ? sp.at : undefined} resident={typeof sp.resident === "string" ? sp.resident : undefined} />;
 }

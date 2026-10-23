@@ -550,6 +550,39 @@ def town_place_request(b: PlaceRequestIn) -> dict:
         raise HTTPException(400, detail={"code": e.code, "message": e.detail})
 
 
+@router.get("/town/residents")
+def town_residents(q: str = "", filter: str = "all", viewer: str = "", limit: int = 30, offset: int = 0) -> dict:
+    """The residents directory: live counts, search by name, @handle or address, and the no-home / no-job / following filters."""
+    from .town import residents
+    return residents.directory(service.con(), q[:60], filter if filter in residents.FILTERS else "all", viewer, max(1, min(limit, 100)), max(0, offset))
+
+
+@router.get("/town/residents/{aid}")
+def town_resident(aid: str, viewer: str = "") -> dict:
+    """One resident's card: address, job, income, net worth, neighbours, businesses and recent public events."""
+    from .town import residents
+    out = residents.resident(service.con(), aid[:40], viewer)
+    if out is None:
+        raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "no such resident"})
+    return out
+
+
+class FollowIn(BaseModel):
+    user_id: str = Field(min_length=1, max_length=40)
+    on: bool = True
+
+
+@router.post("/town/residents/{aid}/follow")
+def town_follow(aid: str, b: FollowIn) -> dict:
+    from .town import residents
+    c = service.con()
+    try:
+        with db.tx(c):
+            return residents.follow(c, b.user_id, aid[:40], b.on)
+    except KeyError:
+        raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "no such resident"})
+
+
 class TownLinkIn(BaseModel):
     town_agent: str = Field(min_length=1, max_length=40)
     user_id: str = Field(default="", max_length=40)

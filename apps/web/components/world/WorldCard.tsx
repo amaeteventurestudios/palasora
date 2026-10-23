@@ -1,7 +1,7 @@
 "use client";
 // Cards over the world (Doc 06 section 9.3): a half-height sheet in portrait, a slim right panel in landscape.
 // Phase 6 shows what the town's records say about a place; Phase 7 adds the business numbers from the ledger (BusinessCard).
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { AREA_LABEL, BUSINESS_LABEL, HEALTH_LABEL, plotTitle, townTime, type WorldData } from "@/lib/world/layout";
@@ -9,11 +9,12 @@ import type { Viewer } from "./WorldApp";
 import { useTrap } from "./useTrap";
 import { BusinessCard } from "./BusinessCard";
 import { PlacePanel, type Highlight } from "./PlacePanel";
+import { ResidentCard, ResidentsPanel } from "./ResidentsPanel";
 import { ZONE_TAKES, soraWhole } from "@/lib/world/place";
 
 export type CardState =
   | { kind: "plot"; id: string } | { kind: "landmark"; title: string; text: string } | { kind: "away" } | { kind: "agent" }
-  | { kind: "place"; plot?: string } | { kind: "travel" } | { kind: "settings" };
+  | { kind: "place"; plot?: string } | { kind: "travel" } | { kind: "settings" } | { kind: "residents" } | { kind: "resident"; id: string };
 
 const KIND: Record<string, string> = {
   business_opened: "Opened", business_closed: "Closed", business_sold: "Sold", vote_result: "Town vote", player_arrived: "Arrival", hired: "Hired",
@@ -24,12 +25,13 @@ const KIND: Record<string, string> = {
 const DOT: Record<string, string> = { green: "#3fae6a", yellow: "#e8c33c", orange: "#ec8a3a", red: "#d9483b" };
 const sora = (n: number) => `${n.toLocaleString("en", { maximumFractionDigits: 2 })} Sora`;
 
-export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onClose, onPlot, onPref, onTour, onPlace, onHighlight, onFly }: {
+export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onClose, onPlot, onPref, onTour, onPlace, onHighlight, onFly, onResident }: {
   card: CardState; data: WorldData; viewer: Viewer; prefs: { three: boolean; leftHanded: boolean }; reduceMotion: boolean; reason: string | null;
   onClose(): void; onPlot(id: string): void; onPref(p: Partial<{ three: boolean; leftHanded: boolean }>): void; onTour(): void;
-  onPlace(plot?: string): void; onHighlight(h: Highlight): void; onFly(plot: string): void;
+  onPlace(plot?: string): void; onHighlight(h: Highlight): void; onFly(plot: string): void; onResident(id?: string): void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [who, setWho] = useState("Resident");
   useTrap(ref, onClose);
   let title = "", body: React.ReactNode = null;
   const btn = "inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-semibold";
@@ -102,6 +104,12 @@ export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onC
   } else if (card.kind === "place") {
     title = "Find a place";
     body = <PlacePanel focus={card.plot} onHighlight={onHighlight} onFly={onFly} />;
+  } else if (card.kind === "residents") {
+    title = "Residents";
+    body = <ResidentsPanel town={data.town.name} signedIn={viewer.signedIn} onOpen={onResident} />;
+  } else if (card.kind === "resident") {
+    title = who;
+    body = <ResidentCard id={card.id} onOpen={onResident} onFly={onFly} onPlot={onPlot} onBack={() => onResident()} onTitle={setWho} />;
   } else if (card.kind === "travel") {
     title = "Travel";
     body = (
