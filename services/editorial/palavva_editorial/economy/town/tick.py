@@ -20,13 +20,16 @@ from . import actions, agents, auctions, business as B, card, civic, contracts, 
 from .world import CIVIC, MEAL_HOURS, WORK_HOURS, World
 
 
-def run_tick(w: World, checker) -> None:
+def run_tick(w: World, checker, before_commit=None) -> None:
+    """One hour, in one transaction. `before_commit` runs inside it (the live service saves its snapshot there)."""
     con = w.con
     with db.clock(lambda: w.ts()):
         con.execute("BEGIN IMMEDIATE")
         try:
             _steps(w)
             checker.tick(w.tick)
+            if before_commit is not None:
+                before_commit()
         except BaseException:
             con.execute("ROLLBACK")
             raise
