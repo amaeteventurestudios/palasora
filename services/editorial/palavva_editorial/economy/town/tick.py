@@ -16,7 +16,7 @@ from __future__ import annotations
 import math
 
 from .. import db
-from . import actions, agents, auctions, business as B, card, civic, contracts, delivery, goods, market, reports, shares
+from . import actions, agents, auctions, business as B, card, civic, contracts, delivery, goods, jobs, market, reports, shares
 from .world import CIVIC, MEAL_HOURS, WORK_HOURS, World
 
 
@@ -55,6 +55,7 @@ def _steps(w: World) -> None:
     auctions.list_daily(w)
     card.apply_requests(w)
     act(w, agents.decide(w))
+    jobs.publish(w)
     # 5. produce
     if h in WORK_HOURS:
         for a in w.agents.values():

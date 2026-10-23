@@ -10,7 +10,7 @@ import { audit } from "@/lib/audit";
 import type { BusinessCardData, RequestKind } from "@/lib/world/card";
 
 const BIZ = /^b\d{3,}$/;
-const KINDS: RequestKind[] = ["set_price", "set_wage", "hire", "fire", "upgrade", "end_contract", "close_business", "list_shares"];
+const KINDS: RequestKind[] = ["set_price", "set_wage", "hire", "fire", "upgrade", "end_contract", "close_business", "list_shares", "post_job", "stop_hiring"];
 
 export async function loadBusinessCard(bid: string): Promise<BusinessCardData | null> {
   if (!BIZ.test(bid)) return null;

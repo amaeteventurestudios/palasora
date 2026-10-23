@@ -146,6 +146,7 @@ def seed_town(pb: PB, t: dict) -> dict:
         _seed_books(con)
         _seed_shares(con)
         _seed_market(con)
+        _seed_jobs(con)
     return social.relay(con, pb, t["id"])
 
 
@@ -260,6 +261,16 @@ def _seed_market(con) -> None:
     con.executemany("INSERT INTO stock(holder, good, qty, reserved) VALUES (?,?,?,?)",
                     [("company:b007", "crops", 64, 40), ("company:b007", "tools", 2, 0), ("company:b002", "crops", 18, 10),
                      ("company:b008", "tools", 9, 6), ("company:b005", "crops", 25, 0)])
+
+
+def _seed_jobs(con) -> None:
+    """Hiring and job boards: the food factory b009 is hiring 2 at 22.00 Sora a day (it already took on h013), workshop b003
+    1 at 16.00; h011 and h012 work the Town Hall's civic job. Stall b001 (the reader's) keeps h010."""
+    con.execute("UPDATE businesses SET wage=2200 WHERE id='b009'")
+    con.executemany("INSERT INTO job_openings(business, slots, wage, posted_tick, updated_tick) VALUES (?,?,?,?,?)",
+                    [("b009", 2, 2200, 10, 11), ("b003", 1, 1600, 12, 12)])
+    con.executemany("INSERT INTO jobs(employer, worker, wage, start_tick) VALUES (?,?,?,?)",
+                    [("civic", "h011", 2000, 9), ("civic", "h012", 2000, 9), ("b009", "h013", 2200, 11)])
 
 def main() -> None:
     if os.environ.get("PALAVVA_ENV") != "test":

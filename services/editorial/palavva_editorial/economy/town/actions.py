@@ -167,7 +167,30 @@ def h_apply_job(w, a: Agent, employer: str) -> dict:
 
 
 def h_quit_job(w, a: Agent) -> dict:
-    w.set_job(a, None)
+    """Leave a job; an owner goes back to working in their own business, anyone else looks for work at the next hour."""
+    own = next((x for x in a.businesses if x in w.biz and w.biz[x].status == "open" and not w.biz[x].cart), None)
+    w.set_job(a, f"own:{own}" if own else None)
+    return {"back_to": own or ""}
+
+
+def h_post_job(w, a: Agent, business: str, slots: int, wage: int) -> dict:
+    """An owner's job post: how many to take on and the day's wage (the wage applies to the whole team, as on the card)."""
+    b = _own_biz(w, a, business)
+    if wage < w.p.civic_wage // 2:
+        raise Refused("WAGE_TOO_LOW", "below half the civic wage")
+    room = b.max_hires(w.p) - len(b.workers)
+    if slots < 1 or slots > room:
+        raise Refused("NO_SLOT", f"room for {max(room, 0)} more at this level")
+    b.wage = int(wage)
+    b.acc["hiring"] = int(slots)
+    b.last_change_day = w.day
+    w.event("job_posted", [a.id, b.id], f"{b.id} is hiring {slots} at {b.wage / C:.0f} Sora a day", visibility="town", refs={"business": b.id})
+    return {"open_slots": slots}
+
+
+def h_stop_hiring(w, a: Agent, business: str) -> dict:
+    b = _own_biz(w, a, business)
+    b.acc["hiring"] = 0
     return {}
 
 
@@ -595,7 +618,7 @@ def h_pay(w, a: Agent, to: str, amount: int) -> dict:
 
 
 HANDLERS = {
-    "apply_job": h_apply_job, "quit_job": h_quit_job, "hire": h_hire, "fire": h_fire, "set_wage": h_set_wage,
+    "apply_job": h_apply_job, "quit_job": h_quit_job, "post_job": h_post_job, "stop_hiring": h_stop_hiring, "hire": h_hire, "fire": h_fire, "set_wage": h_set_wage,
     "set_price": h_set_price, "place_order": h_place_order, "cancel_order": h_cancel_order, "sign_contract": h_sign_contract,
     "end_contract": h_end_contract, "import_materials": h_import_materials, "import_crops": h_import_crops, "sell_floor": h_sell_floor, "buy_meal": h_buy_meal, "eat_own": h_eat_own,
     "build": h_build, "upgrade": h_upgrade, "close_business": h_close_business, "buy_business": h_buy_business,

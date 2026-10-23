@@ -19,12 +19,12 @@ export type BusinessCardData = {
   shares?: { listed: boolean; delisted?: boolean; price?: number; ipo_price?: number; dividend?: number; holders?: number; eligible?: boolean; why?: string; listing_price?: number; max_offer?: number };
   manage?: { owner_agent: string; price_min: number; price_max: number; wage_min: number; upgrade_cost: number; max_staff: number; staff: number; requests: OwnerRequest[] };
 };
-export type RequestKind = "set_price" | "set_wage" | "hire" | "fire" | "upgrade" | "end_contract" | "close_business" | "list_shares";
+export type RequestKind = "set_price" | "set_wage" | "hire" | "fire" | "upgrade" | "end_contract" | "close_business" | "list_shares" | "post_job" | "stop_hiring";
 
 export const PERIOD_LABEL = { day: "Today", week: "7 days", month: "30 days" } as const;
 export const REQUEST_LABEL: Record<string, string> = {
   set_price: "Change price", set_wage: "Change wage", hire: "Hire", fire: "Let someone go", upgrade: "Upgrade", end_contract: "End contract", close_business: "Close business", list_shares: "List shares",
-  place_order: "Market Hall order", cancel_order: "Cancel Market Hall order",
+  place_order: "Market Hall order", cancel_order: "Cancel Market Hall order", post_job: "Post a job", stop_hiring: "Stop hiring",
 };
 export const REFUSAL_LABEL: Record<string, string> = {
   PRICE_RANGE: "outside the price range your agent is allowed", WAGE_TOO_LOW: "below half the civic wage", NO_SLOT: "no room for that",
