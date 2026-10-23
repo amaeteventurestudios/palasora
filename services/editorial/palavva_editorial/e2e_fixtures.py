@@ -144,6 +144,7 @@ def seed_town(pb: PB, t: dict) -> dict:
         for i, (tick, kind, who, vis, refs, text) in enumerate(rows, start=1):
             events.emit(con, seq=i, tick=tick, kind=kind, who=who, visibility=vis, refs=refs, text=text)
         _seed_books(con)
+        _seed_shares(con)
     return social.relay(con, pb, t["id"])
 
 
@@ -174,6 +175,43 @@ def _seed_books(con) -> None:
     at(13, kind="sink", src=b001, dst=hall, amount=300, rule="plot_upkeep", ref_type="business", ref_id="b001")
     con.execute("INSERT INTO jobs(employer, worker, wage, start_tick) VALUES ('b001','h010',1500,10)")
     con.execute("INSERT INTO stock(holder, good, qty, reserved) VALUES ('company:b001','meals',6,0), ('company:b001','crops',14,0)")
+
+
+def _seed_shares(con) -> None:
+    """Company shares: house stall b005 (h023) is listed on the Town Exchange. 300 of its 1,000 shares were offered at 4.20
+    Sora; p002 bought 25, so 275 still rest for sale, and last Sunday it paid 0.30 Sora a share to both holders."""
+    from .economy import db as edb, ledger
+    from .economy.town.world import EPOCH
+    shr = "SHR:b005"
+    hall = ledger.account(con, *ledger.TOWN_HALL)["id"]
+    mint = ledger.account(con, "platform", "mint:b005", shr)["id"]
+    own_s, buy_s = ledger.account(con, "agent", "h023", shr, "seed:h023")["id"], ledger.account(con, "human", "p002", shr, "user:p002")["id"]
+    own_c, buy_c = ledger.account(con, "agent", "h023", edb.SORA, "seed:h023")["id"], ledger.account(con, "human", "p002", edb.SORA, "user:p002")["id"]
+    biz = ledger.account(con, "company", "b005", edb.SORA, "seed:h023")["id"]
+    n = 0
+
+    def at(tick, fn=ledger.transfer, **kw):
+        nonlocal n
+        n += 1
+        with edb.clock(lambda: EPOCH + tick * 3600 + 30 + n):
+            if fn is ledger.transfer:
+                kw.update(src_bucket="available", dst_bucket="available", txn_id=f"t{tick}")
+            fn(con, idem_key=f"e2e-shares-{n}", **kw)
+
+    at(0, kind="ipo_shares", src=mint, dst=own_s, asset=shr, amount=1000, ref_type="business", ref_id="b005")
+    at(0, kind="issue", src=hall, dst=biz, asset=edb.SORA, amount=50000, rule="genesis")
+    at(9, kind="issue", src=hall, dst=buy_c, asset=edb.SORA, amount=30000, rule="new_player_grant")
+    con.execute("INSERT INTO share_listings(business, listed_tick, ipo_price, ipo_qty, status) VALUES ('b005', 1, 420, 300, 'listed')")
+    con.execute("""INSERT INTO share_orders(id, idem_key, business, holder, owner_key, side, price, qty, filled, status, reserved_left, tick, expires_tick, reason) VALUES
+                   (1, 'e2e-sorder-1', 'b005', 'h023', 'seed:h023', 'sell', 420, 300, 25, 'partial', 275, 1, 337, 'listing'),
+                   (2, 'e2e-sorder-2', 'b005', 'p002', 'user:p002', 'buy', 420, 25, 25, 'filled', 0, 10, 82, '')""")
+    at(1, fn=ledger.reserve, acct_id=own_s, asset=shr, amount=275, ref_type="share_order", ref_id="1", txn_id="t1")
+    at(10, kind="trade_cash", src=buy_c, dst=own_c, asset=edb.SORA, amount=420 * 25, ref_type="share_order", ref_id="2", rule="town_exchange")
+    at(10, kind="trade_shares", src=own_s, dst=buy_s, asset=shr, amount=25, ref_type="share_order", ref_id="2", rule="town_exchange")
+    con.execute("INSERT INTO share_trades(business, buy_order, sell_order, buyer, seller, price, qty, tick) VALUES ('b005', 2, 1, 'p002', 'h023', 420, 25, 10)")
+    at(11, kind="transfer", src=biz, dst=own_c, asset=edb.SORA, amount=975 * 30, ref_type="business", ref_id="b005", rule="dividend")
+    at(11, kind="transfer", src=biz, dst=buy_c, asset=edb.SORA, amount=25 * 30, ref_type="business", ref_id="b005", rule="dividend")
+    con.execute("INSERT INTO share_dividends(business, tick, per_share, total, holders) VALUES ('b005', 11, 30, 30000, 2)")
 
 
 def main() -> None:

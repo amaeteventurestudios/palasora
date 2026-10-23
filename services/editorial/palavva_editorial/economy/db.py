@@ -90,6 +90,26 @@ CREATE TABLE IF NOT EXISTS auctions (
   bids INTEGER NOT NULL DEFAULT 0, winner TEXT NOT NULL DEFAULT '', price INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_auctions_status ON auctions (status, plot);
+CREATE TABLE IF NOT EXISTS share_listings (
+  business TEXT PRIMARY KEY, listed_tick INTEGER NOT NULL, ipo_price INTEGER NOT NULL CHECK (ipo_price > 0), ipo_qty INTEGER NOT NULL CHECK (ipo_qty > 0),
+  status TEXT NOT NULL CHECK (status IN ('listed','delisted'))
+);
+CREATE TABLE IF NOT EXISTS share_orders (
+  id INTEGER PRIMARY KEY, idem_key TEXT NOT NULL UNIQUE, business TEXT NOT NULL, holder TEXT NOT NULL, owner_key TEXT NOT NULL,
+  side TEXT NOT NULL CHECK (side IN ('buy','sell')), price INTEGER NOT NULL CHECK (price > 0), qty INTEGER NOT NULL CHECK (qty > 0),
+  filled INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL CHECK (status IN ('open','partial','filled','cancelled')),
+  reserved_left INTEGER NOT NULL DEFAULT 0 CHECK (reserved_left >= 0), tick INTEGER NOT NULL, expires_tick INTEGER NOT NULL, reason TEXT NOT NULL DEFAULT '',
+  CHECK (filled <= qty)
+);
+CREATE INDEX IF NOT EXISTS idx_share_orders_book ON share_orders (business, side, status, price, id);
+CREATE TABLE IF NOT EXISTS share_trades (
+  id INTEGER PRIMARY KEY, business TEXT NOT NULL, buy_order INTEGER NOT NULL, sell_order INTEGER NOT NULL, buyer TEXT NOT NULL, seller TEXT NOT NULL,
+  price INTEGER NOT NULL, qty INTEGER NOT NULL, tick INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_share_trades_biz ON share_trades (business, id);
+CREATE TABLE IF NOT EXISTS share_dividends (
+  id INTEGER PRIMARY KEY, business TEXT NOT NULL, tick INTEGER NOT NULL, per_share INTEGER NOT NULL, total INTEGER NOT NULL, holders INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS bids (
   id INTEGER PRIMARY KEY, auction INTEGER NOT NULL, bidder TEXT NOT NULL, amount INTEGER NOT NULL CHECK (amount > 0), tick INTEGER NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('leading','outbid','won'))

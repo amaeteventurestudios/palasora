@@ -37,12 +37,13 @@ def world(con: sqlite3.Connection, viewer: str = "", since_hours: int = 48) -> d
             p["price"] = prices.plot_price(p) / C
     names = {r["town_agent"]: r["display_name"] for r in con.execute("SELECT town_agent, display_name FROM town_links WHERE display_name != ''")}
     biz = []
+    listed = {r["business"] for r in con.execute("SELECT business FROM share_listings WHERE status='listed'")}
     for b in con.execute("SELECT id, type, plot, owner, price, wage, level, health, status, opened_tick, cart FROM businesses ORDER BY id"):
         if b["plot"] not in by_id:
             continue
         row = {"id": b["id"], "type": b["type"], "plot": b["plot"], "owner": b["owner"], "owner_name": names.get(b["owner"], ""),
                "level": b["level"], "health": b["health"], "status": b["status"], "price_sora": b["price"] / C, "wage_sora": b["wage"] / C,
-               "opened_tick": b["opened_tick"], "cart": bool(b["cart"])}
+               "opened_tick": b["opened_tick"], "cart": bool(b["cart"]), "listed": b["id"] in listed}
         biz.append(row)
         if b["status"] == "open" and not b["cart"]:  # a cart stands at the kerb; the plot stays free
             by_id[b["plot"]]["business"] = b["id"]

@@ -8,7 +8,7 @@ export type WorldPlot = { id: string; area: string; x: number; y: number; size: 
 /** Goods on the move (step 4): a contract's daily route or the last day's deliveries, from plot to plot. */
 export type GoodsFlow = { from: string; to: string; good: "crops" | "meals" | "tools" | "materials"; qty: number; kind: "contract" | "delivery"; moving: boolean };
 export type WorldBusiness = { id: string; type: "farm" | "workshop" | "stall" | "delivery" | "factory"; plot: string; owner: string; owner_name: string; level: number;
-  health: "green" | "yellow" | "orange" | "red"; status: "open" | "closed"; price_sora: number; wage_sora: number; opened_tick?: number; cart?: boolean };
+  health: "green" | "yellow" | "orange" | "red"; status: "open" | "closed"; price_sora: number; wage_sora: number; opened_tick?: number; cart?: boolean; listed?: boolean };
 export type AwayItem = { event: string; kind: string; text: string; tick: number; yours: boolean; plot: string | null };
 export type WorldData = {
   town: { id: string; name: string; slug: string }; tick: number; population?: number; grid: { w: number; d: number }; founded: boolean; plots: WorldPlot[];

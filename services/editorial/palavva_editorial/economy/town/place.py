@@ -17,7 +17,9 @@ import time
 from . import auctions as AU, social
 from .params import C, TYPES, tuned
 
-KINDS = ("move_in", "claim_home", "start_cart", "buy_plot", "bid", "build")
+KINDS = ("move_in", "claim_home", "start_cart", "buy_plot", "bid", "build", "buy_shares", "sell_shares", "cancel_share_order")
+SHARE_KINDS = ("buy_shares", "sell_shares", "cancel_share_order")  # stored without a business, so they never show on its owner's card
+PLACE_KINDS = tuple(k for k in KINDS if k not in SHARE_KINDS)        # share orders show on their listing, not in Find a place
 ALLOWED = {"farmland": ("farm",), "harbourside": ("workshop", "delivery", "factory"), "market": ("stall", "delivery"), "main": ("stall", "delivery")}
 LABEL = {"farm": "Farm", "workshop": "Workshop", "stall": "Food stall", "delivery": "Delivery depot", "factory": "Food factory"}
 
@@ -90,8 +92,8 @@ def me(con: sqlite3.Connection, user_id: str) -> dict:
                  "labels": LABEL}
     if user_id:
         out["requests"] = [dict(r) | {"inputs": json.loads(r["inputs"])} for r in con.execute(
-            f"SELECT id, kind, inputs, status, refusal, detail, done_tick FROM owner_requests WHERE user_id=? AND kind IN ({','.join('?' * len(KINDS))}) "
-            "ORDER BY id DESC LIMIT 8", (user_id, *KINDS))]
+            f"SELECT id, kind, inputs, status, refusal, detail, done_tick FROM owner_requests WHERE user_id=? AND kind IN ({','.join('?' * len(PLACE_KINDS))}) "
+            "ORDER BY id DESC LIMIT 8", (user_id, *PLACE_KINDS))]
     if agent is None:
         return out
     h = con.execute("SELECT id FROM plots WHERE use='home' AND owner=?", (agent,)).fetchone()
@@ -138,7 +140,26 @@ def request(con: sqlite3.Connection, user_id: str, kind: str, inputs: dict) -> d
         if agent is None:
             raise PlaceError("NOT_RESIDENT", "move in first")
         sale = {r["plot"]: r for r in for_sale(con)}
-        if kind == "bid":
+        if kind in ("buy_shares", "sell_shares"):
+            from . import shares
+            bid = str(inputs.get("business", ""))
+            lst = shares.listing(con, bid)
+            if lst is None or lst["status"] != "listed":
+                raise PlaceError("NOT_LISTED", "that business is not on the Town Exchange")
+            price = int(round(float(inputs.get("price", 0) or 0) * C))
+            qty = int(inputs.get("qty", 0) or 0)
+            ref = shares.last_price(con, bid)
+            if price <= 0 or not 1 <= qty <= 500:
+                raise PlaceError("BAD_INPUT", "a price above zero and between 1 and 500 shares")
+            if abs(price - ref) > ref * shares.BAND:
+                raise PlaceError("PRICE_BAND", f"the price must be within {int(shares.BAND * 100)}% of {ref / C:.2f} Sora")
+            clean = {"business": bid, "price": price, "qty": qty}
+        elif kind == "cancel_share_order":
+            o = con.execute("SELECT business FROM share_orders WHERE id=? AND holder=? AND status IN ('open','partial')", (int(inputs.get("order", 0) or 0), agent)).fetchone()
+            if o is None:
+                raise PlaceError("BAD_INPUT", "no such open order of yours")
+            clean = {"order": int(inputs.get("order")), "share_business": o["business"]}
+        elif kind == "bid":
             au = next((a for a in AU.open_auctions(con) if a["id"] == int(inputs.get("auction", 0) or 0)), None)
             if au is None:
                 raise PlaceError("CLOSED", "that auction has ended")
@@ -177,7 +198,7 @@ def request(con: sqlite3.Connection, user_id: str, kind: str, inputs: dict) -> d
     if kind == "move_in" and con.execute("SELECT 1 FROM owner_requests WHERE user_id=? AND kind='move_in' AND status='queued'", (user_id,)).fetchone():
         raise PlaceError("ALREADY", "your move is already waiting for the next hour")
     cur = con.execute("INSERT INTO owner_requests(business, actor, user_id, kind, inputs, created_at) VALUES (?,?,?,?,?,?)",
-                      (clean.get("business", ""), agent or "", user_id, kind, json.dumps(clean, sort_keys=True), time.time()))
+                      ("" if kind in SHARE_KINDS else clean.get("business", ""), agent or "", user_id, kind, json.dumps(clean, sort_keys=True), time.time()))
     return {"id": cur.lastrowid, "status": "queued", "kind": kind, "inputs": clean}
 
 

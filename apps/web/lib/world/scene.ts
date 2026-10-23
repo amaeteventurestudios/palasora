@@ -760,11 +760,13 @@ function scaffold(B: Builder) {
   B.box(0.04, 0.04, 0.5, pole, M(0.8, 1.22, 0.35)); B.cyl(0.006, 0.006, 0.5, 3, C("#3a4048"), M(0.8, 0.97, 0.58));
 }
 
-/** The shop sign at the plot's corner carries the owner's colour. */
+/** The shop sign at the plot's corner carries the owner's colour; a business listed on the Town Exchange wears a gold
+ *  coin on top of its sign. */
 function sign(B: Builder, cx: number, cz: number, b: WorldBusiness) {
   const own = C(OWNER[hashStr(b.owner) % OWNER.length]);
   B.cyl(0.02, 0.02, 0.7, 4, C(PAL.white), M(cx + 0.95, 0.45, cz + 0.95));
   B.box(0.36, 0.22, 0.03, own, M(cx + 0.95, 0.75, cz + 0.95));
+  if (b.listed) B.cyl(0.1, 0.1, 0.03, 12, C(PAL.gold), M(cx + 0.95, 0.97, cz + 0.95, 0, Math.PI / 2));
 }
 
 function buildDressing(B: Builder, G: Builder, W: Builder, R: Rand, landmarks: { id: string; title: string; text: string; x0: number; x1: number; z0: number; z1: number }[]) {
