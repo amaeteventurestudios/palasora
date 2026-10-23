@@ -42,7 +42,7 @@ function fallbackReason(prefs: Prefs): string | null {
   return null;
 }
 
-export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer: Viewer; at?: string }) {
+export function WorldApp({ data, viewer, at, resident }: { data: WorldData | null; viewer: Viewer; at?: string; resident?: string }) {
   const [view, setView] = useState<View | null>(null);
   const [reason, setReason] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<Prefs>({ three: true, leftHanded: false });
@@ -64,11 +64,11 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
 
   // "Since you left": once per visit, when there is something real to show
   useEffect(() => {
-    if (!data?.away || !view || view === "list" || at) return;
+    if (!data?.away || !view || view === "list" || at || resident) return;
     const key = `palasora.away.${data.away.since_tick}.${data.tick}`;
     try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, "1"); } catch { /* ignore */ }
     if (data.away.items.length || data.mine.resident) setCard({ kind: "away" });
-  }, [data, view, at]);
+  }, [data, view, at, resident]);
 
   const covered = !!menu || !!card;
   // on a portrait phone a card covers the bottom half: keep the place it is about in the visible half above it
@@ -98,7 +98,8 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
   const onReady = useCallback((h: WorldHandle) => {
     world.current = h;
     if (at) { h.select(at); h.flyTo(at); setCard({ kind: "plot", id: at }); }
-  }, [at]);
+    else if (resident) setCard({ kind: "resident", id: resident });
+  }, [at, resident]);
 
   // remember the camera when leaving for a full page, so "Back to town" lands on the same view
   useEffect(() => {
@@ -175,6 +176,7 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
         <WorldCard card={card} data={data} viewer={viewer} prefs={prefs} reduceMotion={reduce || view !== "3d"} reason={reason}
           onClose={() => { setCard(null); setSelected(null); world.current?.select(null); world.current?.stopTour(); }}
           onPlot={openPlot} onPref={setPref} onPlace={(plot) => setCard({ kind: "place", plot })} onHighlight={onHighlight}
+          onResident={(id) => setCard(id ? { kind: "resident", id } : { kind: "residents" })}
           onFly={(id) => { setSelected(id); world.current?.select(id); world.current?.flyTo(id, 2.2); }}
           onTour={() => { const ids = data.markers.map((m) => m.plot); setCard(null); world.current?.tour(ids, () => setCard({ kind: "away" })); }} />
       )}
@@ -252,6 +254,7 @@ function MainMenu({ viewer, leftHanded, onClose, onCard, onList }: { viewer: Vie
     { title: "Agents and places", items: [
       { label: "My Agents", href: "/my-agents", icon: Bot, badge: viewer.waiting },
       { label: "Find a place", icon: MapPin, on: () => onCard({ kind: "place" }), testid: "menu-place" },
+      { label: "Residents", icon: Users, on: () => onCard({ kind: "residents" }), testid: "menu-residents" },
       { label: "Towns and Districts", icon: MapIcon, on: () => onCard({ kind: "travel" }) },
       { label: "Businesses", href: "/businesses", icon: Store },
     ] },

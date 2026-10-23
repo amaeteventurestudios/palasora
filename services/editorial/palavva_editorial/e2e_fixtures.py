@@ -5,6 +5,7 @@ member. All output is is_fixture/is_demo. (The synthetic news feed it used to in
 """
 from __future__ import annotations
 
+import json
 import os
 
 from . import config
@@ -123,6 +124,13 @@ def seed_town(pb: PB, t: dict) -> dict:
         con.execute("""INSERT INTO deliveries(src, dst, good, qty, cart, fee, status, created_tick, due_tick) VALUES
                        ('company:b003','company:b006','materials',12,'b004',0,'moving',12,15)""")
         con.execute("INSERT INTO auctions(plot, reserve, start_tick, end_tick, status) VALUES ('P604', 12000, 9, 33, 'open')")
+        # the residents directory: who lives where (house agents share the town's homes; p002 has no home yet)
+        homes = {"h010": (4.1, 0.2), "h011": (4.2, -0.1), "h012": (5.0, 0.1), "h013": (5.1, 0.9), "h014": (4.0, 1.1), "h020": (6.0, 0.0),
+                 "h021": (6.1, 1.0), "h022": (7.0, 0.1), "h023": (7.1, 1.1), "h024": (8.0, 0.0), "h025": (8.2, 1.0), "h026": (9.0, 0.1)}
+        con.executemany("INSERT OR IGNORE INTO town_agents(id, kind, role, owner_kind, owner_key, home, arrived_tick) VALUES (?,?,?,?,?,?,0)",
+                        [(a, "house", "entrepreneur" if a >= "h020" else "worker" if a == "h010" else "consumer", "agent", f"seed:{a}", json.dumps(xy))
+                         for a, xy in homes.items()]
+                        + [("p001", "player", "entrepreneur", "human", "user:p001", "[3, 0]"), ("p002", "player", "entrepreneur", "human", "user:p002", "")])
         rows = [(8, "player_arrived", ["p001"], "public", {"agent": "p001"}, "p001 arrived in town"),
                 (9, "business_opened", ["p001", "b001"], "public", {"business": "b001", "plot": "P405"}, "A new stall opened on plot P405 (run by p001)"),
                 (10, "hired", ["h010", "p001", "b001"], "owner", {"business": "b001"}, "h010 started work at b001 for 15 Sora a day"),

@@ -7,6 +7,7 @@ import { getSession, isStaff } from "@/lib/session";
 import { pb, q } from "@/lib/pb";
 import { economyGet } from "@/lib/economy";
 import type { WorldData } from "@/lib/world/layout";
+import { RESIDENT_ID } from "@/lib/world/residents";
 import { WorldApp } from "./WorldApp";
 
 export async function worldMetadata(): Promise<Metadata> {
@@ -15,7 +16,7 @@ export async function worldMetadata(): Promise<Metadata> {
 
 const PLOT_ID = /^P\d{3}$/;
 
-export async function WorldPage({ slug, at }: { slug?: string; at?: string }) {
+export async function WorldPage({ slug, at, resident }: { slug?: string; at?: string; resident?: string }) {
   const tenant = await getTenant();
   const session = await getSession(tenant);
   const [data, unread] = await Promise.all([
@@ -25,5 +26,5 @@ export async function WorldPage({ slug, at }: { slug?: string; at?: string }) {
   if (slug && data && slug !== data.town.slug) notFound(); // one town for now; more towns come with Travel (phase 8)
   const viewer = { signedIn: !!session, name: session ? String(session.user.display_name || session.user.handle || "") : "", handle: session ? String(session.user.handle ?? "") : "",
     staff: isStaff(session), unread, waiting: 0 };
-  return <WorldApp data={data} viewer={viewer} at={at && PLOT_ID.test(at) ? at : undefined} />;
+  return <WorldApp data={data} viewer={viewer} at={at && PLOT_ID.test(at) ? at : undefined} resident={resident && RESIDENT_ID.test(resident) ? resident : undefined} />;
 }
