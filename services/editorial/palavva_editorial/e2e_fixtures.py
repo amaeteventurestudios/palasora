@@ -116,6 +116,13 @@ def seed_town(pb: PB, t: dict) -> dict:
                        ('b007','farm','P903','h025',170,1300,'open',30000,0,'green'), ('b008','workshop','P706','h026',380,1600,'open',50000,0,'green')""")
         social.link(con, "p001", user_id=reader["id"] if reader else "", display_name="Local Reader's agent")
         con.execute("UPDATE plots SET owner='p001' WHERE id='P003'")  # step 3: p001 lives in the home on P003
+        # step 4: goods routes between the businesses (vans on the streets) and one plot at auction (reserve 120 Sora, 20 hours left)
+        con.execute("""INSERT INTO contracts(id, seller, buyer, good, qty_per_day, price, start_day, end_day, status) VALUES
+                       ('k001','b002','b001','crops',20,90,0,14,'active'), ('k002','b007','b005','crops',30,85,0,14,'active'),
+                       ('k003','b008','b004','tools',6,350,0,14,'active')""")
+        con.execute("""INSERT INTO deliveries(src, dst, good, qty, cart, fee, status, created_tick, due_tick) VALUES
+                       ('company:b003','company:b006','materials',12,'b004',0,'moving',12,15)""")
+        con.execute("INSERT INTO auctions(plot, reserve, start_tick, end_tick, status) VALUES ('P604', 12000, 9, 33, 'open')")
         rows = [(8, "player_arrived", ["p001"], "public", {"agent": "p001"}, "p001 arrived in town"),
                 (9, "business_opened", ["p001", "b001"], "public", {"business": "b001", "plot": "P405"}, "A new stall opened on plot P405 (run by p001)"),
                 (10, "hired", ["h010", "p001", "b001"], "owner", {"business": "b001"}, "h010 started work at b001 for 15 Sora a day"),

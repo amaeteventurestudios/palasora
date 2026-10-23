@@ -84,6 +84,16 @@ CREATE INDEX IF NOT EXISTS idx_companies_market ON companies (market, status);
 # stock = made + imported - eaten - worn - exported for every good, holder and tick (Doc 04 section 5, invariant 2).
 # Holders are 'kind:id' keys matching ledger accounts (company:b001, agent:h001, human:p001) plus platform:transit.
 TOWN_SCHEMA = """
+CREATE TABLE IF NOT EXISTS auctions (
+  id INTEGER PRIMARY KEY, plot TEXT NOT NULL, reserve INTEGER NOT NULL CHECK (reserve > 0), start_tick INTEGER NOT NULL, end_tick INTEGER NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('open','sold','unsold')), high INTEGER NOT NULL DEFAULT 0, high_bidder TEXT NOT NULL DEFAULT '',
+  bids INTEGER NOT NULL DEFAULT 0, winner TEXT NOT NULL DEFAULT '', price INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_auctions_status ON auctions (status, plot);
+CREATE TABLE IF NOT EXISTS bids (
+  id INTEGER PRIMARY KEY, auction INTEGER NOT NULL, bidder TEXT NOT NULL, amount INTEGER NOT NULL CHECK (amount > 0), tick INTEGER NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('leading','outbid','won'))
+);
 CREATE TABLE IF NOT EXISTS owner_requests (
   id INTEGER PRIMARY KEY, business TEXT NOT NULL, actor TEXT NOT NULL, user_id TEXT NOT NULL, kind TEXT NOT NULL, inputs TEXT NOT NULL DEFAULT '{}',
   status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued','done','refused','withdrawn')), refusal TEXT NOT NULL DEFAULT '', detail TEXT NOT NULL DEFAULT '',

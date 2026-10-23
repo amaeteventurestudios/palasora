@@ -10,10 +10,11 @@ import { Builder, M, createAdaptiveDpr, createRandom, detectQuality, glowMateria
 import { createChunks } from "./chunks";
 import { COAST, DISTRICTS, EAST, SEA_Y, WORLD_R, X0, X1, Z0, Z1, ZONE_COLOR, ZONE_LABEL, districtAt, districtStatus, plotZone, zoneAt } from "./districts";
 import { createLife, type LifeInfo, type Station } from "./life";
+import { createGoods } from "./goods";
 import { COLS, PLOT, ROAD, ROWS, TOWN_D, TOWN_W, plotAt, plotCenter, streets, Y_STREETS, type WorldBusiness, type WorldData, type WorldPlot } from "./layout";
 
 export type Selection = { kind: "plot"; id: string } | { kind: "landmark"; id: string; title: string; text: string };
-export type Label = { id: string; text: string; x: number; y: number; tone: "mine" | "selected" | "marker" | "district" | "pick"; color?: string };
+export type Label = { id: string; text: string; x: number; y: number; tone: "mine" | "selected" | "marker" | "district" | "pick" | "goods"; color?: string };
 export type CameraState = { tx: number; tz: number; zoom: number; theta: number; phi: number };
 export type WorldOptions = {
   reduceMotion?: boolean; hour?: number; initialCamera?: CameraState | null;
@@ -22,7 +23,8 @@ export type WorldOptions = {
 export type WorldHandle = {
   flyTo(plotId: string, zoom?: number): void; select(plotId: string | null): void; setPaused(p: boolean): void; tour(plots: string[], onDone: () => void): void;
   stopTour(): void; camera(): CameraState; setHour(h: number): void; dispose(): void;
-  info(): { calls: number; triangles: number; fps: number; dpr: number; lite: boolean; people: number; cars: number; zoom: number; hour: number; life: LifeInfo; chunks: number; outerCars: number };
+  info(): { calls: number; triangles: number; fps: number; dpr: number; lite: boolean; people: number; cars: number; zoom: number; hour: number; life: LifeInfo; chunks: number; outerCars: number;
+    goods: { routes: number; vans: number; moving: number } };
   /** On-screen controls: zoom by a factor, fly home (your plot, or the whole town), the compass (heading: where north points
    *  on screen, clockwise from up, in radians; resetNorth returns to the framed angle). */
   zoomBy(f: number): void; home(): void; heading(): number; resetNorth(): void;
@@ -32,6 +34,8 @@ export type WorldHandle = {
   districts(on: boolean): void;
   /** Light up plots a person can pick (free homes, plots for sale) with a short label each; null clears them. */
   pick(plots: { id: string; text: string }[] | null): void;
+  /** Show or hide the Goods layer: each goods route drawn on the road and named. Delivery vans always drive. */
+  goods(on: boolean): void;
   /** Keep the middle of the view clear of a sheet covering the bottom `px` of the screen (a card on a phone). */
   inset(px: number): void;
   /** Run the town's life forward by `sec` seconds at once (for checks). */
@@ -118,6 +122,9 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
   lawn.position.set(COAST + 6 + R2 / 2, -0.01, 0);
   lawn.receiveShadow = true;
   scene.add(seaFloor, sea, lawn);
+
+  // goods on the move between the town's businesses (step 4)
+  const goods = createGoods({ scene, flows: data.flows ?? [], plots: plotsById, lite: Q.LITE });
 
   // the land beyond the town, built in chunks around the camera
   const chunks = createChunks({ scene, mat, glowMat: glow.material as THREE.Material, lite: Q.LITE });
@@ -380,6 +387,11 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
       out.push({ id: `d-${d.id}`, text: `${d.name} · ${st.open ? "open" : `opens at ${d.opensAt.toLocaleString("en")} residents`}`, x: ((proj.x + 1) / 2) * w, y: ((1 - proj.y) / 2) * h,
         tone: "district", color: ZONE_COLOR[d.zone] });
     }
+    if (goods.shown) for (const g of goods.labels()) {
+      proj.set(g.x, 0.6, g.z).project(cam);
+      if (proj.x < -0.95 || proj.x > 0.95 || proj.y < -0.95 || proj.y > 0.95) continue;
+      out.push({ id: g.id, text: g.text, x: ((proj.x + 1) / 2) * w, y: ((1 - proj.y) / 2) * h, tone: "goods", color: g.color });
+    }
     opts.onLabels(out);
   }
   function frame(now: number) {
@@ -404,6 +416,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     followSun();
     if (chunks.update(footprint(), time, hour, Q.LITE ? 1 : 2) > 0) renderer.shadowMap.needsUpdate = true;
     if (dt > 0) life.step(dt, hour, time);
+    goods.step(time, hour);
     life.draw(time);
     beaconMat.opacity = 0.28 + 0.2 * Math.sin(time * 2.4);
     if (picks.count) pickMat.opacity = 0.6 + 0.3 * Math.sin(time * 3.2);
@@ -424,6 +437,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     setHour(h) { applyHour(h); },
     districts(on) { zoneMesh.visible = on; },
     inset(px) { sheet.to = Math.max(0, px); },
+    goods(on) { goods.show(on); },
     pick(list) {
       picked = (list ?? []).map((k) => ({ p: plotsById.get(k.id)!, text: k.text })).filter((k) => k.p);
       picked.forEach((k, i) => { const [x, z] = plotCenter(k.p.x, k.p.y); picks.setMatrixAt(i, M(x, 0.15, z)); });
@@ -454,10 +468,11 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
     },
     ff(sec) {
       for (let k = 0; k < Math.round(sec * 10); k++) { time += 0.1; life.step(0.1, hour, time); }
+      goods.step(time, hour);
       life.draw(time);
     },
     info() {
-      return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, fps: dpr.fps, dpr: dpr.dpr, lite: Q.LITE, ...life.counts, ...chunks.info(),
+      return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, fps: dpr.fps, dpr: dpr.dpr, lite: Q.LITE, ...life.counts, ...chunks.info(), goods: goods.info(),
         zoom: Math.round(cam.zoom * 100) / 100, hour: Math.round(hour * 100) / 100, life: life.info() };
     },
     dispose() {
@@ -466,7 +481,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
       canvas.removeEventListener("pointerdown", onDown); canvas.removeEventListener("pointerup", onUp);
       ro.disconnect(); controls.dispose();
       for (const d of disposables) d.dispose();
-      life.dispose(); chunks.dispose();
+      life.dispose(); chunks.dispose(); goods.dispose();
       for (const m of [rings, beacons, picks]) m.dispose();
       renderer.dispose();
     },
@@ -638,6 +653,16 @@ function buildPlot(B: Builder, G: Builder, W: Builder, p: WorldPlot, biz: WorldB
     for (let k = 0; k < n; k++) { const x = cx + R.rr(-0.75, 0.75), z = cz + R.rr(-0.75, 0.75);
       B.cyl(0.04, 0.05, 0.4, 5, C(PAL.trunk), M(x, 0.3, z)); B.sphere(R.rr(0.26, 0.36), R.col(R.pick([PAL.leaf, PAL.leaf2]), 0.06), M(x, 0.66, z), 7, 5); }
     B.box(0.5, 0.06, 0.16, C(PAL.wood), M(cx + 0.3, 0.2, cz + 0.75));
+  }
+  if (p.auction) { // at auction: a tall board in auction red with bunting to the corners
+    B.cyl(0.025, 0.025, 1.1, 5, C(PAL.white), M(cx + 0.85, 0.6, cz + 0.85));
+    B.box(0.62, 0.36, 0.04, C("#c0392b"), M(cx + 0.85, 1.0, cz + 0.85, Math.PI / 4));
+    B.box(0.5, 0.06, 0.05, C(PAL.white), M(cx + 0.85, 1.0, cz + 0.85, Math.PI / 4));
+    for (const [ex, ez] of [[-0.95, 0.95], [0.95, -0.95]]) for (let k = 1; k <= 5; k++) { // pennants on a line from the board to two corners
+      const t = k / 6, x = cx + 0.85 + (ex - 0.85) * t, z = cz + 0.85 + (ez - 0.85) * t, y = 1.15 + (0.3 - 1.15) * t - 0.12 * Math.sin(t * Math.PI);
+      B.cone(0.05, 0.1, 3, C(k % 2 ? "#c0392b" : PAL.gold), M(x, y, z, 0, Math.PI));
+    }
+    return;
   }
   B.cyl(0.015, 0.015, 0.36, 4, C(PAL.white), M(cx + 0.92, 0.28, cz + 0.92)); // "for sale"
   B.box(0.24, 0.15, 0.02, C(PAL.sign), M(cx + 0.92, 0.44, cz + 0.92));

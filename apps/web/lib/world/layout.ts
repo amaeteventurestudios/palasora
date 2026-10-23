@@ -3,7 +3,10 @@
 // the economy service (economy/town/layout.py); this file only decides where streets run between the plots.
 
 export type WorldPlot = { id: string; area: string; x: number; y: number; size: number; prime: number; use: "home" | "business" | "civic"; owner: string;
-  building: string; level: number; business?: string; price?: number };
+  building: string; level: number; business?: string; price?: number;
+  auction?: { id: number; reserve: number; high: number; bids: number; ends_tick: number; min_bid: number } };
+/** Goods on the move (step 4): a contract's daily route or the last day's deliveries, from plot to plot. */
+export type GoodsFlow = { from: string; to: string; good: "crops" | "meals" | "tools" | "materials"; qty: number; kind: "contract" | "delivery"; moving: boolean };
 export type WorldBusiness = { id: string; type: "farm" | "workshop" | "stall" | "delivery"; plot: string; owner: string; owner_name: string; level: number;
   health: "green" | "yellow" | "orange" | "red"; status: "open" | "closed"; price_sora: number; wage_sora: number; opened_tick?: number; cart?: boolean };
 export type AwayItem = { event: string; kind: string; text: string; tick: number; yours: boolean; plot: string | null };
@@ -11,6 +14,7 @@ export type WorldData = {
   town: { id: string; name: string; slug: string }; tick: number; population?: number; grid: { w: number; d: number }; founded: boolean; plots: WorldPlot[];
   businesses: WorldBusiness[]; mine: { plot: string | null; agents: string[]; businesses: string[]; resident: boolean; home?: string | null };
   away: { since_tick: number; items: AwayItem[]; quiet: boolean; total: number } | null; markers: { plot: string; event: string; kind: string; yours: boolean }[];
+  flows?: GoodsFlow[];
 };
 
 export const PLOT = 2.4; // one plot, in world units (metres / 10)
@@ -58,7 +62,8 @@ export function plotTitle(p: WorldPlot, biz?: WorldBusiness): string {
   if (p.use === "civic") return CIVIC_LABEL[p.area] ?? "Town building";
   if (biz && biz.status === "open") return BUSINESS_LABEL[biz.type] ?? "Business";
   if (p.use === "home") return p.owner ? "House" : "Free home";
-  return "Plot for sale";
+  if (p.auction) return "Plot at auction";
+  return p.owner ? "Empty plot" : "Plot for sale";
 }
 
 /** Town clock: hour 0 is the town's first morning. */

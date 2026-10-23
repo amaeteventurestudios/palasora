@@ -14,10 +14,10 @@ import json
 import sqlite3
 import time
 
-from . import social
+from . import auctions as AU, social
 from .params import C, TYPES, tuned
 
-KINDS = ("move_in", "claim_home", "start_cart", "buy_plot")
+KINDS = ("move_in", "claim_home", "start_cart", "buy_plot", "bid", "build")
 ALLOWED = {"farmland": ("farm",), "harbourside": ("workshop", "delivery"), "market": ("stall", "delivery"), "main": ("stall", "delivery")}
 LABEL = {"farm": "Farm", "workshop": "Workshop", "stall": "Food stall", "delivery": "Delivery depot"}
 
@@ -51,8 +51,11 @@ def _queued_plots(con: sqlite3.Connection, kinds: tuple, user_id: str = "") -> s
 def for_sale(con: sqlite3.Connection) -> list[dict]:
     p = tuned()
     carts = {r["plot"] for r in con.execute("SELECT plot FROM businesses WHERE cart=1 AND status='open'")}
+    held = {a["plot"] for a in AU.open_auctions(con)}
     rows = []
     for pl in con.execute("SELECT id, area, x, y, prime FROM plots WHERE use='business' AND owner='' AND building='' ORDER BY id"):
+        if pl["id"] in held:
+            continue
         pl = dict(pl)
         price = p.plot_price(pl)
         allowed = ALLOWED.get(pl["area"], ())
@@ -62,6 +65,18 @@ def for_sale(con: sqlite3.Connection) -> list[dict]:
     return rows
 
 
+def auction_rows(con: sqlite3.Connection, agent: str | None = None) -> list[dict]:
+    now = con.execute("SELECT COALESCE(MAX(tick), 0) t FROM world_events").fetchone()["t"]
+    out = []
+    for a in AU.open_auctions(con):
+        pl = con.execute("SELECT area, prime FROM plots WHERE id=?", (a["plot"],)).fetchone()
+        mine = con.execute("SELECT MAX(amount) m FROM bids WHERE auction=? AND bidder=?", (a["id"], agent or "")).fetchone()["m"] if agent else None
+        out.append({"id": a["id"], "plot": a["plot"], "area": pl["area"] if pl else "", "prime": bool(pl and pl["prime"]), "reserve": a["reserve"] / C,
+                    "high": a["high"] / C, "bids": a["bids"], "min_bid": AU.min_bid(a) / C, "ends_tick": a["end_tick"], "hours_left": max(0, a["end_tick"] - now),
+                    "leading": bool(agent) and a["high_bidder"] == agent, "my_bid": (mine or 0) / C})
+    return out
+
+
 def me(con: sqlite3.Connection, user_id: str) -> dict:
     p = tuned()
     agent = _resident(con, user_id)
@@ -69,7 +84,7 @@ def me(con: sqlite3.Connection, user_id: str) -> dict:
     free_homes = [{"plot": r["id"], "x": r["x"], "y": r["y"]} for r in con.execute("SELECT id, x, y FROM plots WHERE use='home' AND owner='' ORDER BY id")
                   if r["id"] not in pending_homes]
     out: dict = {"resident": agent is not None, "agent": agent, "home": None, "balance": 0.0, "businesses": [], "carts": [],
-                 "free_homes": free_homes, "for_sale": for_sale(con), "requests": [],
+                 "free_homes": free_homes, "for_sale": for_sale(con), "requests": [], "auctions": auction_rows(con, agent), "my_plots": [],
                  "prices": {"cart": p.cart_cost / C, "grant": p.grant_new_player / C, "plot_share": p.plot_share / C,
                             "build": {t: p.build_cost[t] / C for t in TYPES}, "max_businesses": p.max_businesses_per_player},
                  "labels": LABEL}
@@ -84,6 +99,12 @@ def me(con: sqlite3.Connection, user_id: str) -> dict:
     bal = con.execute("SELECT COALESCE(SUM(available),0) s FROM accounts WHERE owner_id=? AND owner_kind IN ('human','agent') AND asset='SORA'",
                       (agent,)).fetchone()
     out["balance"] = bal["s"] / C
+    held = con.execute("SELECT COALESCE(SUM(reserved),0) s FROM accounts WHERE owner_id=? AND owner_kind IN ('human','agent') AND asset='SORA'", (agent,)).fetchone()
+    out["held"] = held["s"] / C
+    for pl in con.execute("SELECT id, area, prime FROM plots WHERE use='business' AND owner=? AND building='' ORDER BY id", (agent,)):
+        allowed = ALLOWED.get(pl["area"], ())
+        out["my_plots"].append({"plot": pl["id"], "area": pl["area"], "prime": bool(pl["prime"]), "allowed": list(allowed),
+                                "total": {t: (p.build_cost[t] - p.plot_share) / C for t in allowed}})
     for b in con.execute("SELECT id, type, plot, cart, level FROM businesses WHERE owner=? AND status='open' ORDER BY id", (agent,)):
         row = {"id": b["id"], "type": b["type"], "plot": b["plot"], "cart": bool(b["cart"]), "level": b["level"]}
         (out["carts"] if b["cart"] else out["businesses"]).append(row)
@@ -117,7 +138,23 @@ def request(con: sqlite3.Connection, user_id: str, kind: str, inputs: dict) -> d
         if agent is None:
             raise PlaceError("NOT_RESIDENT", "move in first")
         sale = {r["plot"]: r for r in for_sale(con)}
-        if kind == "start_cart":
+        if kind == "bid":
+            au = next((a for a in AU.open_auctions(con) if a["id"] == int(inputs.get("auction", 0) or 0)), None)
+            if au is None:
+                raise PlaceError("CLOSED", "that auction has ended")
+            amount = int(round(float(inputs.get("amount", 0)) * C))
+            if amount < AU.min_bid(au):
+                raise PlaceError("LOW_BID", f"the lowest bid now is {AU.min_bid(au) / C:.0f} Sora")
+            clean = {"auction": au["id"], "amount": amount, "plot": au["plot"]}
+        elif kind == "build":
+            btype = str(inputs.get("btype", ""))
+            row = con.execute("SELECT area FROM plots WHERE id=? AND use='business' AND owner=? AND building=''", (plot, agent)).fetchone()
+            if row is None:
+                raise PlaceError("NO_PLOT", "that is not an empty plot of yours")
+            if btype not in ALLOWED.get(row["area"], ()):
+                raise PlaceError("ZONE", f"this plot takes {' or '.join(LABEL[t].lower() for t in ALLOWED.get(row['area'], ()))}")
+            clean = {"plot": plot, "btype": btype}
+        elif kind == "start_cart":
             if plot and not (plot in sale and sale[plot]["kerb"]):
                 raise PlaceError("NO_PLOT", "there is no free kerb by that plot")
             if con.execute("SELECT 1 FROM businesses WHERE owner=? AND cart=1 AND status='open'", (agent,)).fetchone():

@@ -19,7 +19,7 @@ const KIND: Record<string, string> = {
   business_opened: "Opened", business_closed: "Closed", business_sold: "Sold", vote_result: "Town vote", player_arrived: "Arrival", hired: "Hired",
   let_go: "Let go", worker_left: "Worker left", contract_signed: "Contract", contract_breached: "Contract breached", contract_ended: "Contract ended",
   price_changed: "Price", upgraded: "Upgrade", market_trade: "Market Hall", starter_grant: "Grant", moved_in: "Moved in", cart_opened: "New cart",
-  cart_settled: "Cart settled",
+  cart_settled: "Cart settled", auction_opened: "Auction", auction_won: "Auction won", auction_unsold: "Auction", outbid: "Outbid",
 };
 const DOT: Record<string, string> = { green: "#3fae6a", yellow: "#e8c33c", orange: "#ec8a3a", red: "#d9483b" };
 const sora = (n: number) => `${n.toLocaleString("en", { maximumFractionDigits: 2 })} Sora`;
@@ -59,7 +59,12 @@ export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onC
         {!b && p.use === "home" && (p.owner ? <p className="mt-3 text-sm">{p.id === data.mine.home ? "Your home." : "A resident's home."}</p> : (
           <div className="mt-3 text-sm" data-testid="card-free-home"><p>Free to move into. Homes cost nothing, one each.</p>
             {!data.mine.home && <div className="mt-2"><button type="button" className={primary} onClick={() => onPlace(p.id)} data-testid="card-move-in">{data.mine.resident ? "Make this my home" : "Move in here"}</button></div>}</div>))}
-        {!b && p.use === "business" && (p.price != null ? (
+        {!b && p.auction && (
+          <div className="mt-3 text-sm" data-testid="card-auction"><p><span className="font-semibold">At auction · {p.auction.bids ? `highest bid ${soraWhole(p.auction.high)} (${p.auction.bids} bid${p.auction.bids > 1 ? "s" : ""})` : `from ${soraWhole(p.auction.reserve)}`}</span>.
+            Ends {townTime(p.auction.ends_tick)}. Takes {ZONE_TAKES[p.area] ?? "nothing yet"}.</p>
+            <div className="mt-2"><button type="button" className={primary} onClick={() => onPlace(p.id)} data-testid="card-bid">{data.mine.resident ? "Bid for this plot" : "Move in to bid"}</button></div></div>
+        )}
+        {!b && !p.auction && p.use === "business" && (p.price != null ? (
           <div className="mt-3 text-sm" data-testid="card-for-sale"><p><span className="font-semibold">For sale · {soraWhole(p.price)}</span> for the plot. Takes {ZONE_TAKES[p.area] ?? "nothing yet"}.</p>
             <div className="mt-2"><button type="button" className={primary} onClick={() => onPlace(p.id)} data-testid="card-buy-plot">{data.mine.resident ? "Buy this plot" : "Move in to buy"}</button></div></div>
         ) : <p className="mt-3 text-sm">No business on this plot yet.</p>)}
