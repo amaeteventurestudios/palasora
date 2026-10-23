@@ -569,6 +569,23 @@ def town_exchange_listing(bid: str, user_id: str = "") -> dict:
     return out
 
 
+@router.get("/town/market")
+def town_market(user_id: str = "") -> dict:
+    """The player market: the Market Hall board, everyone selling now, and the viewer's businesses with their goods and orders."""
+    from .town import market
+    return market.hall(service.con(), user_id[:40])
+
+
+@router.get("/town/market/{good}")
+def town_market_good(good: str, user_id: str = "") -> dict:
+    """One good at the Market Hall: its order book, recent trades, two weeks of prices and its stalls."""
+    from .town import market
+    out = market.good_view(service.con(), good, user_id[:40])
+    if out is None:
+        raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "the Market Hall trades crops, tools and materials"})
+    return out
+
+
 @router.get("/town/live")
 def town_live_status() -> dict:
     """Phase 8: whether the town runs on its own, its hour, how far behind the real clock it is, and any pause."""

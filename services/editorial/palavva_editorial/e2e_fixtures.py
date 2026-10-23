@@ -145,6 +145,7 @@ def seed_town(pb: PB, t: dict) -> dict:
             events.emit(con, seq=i, tick=tick, kind=kind, who=who, visibility=vis, refs=refs, text=text)
         _seed_books(con)
         _seed_shares(con)
+        _seed_market(con)
     return social.relay(con, pb, t["id"])
 
 
@@ -213,6 +214,52 @@ def _seed_shares(con) -> None:
     at(11, kind="transfer", src=biz, dst=buy_c, asset=edb.SORA, amount=25 * 30, ref_type="business", ref_id="b005", rule="dividend")
     con.execute("INSERT INTO share_dividends(business, tick, per_share, total, holders) VALUES ('b005', 11, 30, 30000, 2)")
 
+
+
+def _seed_market(con) -> None:
+    """The player market: the Market Hall's stalls. Farm b007 offers 40 crops at 1.40 and farm b002 has 10 left at 1.55;
+    workshop b008 offers 6 tools at 21.00; workshop b003 wants 10 materials at 7.60. Earlier, b007 sold 20 crops to stall b005
+    at 1.50, b008 sold 2 tools to b007 at 20.50 and b002 sold 5 crops to b005 at 1.55. Every reservation is in the ledger."""
+    from .economy import db as edb, ledger
+    from .economy.town.world import EPOCH
+    hall = ledger.account(con, *ledger.TOWN_HALL)["id"]
+    acct = lambda bid, owner: ledger.account(con, "company", bid, edb.SORA, f"seed:{owner}")["id"]  # noqa: E731
+    b002, b003, b005, b007, b008 = acct("b002", "h020"), acct("b003", "h021"), acct("b005", "h023"), acct("b007", "h025"), acct("b008", "h026")
+    n = 0
+
+    def at(tick, fn=ledger.transfer, **kw):
+        nonlocal n
+        n += 1
+        with edb.clock(lambda: EPOCH + tick * 3600 + 40 + n):
+            if fn is ledger.transfer:
+                kw.update(src_bucket="available", dst_bucket="available", txn_id=f"t{tick}", asset=edb.SORA)
+            fn(con, idem_key=f"e2e-market-{n}", **kw)
+
+    for a in (b003, b007):
+        at(0, kind="issue", src=hall, dst=a, amount=20000, rule="genesis")
+    rows = [  # id, holder, owner, good, side, price, qty, filled, status, reserved_left, tick
+        (1, "b007", "h025", "crops", "sell", 140, 40, 0, "open", 40, 12),
+        (2, "b002", "h020", "crops", "sell", 155, 15, 5, "partial", 10, 10),
+        (3, "b008", "h026", "tools", "sell", 2100, 6, 0, "open", 6, 12),
+        (4, "b003", "h021", "materials", "buy", 760, 10, 0, "open", 7600, 12),
+        (5, "b007", "h025", "crops", "sell", 150, 20, 20, "filled", 0, 3),
+        (6, "b005", "h023", "crops", "buy", 150, 20, 20, "filled", 0, 3),
+        (7, "b008", "h026", "tools", "sell", 2050, 2, 2, "filled", 0, 8),
+        (8, "b007", "h025", "tools", "buy", 2050, 2, 2, "filled", 0, 8),
+        (9, "b005", "h023", "crops", "buy", 155, 5, 5, "filled", 0, 11)]
+    con.executemany("""INSERT INTO goods_orders(id, idem_key, holder, owner_key, good, side, price, qty, filled, status, reserved_left, tick, expires_tick)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    [(i, f"e2e-gorder-{i}", f"company:{b}", f"seed:{o}", g, sd, px, q, f, st, r, t, t + 24) for i, b, o, g, sd, px, q, f, st, r, t in rows])
+    con.executemany("INSERT INTO goods_trades(good, buy_order, sell_order, buyer, seller, price, qty, tick) VALUES (?,?,?,?,?,?,?,?)",
+                    [("crops", 6, 5, "company:b005", "company:b007", 150, 20, 3), ("tools", 8, 7, "company:b007", "company:b008", 2050, 2, 8),
+                     ("crops", 9, 2, "company:b005", "company:b002", 155, 5, 11)])
+    at(3, kind="goods_cash", src=b005, dst=b007, amount=150 * 20, ref_type="goods_order", ref_id="6", rule="market_hall")
+    at(8, kind="goods_cash", src=b007, dst=b008, amount=2050 * 2, ref_type="goods_order", ref_id="8", rule="market_hall")
+    at(11, kind="goods_cash", src=b005, dst=b002, amount=155 * 5, ref_type="goods_order", ref_id="9", rule="market_hall")
+    at(12, fn=ledger.reserve, acct_id=b003, asset=edb.SORA, amount=7600, ref_type="goods_order", ref_id="4", txn_id="t12")
+    con.executemany("INSERT INTO stock(holder, good, qty, reserved) VALUES (?,?,?,?)",
+                    [("company:b007", "crops", 64, 40), ("company:b007", "tools", 2, 0), ("company:b002", "crops", 18, 10),
+                     ("company:b008", "tools", 9, 6), ("company:b005", "crops", 25, 0)])
 
 def main() -> None:
     if os.environ.get("PALAVVA_ENV") != "test":

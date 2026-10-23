@@ -213,11 +213,11 @@ def h_set_price(w, a: Agent, business: str, price: int) -> dict:
     return {"old": old, "new": b.price}
 
 
-def h_place_order(w, a: Agent, good: str, side: str, price: int, qty: int, business: str = "") -> dict:
+def h_place_order(w, a: Agent, good: str, side: str, price: int, qty: int, business: str = "", hours: int = 24) -> dict:
     acct = a.acct
     if business:
         acct = _own_biz(w, a, business).acct
-    r = market.place(w, acct=acct, good=good, side=side, price=int(price), qty=int(qty))
+    r = market.place(w, acct=acct, good=good, side=side, price=int(price), qty=int(qty), ttl_hours=max(1, min(72, int(hours))))
     return {"order": r["order"]["id"], "fills": len(r["fills"])}
 
 

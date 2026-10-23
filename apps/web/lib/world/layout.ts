@@ -14,7 +14,7 @@ export type WorldData = {
   town: { id: string; name: string; slug: string }; tick: number; population?: number; grid: { w: number; d: number }; founded: boolean; plots: WorldPlot[];
   businesses: WorldBusiness[]; mine: { plot: string | null; agents: string[]; businesses: string[]; resident: boolean; home?: string | null };
   away: { since_tick: number; items: AwayItem[]; quiet: boolean; total: number } | null; markers: { plot: string; event: string; kind: string; yours: boolean }[];
-  flows?: GoodsFlow[];
+  flows?: GoodsFlow[]; market?: { stalls: number };
 };
 
 export const PLOT = 2.4; // one plot, in world units (metres / 10)

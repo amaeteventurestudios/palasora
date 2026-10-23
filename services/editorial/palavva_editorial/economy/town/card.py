@@ -29,7 +29,8 @@ COST_LABEL = {"wage": "Wages", "plot_upkeep": "Plot upkeep", "import": "Imports"
               "market_hall": "Market Hall purchases", "": "Market Hall purchases", "upgrade": "Upgrade", "build": "Building"}
 OUTPUT = {"farm": "crops", "workshop": "tools", "stall": "meals", "delivery": "delivery loads", "factory": "meals for stalls"}
 INPUT = {"farm": "tools", "workshop": "materials", "stall": "crops", "factory": "crops"}
-REQUEST_KINDS = ("set_price", "set_wage", "hire", "fire", "upgrade", "end_contract", "close_business", "list_shares")
+REQUEST_KINDS = ("set_price", "set_wage", "hire", "fire", "upgrade", "end_contract", "close_business", "list_shares",
+                 "place_order", "cancel_order")
 PERIODS = (("day", 24), ("week", 24 * 7), ("month", 24 * 30))
 
 
@@ -166,11 +167,53 @@ def request(con: sqlite3.Connection, bid: str, user_id: str, kind: str, inputs: 
         clean["qty"] = int(inputs.get("qty", 300) or 0)
         if not 1 <= clean["qty"] <= MAX_OFFER:
             raise RequestError("BAD_INPUT", f"offer between 1 and {MAX_OFFER} shares; you keep the majority")
+    elif kind == "place_order":
+        clean.update(_market_order(con, bid, owner, inputs))
+    elif kind == "cancel_order":
+        oid = int(inputs.get("order", 0) or 0)
+        if not con.execute("SELECT 1 FROM goods_orders WHERE id=? AND holder=? AND status IN ('open','partial')", (oid, f"company:{bid}")).fetchone():
+            raise RequestError("BAD_INPUT", "no such open Market Hall order on this business")
+        clean = {"order": oid}
     if con.execute("SELECT COUNT(*) n FROM owner_requests WHERE business=? AND status='queued'", (bid,)).fetchone()["n"] >= 10:
         raise RequestError("TOO_MANY", "ten requests are already waiting for the next tick")
     cur = con.execute("INSERT INTO owner_requests(business, actor, user_id, kind, inputs, created_at) VALUES (?,?,?,?,?,?)",
                       (bid, owner, user_id, kind, json.dumps(clean, sort_keys=True), time.time()))
     return {"id": cur.lastrowid, "status": "queued", "kind": kind, "inputs": clean}
+
+
+def _market_order(con: sqlite3.Connection, bid: str, owner: str, inputs: dict) -> dict:
+    """The player market: an owner offers their business's goods at the Market Hall, or bids for some, at their own price."""
+    from . import market
+    from .. import ledger
+    good, side = str(inputs.get("good", "")), str(inputs.get("side", ""))
+    if good not in market.MARKET_GOODS:
+        raise RequestError("BAD_INPUT", "the Market Hall trades crops, tools and materials")
+    if side not in ("buy", "sell"):
+        raise RequestError("BAD_INPUT", "choose to buy or to sell")
+    price, qty = int(round(float(inputs.get("price", 0) or 0) * C)), int(inputs.get("qty", 0) or 0)
+    if not 1 <= qty <= market.MAX_QTY:
+        raise RequestError("BAD_INPUT", f"between 1 and {market.MAX_QTY} at a time")
+    lo, hi = market.band(good)
+    if not lo <= price <= hi:
+        raise RequestError("PRICE_BAND", f"a price between {lo / C:.2f} and {hi / C:.2f} Sora")
+    holder = f"company:{bid}"
+    if side == "sell":
+        r = con.execute("SELECT qty - reserved q FROM stock WHERE holder=? AND good=?", (holder, good)).fetchone()
+        if not r or r["q"] < qty:
+            raise RequestError("NO_STOCK", f"this business has {r['q'] if r else 0} {good} to sell")
+    else:
+        a = con.execute("SELECT available FROM accounts WHERE owner_kind='company' AND owner_id=? AND asset='SORA'", (bid,)).fetchone()
+        if not a or a["available"] < price * qty:
+            raise RequestError("INSUFFICIENT", f"the business has {(a['available'] if a else 0) / C:.2f} Sora to spend")
+    # never against one of your own orders: the Hall refuses that, and it would count against your agent
+    okey = con.execute("SELECT owner_key FROM town_agents WHERE id=?", (owner,)).fetchone()
+    me = ledger.trade_owner(okey["owner_key"]) if okey else owner
+    cross = "price <= ?" if side == "buy" else "price >= ?"
+    for r in con.execute(f"SELECT owner_key FROM goods_orders WHERE good=? AND side=? AND status IN ('open','partial') AND {cross}",
+                         (good, "sell" if side == "buy" else "buy", price)):
+        if ledger.trade_owner(r["owner_key"]) == me:
+            raise RequestError("SELF_TRADE", "that price would meet one of your own orders")
+    return {"good": good, "side": side, "price": price, "qty": qty, "hours": market.PERSON_HOURS}
 
 
 def apply_requests(w) -> int:

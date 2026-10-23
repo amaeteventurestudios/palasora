@@ -9,6 +9,8 @@ from orders, not from the game: the Harbour sits underneath as the seller of mat
 """
 from __future__ import annotations
 
+import json
+
 from .. import db, ledger
 from . import delivery, goods
 from .params import C
@@ -163,3 +165,120 @@ def check_reservations(con) -> list[dict]:
         if r["reserved"] != gds.get((r["holder"], r["good"]), 0):
             bad.append({"check": "goods_reservation", "holder": r["holder"], "good": r["good"], "reserved": r["reserved"], "orders": gds.get((r["holder"], r["good"]), 0)})
     return bad, cash
+
+
+# --------------------------------------------------------------------------- the player market: what people see
+PERSON_HOURS = 72   # a person's order waits up to three days (an agent's waits one)
+MAX_QTY = 500
+GOOD_LABEL = {"crops": "Crops", "tools": "Tools", "materials": "Materials"}
+
+
+def ref_prices() -> dict:
+    """The reference each good's price band is measured from (the Harbour's materials price moves with town events;
+    the gate checks the live one when the order goes in)."""
+    from .params import tuned
+    p = tuned()
+    return {"crops": p.crop_ref, "tools": p.tool_ref, "materials": p.material_price}
+
+
+def band(good: str) -> tuple[int, int]:
+    ref = ref_prices()[good]
+    return int(ref - ref * BAND) + 1, int(ref + ref * BAND)
+
+
+def _now(con) -> int:
+    from .card import now_tick
+    return now_tick(con)
+
+
+def _names(con) -> dict:
+    return {r["town_agent"]: r["display_name"] for r in con.execute("SELECT town_agent, display_name FROM town_links WHERE display_name != ''")}
+
+
+def _who(con, holder: str, names: dict) -> dict:
+    """A holder as people see it: the business (with its plot and owner) or the resident."""
+    from .residents import made_up_name
+    k, i = _acct_of(holder)
+    if k == "company":
+        b = con.execute("SELECT id, type, plot, owner FROM businesses WHERE id=?", (i,)).fetchone()
+        if b:
+            return {"business": b["id"], "type": b["type"], "plot": b["plot"], "owner": b["owner"], "name": names.get(b["owner"]) or made_up_name(b["owner"])}
+    return {"business": "", "type": "", "plot": "", "owner": i, "name": names.get(i) or made_up_name(i)}
+
+
+def my_businesses(con, user_id: str) -> list:
+    if not user_id:
+        return []
+    return con.execute("""SELECT b.* FROM businesses b JOIN town_links l ON l.town_agent = b.owner
+                          WHERE l.user_id=? AND l.user_id != '' AND b.status='open' ORDER BY b.id""", (user_id,)).fetchall()
+
+
+def _good_row(con, good: str, now: int) -> dict:
+    ref = ref_prices()[good]
+    last = con.execute("SELECT price FROM goods_trades WHERE good=? ORDER BY id DESC LIMIT 1", (good,)).fetchone()
+    day_ago = con.execute("SELECT price FROM goods_trades WHERE good=? AND tick <= ? ORDER BY id DESC LIMIT 1", (good, now - 24)).fetchone()
+    best = lambda side, agg: con.execute(  # noqa: E731
+        f"SELECT {agg}(price) p, COALESCE(SUM(qty - filled), 0) q, COUNT(DISTINCT holder) n FROM goods_orders WHERE good=? AND side=? AND status IN ('open','partial')",
+        (good, side)).fetchone()
+    ask, bid = best("sell", "MIN"), best("buy", "MAX")
+    vol = con.execute("SELECT COALESCE(SUM(qty), 0) q, COUNT(*) n FROM goods_trades WHERE good=? AND tick > ?", (good, now - 24)).fetchone()
+    price = last["price"] if last else ref
+    lo, hi = band(good)
+    return {"good": good, "label": GOOD_LABEL[good], "price": price / C, "ref": ref / C, "traded": bool(last),
+            "change_pct": round((price - day_ago["price"]) * 100 / day_ago["price"], 1) if day_ago else 0.0,
+            "ask": ask["p"] / C if ask["p"] else None, "for_sale": ask["q"], "sellers": ask["n"],
+            "bid": bid["p"] / C if bid["p"] else None, "wanted": bid["q"], "buyers": bid["n"],
+            "volume_day": vol["q"], "trades_day": vol["n"], "band": [lo / C, hi / C]}
+
+
+def hall(con, user_id: str = "") -> dict:
+    """The Market Hall board: each good's price, best offers and the day's trade; the stalls (everyone selling now); and
+    the viewer's businesses with the goods they hold and the orders they have open."""
+    names = _names(con)
+    now = _now(con)
+    stalls = []
+    for r in con.execute("""SELECT holder, good, MIN(price) price, SUM(qty - filled) q FROM goods_orders WHERE side='sell' AND status IN ('open','partial')
+                            GROUP BY holder, good ORDER BY good, price, holder LIMIT 40"""):
+        stalls.append(_who(con, r["holder"], names) | {"good": r["good"], "price": r["price"] / C, "qty": r["q"]})
+    mine = []
+    for b in my_businesses(con, user_id):
+        holder = f"company:{b['id']}"
+        acct = con.execute("SELECT available FROM accounts WHERE owner_kind='company' AND owner_id=? AND asset='SORA'", (b["id"],)).fetchone()
+        stock = {r["good"]: r["qty"] - r["reserved"] for r in con.execute("SELECT good, qty, reserved FROM stock WHERE holder=?", (holder,)) if r["good"] in MARKET_GOODS}
+        orders = [{"id": o["id"], "good": o["good"], "side": o["side"], "price": o["price"] / C, "qty": o["qty"], "filled": o["filled"], "expires_tick": o["expires_tick"]}
+                  for o in con.execute("SELECT * FROM goods_orders WHERE holder=? AND status IN ('open','partial') ORDER BY id DESC", (holder,))]
+        requests = [{"id": r["id"], "kind": r["kind"], "inputs": json.loads(r["inputs"]), "status": r["status"], "refusal": r["refusal"], "detail": r["detail"]}
+                    for r in con.execute("SELECT * FROM owner_requests WHERE business=? AND kind IN ('place_order','cancel_order') ORDER BY id DESC LIMIT 5", (b["id"],))]
+        mine.append({"business": b["id"], "type": b["type"], "plot": b["plot"], "cash": (acct["available"] if acct else 0) / C, "stock": stock,
+                     "orders": orders, "requests": requests})
+    return {"goods": [_good_row(con, g, now) for g in MARKET_GOODS], "stalls": stalls, "mine": mine, "now_tick": now,
+            "signed_in": bool(user_id), "rules": {"band_pct": int(BAND * 100), "order_hours": PERSON_HOURS, "max_qty": MAX_QTY}}
+
+
+def good_view(con, good: str, user_id: str = "") -> dict | None:
+    """One good: its order book by price, the last trades with who sold to whom, two weeks of daily prices, and its stalls."""
+    if good not in MARKET_GOODS:
+        return None
+    names = _names(con)
+    now = _now(con)
+    out = _good_row(con, good, now)
+    book = lambda side, order: [{"price": r["price"] / C, "qty": r["q"], "orders": r["n"]} for r in con.execute(  # noqa: E731
+        f"SELECT price, SUM(qty - filled) q, COUNT(*) n FROM goods_orders WHERE good=? AND side=? AND status IN ('open','partial') GROUP BY price ORDER BY price {order} LIMIT 6",
+        (good, side))]
+    out["book"] = {"sell": book("sell", "ASC"), "buy": book("buy", "DESC")}
+    out["trades"] = [{"tick": r["tick"], "price": r["price"] / C, "qty": r["qty"], "seller": _who(con, r["seller"], names), "buyer": _who(con, r["buyer"], names)}
+                     for r in con.execute("SELECT * FROM goods_trades WHERE good=? ORDER BY id DESC LIMIT 10", (good,))]
+    days = {}
+    for r in con.execute("SELECT tick, price, qty FROM goods_trades WHERE good=? AND tick > ? ORDER BY id", (good, now - 24 * 14)):
+        d = r["tick"] // 24
+        days.setdefault(d, [0, 0, 0])
+        days[d][0] += r["price"] * r["qty"]
+        days[d][1] += r["qty"]
+        days[d][2] = r["price"]
+    out["history"] = [{"day": d, "avg": round(v[0] / v[1] / C, 2), "close": v[2] / C, "qty": v[1]} for d, v in sorted(days.items())]
+    out["stalls"] = [_who(con, r["holder"], names) | {"price": r["price"] / C, "qty": r["q"]} for r in con.execute(
+        """SELECT holder, MIN(price) price, SUM(qty - filled) q FROM goods_orders WHERE good=? AND side='sell' AND status IN ('open','partial')
+           GROUP BY holder ORDER BY price, holder LIMIT 12""", (good,))]
+    out["mine"] = hall(con, user_id)["mine"] if user_id else []
+    out["signed_in"] = bool(user_id)
+    return out

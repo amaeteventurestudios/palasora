@@ -7,11 +7,12 @@ import Link from "next/link";
 import { loadBusinessCard, requestChange } from "@/app/actions/town-business";
 import { PERIOD_LABEL, REFUSAL_LABEL, REQUEST_LABEL, sora2, type BusinessCardData, type RequestKind } from "@/lib/world/card";
 import { BUSINESS_LABEL, HEALTH_LABEL, townTime } from "@/lib/world/layout";
+import { GOODS, type Good } from "@/lib/world/market";
 
 const DOT: Record<string, string> = { green: "#3fae6a", yellow: "#e8c33c", orange: "#ec8a3a", red: "#d9483b" };
 type Period = keyof typeof PERIOD_LABEL;
 
-export function BusinessCard({ bid, initial, full = false, head = true, onShares }: { bid: string; initial?: BusinessCardData | null; full?: boolean; head?: boolean; onShares?(bid: string): void }) {
+export function BusinessCard({ bid, initial, full = false, head = true, onShares, onMarket }: { bid: string; initial?: BusinessCardData | null; full?: boolean; head?: boolean; onShares?(bid: string): void; onMarket?(good: Good): void }) {
   const [card, setCard] = useState<BusinessCardData | null | undefined>(initial);
   const [period, setPeriod] = useState<Period>("week");
   const reload = useCallback(() => { loadBusinessCard(bid).then((c) => setCard(c)).catch(() => setCard(null)); }, [bid]);
@@ -63,7 +64,8 @@ export function BusinessCard({ bid, initial, full = false, head = true, onShares
 
       <section aria-label="Staff and stock" className="grid grid-cols-2 gap-3">
         <div><h3 className={h}>Staff</h3>{card.employees.length ? <ul className="mt-1" data-testid="biz-staff">{card.employees.map((e) => <li key={e.worker}>{e.name || e.worker}</li>)}</ul> : <p className="mt-1 text-[#4b5566]">Nobody yet</p>}</div>
-        <div><h3 className={h}>Stock</h3>{Object.keys(card.stock).length ? <ul className="mt-1" data-testid="biz-stock">{Object.entries(card.stock).map(([g, s]) => <li key={g}>{s.qty} {g}{s.reserved ? ` (${s.reserved} promised)` : ""}</li>)}</ul> : <p className="mt-1 text-[#4b5566]">Empty</p>}</div>
+        <div><h3 className={h}>Stock</h3>{Object.keys(card.stock).length ? <ul className="mt-1" data-testid="biz-stock">{Object.entries(card.stock).map(([g, s]) => <li key={g}>{s.qty} {g}{s.reserved ? ` (${s.reserved} promised)` : ""}{card.mine && onMarket && GOODS.includes(g as Good) && s.qty > s.reserved
+          ? <> · <button type="button" className="underline" onClick={() => onMarket(g as Good)} data-testid="biz-sell-market">sell at the Market Hall</button></> : null}</li>)}</ul> : <p className="mt-1 text-[#4b5566]">Empty</p>}</div>
       </section>
 
       {card.contracts.length > 0 && <section aria-label="Contracts"><h3 className={h}>Contracts</h3>
