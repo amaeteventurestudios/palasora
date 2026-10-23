@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Bell, Bot, CircleHelp, Coins, Gamepad2, Home, LayoutList, LineChart, Map as MapIcon, MessageSquare, MoreHorizontal, Plus,
-  Settings, Shield, Trophy, User, Users, X, Store, Navigation, ZoomIn, ZoomOut, LocateFixed } from "lucide-react";
+  Settings, Shield, Trophy, User, Users, X, Store, Navigation, ZoomIn, ZoomOut, LocateFixed, Layers } from "lucide-react";
 import type { WorldData } from "@/lib/world/layout";
 import { townTime } from "@/lib/world/layout";
 import type { WorldHandle, Selection, Label } from "@/lib/world/scene";
@@ -125,8 +125,9 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
         onFail={(why) => { setReason(why); setView("2d"); }} />}
       {view === "2d" && data && <Town2D data={data} selected={selected} onSelect={onSelect} reason={reason} />}
       {view === "3d" && labels.map((l) => (
-        <div key={l.id} className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-full px-2.5 py-1 text-xs font-semibold shadow"
-          style={{ left: l.x, top: l.y, background: l.tone === "mine" ? "#d8a838" : "#ffffff", color: "#1d2433" }}>{l.text}</div>
+        <div key={l.id} className="pointer-events-none absolute z-10 flex -translate-x-1/2 -translate-y-full items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold shadow"
+          style={{ left: l.x, top: l.y, background: l.tone === "mine" ? "#d8a838" : "#ffffff", color: "#1d2433" }} data-testid={l.tone === "district" ? "district-label" : undefined}>
+          {l.color && <span className="size-2.5 rounded-full" style={{ background: l.color }} aria-hidden />}{l.text}</div>
       ))}
       {!data && <Unavailable />}
       <TownList data={data} visible={view === "list"} onShow={(id) => { setView(reason ? "2d" : "3d"); openPlot(id); }} />
@@ -170,6 +171,7 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
 /** Map controls under the top corner opposite the main menu: compass, zoom in, zoom out, and back to your home. */
 function MapControls({ world, leftHanded, mine }: { world: React.RefObject<WorldHandle | null>; leftHanded: boolean; mine: boolean }) {
   const [north, setNorth] = useState(0);
+  const [districts, setDistricts] = useState(false);
   useEffect(() => {
     const t = setInterval(() => { const h = world.current?.heading(); if (h != null) setNorth((n) => (Math.abs(n - h) > 0.01 ? h : n)); }, 200);
     return () => clearInterval(t);
@@ -189,6 +191,10 @@ function MapControls({ world, leftHanded, mine }: { world: React.RefObject<World
         <div className="h-px bg-[#e3e6ea]" />
         <button type="button" className={btn} onClick={() => world.current?.zoomBy(1 / 1.6)} aria-label="Zoom out" data-testid="map-zoom-out"><ZoomOut className="size-5" aria-hidden /></button>
       </div>
+      <button type="button" className={`${btn} rounded-full shadow-md ${districts ? "!bg-[#1d2433] !text-white" : ""}`} aria-pressed={districts} aria-label="Districts"
+        onClick={() => { const on = !districts; setDistricts(on); world.current?.districts(on); }} data-testid="map-districts">
+        <Layers className="size-5" aria-hidden />
+      </button>
       <button type="button" className={`${btn} rounded-full shadow-md`} onClick={() => world.current?.home()} aria-label={mine ? "Back to your home" : "Back to the whole town"} data-testid="map-home">
         <LocateFixed className="size-5" aria-hidden />
       </button>

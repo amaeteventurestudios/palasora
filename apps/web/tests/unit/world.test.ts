@@ -1,6 +1,7 @@
 // Palasora Phase 6: the world viewer's street grid. Pure functions shared by the 3D town, the 2D map and the list view.
 import { describe, expect, it } from "vitest";
 import { SPEED, busy, outdoors } from "../../lib/world/life";
+import { CELL, COAST, DISTRICTS, GX, GZ, X1, Z0, Z1, coastAt, districtAt, districtStatus, plotZone, zoneAt } from "../../lib/world/districts";
 import { COLS, PLOT, ROAD, ROWS, TOWN_D, TOWN_W, X_STREETS, Y_STREETS, plotAt, plotCenter, plotTitle, streets, townTime, type WorldPlot } from "../../lib/world/layout";
 
 describe("Phase 6 town grid", () => {
@@ -54,5 +55,48 @@ describe("Town life follows the clock at believable speeds", () => {
     expect(busy(3)).toBeLessThan(0.15);
     expect(outdoors(3)).toBeLessThan(0.05);
     expect(outdoors(8)).toBeGreaterThan(outdoors(14));
+  });
+});
+
+describe("The open map: districts around the town", () => {
+  it("the core block's east, north and south edges sit on the outer street grid", () => {
+    const on = (v: number, o: number) => Math.abs(((v - o) % CELL + CELL) % CELL) < 1e-6 || Math.abs((((v - o) % CELL) + CELL) % CELL - CELL) < 1e-6;
+    expect(on(X1, GX)).toBe(true);
+    expect(on(Z0, GZ)).toBe(true);
+    expect(on(Z1, GZ)).toBe(true);
+  });
+  it("the coast is straight beside the town and has no jumps further out", () => {
+    expect(coastAt(Z0)).toBeCloseTo(COAST); expect(coastAt(Z1)).toBeCloseTo(COAST);
+    for (let z = -400; z < 400; z += 0.5) expect(Math.abs(coastAt(z + 0.5) - coastAt(z))).toBeLessThan(0.2);
+    expect(zoneAt(COAST - 5, 0)).toBe("sea");
+  });
+  it("districts never overlap, and each has a zone, a name and an opening size", () => {
+    for (const a of DISTRICTS) for (const b of DISTRICTS) {
+      if (a === b) continue;
+      const overlap = a.x0 < b.x1 - 1e-6 && b.x0 < a.x1 - 1e-6 && a.z0 < b.z1 - 1e-6 && b.z0 < a.z1 - 1e-6;
+      expect(overlap, `${a.id} and ${b.id}`).toBe(false);
+    }
+    const zones = new Set(DISTRICTS.map((d) => d.zone));
+    for (const z of ["residential", "commercial", "industrial", "farmland"]) expect(zones.has(z as never)).toBe(true);
+    expect(districtAt(0, 0)?.id).toBe("old-town");
+    expect(districtAt(60, -25)?.zone).toBe("industrial");
+  });
+  it("a district opens when the town is big enough", () => {
+    const mill = DISTRICTS.find((d) => d.id === "mill-district")!;
+    expect(districtStatus(mill, 10).open).toBe(false);
+    expect(districtStatus(mill, 10).text).toBe("Opens when the town reaches 800 residents (10 now)");
+    expect(districtStatus(mill, 800).open).toBe(true);
+  });
+  it("plots are zoned by what they are for", () => {
+    expect(plotZone({ use: "home", area: "main" })).toBe("residential");
+    expect(plotZone({ use: "business", area: "market" })).toBe("commercial");
+    expect(plotZone({ use: "business", area: "farmland" })).toBe("farmland");
+    expect(plotZone({ use: "business", area: "harbourside" })).toBe("industrial");
+    expect(plotZone({ use: "civic", area: "town_hall" })).toBe("civic");
+  });
+  it("past the districts the land carries on: villages, farms and woods, never empty", () => {
+    const seen = new Set<string>();
+    for (let x = 100; x < 400; x += 13) for (let z = -400; z < 400; z += 13) seen.add(zoneAt(x, z));
+    expect(seen.has("farmland") && seen.has("countryside") && seen.has("residential")).toBe(true);
   });
 });

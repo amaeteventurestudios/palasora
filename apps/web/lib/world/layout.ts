@@ -8,7 +8,7 @@ export type WorldBusiness = { id: string; type: "farm" | "workshop" | "stall" | 
   health: "green" | "yellow" | "orange" | "red"; status: "open" | "closed"; price_sora: number; wage_sora: number; opened_tick?: number };
 export type AwayItem = { event: string; kind: string; text: string; tick: number; yours: boolean; plot: string | null };
 export type WorldData = {
-  town: { id: string; name: string; slug: string }; tick: number; grid: { w: number; d: number }; founded: boolean; plots: WorldPlot[];
+  town: { id: string; name: string; slug: string }; tick: number; population?: number; grid: { w: number; d: number }; founded: boolean; plots: WorldPlot[];
   businesses: WorldBusiness[]; mine: { plot: string | null; agents: string[]; businesses: string[]; resident: boolean };
   away: { since_tick: number; items: AwayItem[]; quiet: boolean; total: number } | null; markers: { plot: string; event: string; kind: string; yours: boolean }[];
 };
