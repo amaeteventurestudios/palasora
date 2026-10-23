@@ -14,7 +14,7 @@ export type WorldData = {
   town: { id: string; name: string; slug: string }; tick: number; population?: number; grid: { w: number; d: number }; founded: boolean; plots: WorldPlot[];
   businesses: WorldBusiness[]; mine: { plot: string | null; agents: string[]; businesses: string[]; resident: boolean; home?: string | null };
   away: { since_tick: number; items: AwayItem[]; quiet: boolean; total: number } | null; markers: { plot: string; event: string; kind: string; yours: boolean }[];
-  flows?: GoodsFlow[]; market?: { stalls: number };
+  flows?: GoodsFlow[]; market?: { stalls: number }; suburb?: { recent: string[] };
 };
 
 export const PLOT = 2.4; // one plot, in world units (metres / 10)
@@ -52,6 +52,7 @@ export function plotAt(wx: number, wz: number): { x: number; y: number } | null 
 
 export const AREA_LABEL: Record<string, string> = {
   market: "Downtown", main: "Home quarters", harbourside: "Workshop yard", farmland: "Farm belt", town_hall: "Downtown", market_hall: "Downtown", harbour: "Harbour",
+  suburb: "Southgate",
 };
 export const CIVIC_LABEL: Record<string, string> = { town_hall: "Town Hall", market_hall: "Market Hall", harbour: "Harbour" };
 export const BUSINESS_LABEL: Record<string, string> = { farm: "Farm", workshop: "Workshop", stall: "Food stall", delivery: "Delivery depot", factory: "Food factory" };
@@ -61,7 +62,7 @@ export const HEALTH_LABEL: Record<string, string> = { green: "Has everything", y
 export function plotTitle(p: WorldPlot, biz?: WorldBusiness): string {
   if (p.use === "civic") return CIVIC_LABEL[p.area] ?? "Town building";
   if (biz && biz.status === "open") return BUSINESS_LABEL[biz.type] ?? "Business";
-  if (p.use === "home") return p.owner ? "House" : "Free home";
+  if (p.use === "home") return p.owner ? "House" : p.area === "suburb" ? "New home" : "Free home";
   if (p.auction) return "Plot at auction";
   return p.owner ? "Empty plot" : "Plot for sale";
 }

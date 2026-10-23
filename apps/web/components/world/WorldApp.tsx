@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Bell, Bot, CircleHelp, Coins, Gamepad2, Home, LayoutList, LineChart, Map as MapIcon, MessageSquare, MoreHorizontal, Plus,
-  Settings, Shield, Trophy, User, Users, X, Store, Navigation, ZoomIn, ZoomOut, LocateFixed, Layers, MapPin, Truck, TrendingUp, ShoppingBasket, Briefcase } from "lucide-react";
+  Settings, Shield, Trophy, User, Users, X, Store, Navigation, ZoomIn, ZoomOut, LocateFixed, Layers, MapPin, Truck, TrendingUp, ShoppingBasket, Briefcase, Route } from "lucide-react";
 import type { WorldData } from "@/lib/world/layout";
 import { townTime } from "@/lib/world/layout";
 import type { WorldHandle, Selection, Label } from "@/lib/world/scene";
@@ -255,6 +255,7 @@ function MainMenu({ viewer, leftHanded, onClose, onCard, onList }: { viewer: Vie
     ] },
     { title: "Agents and places", items: [
       { label: "My Agents", href: "/my-agents", icon: Bot, badge: viewer.waiting },
+      { label: "Your path", icon: Route, on: () => onCard({ kind: "path" }), testid: "menu-path" },
       { label: "Find a place", icon: MapPin, on: () => onCard({ kind: "place" }), testid: "menu-place" },
       { label: "Residents", icon: Users, on: () => onCard({ kind: "residents" }), testid: "menu-residents" },
       { label: "Job board", icon: Briefcase, on: () => onCard({ kind: "jobs" }), testid: "menu-jobs" },

@@ -61,7 +61,8 @@ export function PlacePanel({ focus, onHighlight, onFly }: { focus?: string; onHi
   const owned = d.businesses.length + d.carts.length;
   const sale = d.for_sale.filter((p) => p.area === z).sort((a, b) => (a.plot === focus ? -1 : b.plot === focus ? 1 : a.price - b.price || a.plot.localeCompare(b.plot)));
   const shown = more ? sale : sale.slice(0, 6);
-  const homes = [...d.free_homes].sort((a, b) => (a.plot === focus ? -1 : b.plot === focus ? 1 : a.plot.localeCompare(b.plot)));
+  // the service lists the new suburb homes first (a house goes up for whoever moves in), then the old town's free homes
+  const homes = [...d.free_homes].sort((a, b) => (a.plot === focus ? -1 : b.plot === focus ? 1 : 0));
   const h3 = "text-sm font-semibold";
 
   return (
@@ -77,12 +78,14 @@ export function PlacePanel({ focus, onHighlight, onFly }: { focus?: string; onHi
       {needsHome && (
         <section aria-label="Pick a home">
           <h3 className={h3}>{d.resident ? "Pick your home" : "Move in"}</h3>
-          <p className="mt-0.5 text-[#4b5566]">Homes are free, one each. {d.resident ? "" : `You arrive with ${soraWhole(d.prices.grant)} to start. `}Free homes glow on the map; tap one, or pick from the list.</p>
+          <p className="mt-0.5 text-[#4b5566]">Homes are free, one each. {d.resident ? "" : `You arrive with ${soraWhole(d.prices.grant)} to start. `}Free homes glow on the map; tap one, or pick from the list. New houses in Southgate are built for whoever moves in.</p>
           {homes.length === 0 ? <p className="mt-2">Every home is taken right now. New homes open with Southgate.</p> : (
-            <ul className="mt-2 flex flex-wrap gap-2" data-testid="place-homes">{homes.slice(0, 8).map((h) => (
+            <ul className="mt-2 flex flex-wrap gap-2" data-testid="place-homes">{homes.slice(0, 10).map((h) => (
               <li key={h.plot}><button type="button" className={`${secondary} ${h.plot === focus ? "!border-[#d8a838] !bg-[#fff4d6]" : ""}`} disabled={pending || waiting.has("move_in") || waiting.has("claim_home")}
-                onClick={() => { onFly(h.plot); setConfirm({ kind: d.resident ? "claim_home" : "move_in", plot: h.plot, text: `${d.resident ? "Take" : "Move into"} the home on plot ${h.plot}? It's free.` }); }}
-                data-testid="place-home">Plot {h.plot}</button></li>))}</ul>
+                onClick={() => { onFly(h.plot); setConfirm({ kind: d.resident ? "claim_home" : "move_in", plot: h.plot, text: h.new
+                  ? `${d.resident ? "Take" : "Move into"} a new house at ${h.address}? It's free, and it goes up the day you move in.`
+                  : `${d.resident ? "Take" : "Move into"} the home on plot ${h.plot}? It's free.` }); }}
+                data-testid="place-home" data-new={h.new ? "yes" : "no"}>{h.new ? `${h.address} · new` : `Plot ${h.plot}`}</button></li>))}</ul>
           )}
         </section>
       )}

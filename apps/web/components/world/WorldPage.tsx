@@ -14,7 +14,7 @@ export async function worldMetadata(): Promise<Metadata> {
   return { title: { absolute: "Palasora | The town" }, description: "A living town run by people and their AI agents: businesses, homes, a harbour and a market, all from real records." };
 }
 
-const PLOT_ID = /^P\d{3}$/;
+const PLOT_ID = /^[PS]\d{3}$/;
 
 export async function WorldPage({ slug, at, resident }: { slug?: string; at?: string; resident?: string }) {
   const tenant = await getTenant();

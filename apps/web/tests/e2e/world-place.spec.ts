@@ -48,16 +48,18 @@ test("S3-02 a newcomer picks a free home on the map and moves in at the next hou
   await expect(card).toContainText("Move in");
   const homes = card.getByTestId("place-home");
   expect(await homes.count()).toBeGreaterThan(3);
-  await expect(homes.first()).toHaveText("Plot P004"); // P003 is the reader's home
+  // Meadowvale growth: the new houses in Southgate come first, then the old town's free homes (P003 is the reader's)
+  await expect(homes.first()).toHaveText("1 Palm Lane · new");
+  await expect(card.locator('[data-testid="place-home"][data-new="no"]').first()).toHaveText("Plot P004");
   await homes.first().click();
   await page.waitForTimeout(1200); // the camera flies to it; free homes are labelled close up
   await expect(page.getByTestId("pick-label").filter({ hasText: "Free home" }).first()).toBeVisible();
-  await expect(card.getByTestId("place-confirm")).toContainText("Move into the home on plot P004? It's free.");
+  await expect(card.getByTestId("place-confirm")).toContainText("Move into a new house at 1 Palm Lane? It's free, and it goes up the day you move in.");
   await page.screenshot({ path: path.join(shots, "move-in-desktop.png") });
   await card.getByTestId("place-confirm-go").click();
   await expect(card.getByTestId("place-msg")).toContainText("You move in at the town's next hour");
-  await expect(card.getByTestId("place-requests").locator("li").first()).toContainText("Move in · P004: waiting for the next hour");
-  // one move at a time: the homes can't be picked again while this one waits (others are no longer offered P004 at all)
+  await expect(card.getByTestId("place-requests").locator("li").first()).toContainText("Move in · S001: waiting for the next hour");
+  // one move at a time: the homes can't be picked again while this one waits (others are no longer offered S001 at all)
   await expect(card.getByTestId("place-home").first()).toBeDisabled();
 });
 

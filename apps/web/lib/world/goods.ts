@@ -5,7 +5,8 @@
 // each route on the road and names it ("40 crops a day").
 import * as THREE from "three";
 import { M } from "./kit";
-import { plotCenter, streets, type GoodsFlow, type WorldPlot } from "./layout";
+import { streets, type GoodsFlow, type WorldPlot } from "./layout";
+import { plotXZ } from "./districts";
 
 export const GOOD_COLOR: Record<string, string> = { crops: "#7bbf4a", meals: "#e8873a", tools: "#5e7fa8", materials: "#a97c50" };
 const SPEED = 1.6, LOAD = 3; // units a second; seconds loading at each end
@@ -20,7 +21,7 @@ export function createGoods({ scene, flows, plots, lite }: { scene: THREE.Scene;
   for (const f of flows.slice(0, lite ? 16 : 32)) {
     const a = plots.get(f.from), b = plots.get(f.to);
     if (!a || !b) continue;
-    const [ax, az] = plotCenter(a.x, a.y), [bx, bz] = plotCenter(b.x, b.y);
+    const [ax, az] = plotXZ(a), [bx, bz] = plotXZ(b);
     const ha = near(S.h, az), hb = near(S.h, bz), v = near(S.v, (ax + bx) / 2);
     const raw = [[ax, az], [ax, ha], [v, ha], [v, hb], [bx, hb], [bx, bz]];
     const pts: THREE.Vector3[] = [];

@@ -90,11 +90,13 @@ def _people(con: sqlite3.Connection) -> list[dict]:
     for p in out:
         if p["home"]:
             by_home.setdefault(p["home"], []).append(p)
+    from .growth import address as lot_address
     for pid, ps in by_home.items():
         x, y = plot_xy[pid]
-        street = STREETS[y % len(STREETS)]
+        lot = lot_address(pid)
+        street = STREETS[int(y) % len(STREETS)]
         for k, p in enumerate(ps, start=1):
-            p["address"] = f"{(x + 1) * 2 - y % 2} {street}" + (f", flat {k}" if len(ps) > 1 else "")
+            p["address"] = (lot or f"{(int(x) + 1) * 2 - int(y) % 2} {street}") + (f", flat {k}" if len(ps) > 1 else "")
     for p in out:
         p.setdefault("address", "")
     return out

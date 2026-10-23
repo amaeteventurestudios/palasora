@@ -6,7 +6,7 @@
 // carries evenly spaced cars at one speed, so nobody overtakes and nothing jumps, and how many show follows the clock.
 import * as THREE from "three";
 import { Builder, M, createRandom } from "./kit";
-import { CELL, COAST, GX, GZ, SEA_Y, WORLD_R, Z0, Z1, X0, X1, cellNoise, coastAt, zoneAt, type Zone } from "./districts";
+import { CELL, COAST, GX, GZ, SEA_Y, WORLD_R, Z0, Z1, X0, X1, cellNoise, coastAt, districtAt, suburbLots, zoneAt, type Lot, type Zone } from "./districts";
 import { busy } from "./life";
 
 const CH = 2 * CELL;
@@ -23,7 +23,9 @@ const GROUND: Record<Zone, string> = {
 };
 
 type Rand = ReturnType<typeof createRandom>;
-export type ChunkCtx = { scene: THREE.Scene; mat: THREE.Material; glowMat: THREE.Material; lite: boolean };
+/** A suburb lot on the map: laid out and waiting, lived in, or moved into in the last day (the house is going up). */
+export type LotState = "free" | "home" | "new";
+export type ChunkCtx = { scene: THREE.Scene; mat: THREE.Material; glowMat: THREE.Material; lite: boolean; lots?: Map<number, LotState>; population?: number };
 type Chunk = { key: string; i: number; j: number; mesh: THREE.Mesh | null; glow: THREE.Mesh | null; turbines: { x: number; y: number; z: number }[]; seen: number };
 
 /** The core block, where the town builds itself (chunks leave it alone). */
@@ -39,6 +41,11 @@ export function createChunks(ctx: ChunkCtx) {
   const chunks = new Map<string, Chunk>();
   const MAX_KEEP = ctx.lite ? 40 : 80;
   let clock = 0;
+  // Meadowvale growth: the suburb blocks and their lots, and how big the town is (districts open as it grows)
+  const lotsByBlock = new Map<string, Lot[]>();
+  for (const l of suburbLots()) { const k = `${l.ci},${l.cj}`; if (!lotsByBlock.has(k)) lotsByBlock.set(k, []); lotsByBlock.get(k)!.push(l); }
+  const lotState = ctx.lots ?? new Map<number, LotState>();
+  const population = ctx.population ?? 0;
 
   // ------------------------------------------------------------------ building one chunk
   function build(i: number, j: number): Chunk {
@@ -79,8 +86,12 @@ export function createChunks(ctx: ChunkCtx) {
       if (R.rng() < 0.12) boat(B, R, cx + R.rr(-4, 4), cz + R.rr(-4, 4));
       return;
     }
+    // a district the town has not grown into yet is open land: dirt tracks where its streets will run, survey stakes
+    const district = districtAt(cx, cz);
+    const blockLots = lotsByBlock.get(`${ci},${cj}`);
+    const settled = blockLots ? blockLots.some((l) => lotState.has(l.n)) : !district || district.id === "old-town" || population >= district.opensAt;
     // streets on the west and north edges of every block (and the south edge just north of the town)
-    const country = zone === "farmland" || zone === "countryside";
+    const country = zone === "farmland" || zone === "countryside" || !settled;
     if (roadAt(x0, cz)) street(B, W, x0, z0, x0, z1, country);
     const nx = landX(z0);
     if (nx < x1 - 1) street(B, W, nx, z0, x1, z0, country);
@@ -88,8 +99,10 @@ export function createChunks(ctx: ChunkCtx) {
     // what stands on the block
     const ix0 = Math.max(x0 + ROAD / 2 + 0.25, landX(cz) + 0.6), ix1 = x1 - ROAD / 2 - 0.25, iz0 = z0 + ROAD / 2 + 0.25, iz1 = z1 - ROAD / 2 - 0.25;
     if (ix1 - ix0 < 2.5) return;
-    B.box(ix1 - ix0, 0.03, iz1 - iz0, C(GROUND[zone]), M((ix0 + ix1) / 2, 0.012, (iz0 + iz1) / 2));
-    if (zone === "residential") residential(B, W, R, ix0, ix1, iz0, iz1);
+    B.box(ix1 - ix0, 0.03, iz1 - iz0, C(settled ? GROUND[zone] : PAL.meadow), M((ix0 + ix1) / 2, 0.012, (iz0 + iz1) / 2));
+    if (blockLots) suburb(B, W, blockLots, ix0, ix1, iz0, iz1, settled);
+    else if (!settled) openLand(B, R, ix0, ix1, iz0, iz1);
+    else if (zone === "residential") residential(B, W, R, ix0, ix1, iz0, iz1);
     else if (zone === "commercial") commercial(B, W, R, ix0, ix1, iz0, iz1);
     else if (zone === "industrial") industrial(B, W, R, ix0, ix1, iz0, iz1);
     else if (zone === "farmland") farm(B, R, ix0, ix1, iz0, iz1, turbines, cellNoise(ci, cj, 3) < 0.3);
@@ -117,6 +130,52 @@ export function createChunks(ctx: ChunkCtx) {
       house(B, W, R, cx, cz);
       B.box(lw - 0.3, 0.02, 0.05, C(PAL.white), M(cx, 0.08, cz + ld / 2 - 0.15)); // garden fence
     }
+  }
+  /** A suburb block: a lot pad for each lot laid out so far, with survey pegs while it waits, a house going up the day
+   *  someone moves in, and a finished house and garden after; the little park in the middle once the street is open. */
+  function suburb(B: Builder, W: Builder, lots: Lot[], ax0: number, ax1: number, az0: number, az1: number, settled: boolean) {
+    if (!settled) { openLand(B, createRandom(lots[0].n + 1), ax0, ax1, az0, az1); return; }
+    const lw = (ax1 - ax0) / 3, ld = (az1 - az0) / 3;
+    park(B, createRandom(lots[0].n * 31 + 7), ax0 + lw * 1.5, az0 + ld * 1.5, lw, ld);
+    for (const l of lots) {
+      const st = lotState.get(l.n);
+      if (!st) continue;
+      const R = createRandom(l.n * 7919 + 13);
+      B.box(l.w - 0.35, 0.03, l.d - 0.35, C(st === "free" ? "#b9d3a4" : PAL.lawn), M(l.x, 0.04, l.z));
+      if (st === "free") {
+        for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+          const px = l.x + sx * (l.w / 2 - 0.35), pz = l.z + sz * (l.d / 2 - 0.35);
+          B.box(0.05, 0.3, 0.05, C(PAL.wood), M(px, 0.17, pz)); B.box(0.12, 0.06, 0.02, C("#e8743b"), M(px + 0.06, 0.28, pz));
+        }
+        B.box(0.05, 0.5, 0.05, C(PAL.wood), M(l.x, 0.27, l.z + l.d / 2 - 0.3)); B.box(0.5, 0.28, 0.04, C(PAL.white), M(l.x, 0.5, l.z + l.d / 2 - 0.3));
+        B.box(0.38, 0.06, 0.045, C(PAL.terracotta), M(l.x, 0.52, l.z + l.d / 2 - 0.3));
+      } else if (st === "new") {
+        building(B, R, l.x, l.z);
+      } else {
+        house(B, W, R, l.x, l.z);
+        B.box(l.w - 0.3, 0.02, 0.05, C(PAL.white), M(l.x, 0.08, l.z + l.d / 2 - 0.15)); // garden fence
+      }
+    }
+  }
+  /** A house going up: the ground floor walls, scaffolding, a pallet of blocks and a small mixer. */
+  function building(B: Builder, R: Rand, cx: number, cz: number) {
+    const w = R.rr(1.4, 1.8), d = R.rr(1.1, 1.3);
+    B.box(w + 0.2, 0.06, d + 0.2, C("#cfc8b8"), M(cx, 0.05, cz));
+    B.box(w, 0.28, d, C("#e9d8c0"), M(cx, 0.22, cz));
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) B.box(0.04, 0.9, 0.04, C("#d9a441"), M(cx + sx * (w / 2 + 0.12), 0.45, cz + sz * (d / 2 + 0.12)));
+    for (const y of [0.45, 0.85]) {
+      B.box(w + 0.28, 0.03, 0.04, C("#d9a441"), M(cx, y, cz + d / 2 + 0.12)); B.box(w + 0.28, 0.03, 0.04, C("#d9a441"), M(cx, y, cz - d / 2 - 0.12));
+    }
+    B.box(0.4, 0.2, 0.3, C("#a9a39a"), M(cx + w / 2 + 0.45, 0.13, cz + 0.2));
+    B.cyl(0.12, 0.1, 0.22, 8, C("#e8743b"), M(cx - w / 2 - 0.4, 0.2, cz - 0.1, 0, 0, 0.4));
+  }
+  /** Open land in a district the town has not reached: meadow, a few trees and survey stakes at the corners. */
+  function openLand(B: Builder, R: Rand, ax0: number, ax1: number, az0: number, az1: number) {
+    for (const [px, pz] of [[ax0 + 0.3, az0 + 0.3], [ax1 - 0.3, az0 + 0.3], [ax0 + 0.3, az1 - 0.3], [ax1 - 0.3, az1 - 0.3]]) {
+      B.box(0.05, 0.35, 0.05, C(PAL.wood), M(px, 0.2, pz)); B.box(0.12, 0.06, 0.02, C("#e8743b"), M(px + 0.06, 0.32, pz));
+    }
+    const n = 2 + Math.floor(R.rng() * 4);
+    for (let k = 0; k < n; k++) tree(B, R, R.rr(ax0 + 1, ax1 - 1), R.rr(az0 + 1, az1 - 1), R.rr(0.8, 1.2));
   }
   function park(B: Builder, R: Rand, cx: number, cz: number, w: number, d: number) {
     B.box(w - 0.4, 0.04, d - 0.4, C("#8db97c"), M(cx, 0.03, cz));

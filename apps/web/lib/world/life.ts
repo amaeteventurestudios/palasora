@@ -191,7 +191,7 @@ export function createLife(ctx: LifeCtx) {
     }
     return best.filter((p, k) => k === 0 || Math.hypot(p[0] - best[k - 1][0], p[1] - best[k - 1][1]) > 0.01);
   };
-  const homes = ctx.plots.filter((p) => p.use === "home").map((p) => doorOf(...plotCenter(p.x, p.y)));
+  const homes = ctx.plots.filter((p) => p.use === "home" && p.area !== "suburb").map((p) => doorOf(...plotCenter(p.x, p.y)));
   const works = ctx.plots.filter((p) => p.use !== "home").map((p) => doorOf(...plotCenter(p.x, p.y)));
   const marketPlot = ctx.plots.find((p) => p.area === "market_hall");
   const market: P2 = marketPlot ? doorOf(...plotCenter(marketPlot.x, marketPlot.y)) : works[0] ?? [0, 0];

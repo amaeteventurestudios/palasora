@@ -147,6 +147,7 @@ def seed_town(pb: PB, t: dict) -> dict:
         _seed_shares(con)
         _seed_market(con)
         _seed_jobs(con)
+        _seed_suburb(con)
     return social.relay(con, pb, t["id"])
 
 
@@ -271,6 +272,13 @@ def _seed_jobs(con) -> None:
                     [("b009", 2, 2200, 10, 11), ("b003", 1, 1600, 12, 12)])
     con.executemany("INSERT INTO jobs(employer, worker, wage, start_tick) VALUES (?,?,?,?)",
                     [("civic", "h011", 2000, 9), ("civic", "h012", 2000, 9), ("b009", "h013", 2200, 11)])
+
+
+def _seed_suburb(con) -> None:
+    """Meadowvale growth: the first street of the suburb (Palm Lane, Southgate) is laid out, eight new homes waiting."""
+    from .economy.town import growth
+    con.executemany("INSERT OR IGNORE INTO plots(id, area, x, y, size, prime, use) VALUES (?,?,?,?,1,0,'home')",
+                    [(l["id"], growth.AREA, l["x"], l["y"]) for l in growth.lots()[:growth.PER_STREET]])
 
 def main() -> None:
     if os.environ.get("PALAVVA_ENV") != "test":

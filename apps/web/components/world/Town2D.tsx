@@ -23,7 +23,7 @@ export function Town2D({ data, selected, onSelect, reason }: { data: WorldData; 
         <rect x={-TOWN_W / 2} y={-TOWN_D / 2} width={TOWN_W} height={TOWN_D} fill="#e6e0d2" />
         {S.v.map((x) => <rect key={`v${x}`} x={x - 0.6} y={-TOWN_D / 2} width={1.2} height={TOWN_D} fill="#646d78" />)}
         {S.h.map((z) => <rect key={`h${z}`} x={-TOWN_W / 2} y={z - 0.6} width={TOWN_W} height={1.2} fill="#646d78" />)}
-        {data.plots.map((p) => {
+        {data.plots.filter((p) => p.area !== "suburb").map((p) => {
           const [x, z] = plotCenter(p.x, p.y), b = biz.get(p.id), sel = selected === p.id;
           const title = `${plotTitle(p, b)}, plot ${p.id}`;
           return (

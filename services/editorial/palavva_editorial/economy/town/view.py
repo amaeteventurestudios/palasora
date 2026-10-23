@@ -72,6 +72,8 @@ def world(con: sqlite3.Connection, viewer: str = "", since_hours: int = 48) -> d
             "businesses": biz, "mine": {"plot": my_plot, "agents": agents, "businesses": [b["id"] for b in mine_biz], "resident": bool(members),
                      "home": next((p["id"] for p in plots if p["use"] == "home" and p["owner"] and p["owner"] in members), None)},
             "away": away, "markers": markers, "flows": flows,
+            "suburb": {"recent": [json.loads(r["refs"]).get("plot") for r in con.execute(
+                "SELECT refs FROM world_events WHERE kind='moved_in' AND tick > ? AND refs LIKE '%\"S%'", (now - 24,))]},
             "market": {"stalls": con.execute("SELECT COUNT(DISTINCT holder) n FROM goods_orders WHERE side='sell' AND status IN ('open','partial')").fetchone()["n"]}}
 
 

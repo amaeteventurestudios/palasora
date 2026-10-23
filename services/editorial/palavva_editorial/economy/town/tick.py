@@ -16,7 +16,7 @@ from __future__ import annotations
 import math
 
 from .. import db
-from . import actions, agents, auctions, business as B, card, civic, contracts, delivery, goods, jobs, market, reports, shares
+from . import actions, agents, auctions, business as B, card, civic, contracts, delivery, goods, growth, jobs, market, reports, shares
 from .world import CIVIC, MEAL_HOURS, WORK_HOURS, World
 
 
@@ -50,6 +50,7 @@ def _steps(w: World) -> None:
         w.scenario.on_tick(w)
     if h == 10 and w.day % 7 == 0:
         civic.weekly_vote(w)
+    growth.grow(w)  # Meadowvale growth: a new street of suburb homes when the last ones are nearly taken
     # 3. decide, 4. act (owners' own requests from the business card first, through the same gate)
     auctions.close_due(w)
     auctions.list_daily(w)
