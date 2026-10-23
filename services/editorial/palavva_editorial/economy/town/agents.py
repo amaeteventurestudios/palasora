@@ -10,7 +10,7 @@ import json
 import math
 
 from .. import ledger
-from . import ai, business as B, contracts, delivery, goods
+from . import ai, business as B, contracts, delivery, goods, market
 from .params import C, TYPES
 from .world import CIVIC, WORK_HOURS, Agent, Biz
 
@@ -42,6 +42,43 @@ def decide(w) -> list[Proposal]:
         out += mischief(w)
     if h == 11:
         out += investing(w)
+    if h == 13:
+        out += bargains(w)
+    return out
+
+
+# --------------------------------------------------------------------------- the player market
+def bargains(w) -> list[Proposal]:
+    """13:00. A business low on its input looks round the Market Hall's stalls: an offer from another owner at or under the
+    reference price is cheaper than a contract or an import, so it buys up to three days' use, with at most a third of its cash.
+    This is what makes a person's offer at a fair price sell."""
+    out: list[Proposal] = []
+    con = w.con
+    for b in w.open_biz():
+        g = B.input_good(b.type)
+        if g not in market.MARKET_GOODS or w.agents[b.owner].mode != "rules":
+            continue
+        use = B.input_use_per_day(w, b)
+        have = goods.free(con, b.holder, g) + delivery.incoming(w, b.holder, g)
+        gap = int(use * 3) - have
+        if gap < 1:
+            continue
+        me = ledger.trade_owner(w.agents[b.owner].owner_key)
+        ref = w.ref_price(g)
+        purse = w.bal(b.acct) // 3
+        for r in con.execute(f"""SELECT price, qty - filled q FROM goods_orders WHERE good=? AND side='sell' AND status IN ('open','partial') AND price <= ?
+                                 AND {ledger.TRADE_OWNER_SQL} != ? ORDER BY price, id""", (g, ref, me)).fetchall():
+            q = min(gap, r["q"], purse // r["price"])
+            if q < 1:
+                break
+            if con.execute(f"SELECT 1 FROM goods_orders WHERE good=? AND side='sell' AND status IN ('open','partial') AND price <= ? AND {ledger.TRADE_OWNER_SQL} = ?",
+                           (g, r["price"], me)).fetchone():
+                break  # its own offer sits at that price: the Hall would refuse the match
+            out.append((b.owner, "place_order", {"good": g, "side": "buy", "price": r["price"], "qty": q, "business": b.id}, ""))
+            gap -= q
+            purse -= q * r["price"]
+            if gap < 1:
+                break
     return out
 
 

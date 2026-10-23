@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Bell, Bot, CircleHelp, Coins, Gamepad2, Home, LayoutList, LineChart, Map as MapIcon, MessageSquare, MoreHorizontal, Plus,
-  Settings, Shield, Trophy, User, Users, X, Store, Navigation, ZoomIn, ZoomOut, LocateFixed, Layers, MapPin, Truck, TrendingUp } from "lucide-react";
+  Settings, Shield, Trophy, User, Users, X, Store, Navigation, ZoomIn, ZoomOut, LocateFixed, Layers, MapPin, Truck, TrendingUp, ShoppingBasket } from "lucide-react";
 import type { WorldData } from "@/lib/world/layout";
 import { townTime } from "@/lib/world/layout";
 import type { WorldHandle, Selection, Label } from "@/lib/world/scene";
@@ -178,6 +178,7 @@ export function WorldApp({ data, viewer, at, resident }: { data: WorldData | nul
           onPlot={openPlot} onPref={setPref} onPlace={(plot) => setCard({ kind: "place", plot })} onHighlight={onHighlight}
           onResident={(id) => setCard(id ? { kind: "resident", id } : { kind: "residents" })}
           onExchange={(id) => setCard(id ? { kind: "listing", id } : { kind: "exchange" })}
+          onMarket={(good) => setCard(good ? { kind: "good", good } : { kind: "market" })}
           onFly={(id) => { setSelected(id); world.current?.select(id); world.current?.flyTo(id, 2.2); }}
           onTour={() => { const ids = data.markers.map((m) => m.plot); setCard(null); world.current?.tour(ids, () => setCard({ kind: "away" })); }} />
       )}
@@ -256,6 +257,7 @@ function MainMenu({ viewer, leftHanded, onClose, onCard, onList }: { viewer: Vie
       { label: "My Agents", href: "/my-agents", icon: Bot, badge: viewer.waiting },
       { label: "Find a place", icon: MapPin, on: () => onCard({ kind: "place" }), testid: "menu-place" },
       { label: "Residents", icon: Users, on: () => onCard({ kind: "residents" }), testid: "menu-residents" },
+      { label: "Market Hall", icon: ShoppingBasket, on: () => onCard({ kind: "market" }), testid: "menu-market" },
       { label: "Town Exchange", icon: TrendingUp, on: () => onCard({ kind: "exchange" }), testid: "menu-exchange" },
       { label: "Towns and Districts", icon: MapIcon, on: () => onCard({ kind: "travel" }) },
       { label: "Businesses", href: "/businesses", icon: Store },

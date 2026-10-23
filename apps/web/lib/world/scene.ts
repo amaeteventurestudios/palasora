@@ -95,7 +95,7 @@ export function mountWorld(canvas: HTMLCanvasElement, data: WorldData, opts: Wor
 
   buildGround(B, R);
   buildStreets(B, W, R, S, busStops);
-  for (const p of data.plots) buildPlot(B, G, W, p, bizOnPlot.get(p.id), data.founded || data.businesses.length > 0, data.tick);
+  for (const p of data.plots) buildPlot(B, G, W, p, bizOnPlot.get(p.id), data.founded || data.businesses.length > 0, data.tick, data.market?.stalls ?? 5);
   for (const b of data.businesses) { const p = plotsById.get(b.plot); if (b.cart && b.status === "open" && p) foodCart(B, p, b); }
   buildDressing(B, G, W, R, landmarks);
 
@@ -577,7 +577,7 @@ function windowRow(W: Builder, x: number, y: number, z: number, w: number, d: nu
   }
 }
 
-function buildPlot(B: Builder, G: Builder, W: Builder, p: WorldPlot, biz: WorldBusiness | undefined, lived: boolean, tick = 0) {
+function buildPlot(B: Builder, G: Builder, W: Builder, p: WorldPlot, biz: WorldBusiness | undefined, lived: boolean, tick = 0, stalls = 5) {
   const [cx, cz] = plotCenter(p.x, p.y);
   const R = createRandom(hashStr(p.id));
   const IN = PLOT - 0.24;
@@ -606,7 +606,12 @@ function buildPlot(B: Builder, G: Builder, W: Builder, p: WorldPlot, biz: WorldB
       sb.box(1.7, 0.5, 1.2, C(PAL.cream), M(0, 0.36, -0.15));
       sg.gable(1.75, 0.45, 1.3, C(PAL.glass), M(0, 0.61, -0.15, Math.PI / 2));
       sb.box(1.8, 0.04, 1.32, C(PAL.slate), M(0, 0.61, -0.15));
-      for (let k = -2; k <= 2; k++) { sb.box(0.26, 0.16, 0.18, C(PAL.wood), M(k * 0.34, 0.19, 0.7)); sb.box(0.3, 0.03, 0.24, C(R.pick(OWNER)), M(k * 0.34, 0.38, 0.7)); }
+      // the stalls out front: one is open (bright awning, crates of goods) for each seller at the Market Hall now
+      for (let k = -2; k <= 2; k++) {
+        const open = k + 2 < stalls, awning = R.pick(OWNER);
+        sb.box(0.26, 0.16, 0.18, C(PAL.wood), M(k * 0.34, 0.19, 0.7)); sb.box(0.3, 0.03, 0.24, C(open ? awning : "#c9c2b4"), M(k * 0.34, 0.38, 0.7));
+        if (open) for (let c = 0; c < 2; c++) sb.box(0.08, 0.06, 0.08, C(c ? "#7fae4f" : "#c98f3e"), M(k * 0.34 + (c ? 0.06 : -0.06), 0.3, 0.7));
+      }
       windowRow(sw, 0, 0.4, -0.15, 1.4, 1.2, 6, "z", warm);
       place(1.25);
     } else { // harbour: quay, warehouse, crane, pier into the sea

@@ -71,7 +71,8 @@ def world(con: sqlite3.Connection, viewer: str = "", since_hours: int = 48) -> d
     return {"town": _town(con), "tick": now, "population": population, "grid": {"w": layout.WIDTH, "d": layout.DEPTH}, "founded": bool(stored), "plots": plots,
             "businesses": biz, "mine": {"plot": my_plot, "agents": agents, "businesses": [b["id"] for b in mine_biz], "resident": bool(members),
                      "home": next((p["id"] for p in plots if p["use"] == "home" and p["owner"] and p["owner"] in members), None)},
-            "away": away, "markers": markers, "flows": flows}
+            "away": away, "markers": markers, "flows": flows,
+            "market": {"stalls": con.execute("SELECT COUNT(DISTINCT holder) n FROM goods_orders WHERE side='sell' AND status IN ('open','partial')").fetchone()["n"]}}
 
 
 def goods_flows(con: sqlite3.Connection, now: int, by_id: dict, limit: int = 40) -> list[dict]:

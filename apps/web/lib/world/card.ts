@@ -24,9 +24,11 @@ export type RequestKind = "set_price" | "set_wage" | "hire" | "fire" | "upgrade"
 export const PERIOD_LABEL = { day: "Today", week: "7 days", month: "30 days" } as const;
 export const REQUEST_LABEL: Record<string, string> = {
   set_price: "Change price", set_wage: "Change wage", hire: "Hire", fire: "Let someone go", upgrade: "Upgrade", end_contract: "End contract", close_business: "Close business", list_shares: "List shares",
+  place_order: "Market Hall order", cancel_order: "Cancel Market Hall order",
 };
 export const REFUSAL_LABEL: Record<string, string> = {
   PRICE_RANGE: "outside the price range your agent is allowed", WAGE_TOO_LOW: "below half the civic wage", NO_SLOT: "no room for that",
   NO_FUNDS: "not enough Sora in the business", NOT_OWNER: "not your business", CLOSED: "the business is closed", TOO_SOON: "changed too recently", NOT_ELIGIBLE: "not eligible to list yet", BAD_QTY: "you keep the majority of shares",
+  NO_STOCK: "not enough goods in store", INSUFFICIENT: "not enough Sora in the business", PRICE_BAND: "too far from the usual price",
 };
 export const sora2 = (n: number) => `${n.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Sora`;
