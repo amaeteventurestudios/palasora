@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Bell, Bot, CircleHelp, Coins, Gamepad2, Home, LayoutList, LineChart, Map as MapIcon, MessageSquare, MoreHorizontal, Plus,
-  Settings, Shield, Trophy, User, Users, X, Store, Navigation, ZoomIn, ZoomOut, LocateFixed, Layers, MapPin } from "lucide-react";
+  Settings, Shield, Trophy, User, Users, X, Store, Navigation, ZoomIn, ZoomOut, LocateFixed, Layers, MapPin, Truck } from "lucide-react";
 import type { WorldData } from "@/lib/world/layout";
 import { townTime } from "@/lib/world/layout";
 import type { WorldHandle, Selection, Label } from "@/lib/world/scene";
@@ -140,7 +140,7 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
       {view === "3d" && labels.map((l) => (
         <div key={l.id} className="pointer-events-none absolute z-10 flex -translate-x-1/2 -translate-y-full items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold shadow"
           style={{ left: l.x, top: l.y, background: l.tone === "mine" ? "#d8a838" : l.tone === "pick" ? "#fff4d6" : "#ffffff", color: "#1d2433" }}
-          data-testid={l.tone === "district" ? "district-label" : l.tone === "pick" ? "pick-label" : undefined}>
+          data-testid={l.tone === "district" ? "district-label" : l.tone === "pick" ? "pick-label" : l.tone === "goods" ? "goods-label" : undefined}>
           {l.color && <span className="size-2.5 rounded-full" style={{ background: l.color }} aria-hidden />}{l.text}</div>
       ))}
       {!data && <Unavailable />}
@@ -187,6 +187,7 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
 function MapControls({ world, leftHanded, mine }: { world: React.RefObject<WorldHandle | null>; leftHanded: boolean; mine: boolean }) {
   const [north, setNorth] = useState(0);
   const [districts, setDistricts] = useState(false);
+  const [goods, setGoods] = useState(false);
   useEffect(() => {
     const t = setInterval(() => { const h = world.current?.heading(); if (h != null) setNorth((n) => (Math.abs(n - h) > 0.01 ? h : n)); }, 200);
     return () => clearInterval(t);
@@ -209,6 +210,10 @@ function MapControls({ world, leftHanded, mine }: { world: React.RefObject<World
       <button type="button" className={`${btn} rounded-full shadow-md ${districts ? "!bg-[#1d2433] !text-white" : ""}`} aria-pressed={districts} aria-label="Districts"
         onClick={() => { const on = !districts; setDistricts(on); world.current?.districts(on); }} data-testid="map-districts">
         <Layers className="size-5" aria-hidden />
+      </button>
+      <button type="button" className={`${btn} rounded-full shadow-md ${goods ? "!bg-[#1d2433] !text-white" : ""}`} aria-pressed={goods} aria-label="Goods on the move"
+        onClick={() => { const on = !goods; setGoods(on); world.current?.goods(on); }} data-testid="map-goods">
+        <Truck className="size-5" aria-hidden />
       </button>
       <button type="button" className={`${btn} rounded-full shadow-md`} onClick={() => world.current?.home()} aria-label={mine ? "Back to your home" : "Back to the whole town"} data-testid="map-home">
         <LocateFixed className="size-5" aria-hidden />

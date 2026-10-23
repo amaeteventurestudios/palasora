@@ -21,10 +21,10 @@ from .world import CIVIC, WORK_HOURS, Agent
 
 # Refusal codes that are ordinary (an applicant was too late, a seller had sold out): logged, never a violation.
 ORDINARY = {"INSUFFICIENT", "NO_STOCK", "NO_SLOT", "NO_PLOT", "NO_CAPACITY", "NEEDS_APPROVAL", "NOT_HIRING", "CLOSED", "PRICE_BAND", "NO_ROOM",
-            "ALREADY", "NOT_FOR_SALE"}
+            "ALREADY", "NOT_FOR_SALE", "LOW_BID", "ZONE"}
 APPROVAL = {"build", "buy_plot", "start_cart", "sell_plot", "close_business", "buy_business", "transfer_shares", "upgrade"}
 SPEND = {"build": "amount", "buy_plot": "amount", "import_materials": "amount", "buy_decor": "amount", "place_order": "amount", "upgrade": "amount",
-         "buy_business": "amount", "start_cart": "amount"}
+         "buy_business": "amount", "start_cart": "amount", "bid": "amount"}
 # step 3, zone rules: what may be built on a business plot, by its area
 ALLOWED = {"farmland": ("farm",), "harbourside": ("workshop", "delivery"), "market": ("stall", "delivery"), "main": ("stall", "delivery")}
 
@@ -103,6 +103,8 @@ def _spend_of(w, kind: str, inp: dict) -> int:
         return b.cost if b else 0
     if kind == "start_cart":
         return p.cart_cost
+    if kind == "bid":
+        return int(inp.get("amount", 0))
     if kind == "buy_plot":
         pl = w.plots.get(inp.get("plot", ""))
         btype = inp.get("btype", "stall")
@@ -304,7 +306,7 @@ def h_eat_own(w, a: Agent, business: str) -> dict:
 # --------------------------------------------------------------------------- handlers: property
 def _free_plot(w, btype: str, prime: bool | None = None) -> str | None:
     pref = {"farm": "farmland", "workshop": "harbourside", "stall": "market", "delivery": "main"}[btype]
-    free = [p for p in w.plots.values() if p["use"] == "business" and not p["owner"]]
+    free = [p for p in w.plots.values() if p["use"] == "business" and not p["owner"] and p["id"] not in w.at_auction]
     if btype == "stall" and free:
         return _roomy_stall_plot(w, free, pref)
     free.sort(key=lambda p: (p["area"] != pref, p["prime"], p["id"]))
@@ -341,14 +343,18 @@ def h_build(w, a: Agent, btype: str, plot: str = "") -> dict:
         plot, founder = a.founder_plot, True
     elif plot and plot == a.founder_plot and not w.plots[plot]["building"]:
         founder = True
+    if not plot:  # a plot the builder already owns (won at auction) comes first
+        plot = next((p["id"] for p in sorted(w.plots.values(), key=lambda p: p["id"])
+                     if p["use"] == "business" and p["owner"] == a.id and not p["building"] and p["id"] != a.founder_plot), "")
     plot = plot or _free_plot(w, btype)
     if not plot or plot not in w.plots:
         raise Refused("NO_PLOT", "no free plot")
     pl = w.plots[plot]
-    if pl["use"] != "business" or (pl["owner"] and pl["owner"] != a.id) or pl["building"]:
+    if pl["use"] != "business" or (pl["owner"] and pl["owner"] != a.id) or pl["building"] or plot in w.at_auction:
         raise Refused("NO_PLOT", f"plot {plot} is not free")
     crowded = not w.signals.get("room", {}).get(btype, True)
-    b = B.build(w, a, btype, plot, founder_plot=founder)
+    # a plot the builder already bought (at auction) is paid for: only the construction is due
+    b = B.build(w, a, btype, plot, founder_plot=founder, plot_price=0 if pl["owner"] == a.id and not founder else None)
     if crowded:
         # Doc 04 rule 1: a business opened where its trade has no room (a stall in a crowded street) shares customers by
         # design; it is shown beside the payback curve, not forced onto it
@@ -382,7 +388,7 @@ def _kerbs(w) -> list[dict]:
     """Free business plots with no cart parked at the kerb yet."""
     taken = {b.plot for b in w.open_biz() if b.cart}
     return [p for p in w.plots.values() if p["use"] == "business" and not p["owner"] and not p["building"] and p["id"] not in taken
-            and p["area"] in ("market", "main")]
+            and p["id"] not in w.at_auction and p["area"] in ("market", "main")]
 
 
 def h_start_cart(w, a: Agent, plot: str = "") -> dict:
@@ -414,6 +420,8 @@ def h_buy_plot(w, a: Agent, plot: str, btype: str = "stall", business: str = "")
         raise Refused("NO_PLOT", f"{plot} is not a business plot")
     if pl["owner"] or pl["building"]:
         raise Refused("NO_PLOT", f"plot {plot} is not for sale")
+    if plot in w.at_auction:
+        raise Refused("NOT_FOR_SALE", f"plot {plot} is up for auction")
     if btype not in TYPES:
         raise Refused("BAD_TYPE", btype)
     if btype not in ALLOWED.get(pl["area"], ()):
@@ -429,6 +437,12 @@ def h_buy_plot(w, a: Agent, plot: str, btype: str = "stall", business: str = "")
         raise Refused("PLOT_LIMIT", f"up to {w.p.max_businesses_per_player} businesses before the Exchange opens")
     b = B.build(w, a, btype, plot, plot_price=price)
     return {"business": b.id, "plot": plot, "paid": b.cost, "settled": False}
+
+
+def h_bid(w, a: Agent, auction: int, amount: int, plot: str = "") -> dict:
+    """Step 4: bid for a plot at auction; the Sora is held until the bidder is outbid or the auction ends."""
+    from . import auctions
+    return auctions.bid(w, a, int(auction), int(amount))
 
 
 def h_upgrade(w, a: Agent, business: str) -> dict:
@@ -545,6 +559,6 @@ HANDLERS = {
     "end_contract": h_end_contract, "import_materials": h_import_materials, "sell_floor": h_sell_floor, "buy_meal": h_buy_meal, "eat_own": h_eat_own,
     "build": h_build, "upgrade": h_upgrade, "close_business": h_close_business, "buy_business": h_buy_business,
     "transfer_shares": h_transfer_shares, "pay_dividend": h_pay_dividend, "request_delivery": h_request_delivery,
-    "claim_home": h_claim_home, "start_cart": h_start_cart, "buy_plot": h_buy_plot,
+    "claim_home": h_claim_home, "start_cart": h_start_cart, "buy_plot": h_buy_plot, "bid": h_bid,
     "buy_decor": h_buy_decor, "vote": h_vote, "make_request": h_make_request, "message_owner": h_message_owner, "pay": h_pay,
 }

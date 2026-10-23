@@ -36,8 +36,31 @@ def decide(w) -> list[Proposal]:
         out += decor(w)
     if h == 21:
         out += reviews(w)
+    if h == 15:
+        out += bidding(w)
     if h in (10, 14, 16):
         out += mischief(w)
+    return out
+
+
+# --------------------------------------------------------------------------- property auctions (step 4)
+def bidding(w) -> list[Proposal]:
+    """House entrepreneurs with money to spare bid on a plot at auction, once a day each, up to 1.3x its reserve. The
+    plot they win is where their next business goes (actions.h_build)."""
+    from .auctions import min_bid, open_auctions
+    out = []
+    for au in open_auctions(w.con):
+        need = min_bid(au)
+        if need > au["reserve"] * 13 // 10:
+            continue
+        for a in sorted(w.agents.values(), key=lambda x: x.id):
+            if a.kind != "house" or a.role != "entrepreneur" or a.id == au["high_bidder"]:
+                continue
+            if any(p["owner"] == a.id and p["use"] == "business" and not p["building"] for p in w.plots.values()):
+                continue  # already holds an empty plot
+            if w.bal(a.acct) >= need * 3:
+                out.append((a.id, "bid", {"auction": au["id"], "amount": need}, ""))
+                break
     return out
 
 

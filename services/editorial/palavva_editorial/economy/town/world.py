@@ -132,6 +132,7 @@ class World:
                               "crowd": {t: "balanced" for t in ("stall", "farm", "workshop", "delivery")}}
         self.ai_budget: dict = {}
         self._today_events = None
+        self.at_auction: set = set()   # plots up for auction (step 4): not for sale or building until it ends
 
     # ------------------------------------------------------------------ clock and ids
     def ts(self, tick: int | None = None) -> float:

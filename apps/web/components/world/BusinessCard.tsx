@@ -2,7 +2,7 @@
 // Palasora Phase 7: a business's numbers and, for its owner, the controls (Doc 06 sections 10 and 11.3). Every figure is
 // read from the business's ledger account by the economy service; changes go out as requests that the town's next hour
 // runs through the Actions gate, so the card shows each one as waiting, done or refused (with the reason).
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { loadBusinessCard, requestChange } from "@/app/actions/town-business";
 import { PERIOD_LABEL, REFUSAL_LABEL, REQUEST_LABEL, sora2, type BusinessCardData, type RequestKind } from "@/lib/world/card";
@@ -33,6 +33,8 @@ export function BusinessCard({ bid, initial, full = false, head = true }: { bid:
         <dt className="text-[#4b5566]">Wage</dt><dd>{sora2(card.wage)} a day</dd>
         <dt className="text-[#4b5566]">Reputation</dt><dd>{card.rating.toFixed(2)} <span className="text-[#4b5566]">(new businesses start at 1.00)</span></dd>
       </dl>}
+
+      <LookInside card={card} />
 
       <section aria-label="Money">
         <div className="flex items-center justify-between gap-2"><h3 className={h}>Money</h3>
@@ -131,4 +133,31 @@ function describe(i: Record<string, unknown>) {
   if (typeof i.wage === "number") return ` to ${sora2(i.wage / 100)}`;
   if (typeof i.contract === "string") return ` ${i.contract}`;
   return "";
+}
+
+// Step 4: a cutaway of the room the business works in, drawn from the same numbers as the card (its staff and stock).
+function LookInside({ card }: { card: BusinessCardData }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLCanvasElement>(null);
+  const staff = card.employees.length;
+  const stock = JSON.stringify(Object.fromEntries(Object.entries(card.stock).map(([g, s]) => [g, s.qty])));
+  useEffect(() => {
+    if (!open || !ref.current) return;
+    let gone = false, mounted: { dispose(): void } | null = null;
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    import("@/lib/world/interior").then(({ mountInterior }) => {
+      if (gone || !ref.current) return;
+      const m = mountInterior(ref.current, { type: card.type as never, level: card.level, staff, stock: JSON.parse(stock), reduceMotion });
+      mounted = m; ref.current.dataset.people = String(m.people);
+      ref.current.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" });
+    });
+    return () => { gone = true; mounted?.dispose(); };
+  }, [open, card.type, card.level, staff, stock]);
+  return (
+    <section aria-label="Inside">
+      <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} data-testid="biz-look-inside"
+        className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/15 bg-white px-4 font-semibold">{open ? "Close the inside view" : "Look inside"}</button>
+      {open && <canvas ref={ref} className="mt-2 aspect-[16/10] w-full rounded-2xl bg-[#efe9dc]" aria-label={`Inside the ${BUSINESS_LABEL[card.type]?.toLowerCase() ?? "business"}: ${staff + 1} at work`} role="img" data-testid="biz-interior" />}
+    </section>
+  );
 }
