@@ -110,6 +110,10 @@ CREATE INDEX IF NOT EXISTS idx_share_trades_biz ON share_trades (business, id);
 CREATE TABLE IF NOT EXISTS share_dividends (
   id INTEGER PRIMARY KEY, business TEXT NOT NULL, tick INTEGER NOT NULL, per_share INTEGER NOT NULL, total INTEGER NOT NULL, holders INTEGER NOT NULL
 );
+-- hiring and job boards: each business's open positions as the town's last hour left them (town/jobs.py)
+CREATE TABLE IF NOT EXISTS job_openings (
+  business TEXT PRIMARY KEY, slots INTEGER NOT NULL CHECK (slots > 0), wage INTEGER NOT NULL, posted_tick INTEGER NOT NULL, updated_tick INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS bids (
   id INTEGER PRIMARY KEY, auction INTEGER NOT NULL, bidder TEXT NOT NULL, amount INTEGER NOT NULL CHECK (amount > 0), tick INTEGER NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('leading','outbid','won'))

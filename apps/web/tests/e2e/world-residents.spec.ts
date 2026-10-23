@@ -39,8 +39,8 @@ test("R-01 the directory counts everyone; filters and @handle search find a resi
   await expect(card.getByTestId("resident-row")).toContainText("Tariq Sesay");
   await expect(card.getByTestId("resident-row")).toContainText("No home yet");
   await card.getByTestId("residents-filter-no_job").click();
-  await expect(card.getByTestId("residents-filter-no_job")).toContainText("No job · 5");
-  await expect(card.getByTestId("resident-row")).toHaveCount(5);
+  await expect(card.getByTestId("residents-filter-no_job")).toContainText("No job · 2");
+  await expect(card.getByTestId("resident-row")).toHaveCount(2);
   await card.getByTestId("residents-filter-all").click();
   await card.getByTestId("residents-search").fill("@femi010");
   await expect(card.getByTestId("resident-row")).toHaveCount(1);

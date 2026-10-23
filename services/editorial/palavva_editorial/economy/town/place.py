@@ -17,9 +17,10 @@ import time
 from . import auctions as AU, social
 from .params import C, TYPES, tuned
 
-KINDS = ("move_in", "claim_home", "start_cart", "buy_plot", "bid", "build", "buy_shares", "sell_shares", "cancel_share_order")
+KINDS = ("move_in", "claim_home", "start_cart", "buy_plot", "bid", "build", "buy_shares", "sell_shares", "cancel_share_order", "apply_job", "quit_job")
 SHARE_KINDS = ("buy_shares", "sell_shares", "cancel_share_order")  # stored without a business, so they never show on its owner's card
-PLACE_KINDS = tuple(k for k in KINDS if k not in SHARE_KINDS)        # share orders show on their listing, not in Find a place
+JOB_KINDS = ("apply_job", "quit_job")                               # the same: a job request shows on the job board
+PLACE_KINDS = tuple(k for k in KINDS if k not in SHARE_KINDS + JOB_KINDS)  # share orders show on their listing, jobs on the board
 ALLOWED = {"farmland": ("farm",), "harbourside": ("workshop", "delivery", "factory"), "market": ("stall", "delivery"), "main": ("stall", "delivery")}
 LABEL = {"farm": "Farm", "workshop": "Workshop", "stall": "Food stall", "delivery": "Delivery depot", "factory": "Food factory"}
 
@@ -140,7 +141,13 @@ def request(con: sqlite3.Connection, user_id: str, kind: str, inputs: dict) -> d
         if agent is None:
             raise PlaceError("NOT_RESIDENT", "move in first")
         sale = {r["plot"]: r for r in for_sale(con)}
-        if kind in ("buy_shares", "sell_shares"):
+        if kind in JOB_KINDS:
+            from . import jobs
+            try:
+                clean = jobs.check_request(con, agent, kind, inputs)
+            except jobs.JobError as e:
+                raise PlaceError(e.code, e.detail) from e
+        elif kind in ("buy_shares", "sell_shares"):
             from . import shares
             bid = str(inputs.get("business", ""))
             lst = shares.listing(con, bid)
@@ -198,7 +205,7 @@ def request(con: sqlite3.Connection, user_id: str, kind: str, inputs: dict) -> d
     if kind == "move_in" and con.execute("SELECT 1 FROM owner_requests WHERE user_id=? AND kind='move_in' AND status='queued'", (user_id,)).fetchone():
         raise PlaceError("ALREADY", "your move is already waiting for the next hour")
     cur = con.execute("INSERT INTO owner_requests(business, actor, user_id, kind, inputs, created_at) VALUES (?,?,?,?,?,?)",
-                      ("" if kind in SHARE_KINDS else clean.get("business", ""), agent or "", user_id, kind, json.dumps(clean, sort_keys=True), time.time()))
+                      ("" if kind in SHARE_KINDS + JOB_KINDS else clean.get("business", ""), agent or "", user_id, kind, json.dumps(clean, sort_keys=True), time.time()))
     return {"id": cur.lastrowid, "status": "queued", "kind": kind, "inputs": clean}
 
 

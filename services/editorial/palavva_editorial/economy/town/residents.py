@@ -57,6 +57,7 @@ def _people(con: sqlite3.Connection) -> list[dict]:
         if b["status"] == "open":
             runs.setdefault(b["owner"], []).append(b)
     out = []
+    hall = (con.execute("SELECT id FROM plots WHERE area='town_hall' LIMIT 1").fetchone() or {"id": ""})["id"]
     for a in con.execute("SELECT id, kind, role, home, arrived_tick FROM town_agents WHERE status='active' AND role != 'mischief' ORDER BY id"):
         aid = a["id"]
         home = owned.get(aid)
@@ -74,6 +75,8 @@ def _people(con: sqlite3.Connection) -> list[dict]:
             e = biz[j["employer"]]
             job = {"kind": "works", "business": e["id"], "type": e["type"], "plot": e["plot"], "wage": j["wage"] / C,
                    "text": f"Works at the {TYPE.get(e['type'], e['type'])} on plot {e['plot']}"}
+        elif j and j["employer"] == "civic":
+            job = {"kind": "works", "business": "", "type": "civic", "plot": hall, "wage": j["wage"] / C, "text": "Works the civic job at the Town Hall"}
         elif mine:
             b = mine[0]
             job = {"kind": "runs", "business": b["id"], "type": b["type"], "plot": b["plot"], "wage": 0,

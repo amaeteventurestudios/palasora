@@ -586,6 +586,13 @@ def town_market_good(good: str, user_id: str = "") -> dict:
     return out
 
 
+@router.get("/town/jobs")
+def town_jobs(user_id: str = "") -> dict:
+    """The job board: open positions and wages, the civic job, recent hires; the viewer's job, requests and their own teams."""
+    from .town import jobs
+    return jobs.board(service.con(), user_id[:40])
+
+
 @router.get("/town/live")
 def town_live_status() -> dict:
     """Phase 8: whether the town runs on its own, its hour, how far behind the real clock it is, and any pause."""

@@ -30,7 +30,7 @@ COST_LABEL = {"wage": "Wages", "plot_upkeep": "Plot upkeep", "import": "Imports"
 OUTPUT = {"farm": "crops", "workshop": "tools", "stall": "meals", "delivery": "delivery loads", "factory": "meals for stalls"}
 INPUT = {"farm": "tools", "workshop": "materials", "stall": "crops", "factory": "crops"}
 REQUEST_KINDS = ("set_price", "set_wage", "hire", "fire", "upgrade", "end_contract", "close_business", "list_shares",
-                 "place_order", "cancel_order")
+                 "place_order", "cancel_order", "post_job", "stop_hiring")
 PERIODS = (("day", 24), ("week", 24 * 7), ("month", 24 * 30))
 
 
@@ -167,6 +167,13 @@ def request(con: sqlite3.Connection, bid: str, user_id: str, kind: str, inputs: 
         clean["qty"] = int(inputs.get("qty", 300) or 0)
         if not 1 <= clean["qty"] <= MAX_OFFER:
             raise RequestError("BAD_INPUT", f"offer between 1 and {MAX_OFFER} shares; you keep the majority")
+    elif kind == "post_job":
+        clean["slots"] = int(inputs.get("slots", 1) or 0)
+        clean["wage"] = int(round(float(inputs.get("wage", 0) or 0) * C))
+        if not 1 <= clean["slots"] <= 5:
+            raise RequestError("BAD_INPUT", "post between 1 and 5 positions")
+        if clean["wage"] < tuned().civic_wage // 2:
+            raise RequestError("WAGE_TOO_LOW", f"a wage of at least {tuned().civic_wage // 2 / C:.0f} Sora a day")
     elif kind == "place_order":
         clean.update(_market_order(con, bid, owner, inputs))
     elif kind == "cancel_order":
