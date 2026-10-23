@@ -40,6 +40,70 @@ def decide(w) -> list[Proposal]:
         out += bidding(w)
     if h in (10, 14, 16):
         out += mischief(w)
+    if h == 11:
+        out += investing(w)
+    return out
+
+
+# --------------------------------------------------------------------------- company shares (bigger businesses)
+def fair_share_price(b) -> int:
+    """What an agent thinks a share is worth: what the business cost plus a month of its recent daily profit, over 1,000."""
+    from .shares import SHARES, week_profit
+    return (b.cost + 30 * max(0, week_profit(b)) // 7) // SHARES
+
+
+def investing(w) -> list[Proposal]:
+    """11:00. A house entrepreneur lists one profitable business a day (people can buy it); agents with savings buy shares
+    priced below what the business is worth to them and sell ones priced well above it, or when their wallet runs low."""
+    from . import shares
+    out: list[Proposal] = []
+    con = w.con
+    live = [l for l in shares.listed(con) if w.biz.get(l["business"]) and w.biz[l["business"]].status == "open"]
+    if len(live) < 8:
+        for b in sorted(w.open_biz(), key=lambda x: (-shares.week_profit(x), x.id)):
+            a = w.agents[b.owner]
+            if a.kind == "house" and shares.eligibility(w, b)[0] and shares.week_profit(b) >= 70 * C:
+                out.append((a.id, "list_shares", {"business": b.id, "qty": 300}, ""))
+                break
+    if not live:
+        return out
+    rng = w.rng["agents"]
+    for a in sorted(w.agents.values(), key=lambda x: x.id):
+        if a.mode != "rules" or rng.random() > 0.35:
+            continue
+        me = ledger.trade_owner(a.owner_key)
+        keep = (150 if a.kind == "house" else 100) * C
+        spare = w.bal(a.acct) - keep
+        for l in live:
+            b = w.biz[l["business"]]
+            if b.owner == a.id:
+                continue
+            fair = fair_share_price(b)
+            have, _r = shares.held(con, a.owner_kind, a.id, b.id)
+            ask = con.execute(f"SELECT price, qty - filled q FROM share_orders WHERE business=? AND side='sell' AND status IN ('open','partial') "
+                              f"AND {ledger.TRADE_OWNER_SQL} != ? ORDER BY price, id LIMIT 1", (b.id, me)).fetchone()
+            last = shares.last_price(con, b.id)
+            def own_cross(side: str, px: int) -> bool:  # an order of the same owner that this one would meet
+                cmp = "price <= ?" if side == "buy" else "price >= ?"
+                return con.execute(f"SELECT 1 FROM share_orders WHERE business=? AND side=? AND status IN ('open','partial') AND {cmp} "
+                                   f"AND {ledger.TRADE_OWNER_SQL} = ? LIMIT 1", (b.id, "sell" if side == "buy" else "buy", px, me)).fetchone() is not None
+            if spare >= 20 * C and fair > 0:
+                if ask and ask["price"] <= fair * 6 // 5:
+                    q = min(ask["q"], 50, int(spare * 0.3) // ask["price"])
+                    if q >= 1:
+                        out.append((a.id, "buy_shares", {"business": b.id, "price": ask["price"], "qty": q}, ""))
+                        spare -= q * ask["price"]
+                        continue
+                elif not ask and last < fair and not own_cross("buy", min(fair, last * 11 // 10)):
+                    px = min(fair, last * 11 // 10)
+                    q = min(20, int(spare * 0.2) // max(1, px))
+                    if q >= 1:
+                        out.append((a.id, "buy_shares", {"business": b.id, "price": px, "qty": q}, ""))
+                        spare -= q * px
+                        continue
+            if have > 0 and (last >= fair * 3 // 2 or w.bal(a.acct) < 30 * C) and not own_cross("sell", max(1, last * 19 // 20)):
+                px = max(1, last * 19 // 20)
+                out.append((a.id, "sell_shares", {"business": b.id, "price": px, "qty": min(have, 25)}, ""))
     return out
 
 

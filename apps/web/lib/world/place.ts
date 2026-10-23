@@ -17,7 +17,7 @@ export type Auction = { id: number; plot: string; area: string; prime: boolean; 
   hours_left: number; leading: boolean; my_bid: number };
 export type PlaceKind = "move_in" | "claim_home" | "start_cart" | "buy_plot" | "bid" | "build";
 
-export const PLACE_LABEL: Record<string, string> = { move_in: "Move in", claim_home: "Take a home", start_cart: "Start a food cart", buy_plot: "Buy a plot", bid: "Bid", build: "Build" };
+export const PLACE_LABEL: Record<string, string> = { move_in: "Move in", claim_home: "Take a home", start_cart: "Start a food cart", buy_plot: "Buy a plot", bid: "Bid", build: "Build", buy_shares: "Buy shares", sell_shares: "Sell shares", cancel_share_order: "Cancel share order" };
 export const PLACE_REFUSAL: Record<string, string> = {
   NO_PLOT: "the plot was taken first", INSUFFICIENT: "not enough Sora yet", OVER_LIMIT: "over your daily spending limit", ZONE: "this zone doesn't allow that",
   ALREADY: "already done", LOW_BID: "someone bid more first", CLOSED: "the auction had ended", PLOT_LIMIT: "you have the most businesses allowed for now", NOT_ALLOWED: "not allowed",

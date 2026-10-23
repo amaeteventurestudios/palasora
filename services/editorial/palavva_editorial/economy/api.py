@@ -550,6 +550,25 @@ def town_place_request(b: PlaceRequestIn) -> dict:
         raise HTTPException(400, detail={"code": e.code, "message": e.detail})
 
 
+@router.get("/town/exchange")
+def town_exchange(user_id: str = "") -> dict:
+    """Company shares: the Town Exchange board (listed businesses, prices, dividends) and the viewer's own shares."""
+    from .town import shares
+    return shares.board(service.con(), user_id[:40])
+
+
+@router.get("/town/exchange/{bid}")
+def town_exchange_listing(bid: str, user_id: str = "") -> dict:
+    """One listed business: its order book, recent trades, shareholders, dividends and the viewer's open orders."""
+    from .town import card as town_card, shares
+    if not town_card.BIZ_ID.match(bid):
+        raise HTTPException(404, detail={"code": "NOT_FOUND"})
+    out = shares.detail(service.con(), bid, user_id[:40])
+    if out is None:
+        raise HTTPException(404, detail={"code": "NOT_LISTED", "message": "that business is not on the Town Exchange"})
+    return out
+
+
 @router.get("/town/live")
 def town_live_status() -> dict:
     """Phase 8: whether the town runs on its own, its hour, how far behind the real clock it is, and any pause."""

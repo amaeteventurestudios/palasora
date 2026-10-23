@@ -22,14 +22,14 @@ from .world import EPOCH
 
 BIZ_ID = re.compile(r"^b\d{3,}$")
 NOT_REVENUE = ("genesis", "owner_capital", "business_sale")
-NOT_COST = ("owner_draw", "dividend", "business_sale")
+NOT_COST = ("owner_draw", "dividend", "business_sale", "wind_up")
 SALE_LABEL = {"meal": "Meals sold", "contract": "Contract delivery", "delivery_fee": "Delivery fee", "harbour_floor": "Sold to the Harbour",
               "civic_project": "Town Hall project", "market_hall": "Market Hall sale", "": "Market Hall sale"}
 COST_LABEL = {"wage": "Wages", "plot_upkeep": "Plot upkeep", "import": "Imports", "contract": "Contract supplies", "delivery_fee": "Delivery fees",
               "market_hall": "Market Hall purchases", "": "Market Hall purchases", "upgrade": "Upgrade", "build": "Building"}
 OUTPUT = {"farm": "crops", "workshop": "tools", "stall": "meals", "delivery": "delivery loads", "factory": "meals for stalls"}
 INPUT = {"farm": "tools", "workshop": "materials", "stall": "crops", "factory": "crops"}
-REQUEST_KINDS = ("set_price", "set_wage", "hire", "fire", "upgrade", "end_contract", "close_business")
+REQUEST_KINDS = ("set_price", "set_wage", "hire", "fire", "upgrade", "end_contract", "close_business", "list_shares")
 PERIODS = (("day", 24), ("week", 24 * 7), ("month", 24 * 30))
 
 
@@ -116,6 +116,8 @@ def business_card(con: sqlite3.Connection, bid: str, viewer: str = "") -> dict |
         "recent_sales": sales, "costs_week": costs, "employees": staff, "stock": stock, "contracts": contracts, "events": events,
         "mine": mine,
     }
+    from . import shares
+    out["shares"] = shares.card_info(con, bid, mine)
     if mine:
         lim = json.loads((con.execute("SELECT limits FROM town_agents WHERE id=?", (owner,)).fetchone() or {"limits": "{}"})["limits"] or "{}")
         lo, hi = lim.get("price_range", p.price_range)
@@ -159,6 +161,11 @@ def request(con: sqlite3.Connection, bid: str, user_id: str, kind: str, inputs: 
         clean = {"contract": cid}
     elif kind == "close_business":
         clean["reason"] = "the owner closed it"
+    elif kind == "list_shares":
+        from .shares import MAX_OFFER
+        clean["qty"] = int(inputs.get("qty", 300) or 0)
+        if not 1 <= clean["qty"] <= MAX_OFFER:
+            raise RequestError("BAD_INPUT", f"offer between 1 and {MAX_OFFER} shares; you keep the majority")
     if con.execute("SELECT COUNT(*) n FROM owner_requests WHERE business=? AND status='queued'", (bid,)).fetchone()["n"] >= 10:
         raise RequestError("TOO_MANY", "ten requests are already waiting for the next tick")
     cur = con.execute("INSERT INTO owner_requests(business, actor, user_id, kind, inputs, created_at) VALUES (?,?,?,?,?,?)",

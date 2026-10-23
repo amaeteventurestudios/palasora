@@ -16,16 +16,17 @@ export type BusinessCardData = {
   contracts: { id: string; role: "seller" | "buyer"; other: string; good: string; qty_per_day: number; price: number; end_day: number; delivered: number; breaches: number }[];
   events: { id: number; kind: string; tick: number; text: string }[];
   mine: boolean;
+  shares?: { listed: boolean; delisted?: boolean; price?: number; ipo_price?: number; dividend?: number; holders?: number; eligible?: boolean; why?: string; listing_price?: number; max_offer?: number };
   manage?: { owner_agent: string; price_min: number; price_max: number; wage_min: number; upgrade_cost: number; max_staff: number; staff: number; requests: OwnerRequest[] };
 };
-export type RequestKind = "set_price" | "set_wage" | "hire" | "fire" | "upgrade" | "end_contract" | "close_business";
+export type RequestKind = "set_price" | "set_wage" | "hire" | "fire" | "upgrade" | "end_contract" | "close_business" | "list_shares";
 
 export const PERIOD_LABEL = { day: "Today", week: "7 days", month: "30 days" } as const;
 export const REQUEST_LABEL: Record<string, string> = {
-  set_price: "Change price", set_wage: "Change wage", hire: "Hire", fire: "Let someone go", upgrade: "Upgrade", end_contract: "End contract", close_business: "Close business",
+  set_price: "Change price", set_wage: "Change wage", hire: "Hire", fire: "Let someone go", upgrade: "Upgrade", end_contract: "End contract", close_business: "Close business", list_shares: "List shares",
 };
 export const REFUSAL_LABEL: Record<string, string> = {
   PRICE_RANGE: "outside the price range your agent is allowed", WAGE_TOO_LOW: "below half the civic wage", NO_SLOT: "no room for that",
-  NO_FUNDS: "not enough Sora in the business", NOT_OWNER: "not your business", CLOSED: "the business is closed", TOO_SOON: "changed too recently",
+  NO_FUNDS: "not enough Sora in the business", NOT_OWNER: "not your business", CLOSED: "the business is closed", TOO_SOON: "changed too recently", NOT_ELIGIBLE: "not eligible to list yet", BAD_QTY: "you keep the majority of shares",
 };
 export const sora2 = (n: number) => `${n.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Sora`;

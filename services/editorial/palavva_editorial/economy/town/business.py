@@ -313,6 +313,8 @@ def close(w, b: Biz, reason: str) -> None:
         n = goods.free(w.con, b.holder, g)
         if n > 0:
             goods.move(w.con, w.tick, b.holder, o.holder, g, n, "close", b.id)
+    from . import shares
+    shares.wind_up(w, b)  # a listed business shares out its cash among all its shareholders and leaves the Exchange
     cash = w.bal(b.acct)
     if cash > 0:
         w.pay(b.acct, o.acct, cash, kind="transfer", rule="owner_draw", ref_type="business", ref_id=b.id)

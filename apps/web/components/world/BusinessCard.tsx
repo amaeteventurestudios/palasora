@@ -11,7 +11,7 @@ import { BUSINESS_LABEL, HEALTH_LABEL, townTime } from "@/lib/world/layout";
 const DOT: Record<string, string> = { green: "#3fae6a", yellow: "#e8c33c", orange: "#ec8a3a", red: "#d9483b" };
 type Period = keyof typeof PERIOD_LABEL;
 
-export function BusinessCard({ bid, initial, full = false, head = true }: { bid: string; initial?: BusinessCardData | null; full?: boolean; head?: boolean }) {
+export function BusinessCard({ bid, initial, full = false, head = true, onShares }: { bid: string; initial?: BusinessCardData | null; full?: boolean; head?: boolean; onShares?(bid: string): void }) {
   const [card, setCard] = useState<BusinessCardData | null | undefined>(initial);
   const [period, setPeriod] = useState<Period>("week");
   const reload = useCallback(() => { loadBusinessCard(bid).then((c) => setCard(c)).catch(() => setCard(null)); }, [bid]);
@@ -35,6 +35,12 @@ export function BusinessCard({ bid, initial, full = false, head = true }: { bid:
       </dl>}
 
       <LookInside card={card} />
+
+      {card.shares?.listed && <section aria-label="Shares" className="rounded-2xl bg-[#f3f1ea] p-3" data-testid="biz-shares">
+        <div className="flex items-baseline justify-between gap-2"><h3 className={h}>Shares on the Town Exchange</h3><span className="font-semibold tabular-nums">{sora2(card.shares.price ?? 0)}</span></div>
+        <p className="mt-0.5 text-xs text-[#4b5566]">Listed at {sora2(card.shares.ipo_price ?? 0)} · last dividend {sora2(card.shares.dividend ?? 0)} a share · {card.shares.holders} shareholder{card.shares.holders === 1 ? "" : "s"}</p>
+        {onShares && <button type="button" className="mt-2 inline-flex min-h-11 items-center rounded-full border border-black/15 bg-white px-4 text-sm font-semibold" onClick={() => onShares(card.id)} data-testid="biz-open-shares">Buy or sell shares</button>}
+      </section>}
 
       <section aria-label="Money">
         <div className="flex items-center justify-between gap-2"><h3 className={h}>Money</h3>
@@ -79,6 +85,7 @@ function Manage({ card, onChanged }: { card: BusinessCardData; onChanged(): void
   const [msg, setMsg] = useState<{ ok: boolean; message: string } | null>(null);
   const [confirm, setConfirm] = useState<RequestKind | null>(null);
   const [pending, setPending] = useState(false);
+  const [offer, setOffer] = useState(300);
   const send = async (kind: RequestKind, inputs: Record<string, number | string> = {}) => {
     setPending(true);
     const r = await requestChange(card.id, kind, inputs).catch(() => ({ ok: false, message: "The town is unreachable right now: nothing was changed." }));
@@ -93,6 +100,7 @@ function Manage({ card, onChanged }: { card: BusinessCardData; onChanged(): void
     upgrade: `Upgrade to level ${card.level + 1} for ${sora2(g.upgrade_cost)} from the business's balance?`,
     close_business: "Close this business? Staff are let go and the plot goes back on sale.",
     fire: "Let your most recent hire go?",
+    list_shares: `Offer ${offer} shares at ${sora2(card.shares?.listing_price ?? 0)} each on the Town Exchange? You keep ${1000 - offer} of 1,000.`,
   };
   return (
     <section aria-label="Manage" className="rounded-2xl border border-[#d8a838]/50 bg-[#fffaf0] p-3" data-testid="biz-manage">
@@ -118,8 +126,17 @@ function Manage({ card, onChanged }: { card: BusinessCardData; onChanged(): void
       </div>
       {confirm && <div className="mt-3 rounded-xl bg-white p-3" role="alertdialog" aria-label="Confirm" data-testid="biz-confirm">
         <p>{big[confirm]}</p>
-        <div className="mt-2 flex gap-2"><button type="button" className={`${btn} bg-[#1d2433] text-white`} disabled={pending} onClick={() => send(confirm)} data-testid="biz-confirm-go">Yes, send</button>
+        <div className="mt-2 flex gap-2"><button type="button" className={`${btn} bg-[#1d2433] text-white`} disabled={pending} onClick={() => send(confirm, confirm === "list_shares" ? { qty: offer } : {})} data-testid="biz-confirm-go">Yes, send</button>
           <button type="button" className={`${btn} border border-black/15 bg-white`} onClick={() => setConfirm(null)}>Cancel</button></div></div>}
+      {card.shares && !card.shares.listed && !card.shares.delisted && <div className="mt-3 rounded-xl bg-white p-3" data-testid="biz-list-shares">
+        <h4 className="text-sm font-semibold">Sell shares on the Town Exchange</h4>
+        {card.shares.eligible ? <form className="mt-1 flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); setOffer(Number(new FormData(e.currentTarget).get("qty"))); setConfirm("list_shares"); }}>
+          <p className="w-full text-xs text-[#4b5566]">Offer up to {card.shares.max_offer} of your 1,000 shares at {sora2(card.shares.listing_price ?? 0)} each (what it cost plus its recent profit). You keep the majority; shareholders get half of each profitable week.</p>
+          <label className="flex flex-col text-xs text-[#4b5566]">Shares to offer
+            <input name="qty" type="number" min="1" max={card.shares.max_offer} defaultValue={300} className={field} data-testid="biz-list-qty" /></label>
+          <button className={`${btn} bg-[#1d2433] text-white`} disabled={pending} data-testid="biz-list-go">List shares</button>
+        </form> : <p className="mt-1 text-xs text-[#4b5566]" data-testid="biz-list-why">Not yet: {card.shares.why}.</p>}
+      </div>}
       {msg && <p className={`mt-2 text-sm ${msg.ok ? "" : "text-[#b23a2e]"}`} role="status" data-testid="biz-msg">{msg.message}</p>}
       {g.requests.length > 0 && <div className="mt-3"><h4 className="text-xs font-semibold uppercase text-[#4b5566]">Your requests</h4>
         <ul className="mt-1 flex flex-col gap-0.5" data-testid="biz-requests">{g.requests.map((r) => (
@@ -132,6 +149,7 @@ function describe(i: Record<string, unknown>) {
   if (typeof i.price === "number") return ` to ${sora2(i.price / 100)}`;
   if (typeof i.wage === "number") return ` to ${sora2(i.wage / 100)}`;
   if (typeof i.contract === "string") return ` ${i.contract}`;
+  if (typeof i.qty === "number") return ` · ${i.qty}`;
   return "";
 }
 

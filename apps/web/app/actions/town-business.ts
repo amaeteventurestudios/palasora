@@ -10,7 +10,7 @@ import { audit } from "@/lib/audit";
 import type { BusinessCardData, RequestKind } from "@/lib/world/card";
 
 const BIZ = /^b\d{3,}$/;
-const KINDS: RequestKind[] = ["set_price", "set_wage", "hire", "fire", "upgrade", "end_contract", "close_business"];
+const KINDS: RequestKind[] = ["set_price", "set_wage", "hire", "fire", "upgrade", "end_contract", "close_business", "list_shares"];
 
 export async function loadBusinessCard(bid: string): Promise<BusinessCardData | null> {
   if (!BIZ.test(bid)) return null;
@@ -24,7 +24,7 @@ export async function requestChange(bid: string, kind: RequestKind, inputs: Reco
   const session = await getSession(tenant);
   if (!session) return { ok: false, message: "Sign in to manage your business." };
   const clean: Record<string, number | string> = {};
-  for (const k of ["price", "wage", "slots"]) if (k in inputs) clean[k] = Number(inputs[k]);
+  for (const k of ["price", "wage", "slots", "qty"]) if (k in inputs) clean[k] = Number(inputs[k]);
   if ("contract" in inputs) clean.contract = String(inputs.contract).slice(0, 40);
   const r = await editorialCall<{ id: number; status: string }>(`/economy/town/businesses/${bid}/requests`,
     { method: "POST", body: JSON.stringify({ user_id: session.user.id, kind, inputs: clean }) }, 6000);

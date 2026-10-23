@@ -15,16 +15,16 @@ from dataclasses import dataclass
 
 from .. import ledger
 from . import business as B
-from . import civic, contracts, delivery, goods, market
+from . import civic, contracts, delivery, goods, market, shares
 from .params import C, TYPES
 from .world import CIVIC, WORK_HOURS, Agent
 
 # Refusal codes that are ordinary (an applicant was too late, a seller had sold out): logged, never a violation.
 ORDINARY = {"INSUFFICIENT", "NO_STOCK", "NO_SLOT", "NO_PLOT", "NO_CAPACITY", "NEEDS_APPROVAL", "NOT_HIRING", "CLOSED", "PRICE_BAND", "NO_ROOM",
-            "ALREADY", "NOT_FOR_SALE", "LOW_BID", "ZONE"}
-APPROVAL = {"build", "buy_plot", "start_cart", "sell_plot", "close_business", "buy_business", "transfer_shares", "upgrade"}
+            "ALREADY", "NOT_FOR_SALE", "LOW_BID", "ZONE", "NOT_LISTED", "NOT_ELIGIBLE", "BAD_QTY"}
+APPROVAL = {"build", "buy_plot", "start_cart", "sell_plot", "close_business", "buy_business", "transfer_shares", "upgrade", "list_shares"}
 SPEND = {"build": "amount", "buy_plot": "amount", "import_materials": "amount", "import_crops": "amount", "buy_decor": "amount", "place_order": "amount", "upgrade": "amount",
-         "buy_business": "amount", "start_cart": "amount", "bid": "amount"}
+         "buy_business": "amount", "start_cart": "amount", "bid": "amount", "buy_shares": "amount"}
 # step 3, zone rules: what may be built on a business plot, by its area
 ALLOWED = {"farmland": ("farm",), "harbourside": ("workshop", "delivery", "factory"), "market": ("stall", "delivery"), "main": ("stall", "delivery")}
 
@@ -60,7 +60,7 @@ def submit(w, actor_id: str, kind: str, via: str = "agent", **inputs) -> Result:
         data = fn(w, a, **inputs) or {}
         if spend:
             a.spent_today += spend
-    except (Refused, ledger.LedgerError, goods.GoodsError, market.MarketError) as e:
+    except (Refused, ledger.LedgerError, goods.GoodsError, market.MarketError, shares.ShareError) as e:
         con.execute("ROLLBACK TO act")
         con.execute("RELEASE act")
         for k in set(w._acct) - known:  # an account created inside the rolled-back savepoint no longer exists
@@ -107,6 +107,8 @@ def _spend_of(w, kind: str, inp: dict) -> int:
         return p.cart_cost
     if kind == "bid":
         return int(inp.get("amount", 0))
+    if kind == "buy_shares":
+        return int(inp.get("price", 0)) * int(inp.get("qty", 0))
     if kind == "buy_plot":
         pl = w.plots.get(inp.get("plot", ""))
         btype = inp.get("btype", "stall")
@@ -483,6 +485,8 @@ def h_buy_business(w, a: Agent, business: str) -> dict:
     if b is None or b.status != "open":
         raise Refused("CLOSED", business)
     seller = w.agents[b.owner]
+    if shares.listing(w.con, b.id):
+        raise Refused("NOT_FOR_SALE", "a listed business's shares trade on the Town Exchange")
     if seller.kind != "house" or not a.is_player:
         raise Refused("NOT_FOR_SALE", "house agents sell businesses to people")
     owned = sum(1 for x in a.businesses if w.biz[x].status == "open")
@@ -513,6 +517,30 @@ def h_buy_business(w, a: Agent, business: str) -> dict:
     w.event("business_sold", [a.id, seller.id, b.id], f"{seller.id} (house agent) sold {b.id} to {a.id} for {b.cost / C:.0f} Sora", visibility="public",
             refs={"business": b.id})
     return {"business": b.id}
+
+
+def h_list_shares(w, a: Agent, business: str, qty: int) -> dict:
+    """Company shares: the owner offers up to 490 of its 1,000 shares on the Town Exchange at the listing price."""
+    b = _own_biz(w, a, business)
+    return shares.list_business(w, a, b, int(qty))
+
+
+def h_buy_shares(w, a: Agent, business: str, price: int, qty: int) -> dict:
+    r = shares.place(w, a, business, "buy", int(price), int(qty))
+    return {"order": r["order"]["id"], "filled": r["order"]["filled"]}
+
+
+def h_sell_shares(w, a: Agent, business: str, price: int, qty: int) -> dict:
+    r = shares.place(w, a, business, "sell", int(price), int(qty))
+    return {"order": r["order"]["id"], "filled": r["order"]["filled"]}
+
+
+def h_cancel_share_order(w, a: Agent, order: int, share_business: str = "") -> dict:
+    o = w.con.execute("SELECT holder, status FROM share_orders WHERE id=?", (int(order),)).fetchone()
+    if o is None or o["holder"] != a.id:
+        raise Refused("NOT_OWNER", f"order {order}")
+    shares.cancel(w, int(order))
+    return {}
 
 
 def h_transfer_shares(w, a: Agent, business: str, to: str, qty: int) -> dict:
@@ -571,7 +599,8 @@ HANDLERS = {
     "set_price": h_set_price, "place_order": h_place_order, "cancel_order": h_cancel_order, "sign_contract": h_sign_contract,
     "end_contract": h_end_contract, "import_materials": h_import_materials, "import_crops": h_import_crops, "sell_floor": h_sell_floor, "buy_meal": h_buy_meal, "eat_own": h_eat_own,
     "build": h_build, "upgrade": h_upgrade, "close_business": h_close_business, "buy_business": h_buy_business,
-    "transfer_shares": h_transfer_shares, "pay_dividend": h_pay_dividend, "request_delivery": h_request_delivery,
+    "transfer_shares": h_transfer_shares, "pay_dividend": h_pay_dividend, "list_shares": h_list_shares, "buy_shares": h_buy_shares,
+    "sell_shares": h_sell_shares, "cancel_share_order": h_cancel_share_order, "request_delivery": h_request_delivery,
     "claim_home": h_claim_home, "start_cart": h_start_cart, "buy_plot": h_buy_plot, "bid": h_bid,
     "buy_decor": h_buy_decor, "vote": h_vote, "make_request": h_make_request, "message_owner": h_message_owner, "pay": h_pay,
 }

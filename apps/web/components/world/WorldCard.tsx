@@ -10,25 +10,28 @@ import { useTrap } from "./useTrap";
 import { BusinessCard } from "./BusinessCard";
 import { PlacePanel, type Highlight } from "./PlacePanel";
 import { ResidentCard, ResidentsPanel } from "./ResidentsPanel";
+import { ExchangePanel, ListingCard } from "./ExchangePanel";
 import { ZONE_TAKES, soraWhole } from "@/lib/world/place";
 
 export type CardState =
   | { kind: "plot"; id: string } | { kind: "landmark"; title: string; text: string } | { kind: "away" } | { kind: "agent" }
-  | { kind: "place"; plot?: string } | { kind: "travel" } | { kind: "settings" } | { kind: "residents" } | { kind: "resident"; id: string };
+  | { kind: "place"; plot?: string } | { kind: "travel" } | { kind: "settings" } | { kind: "residents" } | { kind: "resident"; id: string }
+  | { kind: "exchange" } | { kind: "listing"; id: string };
 
 const KIND: Record<string, string> = {
   business_opened: "Opened", business_closed: "Closed", business_sold: "Sold", vote_result: "Town vote", player_arrived: "Arrival", hired: "Hired",
   let_go: "Let go", worker_left: "Worker left", contract_signed: "Contract", contract_breached: "Contract breached", contract_ended: "Contract ended",
   price_changed: "Price", upgraded: "Upgrade", market_trade: "Market Hall", starter_grant: "Grant", moved_in: "Moved in", cart_opened: "New cart",
   cart_settled: "Cart settled", auction_opened: "Auction", auction_won: "Auction won", auction_unsold: "Auction", outbid: "Outbid",
+  shares_listed: "Listed", shares_traded: "Shares", dividend_paid: "Dividend",
 };
 const DOT: Record<string, string> = { green: "#3fae6a", yellow: "#e8c33c", orange: "#ec8a3a", red: "#d9483b" };
 const sora = (n: number) => `${n.toLocaleString("en", { maximumFractionDigits: 2 })} Sora`;
 
-export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onClose, onPlot, onPref, onTour, onPlace, onHighlight, onFly, onResident }: {
+export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onClose, onPlot, onPref, onTour, onPlace, onHighlight, onFly, onResident, onExchange }: {
   card: CardState; data: WorldData; viewer: Viewer; prefs: { three: boolean; leftHanded: boolean }; reduceMotion: boolean; reason: string | null;
   onClose(): void; onPlot(id: string): void; onPref(p: Partial<{ three: boolean; leftHanded: boolean }>): void; onTour(): void;
-  onPlace(plot?: string): void; onHighlight(h: Highlight): void; onFly(plot: string): void; onResident(id?: string): void;
+  onPlace(plot?: string): void; onHighlight(h: Highlight): void; onFly(plot: string): void; onResident(id?: string): void; onExchange(id?: string): void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [who, setWho] = useState("Resident");
@@ -56,7 +59,7 @@ export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onC
             <dt className="text-[#4b5566]">Wage</dt><dd>{sora(b.wage_sora)} a day</dd>
           </dl>
         )}
-        {b && <BusinessCard key={b.id} bid={b.id} head={false} />}
+        {b && <BusinessCard key={b.id} bid={b.id} head={false} onShares={(id) => onExchange(id)} />}
         {!b && p.use === "civic" && <p className="mt-3 text-sm">{p.area === "town_hall" ? "Votes and civic jobs. The weekly vote is decided here." : p.area === "market_hall" ? "Prices for crops, tools and materials are set here by real orders." : "Imports and exports arrive here by boat."}</p>}
         {!b && p.use === "home" && (p.owner ? <p className="mt-3 text-sm">{p.id === data.mine.home ? "Your home." : "A resident's home."}</p> : (
           <div className="mt-3 text-sm" data-testid="card-free-home"><p>Free to move into. Homes cost nothing, one each.</p>
@@ -110,6 +113,12 @@ export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onC
   } else if (card.kind === "resident") {
     title = who;
     body = <ResidentCard id={card.id} onOpen={onResident} onFly={onFly} onPlot={onPlot} onBack={() => onResident()} onTitle={setWho} />;
+  } else if (card.kind === "exchange") {
+    title = "Town Exchange";
+    body = <ExchangePanel town={data.town.name} onOpen={(id) => onExchange(id)} />;
+  } else if (card.kind === "listing") {
+    title = who;
+    body = <ListingCard bid={card.id} onBack={() => onExchange()} onPlot={onPlot} onTitle={setWho} />;
   } else if (card.kind === "travel") {
     title = "Travel";
     body = (

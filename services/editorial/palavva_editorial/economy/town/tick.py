@@ -16,7 +16,7 @@ from __future__ import annotations
 import math
 
 from .. import db
-from . import actions, agents, auctions, business as B, card, civic, contracts, delivery, goods, market, reports
+from . import actions, agents, auctions, business as B, card, civic, contracts, delivery, goods, market, reports, shares
 from .world import CIVIC, MEAL_HOURS, WORK_HOURS, World
 
 
@@ -67,6 +67,7 @@ def _steps(w: World) -> None:
     delivery.arrive(w)
     # 7. trade
     market.expire(w)
+    shares.expire(w)
     if h in MEAL_HOURS:
         meals(w)
     # 8. pay
@@ -78,6 +79,8 @@ def _steps(w: World) -> None:
         w.floor_offers = []
         civic.project_buys(w)
         B.owner_draw(w)
+    if h == 21 and w.day % 7 == 6:
+        shares.pay_dividends(w)
     # 10. record
     if h == 7:
         reports.morning(w)
