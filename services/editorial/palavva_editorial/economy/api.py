@@ -550,6 +550,16 @@ def town_place_request(b: PlaceRequestIn) -> dict:
         raise HTTPException(400, detail={"code": e.code, "message": e.detail})
 
 
+@router.get("/town/live")
+def town_live_status() -> dict:
+    """Phase 8: whether the town runs on its own, its hour, how far behind the real clock it is, and any pause."""
+    from .town import live
+    st = live.status(service.con())
+    if st.get("paused"):
+        st["paused"] = {k: st["paused"][k] for k in ("reason", "at", "tick") if k in st["paused"]}  # problems stay in the logs
+    return st
+
+
 @router.get("/town/residents")
 def town_residents(q: str = "", filter: str = "all", viewer: str = "", limit: int = 30, offset: int = 0) -> dict:
     """The residents directory: live counts, search by name, @handle or address, and the no-home / no-job / following filters."""

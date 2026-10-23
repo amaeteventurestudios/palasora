@@ -64,6 +64,18 @@ def process_one(pb: PB, queue: Queue, s: config.Settings, provider, owner: str) 
     return True
 
 
+def town_live() -> dict | None:
+    """Palasora Phase 8: run the town's due hours (TOWN_LIVE_ENABLED=true, after `live found`). Off by default."""
+    from .economy.town import live
+    if not live.enabled():
+        return None
+    from .economy import service as economy
+    out = live.advance(economy.con())
+    if out.get("ran") or out.get("reason") == "paused":
+        log.info("town live %s", {k: v for k, v in out.items() if k != "paused"} | ({"paused": out["paused"].get("reason")} if out.get("paused") else {}))
+    return out
+
+
 def town_relay(pb: PB) -> dict | None:
     """One relay pass when a town exists (TOWN_RELAY_ENABLED, default on; tenant slug PALASORA_TOWN_TENANT, default palavva)."""
     if os.environ.get("TOWN_RELAY_ENABLED", "true").lower() == "false":
@@ -120,6 +132,7 @@ def main() -> None:
                         city.enqueue_tick(queue, t["id"])
                 last_city = now
             if now - last_town > 10:
+                town_live()  # Palasora Phase 8: the town's hours, on the real clock
                 town_relay(pb)  # Palasora Phase 4: deliver stored town events to the feed, notifications and live updates
                 last_town = now
             if now - last_index > 600:
