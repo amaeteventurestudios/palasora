@@ -31,15 +31,23 @@ def daily_capacity(w, b: Biz) -> int:
     p = w.p
     lab = b.labour(w)
     return {"farm": int(p.farm_crops_per_worker * lab * w.mod["farm_output"]), "workshop": p.workshop_tools_per_worker * lab,
-            "stall": p.stall_meals_per_worker * lab, "delivery": p.delivery_loads_per_worker * lab}[b.type]
+            "stall": p.stall_meals_per_worker * lab, "delivery": p.delivery_loads_per_worker * lab, "factory": p.factory_meals_per_worker * lab}[b.type]
+
+
+def promise_capacity(w, b: Biz) -> int:
+    """What a seller may promise a day: its labour's output; a factory counts at least one pair of hands, since it hires
+    to fill the orders it takes."""
+    if b.type == "factory":
+        return w.p.factory_meals_per_worker * max(1, b.labour(w))
+    return daily_capacity(w, b)
 
 
 def output_good(t: str) -> str | None:
-    return {"farm": "crops", "workshop": "tools", "stall": "meals"}.get(t)
+    return {"farm": "crops", "workshop": "tools", "stall": "meals", "factory": "meals"}.get(t)
 
 
 def input_good(t: str) -> str | None:
-    return {"farm": "tools", "workshop": "materials", "stall": "crops"}.get(t)
+    return {"farm": "tools", "workshop": "materials", "stall": "crops", "factory": "crops"}.get(t)
 
 
 def committed_out(w, b: Biz) -> int:
@@ -63,6 +71,8 @@ def input_use_per_day(w, b: Biz) -> float:
         return max(b.ema_demand, p.farm_crops_per_worker * 0.5) / p.crops_per_tool
     if b.type == "workshop":
         return max(b.ema_demand, 2.0)
+    if b.type == "factory":
+        return max(float(committed_out(w, b)), b.ema_demand, 20.0)
     return 0.0
 
 
@@ -74,6 +84,8 @@ def stock_target(w, b: Biz) -> int:
         return committed_out(w, b) * 2 + w.p.floor_daily_cap_units["crops"] + 40
     if b.type == "workshop":
         return committed_out(w, b) * 3 + w.p.floor_daily_cap_units["tools"] + 4
+    if b.type == "factory":
+        return committed_out(w, b) + 10
     return 0
 
 
@@ -210,10 +222,10 @@ def build(w, a: Agent, btype: str, plot_id: str, *, founder_plot: bool = False, 
     bid = f"b{len(w.biz) + 1:03d}"
     w.sink(a.acct, TOWN_HALL, pay, rule="build", ref_type="business", ref_id=bid)
     pl = w.plots[plot_id]
-    price = {"stall": p.meal_ref, "farm": p.crop_ref, "workshop": p.tool_ref, "delivery": p.delivery_fee}[btype]
+    price = p.type_ref(btype)
     b = Biz(id=bid, type=btype, plot=plot_id, owner=a.id, xy=(pl["x"], pl["y"]), price=price, wage=p.wage_ref, cost=cost, opened_tick=w.tick,
             mode=a.mode if a.mode in ("recorded", "live") else "rules")
-    b.ema_demand = {"stall": 25.0, "farm": 30.0, "workshop": 4.0, "delivery": 6.0}[btype]
+    b.ema_demand = {"stall": 25.0, "farm": 30.0, "workshop": 4.0, "delivery": 6.0, "factory": 40.0}[btype]
     b.last_change_day = w.day
     new_day(b)
     w.biz[bid] = b
@@ -224,6 +236,10 @@ def build(w, a: Agent, btype: str, plot_id: str, *, founder_plot: bool = False, 
         a.first_business_tick = w.tick
     w.save_biz(b)
     mint_shares(w, b, a)
+    if btype == "factory":  # a line buys a day of crops before it sells a meal: the owner puts in a starting float
+        float_ = min(w.bal(a.acct), w.p.factory_float)
+        if float_ > 0:
+            w.pay(a.acct, b.acct, float_, kind="transfer", rule="owner_capital", ref_type="business", ref_id=bid)
     w.set_job(a, f"own:{bid}")
     w.event("business_opened", [a.id, bid], f"A new {btype} opened on plot {plot_id}{label}", visibility="public",
             refs={"business": bid, "plot": plot_id, "cost": cost})

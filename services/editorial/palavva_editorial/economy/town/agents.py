@@ -92,18 +92,39 @@ def procurement(w) -> list[Proposal]:
     p = w.p
     farms = [b for b in w.open_biz() if b.type == "farm"]
     shops = [b for b in w.open_biz() if b.type == "workshop"]
+    lines = [b for b in w.open_biz() if b.type == "factory"]
     def can_make(b) -> int:
         """What a seller can really make a day: its labour, capped by the inputs it has or has coming."""
-        cap = B.daily_capacity(w, b)
+        cap = B.promise_capacity(w, b)
         ig = B.input_good(b.type)
         inputs = goods.free(w.con, b.holder, ig) + delivery.incoming(w, b.holder, ig) + B.contracted_in(w, b)
+        if b.type == "factory":
+            return cap  # it imports the crops it promised when the farms are short
         return min(cap, inputs * p.crops_per_tool if b.type == "farm" else inputs)
-    spare = {b.id: can_make(b) - B.committed_out(w, b) for b in farms + shops}
+    spare = {b.id: can_make(b) - B.committed_out(w, b) for b in farms + shops + lines}
     # stock already on the shelf beyond what contracts need can go out on short (2-day) contracts
     stock = {b.id: max(0, (goods.free(w.con, b.holder, B.output_good(b.type)) - 2 * B.committed_out(w, b) - 10) // 2) for b in farms + shops}
     for b in w.open_biz():
-        if b.type not in ("stall", "farm"):
+        if b.type not in ("stall", "farm", "factory"):
             continue
+        if b.type == "stall" and lines:
+            # a stall turning customers away buys ready meals from a food factory for the overflow, when it pays
+            last = b.history[-1] if b.history else {}
+            # the customers it turned away, plus the factory meals it already sells whose contracts end today (renewed)
+            over = last.get("turned_away", 0) + sum(k["qty_per_day"] for k in w.con.execute(
+                "SELECT qty_per_day FROM contracts WHERE buyer=? AND good='meals' AND status='active' AND end_day <= ?", (b.id, w.day)))
+            # never more than it can pay for each morning, keeping half its cash for its own crops
+            held = sum(k["qty_per_day"] * k["price"] for k in w.con.execute(
+                "SELECT qty_per_day, price FROM contracts WHERE buyer=? AND good='meals' AND status='active' AND end_day > ?", (b.id, w.day)))
+            purse = (w.bal(b.acct) + w.bal(w.agents[b.owner].acct)) // 2 - held
+            for s in sorted(lines, key=lambda s: (s.price, w.dist(s.xy, b.xy), s.id)):
+                q = min(over, spare[s.id], purse // max(1, s.price))
+                if q < 3 or s.price > b.price * 0.8:
+                    continue
+                spare[s.id] -= q
+                over -= q
+                purse -= q * s.price
+                out.append((b.owner, "sign_contract", {"buyer": b.id, "seller": s.id, "good": "meals", "qty": q, "price": s.price, "days": p.contract_days}, ""))
         good = B.input_good(b.type)
         days = b.acc.get("stock_days", 2)
         use = B.input_use_per_day(w, b)
@@ -123,6 +144,19 @@ def procurement(w) -> list[Proposal]:
             if gap < 3:
                 continue
             per_day = gap
+        elif b.type == "factory":
+            # crops for the line: what it has promised the stalls, a little over, as far as its cash goes
+            # what the stalls really take (they sometimes cannot pay), less what is already in store as crops or meals
+            k_out = B.committed_out(w, b)
+            need = math.ceil(min(k_out, max(b.ema_demand, 20)) * 1.05) + 3
+            spare_meals = max(0, goods.free(w.con, b.holder, "meals") - k_out)
+            gap = need - contracted - max(0, goods.free(w.con, b.holder, good) - need) // 2 - spare_meals // 2
+            afford = (w.bal(b.acct) + w.bal(w.agents[b.owner].acct)) // max(1, int(w.ref_price(good) * 1.4)) - contracted
+            gap = min(gap, afford)
+            if gap < 3 or have >= need * (days + 1):
+                continue
+            per_day = gap
+            k_days = 3  # its orders move with the stalls' queues: short contracts so it never sits on a week of crops
         else:
             # tools for what the farm's whole crew can grow (it hires before it grows), a little over so one late cart
             # does not stop the fields
@@ -174,6 +208,17 @@ def imports(w) -> list[Proposal]:
         q = min(q, (w.bal(b.acct) - 20 * C) // price) if price else q
         if q > 0:
             out.append((b.owner, "import_materials", {"business": b.id, "qty": int(q)}, ""))
+    for b in w.open_biz():
+        if b.type != "factory":
+            continue
+        # what the line has promised the stalls for two days (or a first batch), less what it has and what farms send
+        want = math.ceil(max(B.committed_out(w, b), 20) * 1.1) + 3
+        have = goods.free(w.con, b.holder, "crops") + delivery.incoming(w, b.holder, "crops") + B.contracted_in(w, b)
+        q = want - have
+        price = int(w.p.crop_ref * w.p.crop_import_markup)
+        q = min(q, (w.bal(b.acct) + w.bal(w.agents[b.owner].acct) - 20 * C) // price)
+        if q >= 5:
+            out.append((b.owner, "import_crops", {"business": b.id, "qty": int(q)}, ""))
     return out
 
 
@@ -220,9 +265,9 @@ def reviews(w) -> list[Proposal]:
 def _bound(w, b: Biz, price: int) -> int:
     a = w.agents[b.owner]
     lo, hi = a.limits.get("price_range", w.p.price_range)
-    ref = {"stall": w.p.meal_ref, "farm": w.p.crop_ref, "workshop": w.p.tool_ref, "delivery": w.p.delivery_fee}[b.type]
+    ref = w.p.type_ref(b.type)
     floor = {"stall": int(w.p.crop_ref * 2), "farm": int(w.p.crop_ref * w.p.floor_pct * 1.1), "workshop": int(w.material_price() * 1.2),
-             "delivery": int(w.p.delivery_fee * 0.6)}[b.type]
+             "delivery": int(w.p.delivery_fee * 0.6), "factory": int(w.p.crop_ref * 1.2)}[b.type]
     return int(min(max(price, int(lo * ref), floor), int(hi * ref)))
 
 
@@ -247,7 +292,9 @@ def review_rules(w, b: Biz) -> list[Proposal]:
             out.append((b.owner, "hire", {"business": b.id}, ""))
         elif b.workers and d.get("made", 0) < 0.45 * cap and _recent(b, 3) < 0:
             out.append((b.owner, "fire", {"business": b.id}, ""))
-    elif b.type in ("farm", "workshop"):
+    elif b.type in ("farm", "workshop", "factory"):
+        if b.type == "factory" and b.labour(w) == 0 and (B.committed_out(w, b) or goods.free(w.con, b.holder, "crops")):
+            out.append((b.owner, "hire", {"business": b.id}, ""))  # a line needs hands before it can make anything
         committed = B.committed_out(w, b)
         g = B.output_good(b.type)
         free = goods.free(w.con, b.holder, g)
@@ -260,7 +307,8 @@ def review_rules(w, b: Biz) -> list[Proposal]:
                 out.append((b.owner, "upgrade", {"business": b.id}, ""))  # full staff, the town short of its goods: grow
         elif committed < 0.5 * cap:
             new = int(b.price * (1 - step))
-            if b.workers and committed + p.floor_daily_cap_units[g] < 0.5 * cap and _recent(b, 3) < 0:
+            spare_hands = b.type != "factory" or (b.labour(w) - 1) * p.factory_meals_per_worker >= committed  # a line keeps the hands its orders need
+            if b.workers and spare_hands and committed + p.floor_daily_cap_units.get(g, 0) < 0.5 * cap and _recent(b, 3) < 0:
                 out.append((b.owner, "fire", {"business": b.id}, ""))
     elif b.type == "delivery":
         util = b.loads_today / cap if cap else 1.0
@@ -287,7 +335,7 @@ def _unstick(w, b: Biz, out: list[Proposal], tag: str) -> list[Proposal]:
     staff to let go it tries the price: down when sales were slow, up when it sold what it had."""
     if b.loss_streak < 2 or any(k in CHANGES for _, k, _, _ in out):
         return out
-    if b.workers and _recent(b, 2) < 0:
+    if b.workers and _recent(b, 2) < 0 and (b.type != "factory" or (b.labour(w) - 1) * w.p.factory_meals_per_worker >= B.committed_out(w, b)):
         return out + [(b.owner, "fire", {"business": b.id}, tag)]
     last = b.history[-1] if b.history else {}
     slow = last.get("sold", 0) < 0.8 * max(b.ema_demand, 1) if b.type == "stall" else B.committed_out(w, b) < 0.7 * max(B.daily_capacity(w, b), 1)
@@ -347,7 +395,7 @@ def _crowded_exit(w, b: Biz) -> list[Proposal]:
 # --------------------------------------------------------------------------- AI plans and events
 def buckets(w, b: Biz) -> dict:
     p = w.p
-    ref = {"stall": p.meal_ref, "farm": p.crop_ref, "workshop": p.tool_ref, "delivery": p.delivery_fee}[b.type]
+    ref = p.type_ref(b.type)
     last = b.history[-1] if b.history else {}
     price = "low" if b.price < ref * 0.9 else "high" if b.price > ref * 1.15 else "normal"
     if b.type == "stall":

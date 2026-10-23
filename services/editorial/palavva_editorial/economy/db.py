@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS town_agents (
   ai_budget_left INTEGER NOT NULL DEFAULT 0, arrived_tick INTEGER NOT NULL DEFAULT 0, home TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'active'
 );
 CREATE TABLE IF NOT EXISTS businesses (
-  id TEXT PRIMARY KEY, type TEXT NOT NULL CHECK (type IN ('farm','workshop','stall','delivery')), plot TEXT NOT NULL, owner TEXT NOT NULL,
+  id TEXT PRIMARY KEY, type TEXT NOT NULL CHECK (type IN ('farm','workshop','stall','delivery','factory')), plot TEXT NOT NULL, owner TEXT NOT NULL,
   price INTEGER NOT NULL, wage INTEGER NOT NULL, level INTEGER NOT NULL DEFAULT 1, health TEXT NOT NULL DEFAULT 'green',
   status TEXT NOT NULL CHECK (status IN ('open','closed')), cost INTEGER NOT NULL, shares_issued INTEGER NOT NULL DEFAULT 1000,
   rating REAL NOT NULL DEFAULT 1.0, opened_tick INTEGER NOT NULL, closed_tick INTEGER, beside_curve INTEGER NOT NULL DEFAULT 0,
@@ -360,6 +360,28 @@ ADDED_COLUMNS = (
 )
 
 
+def _widen_business_types(con: sqlite3.Connection) -> None:
+    """Bigger businesses: a ledger made before the food factory gets the widened `businesses.type` CHECK. SQLite cannot
+    alter a CHECK, so the table is rebuilt in one transaction with every row copied unchanged."""
+    r = con.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='businesses'").fetchone()
+    if r is None or "'factory'" in r["sql"]:
+        return
+    ddl = r["sql"].replace("'delivery')", "'delivery','factory')", 1).replace("businesses", "businesses_v2", 1)
+    con.execute("BEGIN IMMEDIATE")
+    try:
+        r = con.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='businesses'").fetchone()
+        if "'factory'" not in r["sql"]:  # another process may have done it while we waited
+            cols = ",".join(c["name"] for c in con.execute("PRAGMA table_info(businesses)"))
+            con.execute(ddl)
+            con.execute(f"INSERT INTO businesses_v2 ({cols}) SELECT {cols} FROM businesses")
+            con.execute("DROP TABLE businesses")
+            con.execute("ALTER TABLE businesses_v2 RENAME TO businesses")
+    except BaseException:
+        con.execute("ROLLBACK")
+        raise
+    con.execute("COMMIT")
+
+
 def _add_columns(con: sqlite3.Connection) -> None:
     for table, col, ddl in ADDED_COLUMNS:
         if col not in {r["name"] for r in con.execute(f"PRAGMA table_info({table})")}:
@@ -372,6 +394,7 @@ def init(con: sqlite3.Connection) -> None:
         upgrade(con)  # before SCHEMA: its new indexes name columns that only exist after the upgrade
     con.executescript(SCHEMA)
     _add_columns(con)
+    _widen_business_types(con)
     con.execute("INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', ?)", (str(SCHEMA_VERSION),))
     # A ledger that never held Pals starts in Sora. One that did stays 'pending' until migration.py converts it.
     if not con.execute("SELECT 1 FROM meta WHERE key='currency'").fetchone():

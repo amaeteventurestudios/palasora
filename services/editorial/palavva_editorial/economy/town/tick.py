@@ -170,7 +170,7 @@ def signals(w: World) -> None:
     shortage = {
         "stall": turned >= 0.03 * demand and sum(last[b.id].get("out_hours", 0) for b in by["stall"]) < 3,
         # a supply shortage only counts when the suppliers have nothing spare either (not a late cart or a missing contract)
-        "farm": sum(last[b.id].get("out_hours", 0) for b in by["stall"]) >= 3
+        "farm": sum(last[b.id].get("out_hours", 0) for b in by["stall"] + [x for x in w.open_biz() if x.type == "factory"]) >= 3
                 and sum(goods.free(w.con, b.holder, "crops") - B.committed_out(w, b) for b in by["farm"]) < 0.25 * demand,
         "workshop": sum(last[b.id].get("out_hours", 0) for b in by["farm"]) >= 3
                 and sum(goods.free(w.con, b.holder, "tools") - B.committed_out(w, b) for b in by["workshop"]) < 2,

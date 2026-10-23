@@ -3,7 +3,7 @@
 export type Money = { revenue: number; costs: number; profit: number; entries: number };
 export type OwnerRequest = { id: number; kind: string; inputs: Record<string, unknown>; status: "queued" | "done" | "refused" | "withdrawn"; refusal: string; detail: string; done_tick: number | null };
 export type BusinessCardData = {
-  id: string; type: "farm" | "workshop" | "stall" | "delivery"; plot: string; status: string; health: string; level: number; rating: number;
+  id: string; type: "farm" | "workshop" | "stall" | "delivery" | "factory"; plot: string; status: string; health: string; level: number; rating: number;
   owner: string; owner_name: string; managing_agent: string; opened_tick: number; closed_tick: number | null;
   products: { good: string; price: number; unit: string }[]; input: string | null; wage: number; now_tick: number;
   money: { day: Money; week: Money; month: Money; all: Money };

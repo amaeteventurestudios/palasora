@@ -2,7 +2,7 @@
 // a free home, starts a food cart at a free plot's kerb, then buys a business plot and builds (or settles the cart there).
 import type { OwnerRequest } from "./card";
 
-export type BizType = "farm" | "workshop" | "stall" | "delivery";
+export type BizType = "farm" | "workshop" | "stall" | "delivery" | "factory";
 export type ForSale = { plot: string; area: string; x: number; y: number; prime: boolean; price: number; allowed: BizType[]; total: Partial<Record<BizType, number>>;
   cart_parked: boolean; kerb: boolean };
 export type PlaceData = {
@@ -24,6 +24,6 @@ export const PLACE_REFUSAL: Record<string, string> = {
 };
 /** What each area of the town allows, in words. */
 export const ZONE_TAKES: Record<string, string> = {
-  market: "food stalls and delivery depots", main: "food stalls and delivery depots", harbourside: "workshops and delivery depots", farmland: "farms",
+  market: "food stalls and delivery depots", main: "food stalls and delivery depots", harbourside: "workshops, food factories and delivery depots", farmland: "farms",
 };
 export const soraWhole = (n: number) => `${n.toLocaleString("en", { maximumFractionDigits: 2 })} Sora`;

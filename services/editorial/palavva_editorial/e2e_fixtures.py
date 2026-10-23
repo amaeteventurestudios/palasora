@@ -114,13 +114,17 @@ def seed_town(pb: PB, t: dict) -> dict:
         con.execute("""INSERT INTO businesses(id, type, plot, owner, price, wage, status, cost, opened_tick, health) VALUES
                        ('b003','workshop','P101','h021',400,1600,'open',50000,0,'green'), ('b004','delivery','P201','h022',300,1500,'open',45000,0,'yellow'),
                        ('b005','stall','P406','h023',240,1400,'open',40000,0,'green'), ('b006','stall','P307','h024',260,1400,'open',40000,0,'orange'),
-                       ('b007','farm','P903','h025',170,1300,'open',30000,0,'green'), ('b008','workshop','P706','h026',380,1600,'open',50000,0,'green')""")
+                       ('b007','farm','P903','h025',170,1300,'open',30000,0,'green'), ('b008','workshop','P706','h026',380,1600,'open',50000,0,'green'),
+                       ('b009','factory','P102','h026',175,1500,'open',120000,0,'green')""")
         social.link(con, "p001", user_id=reader["id"] if reader else "", display_name="Local Reader's agent")
         con.execute("UPDATE plots SET owner='p001' WHERE id='P003'")  # step 3: p001 lives in the home on P003
         # step 4: goods routes between the businesses (vans on the streets) and one plot at auction (reserve 120 Sora, 20 hours left)
         con.execute("""INSERT INTO contracts(id, seller, buyer, good, qty_per_day, price, start_day, end_day, status) VALUES
                        ('k001','b002','b001','crops',20,90,0,14,'active'), ('k002','b007','b005','crops',30,85,0,14,'active'),
-                       ('k003','b008','b004','tools',6,350,0,14,'active')""")
+                       ('k003','b008','b004','tools',6,350,0,14,'active'), ('k004','b009','b006','meals',20,175,0,14,'active'),
+                       ('k005','b002','b009','crops',25,95,0,14,'active')""")
+        # bigger businesses: the food factory on P102 has crops in its hopper and packed meals stacked for the stalls
+        con.execute("INSERT INTO stock(holder, good, qty, reserved) VALUES ('company:b009','meals',40,0), ('company:b009','crops',30,0)")
         con.execute("""INSERT INTO deliveries(src, dst, good, qty, cart, fee, status, created_tick, due_tick) VALUES
                        ('company:b003','company:b006','materials',12,'b004',0,'moving',12,15)""")
         con.execute("INSERT INTO auctions(plot, reserve, start_tick, end_tick, status) VALUES ('P604', 12000, 9, 33, 'open')")
