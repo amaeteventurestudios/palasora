@@ -119,7 +119,8 @@ CREATE TABLE IF NOT EXISTS businesses (
   id TEXT PRIMARY KEY, type TEXT NOT NULL CHECK (type IN ('farm','workshop','stall','delivery')), plot TEXT NOT NULL, owner TEXT NOT NULL,
   price INTEGER NOT NULL, wage INTEGER NOT NULL, level INTEGER NOT NULL DEFAULT 1, health TEXT NOT NULL DEFAULT 'green',
   status TEXT NOT NULL CHECK (status IN ('open','closed')), cost INTEGER NOT NULL, shares_issued INTEGER NOT NULL DEFAULT 1000,
-  rating REAL NOT NULL DEFAULT 1.0, opened_tick INTEGER NOT NULL, closed_tick INTEGER, beside_curve INTEGER NOT NULL DEFAULT 0
+  rating REAL NOT NULL DEFAULT 1.0, opened_tick INTEGER NOT NULL, closed_tick INTEGER, beside_curve INTEGER NOT NULL DEFAULT 0,
+  cart INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS jobs (
   id INTEGER PRIMARY KEY, employer TEXT NOT NULL, worker TEXT NOT NULL, wage INTEGER NOT NULL, start_tick INTEGER NOT NULL, end_tick INTEGER
@@ -343,6 +344,7 @@ ADDED_COLUMNS = (
     ("world_events", "town", "TEXT NOT NULL DEFAULT ''"),           # Phase 4: the town an event happened in
     ("world_events", "withdrawn", "INTEGER NOT NULL DEFAULT 0"),    # Phase 4: an event later withdrawn (never deleted)
     ("world_events", "withdrawn_reason", "TEXT NOT NULL DEFAULT ''"),
+    ("businesses", "cart", "INTEGER NOT NULL DEFAULT 0"),           # step 3: a food cart at a plot's kerb, no plot of its own
 )
 
 

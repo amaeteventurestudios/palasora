@@ -10,7 +10,7 @@ import json
 import sqlite3
 
 from . import layout, reports, social
-from .params import C
+from .params import C, tuned
 
 
 def _town(con: sqlite3.Connection) -> dict:
@@ -26,21 +26,27 @@ def world(con: sqlite3.Connection, viewer: str = "", since_hours: int = 48) -> d
     stored = [dict(r) for r in con.execute("SELECT id, area, x, y, size, prime, use, owner, building, level FROM plots ORDER BY id")]
     plots = stored or layout.layout()
     by_id = {p["id"]: p for p in plots}
+    prices = tuned()
+    for p in plots:  # step 3: a free business plot shows its price
+        if p["use"] == "business" and not p["owner"] and not p["building"]:
+            p["price"] = prices.plot_price(p) / C
     names = {r["town_agent"]: r["display_name"] for r in con.execute("SELECT town_agent, display_name FROM town_links WHERE display_name != ''")}
     biz = []
-    for b in con.execute("SELECT id, type, plot, owner, price, wage, level, health, status, opened_tick FROM businesses ORDER BY id"):
+    for b in con.execute("SELECT id, type, plot, owner, price, wage, level, health, status, opened_tick, cart FROM businesses ORDER BY id"):
         if b["plot"] not in by_id:
             continue
         row = {"id": b["id"], "type": b["type"], "plot": b["plot"], "owner": b["owner"], "owner_name": names.get(b["owner"], ""),
                "level": b["level"], "health": b["health"], "status": b["status"], "price_sora": b["price"] / C, "wage_sora": b["wage"] / C,
-               "opened_tick": b["opened_tick"]}
+               "opened_tick": b["opened_tick"], "cart": bool(b["cart"])}
         biz.append(row)
-        if b["status"] == "open":
+        if b["status"] == "open" and not b["cart"]:  # a cart stands at the kerb; the plot stays free
             by_id[b["plot"]]["business"] = b["id"]
     members = social.members_of(con, viewer) if viewer else set()
     agents = sorted(m for m in members if not m.startswith("b"))
     mine_biz = [b for b in biz if b["id"] in members]
-    my_plot = next((p["id"] for p in plots if p["owner"] and p["owner"] in members), None) or (mine_biz[0]["plot"] if mine_biz else None)
+    # "My Plot" is where the person trades (an owned business plot), else their home
+    my_plot = next((p["id"] for p in plots if p["owner"] and p["owner"] in members and p["use"] != "home"), None) or \
+        next((b["plot"] for b in mine_biz if not b["cart"]), None) or next((p["id"] for p in plots if p["owner"] and p["owner"] in members), None)
     markers: list[dict] = []
     away = None
     if viewer:
@@ -56,5 +62,6 @@ def world(con: sqlite3.Connection, viewer: str = "", since_hours: int = 48) -> d
                 markers.append({"plot": plot, "event": i["event"], "kind": i["kind"], "yours": i["yours"]})
     population = con.execute("SELECT COUNT(*) n FROM town_agents WHERE status='active'").fetchone()["n"]
     return {"town": _town(con), "tick": now, "population": population, "grid": {"w": layout.WIDTH, "d": layout.DEPTH}, "founded": bool(stored), "plots": plots,
-            "businesses": biz, "mine": {"plot": my_plot, "agents": agents, "businesses": [b["id"] for b in mine_biz], "resident": bool(members)},
+            "businesses": biz, "mine": {"plot": my_plot, "agents": agents, "businesses": [b["id"] for b in mine_biz], "resident": bool(members),
+                     "home": next((p["id"] for p in plots if p["use"] == "home" and p["owner"] and p["owner"] in members), None)},
             "away": away, "markers": markers}

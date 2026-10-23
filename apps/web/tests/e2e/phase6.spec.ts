@@ -129,7 +129,7 @@ test("P6-04 phone landscape: main menu is a 320 px panel, quick menu fans out in
   await page.screenshot({ path: path.join(shots, "menu-quick-landscape.png") });
   await page.getByTestId("quick-plot").tap();
   const card = page.getByTestId("world-card");
-  await expect(card).toHaveAttribute("data-card", "no-plot");
+  await expect(card).toHaveAttribute("data-card", "place"); // no plot yet: My Plot opens Find a place
   const b = (await card.boundingBox())!;
   expect(b.width).toBeLessThanOrEqual(340); expect(b.x).toBeGreaterThan(844 / 2);
   await ctx.close();

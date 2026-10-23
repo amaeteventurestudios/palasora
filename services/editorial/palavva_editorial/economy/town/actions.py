@@ -22,9 +22,11 @@ from .world import CIVIC, WORK_HOURS, Agent
 # Refusal codes that are ordinary (an applicant was too late, a seller had sold out): logged, never a violation.
 ORDINARY = {"INSUFFICIENT", "NO_STOCK", "NO_SLOT", "NO_PLOT", "NO_CAPACITY", "NEEDS_APPROVAL", "NOT_HIRING", "CLOSED", "PRICE_BAND", "NO_ROOM",
             "ALREADY", "NOT_FOR_SALE"}
-APPROVAL = {"build", "buy_plot", "sell_plot", "close_business", "buy_business", "transfer_shares", "upgrade"}
+APPROVAL = {"build", "buy_plot", "start_cart", "sell_plot", "close_business", "buy_business", "transfer_shares", "upgrade"}
 SPEND = {"build": "amount", "buy_plot": "amount", "import_materials": "amount", "buy_decor": "amount", "place_order": "amount", "upgrade": "amount",
-         "buy_business": "amount"}
+         "buy_business": "amount", "start_cart": "amount"}
+# step 3, zone rules: what may be built on a business plot, by its area
+ALLOWED = {"farmland": ("farm",), "harbourside": ("workshop", "delivery"), "market": ("stall", "delivery"), "main": ("stall", "delivery")}
 
 
 class Refused(Exception):
@@ -99,6 +101,16 @@ def _spend_of(w, kind: str, inp: dict) -> int:
     if kind == "buy_business":
         b = w.biz.get(inp.get("business", ""))
         return b.cost if b else 0
+    if kind == "start_cart":
+        return p.cart_cost
+    if kind == "buy_plot":
+        pl = w.plots.get(inp.get("plot", ""))
+        btype = inp.get("btype", "stall")
+        if pl is None or btype not in p.build_cost:
+            return 0
+        total = p.build_cost[btype] - p.plot_share + p.plot_price(pl)
+        cart = w.biz.get(inp.get("business", ""))
+        return max(0, total - cart.cost) if cart is not None and cart.cart else total
     return 0
 
 
@@ -345,8 +357,84 @@ def h_build(w, a: Agent, btype: str, plot: str = "") -> dict:
     return {"business": b.id, "plot": plot, "beside_curve": crowded}
 
 
+def _open_count(w, a: Agent) -> int:
+    return sum(1 for x in a.businesses if w.biz[x].status == "open")
+
+
+def h_claim_home(w, a: Agent, plot: str) -> dict:
+    """Step 3: a person moves into a free home plot (homes cost nothing; one each)."""
+    pl = w.plots.get(plot)
+    if pl is None or pl["use"] != "home":
+        raise Refused("NO_PLOT", f"{plot} is not a home plot")
+    if any(p["use"] == "home" and p["owner"] == a.id for p in w.plots.values()):
+        raise Refused("ALREADY", "already has a home")
+    if pl["owner"]:
+        raise Refused("NO_PLOT", f"home {plot} is taken")
+    pl["owner"] = a.id
+    w.con.execute("UPDATE plots SET owner=? WHERE id=?", (a.id, plot))
+    a.home = (pl["x"], pl["y"])
+    w.save_agent(a)
+    w.event("moved_in", [a.id], f"{a.id} moved into the home on plot {plot}", visibility="public", refs={"agent": a.id, "plot": plot})
+    return {"plot": plot}
+
+
+def _kerbs(w) -> list[dict]:
+    """Free business plots with no cart parked at the kerb yet."""
+    taken = {b.plot for b in w.open_biz() if b.cart}
+    return [p for p in w.plots.values() if p["use"] == "business" and not p["owner"] and not p["building"] and p["id"] not in taken
+            and p["area"] in ("market", "main")]
+
+
+def h_start_cart(w, a: Agent, plot: str = "") -> dict:
+    """Step 3: start trading from a food cart at a free plot's kerb: the cheapest first business, owner only."""
+    if not a.is_player:
+        raise Refused("NOT_ALLOWED", "carts are for people starting out")
+    if sum(1 for x in a.businesses if w.biz[x].status == "open" and w.biz[x].cart) >= w.p.carts_per_player:
+        raise Refused("ALREADY", "already runs a cart")
+    if _open_count(w, a) >= w.p.max_businesses_per_player:
+        raise Refused("PLOT_LIMIT", f"up to {w.p.max_businesses_per_player} businesses before the Exchange opens")
+    kerbs = _kerbs(w)
+    if plot:
+        if plot not in {p["id"] for p in kerbs}:
+            raise Refused("NO_PLOT", f"no room for a cart by plot {plot}")
+    else:
+        if not kerbs:
+            raise Refused("NO_PLOT", "no free kerb for a cart")
+        plot = _roomy_stall_plot(w, kerbs, "market")
+    b = B.open_cart(w, a, plot)
+    return {"business": b.id, "plot": plot}
+
+
+def h_buy_plot(w, a: Agent, plot: str, btype: str = "stall", business: str = "") -> dict:
+    """Step 3: buy a free business plot at its listed price and build on it, or settle one's cart there as a stall. The
+    plot's zone decides what may be built (farmland: farms; harbourside: workshops and delivery; market and main streets:
+    stalls and delivery)."""
+    pl = w.plots.get(plot)
+    if pl is None or pl["use"] != "business":
+        raise Refused("NO_PLOT", f"{plot} is not a business plot")
+    if pl["owner"] or pl["building"]:
+        raise Refused("NO_PLOT", f"plot {plot} is not for sale")
+    if btype not in TYPES:
+        raise Refused("BAD_TYPE", btype)
+    if btype not in ALLOWED.get(pl["area"], ()):
+        raise Refused("ZONE", f"a {pl['area']} plot takes {' or '.join(ALLOWED.get(pl['area'], ('nothing',)))}, not a {btype}")
+    price = w.p.plot_price(pl)
+    if business:
+        b = _own_biz(w, a, business)
+        if not b.cart or btype != "stall":
+            raise Refused("BAD_ACTION", "only a cart settles on a plot, as a stall")
+        paid = B.settle_cart(w, a, b, plot, price)
+        return {"business": b.id, "plot": plot, "paid": paid, "settled": True}
+    if a.is_player and _open_count(w, a) >= w.p.max_businesses_per_player:
+        raise Refused("PLOT_LIMIT", f"up to {w.p.max_businesses_per_player} businesses before the Exchange opens")
+    b = B.build(w, a, btype, plot, plot_price=price)
+    return {"business": b.id, "plot": plot, "paid": b.cost, "settled": False}
+
+
 def h_upgrade(w, a: Agent, business: str) -> dict:
     b = _own_biz(w, a, business)
+    if b.cart:
+        raise Refused("BAD_ACTION", "a cart is upgraded by settling it on a plot")
     cost = b.cost // 2
     w.sink(a.acct, civic.TOWN_HALL, cost, rule="upgrade", ref_type="business", ref_id=b.id)
     b.level += 1
@@ -457,5 +545,6 @@ HANDLERS = {
     "end_contract": h_end_contract, "import_materials": h_import_materials, "sell_floor": h_sell_floor, "buy_meal": h_buy_meal, "eat_own": h_eat_own,
     "build": h_build, "upgrade": h_upgrade, "close_business": h_close_business, "buy_business": h_buy_business,
     "transfer_shares": h_transfer_shares, "pay_dividend": h_pay_dividend, "request_delivery": h_request_delivery,
+    "claim_home": h_claim_home, "start_cart": h_start_cart, "buy_plot": h_buy_plot,
     "buy_decor": h_buy_decor, "vote": h_vote, "make_request": h_make_request, "message_owner": h_message_owner, "pay": h_pay,
 }

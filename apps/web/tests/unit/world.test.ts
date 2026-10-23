@@ -30,7 +30,7 @@ describe("Phase 6 town grid", () => {
     const p = (o: Partial<WorldPlot>): WorldPlot => ({ id: "P000", area: "main", x: 0, y: 0, size: 1, prime: 0, use: "business", owner: "", building: "", level: 0, ...o });
     expect(plotTitle(p({ use: "civic", area: "town_hall" }))).toBe("Town Hall");
     expect(plotTitle(p({}))).toBe("Plot for sale");
-    expect(plotTitle(p({ use: "home" }))).toBe("Home plot");
+    expect(plotTitle(p({ use: "home" }))).toBe("Free home");
     expect(plotTitle(p({}), { id: "b1", type: "stall", plot: "P000", owner: "a", owner_name: "", level: 1, health: "green", status: "open", price_sora: 1, wage_sora: 1 })).toBe("Food stall");
     expect(plotTitle(p({}), { id: "b1", type: "stall", plot: "P000", owner: "a", owner_name: "", level: 1, health: "green", status: "closed", price_sora: 1, wage_sora: 1 })).toBe("Plot for sale");
     expect(townTime(0)).toBe("Day 1, 00:00");

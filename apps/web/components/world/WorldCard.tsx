@@ -8,22 +8,26 @@ import { AREA_LABEL, BUSINESS_LABEL, HEALTH_LABEL, plotTitle, townTime, type Wor
 import type { Viewer } from "./WorldApp";
 import { useTrap } from "./useTrap";
 import { BusinessCard } from "./BusinessCard";
+import { PlacePanel, type Highlight } from "./PlacePanel";
+import { ZONE_TAKES, soraWhole } from "@/lib/world/place";
 
 export type CardState =
   | { kind: "plot"; id: string } | { kind: "landmark"; title: string; text: string } | { kind: "away" } | { kind: "agent" }
-  | { kind: "no-plot" } | { kind: "travel" } | { kind: "settings" };
+  | { kind: "place"; plot?: string } | { kind: "travel" } | { kind: "settings" };
 
 const KIND: Record<string, string> = {
   business_opened: "Opened", business_closed: "Closed", business_sold: "Sold", vote_result: "Town vote", player_arrived: "Arrival", hired: "Hired",
   let_go: "Let go", worker_left: "Worker left", contract_signed: "Contract", contract_breached: "Contract breached", contract_ended: "Contract ended",
-  price_changed: "Price", upgraded: "Upgrade", market_trade: "Market Hall", starter_grant: "Grant",
+  price_changed: "Price", upgraded: "Upgrade", market_trade: "Market Hall", starter_grant: "Grant", moved_in: "Moved in", cart_opened: "New cart",
+  cart_settled: "Cart settled",
 };
 const DOT: Record<string, string> = { green: "#3fae6a", yellow: "#e8c33c", orange: "#ec8a3a", red: "#d9483b" };
 const sora = (n: number) => `${n.toLocaleString("en", { maximumFractionDigits: 2 })} Sora`;
 
-export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onClose, onPlot, onPref, onTour }: {
+export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onClose, onPlot, onPref, onTour, onPlace, onHighlight, onFly }: {
   card: CardState; data: WorldData; viewer: Viewer; prefs: { three: boolean; leftHanded: boolean }; reduceMotion: boolean; reason: string | null;
   onClose(): void; onPlot(id: string): void; onPref(p: Partial<{ three: boolean; leftHanded: boolean }>): void; onTour(): void;
+  onPlace(plot?: string): void; onHighlight(h: Highlight): void; onFly(plot: string): void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useTrap(ref, onClose);
@@ -33,7 +37,8 @@ export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onC
 
   if (card.kind === "plot") {
     const p = data.plots.find((x) => x.id === card.id);
-    const b = data.businesses.find((x) => x.plot === card.id && x.status === "open") ?? data.businesses.find((x) => x.plot === card.id);
+    const b = data.businesses.find((x) => x.plot === card.id && x.status === "open" && !x.cart) ?? data.businesses.find((x) => x.plot === card.id && !x.cart);
+    const cart = data.businesses.find((x) => x.plot === card.id && x.status === "open" && x.cart);
     const items = data.away?.items.filter((i) => i.plot === card.id) ?? [];
     title = p ? plotTitle(p, b) : "Plot";
     body = !p ? <p>This plot is not on the town map.</p> : (
@@ -51,8 +56,14 @@ export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onC
         )}
         {b && <BusinessCard key={b.id} bid={b.id} head={false} />}
         {!b && p.use === "civic" && <p className="mt-3 text-sm">{p.area === "town_hall" ? "Votes and civic jobs. The weekly vote is decided here." : p.area === "market_hall" ? "Prices for crops, tools and materials are set here by real orders." : "Imports and exports arrive here by boat."}</p>}
-        {!b && p.use === "home" && <p className="mt-3 text-sm">Homes for the town&apos;s residents.</p>}
-        {!b && p.use === "business" && <p className="mt-3 text-sm">No business on this plot yet.</p>}
+        {!b && p.use === "home" && (p.owner ? <p className="mt-3 text-sm">{p.id === data.mine.home ? "Your home." : "A resident's home."}</p> : (
+          <div className="mt-3 text-sm" data-testid="card-free-home"><p>Free to move into. Homes cost nothing, one each.</p>
+            {!data.mine.home && <div className="mt-2"><button type="button" className={primary} onClick={() => onPlace(p.id)} data-testid="card-move-in">{data.mine.resident ? "Make this my home" : "Move in here"}</button></div>}</div>))}
+        {!b && p.use === "business" && (p.price != null ? (
+          <div className="mt-3 text-sm" data-testid="card-for-sale"><p><span className="font-semibold">For sale · {soraWhole(p.price)}</span> for the plot. Takes {ZONE_TAKES[p.area] ?? "nothing yet"}.</p>
+            <div className="mt-2"><button type="button" className={primary} onClick={() => onPlace(p.id)} data-testid="card-buy-plot">{data.mine.resident ? "Buy this plot" : "Move in to buy"}</button></div></div>
+        ) : <p className="mt-3 text-sm">No business on this plot yet.</p>)}
+        {cart && <div className="mt-4" data-testid="card-cart"><h3 className="text-sm font-semibold">Food cart at the kerb</h3><BusinessCard key={cart.id} bid={cart.id} /></div>}
         {items.length > 0 && (
           <div className="mt-4"><h3 className="text-sm font-semibold">Since you left</h3>
             <ul className="mt-1 flex flex-col gap-1 text-sm">{items.map((i) => <li key={i.event}><Link className="underline" href={`/town/event/${i.event}`}>{i.text}</Link> <span className="text-[#4b5566]">· {townTime(i.tick)}</span></li>)}</ul></div>
@@ -83,10 +94,9 @@ export function WorldCard({ card, data, viewer, prefs, reduceMotion, reason, onC
         <div className="mt-3 flex gap-2"><Link className={primary} href="/my-agents">Open My Agents</Link><Link className={secondary} href="/messages">Messages</Link></div>
       </>
     ) : <><p className="text-sm">Sign in to meet your agent.</p><div className="mt-3"><Link className={primary} href="/auth/sign-in?next=/">Sign in</Link></div></>;
-  } else if (card.kind === "no-plot") {
-    title = "My Plot";
-    body = viewer.signedIn ? <p className="text-sm">You don&apos;t have a plot in {data.town.name} yet. Every person gets a home plot when they join the town.</p>
-      : <><p className="text-sm">Sign in to see your plot.</p><div className="mt-3"><Link className={primary} href="/auth/sign-in?next=/">Sign in</Link></div></>;
+  } else if (card.kind === "place") {
+    title = "Find a place";
+    body = <PlacePanel focus={card.plot} onHighlight={onHighlight} onFly={onFly} />;
   } else if (card.kind === "travel") {
     title = "Travel";
     body = (

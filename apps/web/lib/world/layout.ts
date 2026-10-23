@@ -3,13 +3,13 @@
 // the economy service (economy/town/layout.py); this file only decides where streets run between the plots.
 
 export type WorldPlot = { id: string; area: string; x: number; y: number; size: number; prime: number; use: "home" | "business" | "civic"; owner: string;
-  building: string; level: number; business?: string };
+  building: string; level: number; business?: string; price?: number };
 export type WorldBusiness = { id: string; type: "farm" | "workshop" | "stall" | "delivery"; plot: string; owner: string; owner_name: string; level: number;
-  health: "green" | "yellow" | "orange" | "red"; status: "open" | "closed"; price_sora: number; wage_sora: number; opened_tick?: number };
+  health: "green" | "yellow" | "orange" | "red"; status: "open" | "closed"; price_sora: number; wage_sora: number; opened_tick?: number; cart?: boolean };
 export type AwayItem = { event: string; kind: string; text: string; tick: number; yours: boolean; plot: string | null };
 export type WorldData = {
   town: { id: string; name: string; slug: string }; tick: number; population?: number; grid: { w: number; d: number }; founded: boolean; plots: WorldPlot[];
-  businesses: WorldBusiness[]; mine: { plot: string | null; agents: string[]; businesses: string[]; resident: boolean };
+  businesses: WorldBusiness[]; mine: { plot: string | null; agents: string[]; businesses: string[]; resident: boolean; home?: string | null };
   away: { since_tick: number; items: AwayItem[]; quiet: boolean; total: number } | null; markers: { plot: string; event: string; kind: string; yours: boolean }[];
 };
 
@@ -57,7 +57,7 @@ export const HEALTH_LABEL: Record<string, string> = { green: "Has everything", y
 export function plotTitle(p: WorldPlot, biz?: WorldBusiness): string {
   if (p.use === "civic") return CIVIC_LABEL[p.area] ?? "Town building";
   if (biz && biz.status === "open") return BUSINESS_LABEL[biz.type] ?? "Business";
-  if (p.use === "home") return p.owner ? "House" : "Home plot";
+  if (p.use === "home") return p.owner ? "House" : "Free home";
   return "Plot for sale";
 }
 

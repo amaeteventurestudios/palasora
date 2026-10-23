@@ -197,11 +197,16 @@ def owner_draw(w) -> None:
 
 
 # --------------------------------------------------------------------------- building and closing (called by the gate)
-def build(w, a: Agent, btype: str, plot_id: str, *, founder_plot: bool = False, label: str = "") -> Biz:
+def build(w, a: Agent, btype: str, plot_id: str, *, founder_plot: bool = False, plot_price: int | None = None, label: str = "") -> Biz:
+    """Build on a plot. The build cost includes the plot share; a founder's plot is already paid for, and a plot bought at
+    its listed price (`plot_price`, step 3) replaces the plot share with that price."""
     from .civic import TOWN_HALL
     p = w.p
     cost = p.build_cost[btype]
     pay = cost - (p.plot_share if founder_plot else 0)
+    if plot_price is not None:
+        cost = cost - p.plot_share + plot_price
+        pay = cost
     bid = f"b{len(w.biz) + 1:03d}"
     w.sink(a.acct, TOWN_HALL, pay, rule="build", ref_type="business", ref_id=bid)
     pl = w.plots[plot_id]
@@ -223,6 +228,50 @@ def build(w, a: Agent, btype: str, plot_id: str, *, founder_plot: bool = False, 
     w.event("business_opened", [a.id, bid], f"A new {btype} opened on plot {plot_id}{label}", visibility="public",
             refs={"business": bid, "plot": plot_id, "cost": cost})
     return b
+
+
+def open_cart(w, a: Agent, kerb: str) -> Biz:
+    """A food cart (step 3): a stall with no plot of its own, parked at the kerb of a free business plot. It costs the
+    cart, sells meals like a stall, and only its owner works it. Settling it on a bought plot (`settle_cart`) turns it
+    into a stall with the same company, books and shares."""
+    from .civic import TOWN_HALL
+    p = w.p
+    bid = f"b{len(w.biz) + 1:03d}"
+    w.sink(a.acct, TOWN_HALL, p.cart_cost, rule="build", ref_type="business", ref_id=bid)
+    pl = w.plots[kerb]
+    b = Biz(id=bid, type="stall", plot=kerb, owner=a.id, xy=(pl["x"], pl["y"] + 0.45), price=p.meal_ref, wage=p.wage_ref, cost=p.cart_cost,
+            opened_tick=w.tick, mode=a.mode if a.mode in ("recorded", "live") else "rules", cart=True)
+    b.ema_demand = 10.0
+    b.last_change_day = w.day
+    new_day(b)
+    w.biz[bid] = b
+    a.businesses.append(bid)
+    if a.first_business_tick is None:
+        a.first_business_tick = w.tick
+    w.save_biz(b)
+    mint_shares(w, b, a)
+    w.set_job(a, f"own:{bid}")
+    w.event("cart_opened", [a.id, bid], f"A food cart started trading by plot {kerb}", visibility="public", refs={"business": bid, "plot": kerb, "cart": True})
+    return b
+
+
+def settle_cart(w, a: Agent, b: Biz, plot_id: str, plot_price: int) -> int:
+    """A cart moves onto a bought plot and becomes a stall: the plot price and the stall's construction are paid, less what
+    the cart cost (the cart is built into the stall). Returns what was paid."""
+    from .civic import TOWN_HALL
+    p = w.p
+    cost = p.build_cost["stall"] - p.plot_share + plot_price
+    pay = max(0, cost - b.cost)
+    w.sink(a.acct, TOWN_HALL, pay, rule="build", ref_type="business", ref_id=b.id)
+    pl = w.plots[plot_id]
+    b.cart, b.plot, b.xy, b.cost = False, plot_id, (pl["x"], pl["y"]), cost
+    b.last_change_day = w.day
+    pl["owner"], pl["building"], pl["level"] = a.id, "stall", b.level
+    w.con.execute("UPDATE plots SET owner=?, building='stall', level=? WHERE id=?", (a.id, b.level, plot_id))
+    w.save_biz(b)
+    w.event("cart_settled", [a.id, b.id], f"The food cart {b.id} settled on plot {plot_id} and became a stall", visibility="public",
+            refs={"business": b.id, "plot": plot_id, "cost": cost})
+    return pay
 
 
 def mint_shares(w, b: Biz, a: Agent) -> None:
@@ -252,8 +301,9 @@ def close(w, b: Biz, reason: str) -> None:
     if cash > 0:
         w.pay(b.acct, o.acct, cash, kind="transfer", rule="owner_draw", ref_type="business", ref_id=b.id)
     b.status, b.closed_tick = "closed", w.tick
-    w.plots[b.plot].update(owner="", building="", level=0)
-    w.con.execute("UPDATE plots SET owner='', building='', level=0 WHERE id=?", (b.plot,))
+    if not b.cart:  # a cart never held its plot
+        w.plots[b.plot].update(owner="", building="", level=0)
+        w.con.execute("UPDATE plots SET owner='', building='', level=0 WHERE id=?", (b.plot,))
     if o.job == f"own:{b.id}":
         nxt = next((x for x in o.businesses if x != b.id and w.biz[x].status == "open"), None)
         w.set_job(o, f"own:{nxt}" if nxt else None)

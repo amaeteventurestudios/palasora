@@ -11,7 +11,7 @@ const HEALTH: Record<string, string> = { green: "#3fae6a", yellow: "#e8c33c", or
 export function Town2D({ data, selected, onSelect, reason }: { data: WorldData; selected: string | null; onSelect(s: Selection | null): void; reason: string | null }) {
   const pad = 6, W = TOWN_W + pad * 2 + 4, D = TOWN_D + pad * 2;
   const S = streets();
-  const biz = new Map(data.businesses.filter((b) => b.status === "open").map((b) => [b.plot, b]));
+  const biz = new Map(data.businesses.filter((b) => b.status === "open" && !b.cart).map((b) => [b.plot, b]));
   const marked = new Set(data.markers.map((m) => m.plot));
   const lived = data.founded || data.businesses.length > 0;
   return (

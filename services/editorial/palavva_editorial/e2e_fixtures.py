@@ -115,6 +115,7 @@ def seed_town(pb: PB, t: dict) -> dict:
                        ('b005','stall','P406','h023',240,1400,'open',40000,0,'green'), ('b006','stall','P307','h024',260,1400,'open',40000,0,'orange'),
                        ('b007','farm','P903','h025',170,1300,'open',30000,0,'green'), ('b008','workshop','P706','h026',380,1600,'open',50000,0,'green')""")
         social.link(con, "p001", user_id=reader["id"] if reader else "", display_name="Local Reader's agent")
+        con.execute("UPDATE plots SET owner='p001' WHERE id='P003'")  # step 3: p001 lives in the home on P003
         rows = [(8, "player_arrived", ["p001"], "public", {"agent": "p001"}, "p001 arrived in town"),
                 (9, "business_opened", ["p001", "b001"], "public", {"business": "b001", "plot": "P405"}, "A new stall opened on plot P405 (run by p001)"),
                 (10, "hired", ["h010", "p001", "b001"], "owner", {"business": "b001"}, "h010 started work at b001 for 15 Sora a day"),
@@ -145,6 +146,7 @@ def _seed_books(con) -> None:
             ledger.transfer(con, idem_key=f"e2e-books-{n}", src_bucket="available", dst_bucket="available", asset=edb.SORA, txn_id=f"t{tick}", **kw)
 
     at(9, kind="issue", src=hall, dst=b001, amount=40000, rule="genesis")
+    at(9, kind="issue", src=hall, dst=acct("agent", "p001"), amount=30000, rule="new_player_grant")  # step 3: 300 Sora in p001's wallet
     for d in diners:
         at(9, kind="issue", src=hall, dst=d, amount=3000, rule="starter_grant")
     for i, tick in enumerate((10, 10, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 13)):

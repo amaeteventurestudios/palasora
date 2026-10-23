@@ -92,6 +92,7 @@ class Biz:
     closed_tick: int | None = None
     beside_curve: bool = False
     out_hours: int = 0
+    cart: bool = False                            # a food cart at a plot's kerb: owner only, no plot of its own
 
     @property
     def acct(self) -> tuple[str, str]:
@@ -106,6 +107,8 @@ class Biz:
         return own + len(self.workers)
 
     def max_hires(self, p: Params) -> int:
+        if self.cart:
+            return 0
         return p.hires_level1 + (self.level - 1) * p.hires_per_level
 
 
@@ -220,16 +223,16 @@ class World:
     # ------------------------------------------------------------------ records
     def save_agent(self, a: Agent) -> None:
         self.con.execute("""INSERT INTO town_agents(id, kind, role, owner_kind, owner_key, personality, limits, mode, ai_budget_left, arrived_tick, home)
-                            VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET role=excluded.role, mode=excluded.mode""",
+                            VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET role=excluded.role, mode=excluded.mode, home=excluded.home""",
                          (a.id, a.kind, a.role, a.owner_kind, a.owner_key, json.dumps(a.personality, sort_keys=True), json.dumps(a.limits, sort_keys=True),
                           a.mode, 0, a.arrived_tick, json.dumps(a.home)))
 
     def save_biz(self, b: Biz) -> None:
-        self.con.execute("""INSERT INTO businesses(id, type, plot, owner, price, wage, level, health, status, cost, rating, opened_tick, closed_tick, beside_curve)
-                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET owner=excluded.owner, price=excluded.price, wage=excluded.wage,
+        self.con.execute("""INSERT INTO businesses(id, type, plot, owner, price, wage, level, health, status, cost, rating, opened_tick, closed_tick, beside_curve, cart)
+                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET owner=excluded.owner, plot=excluded.plot, cart=excluded.cart, cost=excluded.cost, price=excluded.price, wage=excluded.wage,
                             level=excluded.level, health=excluded.health, status=excluded.status, rating=excluded.rating, closed_tick=excluded.closed_tick""",
                          (b.id, b.type, b.plot, b.owner, b.price, b.wage, b.level, health(b), b.status, b.cost, round(b.rating, 4), b.opened_tick,
-                          b.closed_tick, int(b.beside_curve)))
+                          b.closed_tick, int(b.beside_curve), int(b.cart)))
 
     def set_state(self, key: str, value) -> None:
         self.con.execute("INSERT INTO town_state(key, value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (key, json.dumps(value)))

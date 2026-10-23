@@ -6,13 +6,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Bell, Bot, CircleHelp, Coins, Gamepad2, Home, LayoutList, LineChart, Map as MapIcon, MessageSquare, MoreHorizontal, Plus,
-  Settings, Shield, Trophy, User, Users, X, Store, Navigation, ZoomIn, ZoomOut, LocateFixed, Layers } from "lucide-react";
+  Settings, Shield, Trophy, User, Users, X, Store, Navigation, ZoomIn, ZoomOut, LocateFixed, Layers, MapPin } from "lucide-react";
 import type { WorldData } from "@/lib/world/layout";
 import { townTime } from "@/lib/world/layout";
 import type { WorldHandle, Selection, Label } from "@/lib/world/scene";
 import { Town2D } from "./Town2D";
 import { TownList } from "./TownList";
 import { WorldCard, type CardState } from "./WorldCard";
+import type { Highlight } from "./PlacePanel";
 import { useTrap } from "./useTrap";
 
 const WorldCanvas = dynamic(() => import("./WorldCanvas").then((m) => m.WorldCanvas), { ssr: false, loading: () => <Loading /> });
@@ -70,12 +71,23 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
   }, [data, view, at]);
 
   const covered = !!menu || !!card;
+  // on a portrait phone a card covers the bottom half: keep the place it is about in the visible half above it
+  useEffect(() => {
+    const fit = () => world.current?.inset(card && innerHeight > innerWidth ? Math.round(Math.min(innerHeight * 0.5, document.querySelector("[data-testid=world-card]")?.getBoundingClientRect().height ?? 0)) : 0);
+    fit(); const t = setTimeout(fit, 400);
+    addEventListener("resize", fit);
+    return () => { clearTimeout(t); removeEventListener("resize", fit); };
+  }, [card]);
   useEffect(() => { world.current?.setPaused(!!menu); }, [menu]);
   useEffect(() => { if (selected) world.current?.select(selected); }, [selected]);
 
+  // while "Find a place" is open, tapping a lit-up plot picks it in the panel instead of opening the plot's card
+  const picking = useRef<Set<string> | null>(null);
+  const onHighlight = useCallback((h: Highlight) => { picking.current = h ? new Set(h.map((x) => x.id)) : null; world.current?.pick(h); }, []);
   const onSelect = useCallback((sel: Selection | null) => {
     setMenu(null);
     if (!sel) { setSelected(null); setCard(null); return; }
+    if (sel.kind === "plot" && picking.current?.has(sel.id)) { setSelected(sel.id); setCard({ kind: "place", plot: sel.id }); return; }
     if (sel.kind === "plot") { setSelected(sel.id); setCard({ kind: "plot", id: sel.id }); }
     else { setSelected(null); setCard({ kind: "landmark", title: sel.title, text: sel.text }); }
   }, []);
@@ -108,7 +120,8 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
 
   const quick = (k: string) => {
     setMenu(null);
-    if (k === "plot") { if (data?.mine.plot) openPlot(data.mine.plot); else setCard({ kind: "no-plot" }); }
+    if (k === "plot") { if (data?.mine.plot) openPlot(data.mine.plot); else setCard({ kind: "place" }); }
+    else if (k === "place") setCard({ kind: "place" });
     else if (k === "agent") setCard({ kind: "agent" });
     else if (k === "travel") setCard({ kind: "travel" });
   };
@@ -126,7 +139,8 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
       {view === "2d" && data && <Town2D data={data} selected={selected} onSelect={onSelect} reason={reason} />}
       {view === "3d" && labels.map((l) => (
         <div key={l.id} className="pointer-events-none absolute z-10 flex -translate-x-1/2 -translate-y-full items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold shadow"
-          style={{ left: l.x, top: l.y, background: l.tone === "mine" ? "#d8a838" : "#ffffff", color: "#1d2433" }} data-testid={l.tone === "district" ? "district-label" : undefined}>
+          style={{ left: l.x, top: l.y, background: l.tone === "mine" ? "#d8a838" : l.tone === "pick" ? "#fff4d6" : "#ffffff", color: "#1d2433" }}
+          data-testid={l.tone === "district" ? "district-label" : l.tone === "pick" ? "pick-label" : undefined}>
           {l.color && <span className="size-2.5 rounded-full" style={{ background: l.color }} aria-hidden />}{l.text}</div>
       ))}
       {!data && <Unavailable />}
@@ -160,7 +174,8 @@ export function WorldApp({ data, viewer, at }: { data: WorldData | null; viewer:
       {card && data && (
         <WorldCard card={card} data={data} viewer={viewer} prefs={prefs} reduceMotion={reduce || view !== "3d"} reason={reason}
           onClose={() => { setCard(null); setSelected(null); world.current?.select(null); world.current?.stopTour(); }}
-          onPlot={openPlot} onPref={setPref}
+          onPlot={openPlot} onPref={setPref} onPlace={(plot) => setCard({ kind: "place", plot })} onHighlight={onHighlight}
+          onFly={(id) => { setSelected(id); world.current?.select(id); world.current?.flyTo(id, 2.2); }}
           onTour={() => { const ids = data.markers.map((m) => m.plot); setCard(null); world.current?.tour(ids, () => setCard({ kind: "away" })); }} />
       )}
       {covered && <div className="sr-only" aria-live="polite">{card ? "Card open" : "Menu open"}</div>}
@@ -231,6 +246,7 @@ function MainMenu({ viewer, leftHanded, onClose, onCard, onList }: { viewer: Vie
     ] },
     { title: "Agents and places", items: [
       { label: "My Agents", href: "/my-agents", icon: Bot, badge: viewer.waiting },
+      { label: "Find a place", icon: MapPin, on: () => onCard({ kind: "place" }), testid: "menu-place" },
       { label: "Towns and Districts", icon: MapIcon, on: () => onCard({ kind: "travel" }) },
       { label: "Businesses", href: "/businesses", icon: Store },
     ] },

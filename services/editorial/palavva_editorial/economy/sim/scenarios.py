@@ -42,6 +42,8 @@ class Scenario:
 
     def new_player(self, w, **kw):
         self.players += 1
+        while f"p{self.players:03d}" in w.agents:  # a person who moved in (step 3) already took this id
+            self.players += 1
         return genesis.arrive_player(w, f"p{self.players:03d}", **kw)
 
 
