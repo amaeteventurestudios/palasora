@@ -27,8 +27,8 @@ SALE_LABEL = {"meal": "Meals sold", "contract": "Contract delivery", "delivery_f
               "civic_project": "Town Hall project", "market_hall": "Market Hall sale", "": "Market Hall sale"}
 COST_LABEL = {"wage": "Wages", "plot_upkeep": "Plot upkeep", "import": "Imports", "contract": "Contract supplies", "delivery_fee": "Delivery fees",
               "market_hall": "Market Hall purchases", "": "Market Hall purchases", "upgrade": "Upgrade", "build": "Building"}
-OUTPUT = {"farm": "crops", "workshop": "tools", "stall": "meals", "delivery": "delivery loads"}
-INPUT = {"farm": "tools", "workshop": "materials", "stall": "crops"}
+OUTPUT = {"farm": "crops", "workshop": "tools", "stall": "meals", "delivery": "delivery loads", "factory": "meals for stalls"}
+INPUT = {"farm": "tools", "workshop": "materials", "stall": "crops", "factory": "crops"}
 REQUEST_KINDS = ("set_price", "set_wage", "hire", "fire", "upgrade", "end_contract", "close_business")
 PERIODS = (("day", 24), ("week", 24 * 7), ("month", 24 * 30))
 
@@ -97,7 +97,7 @@ def business_card(con: sqlite3.Connection, bid: str, viewer: str = "") -> dict |
     contracts = [{"id": r["id"], "role": "seller" if r["seller"] == bid else "buyer", "other": r["buyer"] if r["seller"] == bid else r["seller"],
                   "good": r["good"], "qty_per_day": r["qty_per_day"], "price": r["price"] / C, "end_day": r["end_day"], "delivered": r["delivered"], "breaches": r["breaches"]}
                  for r in con.execute("SELECT * FROM contracts WHERE (seller=? OR buyer=?) AND status='active' ORDER BY id", (bid, bid))]
-    ref = {"stall": p.meal_ref, "farm": p.crop_ref, "workshop": p.tool_ref, "delivery": p.delivery_fee}[b["type"]]
+    ref = p.type_ref(b["type"])
     owner = owner_of(con, bid, viewer)
     mine = owner is not None
     vis = "('public','town','owner')" if mine else "('public','town')"

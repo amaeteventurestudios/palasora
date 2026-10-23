@@ -18,8 +18,8 @@ from . import auctions as AU, social
 from .params import C, TYPES, tuned
 
 KINDS = ("move_in", "claim_home", "start_cart", "buy_plot", "bid", "build")
-ALLOWED = {"farmland": ("farm",), "harbourside": ("workshop", "delivery"), "market": ("stall", "delivery"), "main": ("stall", "delivery")}
-LABEL = {"farm": "Farm", "workshop": "Workshop", "stall": "Food stall", "delivery": "Delivery depot"}
+ALLOWED = {"farmland": ("farm",), "harbourside": ("workshop", "delivery", "factory"), "market": ("stall", "delivery"), "main": ("stall", "delivery")}
+LABEL = {"farm": "Farm", "workshop": "Workshop", "stall": "Food stall", "delivery": "Delivery depot", "factory": "Food factory"}
 
 
 class PlaceError(ValueError):

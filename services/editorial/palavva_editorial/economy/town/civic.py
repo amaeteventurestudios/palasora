@@ -207,6 +207,22 @@ def import_materials(w, b: Biz, qty: int) -> dict:
     return delivery.dispatch(w, src=HARBOUR_DOCK, dst=b.holder, good="materials", qty=qty, payer=b.acct, ref_type="import", ref_id=b.id)
 
 
+def import_crops(w, b: Biz, qty: int) -> dict:
+    """Bigger businesses: a food factory short of local crops buys them off the boats at a premium; the coins are
+    destroyed like any import, and the cargo goes by cart. The owner tops up the factory's cash first if it must."""
+    from .business import top_up
+    cost = int(w.p.crop_ref * w.p.crop_import_markup) * qty
+    if w.bal(b.acct) < cost:
+        top_up(w, b, cost - w.bal(b.acct))
+    if w.bal(b.acct) < cost:
+        return {"imported": 0}
+    w.sink(b.acct, HARBOUR, cost, rule="import", ref_type="business", ref_id=b.id)
+    b.day["costs"] = b.day.get("costs", 0) + cost
+    b.day["inputs"] = b.day.get("inputs", 0) + cost
+    goods.create(w.con, w.tick, HARBOUR_DOCK, "crops", qty, "imported", "business", b.id)
+    return delivery.dispatch(w, src=HARBOUR_DOCK, dst=b.holder, good="crops", qty=qty, payer=b.acct, ref_type="import", ref_id=b.id)
+
+
 def buy_decor(w, a: Agent, amount: int) -> None:
     """Cosmetics bought with coins (a sink, Doc 04 section 4). An owner's decor lifts its first business's rating a little."""
     w.sink(a.acct, TOWN_HALL, amount, rule="decor", ref_type="agent", ref_id=a.id)

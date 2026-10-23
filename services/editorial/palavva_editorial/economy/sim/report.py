@@ -112,7 +112,8 @@ def render(s: dict, checks: dict | None = None) -> str:
     # money: Sora per resident index (chain-linked) against the target path from day 14
     i14 = next((d["index"] for d in ds if d["day"] == 14), ds[0]["index"] if ds else 1.0)
     tgt = [None if d["day"] < 14 else i14 * (1 + target) ** ((d["day"] - 14) / 365) for d in ds]
-    refs = {"stall": p["meal_ref"], "farm": p["crop_ref"], "workshop": p["tool_ref"], "delivery": p["delivery_fee"]}
+    refs = {"stall": p["meal_ref"], "farm": p["crop_ref"], "workshop": p["tool_ref"], "delivery": p["delivery_fee"],
+            "factory": int(p["meal_ref"] * p.get("factory_price_share", 0.5))}
     price = {t: [(d["prices"][t] / refs[t]) if d["prices"].get(t) else None for d in ds] for t in refs}
     data = {
         "days": days,

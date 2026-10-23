@@ -23,10 +23,10 @@ from .world import CIVIC, WORK_HOURS, Agent
 ORDINARY = {"INSUFFICIENT", "NO_STOCK", "NO_SLOT", "NO_PLOT", "NO_CAPACITY", "NEEDS_APPROVAL", "NOT_HIRING", "CLOSED", "PRICE_BAND", "NO_ROOM",
             "ALREADY", "NOT_FOR_SALE", "LOW_BID", "ZONE"}
 APPROVAL = {"build", "buy_plot", "start_cart", "sell_plot", "close_business", "buy_business", "transfer_shares", "upgrade"}
-SPEND = {"build": "amount", "buy_plot": "amount", "import_materials": "amount", "buy_decor": "amount", "place_order": "amount", "upgrade": "amount",
+SPEND = {"build": "amount", "buy_plot": "amount", "import_materials": "amount", "import_crops": "amount", "buy_decor": "amount", "place_order": "amount", "upgrade": "amount",
          "buy_business": "amount", "start_cart": "amount", "bid": "amount"}
 # step 3, zone rules: what may be built on a business plot, by its area
-ALLOWED = {"farmland": ("farm",), "harbourside": ("workshop", "delivery"), "market": ("stall", "delivery"), "main": ("stall", "delivery")}
+ALLOWED = {"farmland": ("farm",), "harbourside": ("workshop", "delivery", "factory"), "market": ("stall", "delivery"), "main": ("stall", "delivery")}
 
 
 class Refused(Exception):
@@ -91,6 +91,8 @@ def _spend_of(w, kind: str, inp: dict) -> int:
         return p.build_cost.get(inp.get("btype", ""), 0)
     if kind == "import_materials":
         return w.material_price() * int(inp.get("qty", 0))
+    if kind == "import_crops":
+        return int(p.crop_ref * p.crop_import_markup) * int(inp.get("qty", 0))
     if kind == "buy_decor":
         return int(inp.get("amount", 0))
     if kind == "place_order" and inp.get("side") == "buy":
@@ -118,13 +120,14 @@ def _spend_of(w, kind: str, inp: dict) -> int:
 
 def _limits(w, a: Agent, kind: str, via: str, spend: int, inp: dict) -> None:
     lim = a.limits
-    if spend and a.spent_today + spend > lim.get("daily_cap", 10**12):
+    # the cap is the limit a person sets on their agent; a request the person confirmed themselves is not held to it
+    if spend and via != "human" and a.spent_today + spend > lim.get("daily_cap", 10**12):
         raise Refused("OVER_LIMIT", f"over the owner's daily spending cap of {lim.get('daily_cap', 0) / C:.0f} Sora")
     if kind == "set_price":
         b = w.biz.get(inp.get("business", ""))
         if b:
             lo, hi = lim.get("price_range", w.p.price_range)
-            ref = {"stall": w.p.meal_ref, "farm": w.p.crop_ref, "workshop": w.p.tool_ref, "delivery": w.p.delivery_fee}[b.type]
+            ref = w.p.type_ref(b.type)
             if not (lo * ref <= int(inp.get("price", 0)) <= hi * ref):
                 raise Refused("PRICE_RANGE", "outside the owner's price range")
     if kind in APPROVAL and via == "agent" and a.is_player and kind in lim.get("approval", APPROVAL):
@@ -233,11 +236,12 @@ def h_sign_contract(w, a: Agent, buyer: str, seller: str, good: str, qty: int, p
     s = w.biz.get(seller)
     if s is None or s.status != "open":
         raise Refused("CLOSED", seller)
-    if B.output_good(s.type) != good or B.input_good(bb.type) != good:
+    restock = bb.type == "stall" and s.type == "factory" and good == "meals"  # a busy stall also buys a factory's meals
+    if B.output_good(s.type) != good or (B.input_good(bb.type) != good and not restock):
         raise Refused("BAD_CONTRACT", "the seller does not make this good or the buyer does not use it")
     if price < s.price:
         raise Refused("BELOW_ASK", "below the seller's asking price")
-    spare = B.daily_capacity(w, s) - B.committed_out(w, s)
+    spare = B.promise_capacity(w, s) - B.committed_out(w, s)
     if qty <= 0 or qty > spare:
         raise Refused("NO_CAPACITY", f"{seller} can promise {max(spare, 0)} a day")
     cid = contracts.sign(w, seller=s, buyer=bb, good=good, qty=int(qty), price=int(price), days=int(days or w.p.contract_days))
@@ -263,6 +267,15 @@ def h_import_materials(w, a: Agent, business: str, qty: int) -> dict:
     if qty <= 0:
         raise Refused("BAD_QTY", "")
     return civic.import_materials(w, b, int(qty))
+
+
+def h_import_crops(w, a: Agent, business: str, qty: int) -> dict:
+    b = _own_biz(w, a, business)
+    if b.type != "factory":
+        raise Refused("BAD_ACTION", "only food factories import crops")
+    if qty <= 0:
+        raise Refused("BAD_QTY", "")
+    return civic.import_crops(w, b, int(qty))
 
 
 def h_sell_floor(w, a: Agent, business: str, good: str, qty: int) -> dict:
@@ -305,7 +318,7 @@ def h_eat_own(w, a: Agent, business: str) -> dict:
 
 # --------------------------------------------------------------------------- handlers: property
 def _free_plot(w, btype: str, prime: bool | None = None) -> str | None:
-    pref = {"farm": "farmland", "workshop": "harbourside", "stall": "market", "delivery": "main"}[btype]
+    pref = {"farm": "farmland", "workshop": "harbourside", "stall": "market", "delivery": "main", "factory": "harbourside"}[btype]
     free = [p for p in w.plots.values() if p["use"] == "business" and not p["owner"] and p["id"] not in w.at_auction]
     if btype == "stall" and free:
         return _roomy_stall_plot(w, free, pref)
@@ -556,7 +569,7 @@ def h_pay(w, a: Agent, to: str, amount: int) -> dict:
 HANDLERS = {
     "apply_job": h_apply_job, "quit_job": h_quit_job, "hire": h_hire, "fire": h_fire, "set_wage": h_set_wage,
     "set_price": h_set_price, "place_order": h_place_order, "cancel_order": h_cancel_order, "sign_contract": h_sign_contract,
-    "end_contract": h_end_contract, "import_materials": h_import_materials, "sell_floor": h_sell_floor, "buy_meal": h_buy_meal, "eat_own": h_eat_own,
+    "end_contract": h_end_contract, "import_materials": h_import_materials, "import_crops": h_import_crops, "sell_floor": h_sell_floor, "buy_meal": h_buy_meal, "eat_own": h_eat_own,
     "build": h_build, "upgrade": h_upgrade, "close_business": h_close_business, "buy_business": h_buy_business,
     "transfer_shares": h_transfer_shares, "pay_dividend": h_pay_dividend, "request_delivery": h_request_delivery,
     "claim_home": h_claim_home, "start_cart": h_start_cart, "buy_plot": h_buy_plot, "bid": h_bid,

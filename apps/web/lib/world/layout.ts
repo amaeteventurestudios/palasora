@@ -7,7 +7,7 @@ export type WorldPlot = { id: string; area: string; x: number; y: number; size: 
   auction?: { id: number; reserve: number; high: number; bids: number; ends_tick: number; min_bid: number } };
 /** Goods on the move (step 4): a contract's daily route or the last day's deliveries, from plot to plot. */
 export type GoodsFlow = { from: string; to: string; good: "crops" | "meals" | "tools" | "materials"; qty: number; kind: "contract" | "delivery"; moving: boolean };
-export type WorldBusiness = { id: string; type: "farm" | "workshop" | "stall" | "delivery"; plot: string; owner: string; owner_name: string; level: number;
+export type WorldBusiness = { id: string; type: "farm" | "workshop" | "stall" | "delivery" | "factory"; plot: string; owner: string; owner_name: string; level: number;
   health: "green" | "yellow" | "orange" | "red"; status: "open" | "closed"; price_sora: number; wage_sora: number; opened_tick?: number; cart?: boolean };
 export type AwayItem = { event: string; kind: string; text: string; tick: number; yours: boolean; plot: string | null };
 export type WorldData = {
@@ -54,7 +54,7 @@ export const AREA_LABEL: Record<string, string> = {
   market: "Downtown", main: "Home quarters", harbourside: "Workshop yard", farmland: "Farm belt", town_hall: "Downtown", market_hall: "Downtown", harbour: "Harbour",
 };
 export const CIVIC_LABEL: Record<string, string> = { town_hall: "Town Hall", market_hall: "Market Hall", harbour: "Harbour" };
-export const BUSINESS_LABEL: Record<string, string> = { farm: "Farm", workshop: "Workshop", stall: "Food stall", delivery: "Delivery depot" };
+export const BUSINESS_LABEL: Record<string, string> = { farm: "Farm", workshop: "Workshop", stall: "Food stall", delivery: "Delivery depot", factory: "Food factory" };
 export const HEALTH_LABEL: Record<string, string> = { green: "Has everything", yellow: "Running low", orange: "Getting a little", red: "Getting nothing" };
 
 /** What a plot is, in words (cards, the 2D map and the list view all use this). */

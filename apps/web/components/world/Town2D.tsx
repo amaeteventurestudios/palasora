@@ -5,7 +5,7 @@ import { PLOT, TOWN_D, TOWN_W, plotCenter, plotTitle, streets, type WorldData } 
 import type { Selection } from "@/lib/world/scene";
 
 const FILL: Record<string, string> = { market: "#e3d9c6", main: "#a8c597", harbourside: "#cfc6b2", farmland: "#c9ad86", town_hall: "#f4ecdb", market_hall: "#f4ecdb", harbour: "#d4c8b1" };
-const BIZ: Record<string, string> = { stall: "#c9724f", farm: "#7fa95a", workshop: "#5e6a78", delivery: "#4f7cac" };
+const BIZ: Record<string, string> = { stall: "#c9724f", farm: "#7fa95a", workshop: "#5e6a78", delivery: "#4f7cac", factory: "#b5523b" };
 const HEALTH: Record<string, string> = { green: "#3fae6a", yellow: "#e8c33c", orange: "#ec8a3a", red: "#d9483b" };
 
 export function Town2D({ data, selected, onSelect, reason }: { data: WorldData; selected: string | null; onSelect(s: Selection | null): void; reason: string | null }) {

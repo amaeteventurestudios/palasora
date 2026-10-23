@@ -1,4 +1,4 @@
-// Palasora step 4: goods on the move, a look inside a business, and the Town Hall's plot auction. The test stack stores three
+// Palasora step 4: goods on the move, a look inside a business, and the Town Hall's plot auction. The test stack stores five
 // contracts and a delivery between the founded town's businesses (vans drive them), and plot P604 at auction from 120 Sora
 // (e2e_fixtures). The reader's agent p001 runs stall b001 on P405 and has 300 Sora.
 import { expect, test, type Page } from "@playwright/test";
@@ -25,7 +25,7 @@ test("S4-01 delivery vans drive the goods routes; the Goods layer names each one
   await page.setViewportSize({ width: 1280, height: 800 });
   await openWorld(page);
   const g = await goods(page);
-  expect(g.routes).toBe(4); // three contracts and one delivery
+  expect(g.routes).toBe(6); // five contracts (one carries the food factory's meals) and one delivery
   expect(g.vans).toBeGreaterThanOrEqual(4);
   let moving = 0;
   for (let k = 0; k < 3 && !moving; k++) moving = (await page.evaluate(() => { window.__world!.ff(5); return window.__world!.info().goods.moving; })) as number;

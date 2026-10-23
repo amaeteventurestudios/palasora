@@ -26,7 +26,7 @@ LAST = ("Okafor", "Mensah", "Bello", "Diallo", "Adeyemi", "Nwosu", "Owusu", "Kam
 STREETS = ("Palm Street", "Baobab Street", "Harmattan Road", "Lagoon Street", "Cocoa Row", "Market Road", "Harbour Lane", "Mill Street",
            "Granary Road", "Field Lane")
 ROLE = {"entrepreneur": "Entrepreneur", "worker": "Worker", "trader": "Trader", "consumer": "Resident"}
-TYPE = {"farm": "farm", "workshop": "workshop", "stall": "food stall", "delivery": "delivery depot"}
+TYPE = {"farm": "farm", "workshop": "workshop", "stall": "food stall", "delivery": "delivery depot", "factory": "food factory"}
 FILTERS = ("all", "no_home", "no_job", "following")
 
 

@@ -712,6 +712,20 @@ function buildBusiness(B: Builder, G: Builder, W: Builder, cx: number, cz: numbe
     if (lv >= 2) { B.box(0.7, 0.45, 0.6, C(PAL.cream), M(cx - 0.55, 0.33, cz + 0.65)); B.box(0.75, 0.04, 0.65, C(PAL.slate), M(cx - 0.55, 0.57, cz + 0.65)); }
     for (let k = 0; k < 3; k++) B.box(0.22, 0.2, 0.22, C(PAL.wood), M(cx + 0.55 + (k % 2) * 0.25, 0.21 + ((k / 2) | 0) * 0.2, cz + 0.7));
     windowRow(W, cx, 0.5, cz - 0.2, 1.3, 1.1, 5, "x", warm);
+  } else if (b.type === "factory") { // food factory: a long shed with a sawtooth glass roof, a crop silo, a chimney and a loading bay of meal crates
+    B.box(1.75, 0.62, 1.15, C("#e9e1d2"), M(cx - 0.05, 0.42, cz - 0.25));
+    B.box(1.77, 0.08, 1.17, own, M(cx - 0.05, 0.62, cz - 0.25)); // a band in the owner's colour
+    for (let k = 0; k < 4; k++) { // sawtooth roof: a slope of slate, a face of glass
+      const x = cx - 0.7 + k * 0.42;
+      B.box(0.42, 0.04, 1.15, C(PAL.slate), M(x, 0.84, cz - 0.25, 0, 0, -0.5));
+      G.box(0.03, 0.2, 1.1, C(PAL.glass), M(x + 0.19, 0.83, cz - 0.25));
+    }
+    B.cyl(0.24, 0.24, 1.0, 12, C(PAL.white), M(cx - 1.0 + 0.24, 0.61, cz + 0.62)); B.cone(0.26, 0.16, 12, C(PAL.slate), M(cx - 0.76, 1.19, cz + 0.62)); // crop silo
+    B.cyl(0.08, 0.1, 1.3 + 0.12 * lv, 8, C("#b5523b"), M(cx + 0.7, 0.76 + 0.06 * lv, cz - 0.6)); // chimney
+    B.cyl(0.11, 0.11, 0.06, 8, C(PAL.white), M(cx + 0.7, 1.4 + 0.12 * lv, cz - 0.6));
+    B.box(0.55, 0.4, 0.02, C("#3a4048"), M(cx + 0.35, 0.31, cz + 0.33)); // loading door
+    for (let k = 0; k < Math.min(6, 2 + lv); k++) B.box(0.18, 0.14, 0.18, C("#e8873a"), M(cx + 0.1 + (k % 3) * 0.21, 0.18 + ((k / 3) | 0) * 0.15, cz + 0.65)); // packed meals
+    windowRow(W, cx - 0.05, 0.42, cz - 0.25, 1.4, 1.15, 5, "x", warm);
   } else { // delivery depot with roller doors and carts
     B.box(1.7, 0.55, 1.0, C(PAL.cream), M(cx, 0.38, cz - 0.35)); B.box(1.75, 0.05, 1.05, C(PAL.slate), M(cx, 0.68, cz - 0.35));
     for (let k = 0; k < 3; k++) B.box(0.4, 0.38, 0.02, own, M(cx - 0.55 + k * 0.55, 0.3, cz + 0.16));

@@ -11,7 +11,7 @@ from dataclasses import asdict, dataclass, field, replace
 
 C = 100  # centi-Sora per Sora
 
-TYPES = ("farm", "workshop", "stall", "delivery")
+TYPES = ("farm", "workshop", "stall", "delivery", "factory")
 GOODS = ("crops", "meals", "tools", "materials")
 
 
@@ -43,12 +43,18 @@ class Params:
     hires_level1: int = 2          # owner plus up to 2 at level 1
     hires_per_level: int = 2
     # -- Doc 04 section 2: goods and the four businesses ---------------------------------------------------------------
-    build_cost: dict = field(default_factory=lambda: {"farm": 400 * C, "workshop": 500 * C, "stall": 300 * C, "delivery": 250 * C})
+    build_cost: dict = field(default_factory=lambda: {"farm": 400 * C, "workshop": 500 * C, "stall": 300 * C, "delivery": 250 * C, "factory": 1200 * C})
     plot_share: int = 50 * C       # part of the build cost paid for the plot (the rest is construction); both go to the Town Hall
     farm_crops_per_worker: int = 40
     crops_per_tool: int = 100      # tool wear: 1 tool per 100 crops
     workshop_tools_per_worker: int = 8   # Doc 04 gives no rate ("1 material plus work makes 1 tool")
     stall_meals_per_worker: int = 60
+    # -- bigger businesses: a food factory cooks crops into meals on a production line and sells them to busy stalls ------
+    factory_meals_per_worker: int = 150
+    factory_price_share: float = 0.7   # its meals sell to stalls at 70% of the meal reference price
+    factory_extra_hires: int = 2       # a line takes more hands than a stall
+    factory_float: int = 250 * C        # starting cash the owner puts in when the factory opens
+    crop_import_markup: float = 1.25    # when the farms are short, the Harbour sells crops at this times the reference
     delivery_loads_per_worker: int = 6   # a cart does a 2-hour trip; 12 working hours
     trip_hours: int = 2
     self_fetch_hours: int = 6      # an owner can fetch goods themselves, slowly
@@ -60,7 +66,7 @@ class Params:
     growth_target: float = 0.20
     growth_band: tuple = (0.15, 0.25)
     lanes: dict = field(default_factory=lambda: {"tight": (4.0, 10.0), "shared": (4.0, 10.0), "money": (15.0, 40.0)})
-    lane_of: dict = field(default_factory=lambda: {"stall": "tight", "delivery": "tight", "farm": "shared", "workshop": "shared"})
+    lane_of: dict = field(default_factory=lambda: {"stall": "tight", "delivery": "tight", "farm": "shared", "workshop": "shared", "factory": "money"})
     savings_interest: float = 0.0  # Rule 3: none in v0.1
     rent: bool = False             # default: no rent yet
     max_businesses_per_player: int = 3  # default before the Exchange opens
@@ -91,6 +97,11 @@ class Params:
     def with_(self, **kw) -> "Params":
         return replace(self, **kw)
 
+    def type_ref(self, btype: str) -> int:
+        """The reference price of what a business type sells (a meal, a crop, a tool, a load, a factory meal to stalls)."""
+        return {"stall": self.meal_ref, "farm": self.crop_ref, "workshop": self.tool_ref, "delivery": self.delivery_fee,
+                "factory": int(self.meal_ref * self.factory_price_share)}[btype]
+
     def lane_bounds(self, btype: str) -> tuple[float, float]:
         """The lane for a business type, widened by half a lane either side (Doc 05 Gate A)."""
         lo, hi = self.lanes[self.lane_of[btype]]
@@ -120,7 +131,7 @@ TUNING: dict = {
     "crops_per_tool": (40, "at 1 tool per 100 crops the town needed under 3 tools a day, too few for even one workshop to pay back"),
     "load_size": (10, "with 20-unit loads the town's whole trade filled under two carts, so delivery could not reach its lane"),
     "delivery_fee": (6 * C, "with smaller loads, 6 Sora a load keeps a one-person cart near a 3-day payback without doubling stall costs"),
-    "build_cost": ({"farm": 400 * C, "workshop": 500 * C, "stall": 200 * C, "delivery": 100 * C},
+    "build_cost": ({"farm": 400 * C, "workshop": 500 * C, "stall": 200 * C, "delivery": 100 * C, "factory": 1200 * C},
                    "a cart earning about 30 Sora a day pays back 100 Sora in about 3 days (tight lane); 250 took 8 or more. A stall at "
                    "200 sits mid tight lane at the town's meal demand, and a new player can save it plus a starting float for crops "
                    "within 5 to 10 days on a civic wage"),

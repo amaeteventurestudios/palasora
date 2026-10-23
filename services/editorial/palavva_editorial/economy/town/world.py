@@ -109,7 +109,7 @@ class Biz:
     def max_hires(self, p: Params) -> int:
         if self.cart:
             return 0
-        return p.hires_level1 + (self.level - 1) * p.hires_per_level
+        return p.hires_level1 + (self.level - 1) * p.hires_per_level + (p.factory_extra_hires if self.type == "factory" else 0)
 
 
 class World:
