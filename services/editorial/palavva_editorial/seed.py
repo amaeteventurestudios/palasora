@@ -158,18 +158,20 @@ def main() -> int:
     seed_reference(pb)
     seed_geo(pb)
     tenants = seed_tenants(pb)
-    pw = os.environ.get("LOCAL_DEMO_PASSWORD", "")
-    if len(pw) < 12:
-        print("LOCAL_DEMO_PASSWORD missing or too short; skipping local accounts", file=sys.stderr)
-        return 1
     p, s = tenants["palavva"], tenants["sample"]
-    ensure_user(pb, p, "editor@palavva.local", pw, "editor", "Local Editor", "editor", "Local development editor account.")
-    ensure_user(pb, p, "admin@palavva.local", pw, "admin", "Local Platform Admin", "platform_admin", "Local platform administrator.")
-    ensure_user(pb, p, "moderator@palavva.local", pw, "moderator", "Local Moderator", "moderator")
-    ensure_user(pb, p, "reader@palavva.local", pw, "reader", "Local Reader", "member", "A local test member.")
-    ensure_user(pb, s, "admin@sample.local", pw, "admin", "Sample Tenant Admin", "tenant_admin", "Sample tenant administrator.")
-    ensure_user(pb, s, "editor@sample.local", pw, "editor", "Sample Editor", "editor")
-    ensure_user(pb, s, "reader@sample.local", pw, "reader", "Sample Reader", "member")
+    # A server has no local test accounts (infra/server/install.sh sets SEED_LOCAL_ACCOUNTS=false); the rest is the same.
+    if os.environ.get("SEED_LOCAL_ACCOUNTS", "true").lower() == "true":
+        pw = os.environ.get("LOCAL_DEMO_PASSWORD", "")
+        if len(pw) < 12:
+            print("LOCAL_DEMO_PASSWORD missing or too short; skipping local accounts", file=sys.stderr)
+            return 1
+        ensure_user(pb, p, "editor@palavva.local", pw, "editor", "Local Editor", "editor", "Local development editor account.")
+        ensure_user(pb, p, "admin@palavva.local", pw, "admin", "Local Platform Admin", "platform_admin", "Local platform administrator.")
+        ensure_user(pb, p, "moderator@palavva.local", pw, "moderator", "Local Moderator", "moderator")
+        ensure_user(pb, p, "reader@palavva.local", pw, "reader", "Local Reader", "member", "A local test member.")
+        ensure_user(pb, s, "admin@sample.local", pw, "admin", "Sample Tenant Admin", "tenant_admin", "Sample tenant administrator.")
+        ensure_user(pb, s, "editor@sample.local", pw, "editor", "Sample Editor", "editor")
+        ensure_user(pb, s, "reader@sample.local", pw, "reader", "Sample Reader", "member")
     seed_communities(pb, p)
     seed_communities(pb, s)
     if os.environ.get("SEED_AGENT_CITY", "true").lower() == "true":
