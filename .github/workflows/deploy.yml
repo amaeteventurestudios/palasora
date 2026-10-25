@@ -5,8 +5,9 @@
 #     SERVER_USER       the login name (ubuntu on Oracle Cloud)
 #     SERVER_SSH_KEY    the whole private key file (BEGIN ... END lines included)
 #   Variables (optional):
-#     PALASORA_DOMAIN   a domain pointed at the server (for example palasora.com). Without it the site answers on
-#                       https://palasora.<the IP with dashes>.sslip.io, a free name that always points at that IP.
+#     PALASORA_DOMAIN   the site's names, separated by spaces, main one first. Without it: palasora.com and
+#                       www.palasora.com (their DNS A records point at the server), plus
+#                       palasora.<the IP with dashes>.sslip.io, a free name that always points at that IP.
 # The town stays off on the server (TOWN_LIVE_ENABLED=false) until the owner's go for Phase 8 (docs/PHASE-8-REPORT.md).
 name: Deploy to server
 on:
@@ -59,15 +60,22 @@ jobs:
           USER=$(printf '%s' "$USER" | grep -oE '[a-z_][a-z0-9_-]*' | tail -1); USER="${USER:-ubuntu}"
           install -m 600 /dev/null key && printf '%s\n' "$KEY" | tr -d '\r' | sed -n '/-----BEGIN/,/-----END/p' > key
           [ -s key ] || { echo '::error::SERVER_SSH_KEY should hold the whole key file, from the -----BEGIN line to the -----END line.'; exit 1; }
-          DOMAIN=$(printf '%s' "$DOMAIN" | tr -d ' ')
-          [ -n "$DOMAIN" ] || DOMAIN="palasora.$(printf '%s' "$HOST" | tr . -).sslip.io"
+          SPARE="palasora.$(printf '%s' "$HOST" | tr . -).sslip.io"
+          DOMAIN=$(printf '%s' "$DOMAIN" | tr ',' ' ' | xargs)
+          [ -n "$DOMAIN" ] || DOMAIN="palasora.com www.palasora.com $SPARE"
           OPTS="-i key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20"
           scp $OPTS palasora.tgz "$USER@$HOST:/tmp/"
           ssh $OPTS "$USER@$HOST" "PALASORA_DOMAIN='$DOMAIN' bash -s" < infra/server/install.sh
           rm -f key
-          echo "SITE=https://$DOMAIN" >> "$GITHUB_ENV"
-          echo "::notice::Live at https://$DOMAIN"
+          echo "SITES=$DOMAIN" >> "$GITHUB_ENV"
+          echo "::notice::Palasora answers at: $(printf 'https://%s ' $DOMAIN)"
       - name: Check the site answers
         run: |
-          for i in $(seq 1 12); do curl -fsS -m 15 -o /dev/null "$SITE/api/v1/health" && { echo "OK: $SITE"; exit 0; }; sleep 10; done
-          echo "::warning::Palasora runs on the server, but $SITE can't be reached from outside yet. HTTPS certificates can take a minute; if it stays down, check that ports 80 and 443 are open in Oracle."
+          ok=0
+          for n in $SITES; do
+            up=0
+            for i in $(seq 1 9); do curl -fsS -m 15 -o /dev/null "https://$n/api/v1/health" && { up=1; break; }; sleep 10; done
+            if [ "$up" = 1 ]; then echo "OK: https://$n"; ok=1
+            else echo "::warning::https://$n doesn't answer yet. For a domain, check its DNS A record points at the server (in Cloudflare: DNS only, grey cloud)."; fi
+          done
+          [ "$ok" = 1 ] || echo "::warning::Palasora runs on the server, but no address answers from outside yet. HTTPS certificates can take a minute; if it stays down, check that ports 80 and 443 are open in Oracle."

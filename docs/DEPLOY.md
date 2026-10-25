@@ -23,9 +23,9 @@ Palasora runs on the Oracle server (Ubuntu 24.04 ARM) next to the other projects
 
 ## Address
 
-The address comes from the `PALASORA_DOMAIN` repository variable:
+The addresses come from the `PALASORA_DOMAIN` repository variable (names separated by spaces, main one first):
 
-- **Not set:** the site is at `https://palasora.<IP with dashes>.sslip.io`. That is a free name that always points at the server's IP.
+- **Not set:** `palasora.com` and `www.palasora.com` (in Cloudflare: A records to the server, DNS only), plus `palasora.<IP with dashes>.sslip.io`, a free name that always points at the server.
 - **Set:** to use a real domain, point its DNS A record at the server, then set the variable to that domain.
 
 ## Secrets (repository settings)
