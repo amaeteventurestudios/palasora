@@ -7,6 +7,9 @@
 # The town stays off (TOWN_LIVE_ENABLED=false): switching it on is Phase 8's go-live, which needs the owner's go.
 set -euo pipefail
 : "${PALASORA_DOMAIN:?set PALASORA_DOMAIN}"
+# One or more names, separated by spaces or commas; the first is the site's main address.
+read -r -a NAMES <<< "$(printf '%s' "$PALASORA_DOMAIN" | tr ',' ' ')"
+MAIN="${NAMES[0]}"
 APP=/opt/palasora VENV=/opt/palasora-venv NODE_DIR=/opt/palasora-node DATA=/var/lib/palasora ENVF=/etc/palasora.env
 NODE_V=v22.11.0 PB_V=0.40.5 PB_PORT=8190 API_PORT=8100 WEB_PORT=3100
 case "$(uname -m)" in aarch64|arm64) ARCH=arm64 NARCH=arm64 ;; *) ARCH=amd64 NARCH=x64 ;; esac
@@ -77,9 +80,10 @@ TOWN_LIVE_ENABLED=false
 ENV
 fi
 setkv() { sudo sed -i "/^$1=/d" "$ENVF"; printf '%s=%s\n' "$1" "$2" | sudo tee -a "$ENVF" >/dev/null; }
-setkv WEB_ORIGIN "https://$PALASORA_DOMAIN"
-setkv PUBLIC_ORIGIN "https://$PALASORA_DOMAIN"
-setkv TENANT_HOSTS "'{\"$PALASORA_DOMAIN\":\"palavva\"}'"
+setkv WEB_ORIGIN "https://$MAIN"
+setkv PUBLIC_ORIGIN "https://$MAIN"
+HOSTS=$(for n in "${NAMES[@]}"; do printf '"%s":"palavva",' "$n"; done)
+setkv TENANT_HOSTS "'{${HOSTS%,}}'"
 sudo grep -q '^TOWN_LIVE_ENABLED=true' "$ENVF" && echo 'Note: TOWN_LIVE_ENABLED=true was set on the server by hand; leaving it as it is.'
 
 # ---- services ----
@@ -133,7 +137,7 @@ if [ ! -x /usr/local/bin/caddy ] || [ ! -d /etc/caddy/sites ]; then
   echo 'The shared Caddy web server is missing (the Agent Grand Prix deploy installs it). Palasora runs, but is not on the web yet.'; exit 1
 fi
 sudo tee /etc/caddy/sites/palasora.caddy >/dev/null <<CADDY
-$PALASORA_DOMAIN {
+$(IFS=,; echo "${NAMES[*]}" | sed 's/,/, /g') {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:$WEB_PORT
 }
@@ -142,7 +146,7 @@ sudo /usr/local/bin/caddy validate --config /etc/caddy/Caddyfile --adapter caddy
 sudo systemctl reload caddy
 
 # ---- checks ----
-for i in $(seq 1 60); do curl -fsS -o /dev/null -H "Host: $PALASORA_DOMAIN" "http://127.0.0.1:$WEB_PORT/api/v1/health" 2>/dev/null && break; sleep 1; done
+for i in $(seq 1 60); do curl -fsS -o /dev/null -H "Host: $MAIN" "http://127.0.0.1:$WEB_PORT/api/v1/health" 2>/dev/null && break; sleep 1; done
 for s in palasora-pb palasora-api palasora-worker palasora-web caddy; do printf '%-16s %s\n' "$s" "$(systemctl is-active "$s")"; done
 curl -fsS -o /dev/null "http://127.0.0.1:$API_PORT/health" && echo 'Economy service answers'
-curl -fsS -o /dev/null -H "Host: $PALASORA_DOMAIN" "http://127.0.0.1:$WEB_PORT/" && echo 'Website answers on the server'
+curl -fsS -o /dev/null -H "Host: $MAIN" "http://127.0.0.1:$WEB_PORT/" && echo 'Website answers on the server'
