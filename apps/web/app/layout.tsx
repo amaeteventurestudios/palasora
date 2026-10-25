@@ -8,6 +8,7 @@ import { ConsentBanner } from "@/components/ConsentBanner";
 import { themeInitScript } from "@/components/ThemeToggle";
 import { tenantBySlug, tenantSlugForHost } from "@/lib/tenant";
 import { getSession } from "@/lib/session";
+import { noveniqueConfig } from "@/lib/novenique";
 import { getReaderContext } from "@/lib/i18n/context";
 import { translator } from "@/lib/i18n/messages";
 import { I18nProvider } from "@/lib/i18n/client";
@@ -49,7 +50,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     : undefined;
   return (
     <html lang={ctx.ui} dir={ctx.dir} className={`${inter.variable} ${serif.variable} ${arabic.variable}`} style={style} data-tenant={tenant?.slug ?? "none"}
-      data-edition={ctx.edition} data-reading={ctx.reading} suppressHydrationWarning>
+      data-edition={ctx.edition} data-reading={ctx.reading} data-novenique={noveniqueConfig().on ? "on" : undefined} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>

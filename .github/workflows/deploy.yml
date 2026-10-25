@@ -8,6 +8,8 @@
 #     PALASORA_DOMAIN   the site's names, separated by spaces, main one first. Without it: palasora.com and
 #                       www.palasora.com (their DNS A records point at the server), plus
 #                       palasora.<the IP with dashes>.sslip.io, a free name that always points at that IP.
+#     NOVENIQUE_SIGNIN  "on" shows "Continue with Novenique" (one account for every Novenique game). Needs the
+#                       Novenique accounts service on the same server (noveniqe repo). Anything else: off.
 # The town stays off on the server (TOWN_LIVE_ENABLED=false) until the owner's go for Phase 8 (docs/PHASE-8-REPORT.md).
 name: Deploy to server
 on:
@@ -52,6 +54,7 @@ jobs:
           USER: ${{ secrets.SERVER_USER }}
           KEY: ${{ secrets.SERVER_SSH_KEY }}
           DOMAIN: ${{ vars.PALASORA_DOMAIN }}
+          NOVENIQUE_SIGNIN: ${{ vars.NOVENIQUE_SIGNIN }}
         run: |
           set -euo pipefail
           if [ -z "$HOST" ] || [ -z "$KEY" ]; then echo '::error::Add the SERVER_HOST, SERVER_USER and SERVER_SSH_KEY secrets first.'; exit 1; fi
@@ -65,7 +68,8 @@ jobs:
           [ -n "$DOMAIN" ] || DOMAIN="palasora.com www.palasora.com $SPARE"
           OPTS="-i key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20"
           scp $OPTS palasora.tgz "$USER@$HOST:/tmp/"
-          ssh $OPTS "$USER@$HOST" "PALASORA_DOMAIN='$DOMAIN' bash -s" < infra/server/install.sh
+          NV=$([ "$NOVENIQUE_SIGNIN" = on ] && echo on || echo off)
+          ssh $OPTS "$USER@$HOST" "PALASORA_DOMAIN='$DOMAIN' NOVENIQUE_SIGNIN=$NV bash -s" < infra/server/install.sh
           rm -f key
           echo "SITES=$DOMAIN" >> "$GITHUB_ENV"
           echo "::notice::Palasora answers at: $(printf 'https://%s ' $DOMAIN)"

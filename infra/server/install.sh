@@ -81,6 +81,9 @@ ENV
 fi
 setkv() { sudo sed -i "/^$1=/d" "$ENVF"; printf '%s=%s\n' "$1" "$2" | sudo tee -a "$ENVF" >/dev/null; }
 setkv WEB_ORIGIN "https://$MAIN"
+# "Continue with Novenique" (shared accounts). Off unless the repo variable NOVENIQUE_SIGNIN is "on"; its address and secret come
+# from /etc/palasora-novenique.env, which the Novenique Core deploy writes (noveniqe repo, core/deploy/install.sh).
+setkv NOVENIQUE_SIGNIN "$([ "${NOVENIQUE_SIGNIN:-}" = on ] && sudo test -f /etc/palasora-novenique.env && echo on || echo off)"
 setkv PUBLIC_ORIGIN "https://$MAIN"
 HOSTS=$(for n in "${NAMES[@]}"; do printf '"%s":"palavva",' "$n"; done)
 setkv TENANT_HOSTS "'{${HOSTS%,}}'"
@@ -97,6 +100,7 @@ Wants=network-online.target
 User=palasora
 Group=palasora
 EnvironmentFile=$ENVF
+EnvironmentFile=-/etc/palasora-novenique.env
 WorkingDirectory=$3
 ExecStart=$4
 $5
