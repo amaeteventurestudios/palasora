@@ -82,7 +82,9 @@ fi
 setkv() { sudo sed -i "/^$1=/d" "$ENVF"; printf '%s=%s\n' "$1" "$2" | sudo tee -a "$ENVF" >/dev/null; }
 setkv WEB_ORIGIN "https://$MAIN"
 setkv PUBLIC_ORIGIN "https://$MAIN"
-HOSTS=$(for n in "${NAMES[@]}"; do printf '"%s":"palavva",' "$n"; done)
+# localhost:$WEB_PORT too: Next.js re-enters its own middleware on that host when it rewrites a request (the sign-in gate
+# in front of /admin); the port only listens on 127.0.0.1, so nothing outside can use that name.
+HOSTS=$(for n in "${NAMES[@]}" "localhost:$WEB_PORT"; do printf '"%s":"palavva",' "$n"; done)
 setkv TENANT_HOSTS "'{${HOSTS%,}}'"
 sudo grep -q '^TOWN_LIVE_ENABLED=true' "$ENVF" && echo 'Note: TOWN_LIVE_ENABLED=true was set on the server by hand; leaving it as it is.'
 
@@ -129,6 +131,8 @@ sudo systemctl enable --now palasora-pb >/dev/null
 for i in $(seq 1 60); do curl -fsS -o /dev/null "http://127.0.0.1:$PB_PORT/api/health" 2>/dev/null && break; sleep 1; done
 as_app "cd $APP/services/editorial && $VENV/bin/python -m palavva_editorial.seed" > /tmp/palasora-seed.log 2>&1 \
   || { echo 'Seed failed:'; tail -20 /tmp/palasora-seed.log; exit 1; }
+# The owner's own account (made by signing up on the site) becomes a Super Administrator, for the Command Center at /admin
+if [ -n "${OWNER_EMAIL:-}" ]; then as_app "cd $APP/services/editorial && $VENV/bin/python -m palavva_editorial.owner '$OWNER_EMAIL'"; fi
 for s in palasora-api palasora-worker palasora-web; do sudo systemctl enable "$s" >/dev/null; sudo systemctl restart "$s"; done
 sudo rm -rf "$APP.old"
 

@@ -35,6 +35,7 @@ Set these in Settings > Secrets and variables > Actions:
 - `SERVER_HOST`
 - `SERVER_USER`
 - `SERVER_SSH_KEY`
+- `OWNER_EMAIL` (optional): the email the owner signed up with on the site. Every deploy makes that account a Super Administrator for the Command Center at `/admin` (`palavva_editorial/owner.py`); the first admin sign-in sets up an authenticator app.
 
 They are the same three as on the Agent Grand Prix repo.
 
