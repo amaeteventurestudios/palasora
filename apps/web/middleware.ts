@@ -38,7 +38,9 @@ async function adminGate(req: NextRequest, host: string, path: string): Promise<
   const back = encodeURIComponent(path + req.nextUrl.search);
   // Rewrite (not redirect) to /auth/gate, which redirects with a relative URL: a Location header written here would have its loopback
   // host rewritten by Next (127.0.0.1 -> localhost) and the session cookie would not follow in local development.
-  const to = (p: string) => { const u = req.nextUrl.clone(); u.pathname = "/auth/gate"; u.search = `?to=${encodeURIComponent(p)}`; return NextResponse.rewrite(u, { headers: { "cache-control": "no-store" } }); };
+  // The rewrite is served by this same server over plain http: behind an HTTPS proxy nextUrl says https (X-Forwarded-Proto), and
+  // Next would then fetch https://localhost:<port> as an outside URL and fail.
+  const to = (p: string) => { const u = req.nextUrl.clone(); u.protocol = "http:"; u.pathname = "/auth/gate"; u.search = `?to=${encodeURIComponent(p)}`; return NextResponse.rewrite(u, { headers: { "cache-control": "no-store" } }); };
   if (!who) return isApi ? deny(401, "UNAUTHENTICATED", "Sign in as Palavva staff") : to(`/auth/sign-in?next=${back}`);
   const { access } = who;
   if (!access.staff) return isApi ? deny(403, "FORBIDDEN", "Not permitted") : to("/forbidden");
