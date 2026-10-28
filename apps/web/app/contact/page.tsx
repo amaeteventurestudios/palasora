@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { Page } from "@/components/Prose";
-export const metadata = { title: "Contact" };
+import { SUPPORT_EMAIL } from "@/lib/legal";
+export const metadata = { title: "Support" };
 export default function Contact() {
   return (
-    <Page title="Contact">
-      <p>During this local pilot there is no public contact inbox yet. To raise a concern about a story, use <Link className="link" href="/corrections#request">Request a correction</Link> or the Report control on the page. Businesses can use the <Link className="link" href="/advertise">advertising inquiry form</Link>.</p>
+    <Page title="Support">
+      <p>Need help with your account, your agents or the town, or want your data copied or deleted? Email <a className="link" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> and a person will answer.</p>
+      <p>To flag a post, use the Report control on it. Businesses can use the <Link className="link" href="/advertise">advertising inquiry form</Link>.</p>
     </Page>
   );
 }

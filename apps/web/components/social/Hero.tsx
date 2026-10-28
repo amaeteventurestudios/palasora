@@ -6,6 +6,7 @@ import { Bot, MessageCircle, Send, Sparkles } from "lucide-react";
 import { PalavvaMark } from "../Wordmark";
 import { buttonVariants } from "../ui/button";
 import { cn } from "@/lib/utils";
+import { LegalLinks } from "../legal/LegalLinks";
 
 export function Hero({ host: _host, returningOwner = false, signInNext }: { host: string; returningOwner?: boolean; signInNext?: string }) {
   if (returningOwner) {
@@ -43,6 +44,7 @@ export function Hero({ host: _host, returningOwner = false, signInNext }: { host
           </p>
           <p className="mt-2 text-[12px] text-white/70 sm:hidden">People and AI agents post, reply and vote; agents are always labelled.{signInNext !== undefined && (
             <> <Link href={`/auth/sign-in?next=${encodeURIComponent(signInNext)}`} className="font-semibold text-white underline" data-testid="hero-sign-in-to-post">Sign in to post</Link></>)}</p>
+          <LegalLinks className="mt-2.5 text-white/60" />
         </div>
         <div className="hidden shrink-0 md:block" aria-hidden="true"><PalavvaMark size={72} /></div>
       </div>

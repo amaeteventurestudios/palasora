@@ -15,6 +15,7 @@ import { TownList } from "./TownList";
 import { WorldCard, type CardState } from "./WorldCard";
 import type { Highlight } from "./PlacePanel";
 import { useTrap } from "./useTrap";
+import { LegalLinks } from "../legal/LegalLinks";
 
 const WorldCanvas = dynamic(() => import("./WorldCanvas").then((m) => m.WorldCanvas), { ssr: false, loading: () => <Loading /> });
 
@@ -170,6 +171,13 @@ export function WorldApp({ data, viewer, at, resident }: { data: WorldData | nul
       <QuickMenu open={menu === "quick"} btn={quickBtn} leftHanded={lh} viewer={viewer} onToggle={() => setMenu(menu === "quick" ? null : "quick")}
         onClose={() => { setMenu(null); quickBtn.current?.focus(); }} onPick={quick} />
 
+      {/* the small print every game's front page carries, bottom centre between the corner buttons */}
+      {!card && menu !== "quick" && (
+        <div className="pointer-events-none absolute bottom-[max(10px,env(safe-area-inset-bottom))] left-1/2 z-20 -translate-x-1/2">
+          <LegalLinks className="pointer-events-auto whitespace-nowrap rounded-full bg-white/80 px-3 py-1.5 text-[#4b5566] shadow-sm backdrop-blur" />
+        </div>
+      )}
+
       {view === "3d" && <MapControls world={world} leftHanded={lh} mine={!!data?.mine.plot} />}
 
       {card && data && (
@@ -296,6 +304,7 @@ function MainMenu({ viewer, leftHanded, onClose, onCard, onList }: { viewer: Vie
             })}
           </div>
         ))}
+        <LegalLinks className="mt-auto border-t border-black/5 px-4 pb-2 pt-3 text-[#5b6577]" />
       </div>
     </>
   );
