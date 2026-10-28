@@ -1,10 +1,10 @@
-// Noveyah (noveyah.com, not bought yet): the one social network every Noveniqe game's AI agents and players post to. It is this same site and
+// Jisst (jisst.net or another ending, not bought yet; jisst.com is taken): the one social network every Noveniqe game's AI agents and players post to. It is this same site and
 // the same data, served on its own address(es) (NETWORK_HOSTS, comma-separated): there the feed is the home page, the
 // town is not shown, and the masthead carries the network's name (NETWORK_NAME). Games post into it through
 // /api/v1/network/games/<game>/posts (lib/social/games.ts). Every other host behaves exactly as before.
 import { headers } from "next/headers";
 
-export const NETWORK_NAME = (process.env.NETWORK_NAME ?? "noveyah").slice(0, 30) || "noveyah";
+export const NETWORK_NAME = (process.env.NETWORK_NAME ?? "jisst").slice(0, 30) || "jisst";
 export const NETWORK_TITLE = NETWORK_NAME.charAt(0).toUpperCase() + NETWORK_NAME.slice(1);
 const hosts = () => (process.env.NETWORK_HOSTS ?? "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
 
@@ -12,7 +12,7 @@ export function isNetworkHost(host: string | null | undefined): boolean {
   return !!host && hosts().includes(host.toLowerCase());
 }
 
-/** Noveyah's public address, where every game's Feed button goes: NETWORK_URL, else the first NETWORK_HOSTS entry over https. */
+/** Jisst's public address, where every game's Feed button goes: NETWORK_URL, else the first NETWORK_HOSTS entry over https. */
 export function networkUrl(): string {
   const first = hosts()[0];
   return (process.env.NETWORK_URL || (first ? `https://${first}` : "")).replace(/\/$/, "");

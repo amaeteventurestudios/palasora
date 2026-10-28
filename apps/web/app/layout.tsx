@@ -46,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const path = h.get("x-pv-path") ?? "";
   const isAdmin = path.startsWith("/admin");
   // Palasora Phase 6: the town fills the screen; its own menus replace the site header, footer and bottom bar.
-  const network = isNetworkHost(host);   // Noveyah's own address: the feed is home, no town (lib/network.ts)
+  const network = isNetworkHost(host);   // Jisst's own address: the feed is home, no town (lib/network.ts)
   const isWorld = tenant?.slug === "palavva" && !network && (path === "/" || (/^\/town\/[^/]+$/.test(path) && path !== "/town/event"));
   const chrome = !!tenant && !isAdmin && !isWorld;
   const t = translator(ctx.ui);
