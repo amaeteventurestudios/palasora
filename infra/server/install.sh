@@ -10,6 +10,8 @@ set -euo pipefail
 # One or more names, separated by spaces or commas; the first is the site's main address.
 read -r -a NAMES <<< "$(printf '%s' "$PALASORA_DOMAIN" | tr ',' ' ')"
 MAIN="${NAMES[0]}"
+# Novo, the one social network for every game's agents: this same website on its own address(es) (apps/web/lib/network.ts).
+read -r -a NET <<< "$(printf '%s' "${NETWORK_DOMAIN:-}" | tr ',' ' ')"
 APP=/opt/palasora VENV=/opt/palasora-venv NODE_DIR=/opt/palasora-node DATA=/var/lib/palasora ENVF=/etc/palasora.env
 NODE_V=v22.11.0 PB_V=0.40.5 PB_PORT=8190 API_PORT=8100 WEB_PORT=3100
 case "$(uname -m)" in aarch64|arm64) ARCH=arm64 NARCH=arm64 ;; *) ARCH=amd64 NARCH=x64 ;; esac
@@ -84,8 +86,9 @@ setkv WEB_ORIGIN "https://$MAIN"
 setkv PUBLIC_ORIGIN "https://$MAIN"
 # localhost:$WEB_PORT too: Next.js re-enters its own middleware on that host when it rewrites a request (the sign-in gate
 # in front of /admin); the port only listens on 127.0.0.1, so nothing outside can use that name.
-HOSTS=$(for n in "${NAMES[@]}" "localhost:$WEB_PORT"; do printf '"%s":"palavva",' "$n"; done)
+HOSTS=$(for n in "${NAMES[@]}" "${NET[@]}" "localhost:$WEB_PORT"; do printf '"%s":"palavva",' "$n"; done)
 setkv TENANT_HOSTS "'{${HOSTS%,}}'"
+setkv NETWORK_HOSTS "$(IFS=,; echo "${NET[*]}")"
 sudo grep -q '^TOWN_LIVE_ENABLED=true' "$ENVF" && echo 'Note: TOWN_LIVE_ENABLED=true was set on the server by hand; leaving it as it is.'
 
 # ---- services ----
@@ -140,8 +143,9 @@ sudo rm -rf "$APP.old"
 if [ ! -x /usr/local/bin/caddy ] || [ ! -d /etc/caddy/sites ]; then
   echo 'The shared Caddy web server is missing (the Agent Grand Prix deploy installs it). Palasora runs, but is not on the web yet.'; exit 1
 fi
+ALL=("${NAMES[@]}" "${NET[@]}")
 sudo tee /etc/caddy/sites/palasora.caddy >/dev/null <<CADDY
-$(IFS=,; echo "${NAMES[*]}" | sed 's/,/, /g') {
+$(IFS=,; echo "${ALL[*]}" | sed 's/,/, /g') {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:$WEB_PORT
 }
@@ -154,3 +158,4 @@ for i in $(seq 1 60); do curl -fsS -o /dev/null -H "Host: $MAIN" "http://127.0.0
 for s in palasora-pb palasora-api palasora-worker palasora-web caddy; do printf '%-16s %s\n' "$s" "$(systemctl is-active "$s")"; done
 curl -fsS -o /dev/null "http://127.0.0.1:$API_PORT/health" && echo 'Economy service answers'
 curl -fsS -o /dev/null -H "Host: $MAIN" "http://127.0.0.1:$WEB_PORT/" && echo 'Website answers on the server'
+for n in "${NET[@]}"; do curl -fsS -o /dev/null -H "Host: $n" "http://127.0.0.1:$WEB_PORT/" && echo "Novo answers on the server as $n"; done
