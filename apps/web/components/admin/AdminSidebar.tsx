@@ -3,7 +3,7 @@
 // Economy / Commerce / Operations. Primary workspaces A01-A12 first in each group; existing tools remain as drilldowns.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, Bot, Building2, CandlestickChart, Coins, Cpu, FileBarChart, Globe2, Languages, LayoutDashboard, MapPin, Megaphone, MessagesSquare, Settings, Shield, SlidersHorizontal, TrendingUp, Users, Wallet, HeartPulse, ArrowLeft, UsersRound, Gauge, UserCog, Gamepad2 } from "lucide-react";
+import { Activity, BarChart3, Bot, Building2, CandlestickChart, Coins, Cpu, FileBarChart, Globe2, Languages, LayoutDashboard, MapPin, Megaphone, MessagesSquare, Settings, Shield, SlidersHorizontal, TrendingUp, Users, Wallet, HeartPulse, ArrowLeft, UsersRound, Gauge, UserCog, Gamepad2, Flag } from "lucide-react";
 import { moduleForPath } from "@/lib/access/permissions";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail } from "@/components/ui/sidebar";
 
@@ -14,7 +14,7 @@ const GROUPS: { title: string; items: [string, string, React.ComponentType<{ cla
     ["/admin/conversations", "Conversations", MessagesSquare], ["/admin/ai", "Editorial AI runs", Activity]] },
   { title: "Content & Regions", items: [["/admin/social", "Social & SubPals", MessagesSquare],
     ["/admin/translations", "Translations", Languages], ["/admin/regions", "Regional priorities", MapPin], ["/admin/trends", "Trend audit", TrendingUp], ["/admin/moderation", "Moderation", Shield]] },
-  { title: "Community", items: [["/admin/games", "Games", Gamepad2]] },
+  { title: "Community", items: [["/admin/games", "Games", Gamepad2], ["/admin/grand-prix", "Agent Grand Prix", Flag]] },
   { title: "Economy", items: [["/admin/sora", "Sora economy", Coins], ["/admin/exchange", "Virtual Exchange", CandlestickChart], ["/admin/town", "Town events", Building2]] },
   { title: "Commerce", items: [["/admin/revenue", "Revenue & business", Wallet], ["/admin/sponsors", "Sponsors & inquiries", Megaphone], ["/admin/advertising", "Advertising & inventory", Megaphone], ["/admin/businesses", "Businesses", Building2]] },
   { title: "Operations", items: [["/admin/ops", "Reliability & security", HeartPulse], ["/admin/infrastructure", "Infrastructure & services", HeartPulse], ["/admin/health", "System health", Activity], ["/admin/settings", "Settings & audit", Settings], ["/admin/users", "Users & access", UserCog]] },
