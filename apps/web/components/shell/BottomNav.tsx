@@ -14,14 +14,16 @@ function isActive(path: string, href: string) {
   return path.startsWith(href);
 }
 
-export function BottomNav() {
+export function BottomNav({ network = false }: { network?: boolean }) {
   const path = usePathname();
+  // on the network's own address (Novo) home is the feed, so the Town and Feed tabs become one Home tab plus Games
+  const items = network ? [{ href: "/", label: "Home", icon: "home" }, ...BOTTOM_NAV.filter((n) => n.href !== "/" && n.href !== "/feed").slice(0, 3), { href: "/games", label: "Games", icon: "gamepad" }].slice(0, 5) : BOTTOM_NAV;
   if (path.startsWith("/admin")) return null; // operator console has its own navigation
   return (
     <nav aria-label="Primary" data-testid="bottom-nav"
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/85 md:hidden">
       <ul className="mx-auto grid max-w-lg grid-cols-5">
-        {BOTTOM_NAV.map((n) => {
+        {items.map((n) => {
           const Icon = iconFor(n.icon);
           const on = isActive(path, n.href);
           return (

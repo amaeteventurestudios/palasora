@@ -3,13 +3,15 @@
 import { getTenant } from "@/lib/tenant";
 import { WorldPage, worldMetadata } from "@/components/world/WorldPage";
 import Feed from "./feed/page";
+import { onNetworkHost, networkMetadata } from "@/lib/network";
 
 export const dynamic = "force-dynamic";
-export const generateMetadata = worldMetadata;
+// On the network's own address (Novo, lib/network.ts) the feed is home and the town is not shown.
+export const generateMetadata = async () => ((await onNetworkHost()) ? { title: { absolute: networkMetadata.title.default }, description: networkMetadata.description } : worldMetadata());
 
 export default async function Home(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const tenant = await getTenant();
-  if (tenant.slug !== "palavva") return <Feed {...props} />;
+  if (tenant.slug !== "palavva" || (await onNetworkHost())) return <Feed {...props} />;
   const sp = await props.searchParams;
   return <WorldPage at={typeof sp.at === "string" ? sp.at : undefined} resident={typeof sp.resident === "string" ? sp.resident : undefined} />;
 }

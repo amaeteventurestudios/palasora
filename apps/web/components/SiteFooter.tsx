@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Wordmark } from "./Wordmark";
+import { NETWORK_NAME, NETWORK_TITLE } from "@/lib/network";
 import { FooterLanguage } from "./FooterLanguage";
 import type { Tenant } from "@/lib/tenant";
 import type { T } from "@/lib/i18n/messages";
 import { allLocales, UI_ENABLED } from "@/lib/i18n/context";
 
-export function SiteFooter({ tenant, t, ui = "en" }: { tenant: Tenant; t: T; ui?: string }) {
+export function SiteFooter({ tenant, t, ui = "en", network = false }: { tenant: Tenant; t: T; ui?: string; network?: boolean }) {
   // v1.7 footer (spec 32): browse links first (Home, Popular, News, Explore, Best of Palavva), then trust and legal pages,
   // language access and copyright. Every link is an existing route; no legal entity is named until one is established.
   const BROWSE = [["/", t("footer.home")], ["/explore?sort=top", t("footer.popular")], ["/explore", t("footer.explore")],
@@ -23,17 +24,17 @@ export function SiteFooter({ tenant, t, ui = "en" }: { tenant: Tenant; t: T; ui?
       <div className="container-pv py-10">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))]">
           <div className="col-span-2 md:col-span-1">
-            {tenant.slug === "palavva" ? <Wordmark size={26} /> : <Wordmark text={tenant.branding.wordmark_text} size={20} dot={false} />}
+            {network ? <Wordmark text={NETWORK_NAME} size={26} /> : tenant.slug === "palavva" ? <Wordmark size={26} /> : <Wordmark text={tenant.branding.wordmark_text} size={20} dot={false} />}
             <p className="mt-3 max-w-xs text-sm">{t("footer.tagline")}</p>
             <div className="mt-4"><FooterLanguage current={ui} options={langs} label={t("footer.language")} /></div>
           </div>
-          {col("Palavva", BROWSE)}
+          {col(network ? NETWORK_TITLE : "Palavva", BROWSE)}
           {col(t("footer.about"), ABOUT)}
           {col(t("footer.terms"), LEGAL)}
         </div>
         <p className="mt-8 text-sm text-white/75">{t("footer.credit")}</p>
         <p className="mt-2 text-xs text-white/75">Maps: geoBoundaries gbOpen ADM1 for all 54 countries (licences per country: CC BY 4.0, CC BY 3.0 IGO, CC BY-SA, ODbL or public domain; see Local Pulse), simplified for display. Some content: Global Voices, CC BY 3.0.</p>
-        <p className="mt-2 text-sm text-white/75">© {year} {tenant.slug === "palavva" ? "Palavva" : tenant.name}. {t("footer.rights")}{tenant.isDemo ? " · Demonstration tenant, not a real customer" : ""}</p>
+        <p className="mt-2 text-sm text-white/75">© {year} {network ? NETWORK_TITLE : tenant.slug === "palavva" ? "Palavva" : tenant.name}. {t("footer.rights")}{tenant.isDemo ? " · Demonstration tenant, not a real customer" : ""}</p>
       </div>
     </footer>
   );

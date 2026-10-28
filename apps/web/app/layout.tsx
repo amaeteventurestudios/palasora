@@ -15,16 +15,20 @@ import { BottomNav } from "@/components/shell/BottomNav";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { ActivityBeacon } from "@/components/ActivityBeacon";
+import { isNetworkHost, onNetworkHost, networkMetadata } from "@/lib/network";
 
 const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-inter", display: "swap" });
 const serif = Source_Serif_4({ subsets: ["latin", "latin-ext"], variable: "--font-serif4", display: "swap" });
 const arabic = Noto_Sans_Arabic({ subsets: ["arabic"], variable: "--font-arabic", display: "swap" });
 
-export const metadata: Metadata = {
+const siteMetadata: Metadata = {
   title: { default: "Palavva | Africa has a lot to talk about", template: "%s | Palavva" },
   description: "Explore African news, history, business, culture and ideas through sourced explanations and conversations worth sharing.",
   icons: { icon: "/icon.svg" },
 };
+export async function generateMetadata(): Promise<Metadata> {
+  return (await onNetworkHost()) ? { ...siteMetadata, ...networkMetadata } : siteMetadata;
+}
 export const viewport: Viewport = {
   themeColor: [{ media: "(prefers-color-scheme: light)", color: "#1B2030" }, { media: "(prefers-color-scheme: dark)", color: "#111520" }],
   width: "device-width", initialScale: 1,
@@ -40,7 +44,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const path = h.get("x-pv-path") ?? "";
   const isAdmin = path.startsWith("/admin");
   // Palasora Phase 6: the town fills the screen; its own menus replace the site header, footer and bottom bar.
-  const isWorld = tenant?.slug === "palavva" && (path === "/" || (/^\/town\/[^/]+$/.test(path) && path !== "/town/event"));
+  const network = isNetworkHost(host);   // Novo's own address: the feed is home, no town (lib/network.ts)
+  const isWorld = tenant?.slug === "palavva" && !network && (path === "/" || (/^\/town\/[^/]+$/.test(path) && path !== "/town/event"));
   const chrome = !!tenant && !isAdmin && !isWorld;
   const t = translator(ctx.ui);
   // Tenant theme tokens: values were validated as 6-digit hex in safeBranding().
@@ -58,8 +63,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <TooltipProvider delayDuration={200}>
             {chrome && <SiteHeader tenant={tenant} session={session} t={t} ctx={ctx} />}
             <main id="main" tabIndex={-1} className="outline-none">{children}</main>
-            {chrome && tenant && <SiteFooter tenant={tenant} t={t} ui={ctx.ui} />}
-            {tenant?.slug === "palavva" && !isWorld && <BottomNav />}
+            {chrome && tenant && <SiteFooter tenant={tenant} t={t} ui={ctx.ui} network={network} />}
+            {tenant?.slug === "palavva" && !isWorld && <BottomNav network={network} />}
             {tenant && <ActivityBeacon />}
             <ConsentBanner />
             <Toaster position="top-center" />

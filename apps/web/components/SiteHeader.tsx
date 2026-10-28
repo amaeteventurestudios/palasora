@@ -2,6 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { Search, UserRound } from "lucide-react";
 import { Wordmark } from "./Wordmark";
+import { isNetworkHost, NETWORK_NAME } from "@/lib/network";
 import type { Tenant } from "@/lib/tenant";
 import type { Session } from "@/lib/session";
 import { isStaff } from "@/lib/session";
@@ -26,7 +27,8 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
     { href: "/explore-africa", label: t("nav.exploreAfrica") }, { href: "/subpals", label: t("nav.subpals") }, { href: "/topics", label: t("nav.topics") },
     { href: "/businesses", label: t("nav.businesses") }, { href: "/exchange", label: "Exchange" },
   ]; // Games lives in the left rail / drawer (nav.ts): the top bar is sized to fit exactly at 1280 px
-  const isPalavva = tenant.slug === "palavva";
+  const network = isNetworkHost((await headers()).get("host"));   // Novo's own address shows the network's name (lib/network.ts)
+  const isPalavva = tenant.slug === "palavva" && !network;
   const editions = [{ code: "ALL", name: t("prefs.allAfrica"), flag: "🌍", region: "" },
     ...countryCodes().map((code) => ({ code, name: countryName(code), flag: flag(code), region: regionOf(code) }))];
   const loc = allLocales();
@@ -46,7 +48,7 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
           auth={session ? undefined : { login: t("nav.login"), signup: t("nav.signup"), loginHref: `/auth/sign-in${nq}`, signupHref: `/auth/sign-up${nq}` }} />
         <Link href="/" className="me-1 shrink-0 rounded sm:me-3" aria-label={`${tenant.name} home`}>
           {isPalavva ? <><span className="sm:hidden"><Wordmark size={21} /></span><span className="hidden sm:inline"><Wordmark size={28} /></span></>
-            : <Wordmark text={tenant.branding.wordmark_text} size={20} dot={false} />}
+            : network ? <Wordmark text={NETWORK_NAME} size={24} /> : <Wordmark text={tenant.branding.wordmark_text} size={20} dot={false} />}
         </Link>
         <nav aria-label="Main" className="hidden flex-1 items-center xl:flex">
           {NAV.map((n) => (
