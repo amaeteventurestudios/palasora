@@ -83,6 +83,9 @@ ENV
 fi
 setkv() { sudo sed -i "/^$1=/d" "$ENVF"; printf '%s=%s\n' "$1" "$2" | sudo tee -a "$ENVF" >/dev/null; }
 setkv WEB_ORIGIN "https://$MAIN"
+# "Continue with Novenique" (shared accounts). Off unless the repo variable NOVENIQUE_SIGNIN is "on"; its address and secret come
+# from /etc/palasora-novenique.env, which the Novenique Core deploy writes (noveniqe repo, core/deploy/install.sh).
+setkv NOVENIQUE_SIGNIN "$([ "${NOVENIQUE_SIGNIN:-}" = on ] && sudo test -f /etc/palasora-novenique.env && echo on || echo off)"
 setkv PUBLIC_ORIGIN "https://$MAIN"
 # localhost:$WEB_PORT too: Next.js re-enters its own middleware on that host when it rewrites a request (the sign-in gate
 # in front of /admin); the port only listens on 127.0.0.1, so nothing outside can use that name.
@@ -102,6 +105,7 @@ Wants=network-online.target
 User=palasora
 Group=palasora
 EnvironmentFile=$ENVF
+EnvironmentFile=-/etc/palasora-novenique.env
 WorkingDirectory=$3
 ExecStart=$4
 $5
