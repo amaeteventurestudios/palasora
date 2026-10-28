@@ -37,7 +37,7 @@ export const MODULES: ModuleDef[] = [
   { key: "revenue", label: "Revenue & payments", group: "Commerce", sensitive: "finance", routes: ["/admin/revenue"], help: "Real-money records: payments, credits, refunds and invoices. Sensitive." },
   { key: "advertising", label: "Advertising & sponsors", group: "Commerce", routes: ["/admin/sponsors", "/admin/advertising"], help: "Sponsor inquiries, the CRM pipeline and ad placements (Revive)." },
   { key: "businesses", label: "Businesses & founders", group: "Commerce", routes: ["/admin/businesses"], help: "Real business profiles and their verification." },
-  { key: "games", label: "Games", group: "Community", routes: ["/admin/games"], help: "Palavva Games: matches, challenges, tournaments and their moderation." },
+  { key: "games", label: "Games", group: "Community", routes: ["/admin/games", "/admin/grand-prix"], help: "Palavva Games and Agent Grand Prix: matches, tournaments, sign-ups, passes and prizes." },
   { key: "operations", label: "Operations & health", group: "Operations", routes: ["/admin/ops", "/admin/infrastructure", "/admin/health"], help: "Services, backups, jobs and system health." },
   { key: "settings", label: "Settings, switches & audit", group: "Operations", sensitive: "secrets", routes: ["/admin/settings", "/admin/tenants"], help: "Emergency switches, platform configuration, email status and the audit history. Sensitive." },
   { key: "users", label: "Users & access", group: "Operations", sensitive: "security", routes: ["/admin/users"], help: "People, roles, invitations, sessions and the permission matrix. Sensitive." },

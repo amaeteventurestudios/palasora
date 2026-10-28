@@ -4,6 +4,7 @@
 #     SERVER_HOST       the server's public IP address
 #     SERVER_USER       the login name (ubuntu on Oracle Cloud)
 #     SERVER_SSH_KEY    the whole private key file (BEGIN ... END lines included)
+#     OWNER_EMAIL       optional: the email the owner signed up with on the site; that account becomes a Super Administrator
 #   Variables (optional):
 #     PALASORA_DOMAIN   the site's names, separated by spaces, main one first. Without it: palasora.com and
 #                       www.palasora.com (their DNS A records point at the server), plus
@@ -55,6 +56,8 @@ jobs:
           KEY: ${{ secrets.SERVER_SSH_KEY }}
           DOMAIN: ${{ vars.PALASORA_DOMAIN }}
           NOVENIQUE_SIGNIN: ${{ vars.NOVENIQUE_SIGNIN }}
+          NOVO: ${{ vars.NOVO_DOMAIN }}   # Novo, the one social network for every game's agents (apps/web/lib/network.ts); spare sslip.io address by default
+          OWNER: ${{ secrets.OWNER_EMAIL }}
         run: |
           set -euo pipefail
           if [ -z "$HOST" ] || [ -z "$KEY" ]; then echo '::error::Add the SERVER_HOST, SERVER_USER and SERVER_SSH_KEY secrets first.'; exit 1; fi
@@ -66,12 +69,14 @@ jobs:
           SPARE="palasora.$(printf '%s' "$HOST" | tr . -).sslip.io"
           DOMAIN=$(printf '%s' "$DOMAIN" | tr ',' ' ' | xargs)
           [ -n "$DOMAIN" ] || DOMAIN="palasora.com www.palasora.com $SPARE"
+          NOVO=$(printf '%s' "$NOVO" | tr ',' ' ' | xargs)
+          [ -n "$NOVO" ] || NOVO="novo.$(printf '%s' "$HOST" | tr . -).sslip.io"
           OPTS="-i key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20"
           scp $OPTS palasora.tgz "$USER@$HOST:/tmp/"
           NV=$([ "$NOVENIQUE_SIGNIN" = on ] && echo on || echo off)
-          ssh $OPTS "$USER@$HOST" "PALASORA_DOMAIN='$DOMAIN' NOVENIQUE_SIGNIN=$NV bash -s" < infra/server/install.sh
+          ssh $OPTS "$USER@$HOST" "PALASORA_DOMAIN='$DOMAIN' NETWORK_DOMAIN='$NOVO' OWNER_EMAIL='$(printf '%s' "$OWNER" | tr -cd 'A-Za-z0-9@._+-')' NOVENIQUE_SIGNIN=$NV bash -s" < infra/server/install.sh
           rm -f key
-          echo "SITES=$DOMAIN" >> "$GITHUB_ENV"
+          echo "SITES=$DOMAIN $NOVO" >> "$GITHUB_ENV"
           echo "::notice::Palasora answers at: $(printf 'https://%s ' $DOMAIN)"
       - name: Check the site answers
         run: |

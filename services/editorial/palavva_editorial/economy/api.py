@@ -11,7 +11,8 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from . import db, exchange as ex, intel, policy, rewards, service
+from . import db, exchange as ex, intel, policy, prizes, rewards, service
+from .ledger import LedgerError
 
 router = APIRouter(prefix="/economy")
 
@@ -169,6 +170,34 @@ def migration_status() -> dict:
     from . import migration
     c = service.con()
     return {**migration.status(c), "note": service.migration_note(c)}
+
+
+class PrizeLine(BaseModel):
+    user_id: str = Field(min_length=1, max_length=64)
+    place: int = Field(ge=1, le=100)
+    amount: int = Field(gt=0, le=1_000_000)
+
+
+class PrizeWeekIn(BaseModel):
+    week: int = Field(ge=1)
+    payouts: list[PrizeLine] = Field(max_length=100)
+
+
+@router.post("/prizes/{game}/week")
+def prize_week(game: str, b: PrizeWeekIn) -> dict:
+    """A game's finished week: each winner's share into their own Sora account, at most the week's pot, each place once."""
+    try:
+        return prizes.pay_week(service.con(), game, b.week, [x.model_dump() for x in b.payouts])
+    except (prizes.PrizeError, LedgerError) as e:
+        _err(e)
+
+
+@router.get("/prizes/{game}")
+def prize_history(game: str) -> dict:
+    if game not in prizes.GAMES:
+        raise HTTPException(status_code=404, detail={"code": "UNKNOWN_GAME"})
+    c = service.con()
+    return {"game": game, "pot": prizes.pot(c, game), "payouts": prizes.history(c, game)}
 
 
 @router.post("/humans/{user_id}/account")
