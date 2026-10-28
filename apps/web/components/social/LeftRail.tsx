@@ -1,6 +1,6 @@
 // Left social navigation (master §8.3). SubPals come from real community records ranked for the reader's explicit edition
 // and watches; country-focused SubPals (e.g. p/naijabusiness) appear only for their edition.
-import Link from "next/link";
+import { NetLink } from "../NetLink";
 import { Bookmark, Bot, Flame, Home, KeyRound, Map, LayoutGrid, MessageCircle, MessagesSquare, Radio, Send, Sparkles, Users } from "lucide-react";
 import type { SubPalView } from "@/lib/social/subpals";
 import { RESOURCES } from "../shell/nav";
@@ -8,7 +8,7 @@ import { iconFor } from "../shell/icons";
 import { SubPalIcon } from "./SubPalIcon";
 
 export const RAIL_MAIN = [
-  { key: "town", href: "/", label: "Town", icon: Map }, { key: "home", href: "/feed", label: "Feed", icon: Home }, { key: "popular", href: "/explore?sort=top", label: "Popular", icon: Flame },
+  { key: "town", href: "/town", label: "Town", icon: Map }, { key: "home", href: "/feed", label: "Feed", icon: Home }, { key: "popular", href: "/explore?sort=top", label: "Popular", icon: Flame },
   { key: "following", href: "/following", label: "Following", icon: Users }, { key: "live", href: "/live", label: "Realtime", icon: Radio },
   { key: "discussed", href: "/explore?sort=discussed", label: "Discussed", icon: MessagesSquare }, { key: "saved", href: "/saved", label: "Saved", icon: Bookmark },
 ] as const;
@@ -21,22 +21,22 @@ export const RAIL_TOOLS = [
 export function RailNav({ active, subpals, onDark = false }: { active?: string; subpals: SubPalView[]; onDark?: boolean }) {
   return (
     <nav aria-label="Social" className={onDark ? "" : ""}>
-      <ul>{RAIL_MAIN.map((n) => <li key={n.key}><Link href={n.href} className="rail-link" aria-current={active === n.key ? "page" : undefined}><n.icon size={18} aria-hidden="true" />{n.label}</Link></li>)}</ul>
+      <ul>{RAIL_MAIN.map((n) => <li key={n.key}><NetLink href={n.href} className="rail-link" aria-current={active === n.key ? "page" : undefined}><n.icon size={18} aria-hidden="true" />{n.label}</NetLink></li>)}</ul>
       <p className="rail-heading">SubPals</p>
       <ul>
-        {subpals.map((s) => <li key={s.id}><Link href={`/p/${s.slug}`} className="rail-link !text-[14px]" aria-current={active === `p/${s.slug}` ? "page" : undefined}>
-          <SubPalIcon icon={s.icon} slug={s.slug} size={22} />p/{s.slug}</Link></li>)}
-        <li><Link href="/subpals" className="rail-link !text-[14px]" aria-current={active === "subpals" ? "page" : undefined}><LayoutGrid size={18} aria-hidden="true" />Browse all</Link></li>
+        {subpals.map((s) => <li key={s.id}><NetLink href={`/p/${s.slug}`} className="rail-link !text-[14px]" aria-current={active === `p/${s.slug}` ? "page" : undefined}>
+          <SubPalIcon icon={s.icon} slug={s.slug} size={22} />p/{s.slug}</NetLink></li>)}
+        <li><NetLink href="/subpals" className="rail-link !text-[14px]" aria-current={active === "subpals" ? "page" : undefined}><LayoutGrid size={18} aria-hidden="true" />Browse all</NetLink></li>
       </ul>
       <p className="rail-heading">Tools</p>
-      <ul>{RAIL_TOOLS.map((n) => <li key={n.key}><Link href={n.href} className="rail-link !text-[14px]" aria-current={active === n.key ? "page" : undefined}><n.icon size={18} aria-hidden="true" />{n.label}</Link></li>)}</ul>
+      <ul>{RAIL_TOOLS.map((n) => <li key={n.key}><NetLink href={n.href} className="rail-link !text-[14px]" aria-current={active === n.key ? "page" : undefined}><n.icon size={18} aria-hidden="true" />{n.label}</NetLink></li>)}</ul>
       {/* ISSUE-27: collapsible Resources group; unreleased destinations carry an honest stage label. */}
       <details open className="group" data-testid="rail-resources">
         <summary className="rail-heading flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden">Resources
           <span aria-hidden="true" className="text-[10px] transition-transform group-open:rotate-180">▾</span></summary>
         <ul>{RESOURCES.map((n) => { const Icon = iconFor(n.icon); const key = n.href.slice(1); return (
-          <li key={n.href}><Link href={n.href} className="rail-link !text-[14px]" aria-current={active === key ? "page" : undefined}><Icon size={18} aria-hidden="true" />{n.label}
-            {n.status && <span className="ms-auto rounded-full border px-1.5 text-[11px] font-semibold text-muted-foreground">{n.status}</span>}</Link></li>); })}</ul>
+          <li key={n.href}><NetLink href={n.href} className="rail-link !text-[14px]" aria-current={active === key ? "page" : undefined}><Icon size={18} aria-hidden="true" />{n.label}
+            {n.status && <span className="ms-auto rounded-full border px-1.5 text-[11px] font-semibold text-muted-foreground">{n.status}</span>}</NetLink></li>); })}</ul>
       </details>
     </nav>
   );

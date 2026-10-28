@@ -3,7 +3,7 @@
 // menus float over it (the three-dot main menu top-left, the quick menu bottom-right), a status chip sits top centre,
 // and cards open only on tap. Three.js loads as its own chunk from WorldCanvas; the 2D map and the list view never load it.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { NetLink } from "@/components/NetLink";
 import dynamic from "next/dynamic";
 import { Bell, Bot, CircleHelp, Coins, Gamepad2, Home, LayoutList, LineChart, Map as MapIcon, MessageSquare, MoreHorizontal, Plus,
   Settings, Shield, Trophy, User, Users, X, Store, Navigation, ZoomIn, ZoomOut, LocateFixed, Layers, MapPin, Truck, TrendingUp, ShoppingBasket, Briefcase, Route } from "lucide-react";
@@ -150,12 +150,12 @@ export function WorldApp({ data, viewer, at, resident }: { data: WorldData | nul
 
       {/* status chip, top centre: town, time of day, unread */}
       <div className="pointer-events-none absolute left-1/2 top-[max(10px,env(safe-area-inset-top))] z-20 -translate-x-1/2">
-        <Link href="/notifications" className="pointer-events-auto flex min-h-11 items-center gap-2 rounded-full bg-white/90 px-4 text-sm font-semibold shadow-md backdrop-blur" data-testid="status-chip"
+        <NetLink href="/notifications" className="pointer-events-auto flex min-h-11 items-center gap-2 rounded-full bg-white/90 px-4 text-sm font-semibold shadow-md backdrop-blur" data-testid="status-chip"
           aria-label={`${title}, ${data ? townTime(data.tick) : ""}${viewer.unread ? `, ${viewer.unread} unread` : ""}`}>
           <span>{title}</span>{data && <span className="font-normal text-[#4b5566]">{townTime(data.tick)}</span>}
           {viewer.unread > 0 && <span className="rounded-full bg-[#c9724f] px-1.5 text-xs text-white">{viewer.unread}</span>}
           {markers > 0 && <span className="sr-only">{markers} places changed since you left</span>}
-        </Link>
+        </NetLink>
       </div>
 
       {/* main menu: top-left (top-right when left-handed) */}
@@ -243,7 +243,7 @@ function Unavailable() {
       <div className="max-w-sm rounded-2xl bg-white/95 p-5 shadow">
         <p className="font-semibold">The town is resting.</p>
         <p className="mt-1 text-sm text-[#4b5566]">We could not reach the town just now. The social network is open.</p>
-        <Link href="/feed" className="mt-3 inline-flex min-h-11 items-center rounded-full bg-[#1d2433] px-4 text-sm font-semibold text-white">Open the feed</Link>
+        <NetLink href="/feed" className="mt-3 inline-flex min-h-11 items-center rounded-full bg-[#1d2433] px-4 text-sm font-semibold text-white">Open the feed</NetLink>
       </div>
     </div>
   );
@@ -299,7 +299,7 @@ function MainMenu({ viewer, leftHanded, onClose, onCard, onList }: { viewer: Vie
               const body = <><it.icon className="size-5 shrink-0" aria-hidden /><span className="flex-1">{it.label}</span>{!!it.badge && <span className="rounded-full bg-[#c9724f] px-1.5 text-xs text-white">{it.badge}</span>}</>;
               const cls = "flex min-h-11 w-full items-center gap-3 rounded-lg px-2 text-left text-[15px] hover:bg-black/5 focus-visible:bg-black/5";
               return it.href
-                ? <Link key={it.label} role="menuitem" href={it.href} className={cls} data-testid={it.testid}>{body}</Link>
+                ? <NetLink key={it.label} role="menuitem" href={it.href} className={cls} data-testid={it.testid}>{body}</NetLink>
                 : <button key={it.label} role="menuitem" type="button" className={cls} onClick={it.on} data-testid={it.testid}>{body}</button>;
             })}
           </div>
@@ -332,7 +332,7 @@ function QuickMenu({ open, btn, leftHanded, viewer, onToggle, onClose, onPick }:
             const body = <><it.icon className="size-5 shrink-0" aria-hidden /><span>{it.label}</span>{!!it.badge && <span className="rounded-full bg-[#c9724f] px-1.5 text-xs text-white">{it.badge}</span>}</>;
             const cls = "flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full bg-white px-4 text-[15px] font-semibold shadow-md hover:bg-[#f4ecdb] focus-visible:bg-[#f4ecdb]";
             return it.href
-              ? <Link key={it.key} role="menuitem" href={it.href} className={cls} onClick={onClose}>{body}</Link>
+              ? <NetLink key={it.key} role="menuitem" href={it.href} className={cls} onClick={onClose}>{body}</NetLink>
               : <button key={it.key} role="menuitem" type="button" className={cls} onClick={() => onPick(it.key)} data-testid={`quick-${it.key}`}>{body}</button>;
           })}
         </div>

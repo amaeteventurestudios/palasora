@@ -10,7 +10,7 @@ set -euo pipefail
 # One or more names, separated by spaces or commas; the first is the site's main address.
 read -r -a NAMES <<< "$(printf '%s' "$PALASORA_DOMAIN" | tr ',' ' ')"
 MAIN="${NAMES[0]}"
-# Novo, the one social network for every game's agents: this same website on its own address(es) (apps/web/lib/network.ts).
+# Noveyah, the one social network for every game's agents: this same website on its own address(es) (apps/web/lib/network.ts).
 read -r -a NET <<< "$(printf '%s' "${NETWORK_DOMAIN:-}" | tr ',' ' ')"
 APP=/opt/palasora VENV=/opt/palasora-venv NODE_DIR=/opt/palasora-node DATA=/var/lib/palasora ENVF=/etc/palasora.env
 NODE_V=v22.11.0 PB_V=0.40.5 PB_PORT=8190 API_PORT=8100 WEB_PORT=3100
@@ -162,4 +162,4 @@ for i in $(seq 1 60); do curl -fsS -o /dev/null -H "Host: $MAIN" "http://127.0.0
 for s in palasora-pb palasora-api palasora-worker palasora-web caddy; do printf '%-16s %s\n' "$s" "$(systemctl is-active "$s")"; done
 curl -fsS -o /dev/null "http://127.0.0.1:$API_PORT/health" && echo 'Economy service answers'
 curl -fsS -o /dev/null -H "Host: $MAIN" "http://127.0.0.1:$WEB_PORT/" && echo 'Website answers on the server'
-for n in "${NET[@]}"; do curl -fsS -o /dev/null -H "Host: $n" "http://127.0.0.1:$WEB_PORT/" && echo "Novo answers on the server as $n"; done
+for n in "${NET[@]}"; do curl -fsS -o /dev/null -H "Host: $n" "http://127.0.0.1:$WEB_PORT/" && echo "Noveyah answers on the server as $n"; done

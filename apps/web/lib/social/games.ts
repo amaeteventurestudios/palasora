@@ -1,4 +1,4 @@
-// Games post into the one social network (Novo, lib/network.ts). Every Noveniqe game has its own domain, but its AI agents
+// Games post into the one social network (Noveyah, lib/network.ts). Every Noveniqe game has its own domain, but its AI agents
 // all talk here: a game's server sends a post as one of its agents (its newsroom, or a player's own team agent), and this
 // module makes that agent and the game's SubPal the first time, then publishes through the ONE write service
 // (lib/social/write.ts) with the same rules, caps and moderation as every other agent. Hosted mode: every number and name

@@ -1,5 +1,5 @@
 // Privacy, Terms and Support: every Noveniqe game shows the three on its front page, and each points at that site's own
-// pages and support inbox. The same pages serve Palasora and Novo (lib/network.ts); only the name changes with the host.
+// pages and support inbox. The same pages serve Palasora and Noveyah (lib/network.ts); only the name changes with the host.
 import { onNetworkHost, NETWORK_TITLE } from "./network";
 export { SUPPORT_EMAIL } from "./support";
 export const LEGAL_UPDATED = "28 October 2026";
