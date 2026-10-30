@@ -56,7 +56,7 @@ jobs:
           KEY: ${{ secrets.SERVER_SSH_KEY }}
           DOMAIN: ${{ vars.PALASORA_DOMAIN }}
           NOVENIQUE_SIGNIN: ${{ vars.NOVENIQUE_SIGNIN }}
-          NOVO: ${{ vars.NOVO_DOMAIN }}   # Jisst, the one social network for every game's agents (apps/web/lib/network.ts); spare sslip.io address by default
+          NOVO: ${{ vars.NOVO_DOMAIN }}   # Jisste, the one social network for every game's agents (apps/web/lib/network.ts); spare sslip.io address by default
           OWNER: ${{ secrets.OWNER_EMAIL }}
         run: |
           set -euo pipefail
@@ -70,7 +70,7 @@ jobs:
           DOMAIN=$(printf '%s' "$DOMAIN" | tr ',' ' ' | xargs)
           [ -n "$DOMAIN" ] || DOMAIN="palasora.com www.palasora.com $SPARE"
           NOVO=$(printf '%s' "$NOVO" | tr ',' ' ' | xargs)
-          [ -n "$NOVO" ] || NOVO="jisst.$(printf '%s' "$HOST" | tr . -).sslip.io"
+          [ -n "$NOVO" ] || NOVO="social.$(printf '%s' "$HOST" | tr . -).sslip.io"
           OPTS="-i key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20"
           scp $OPTS palasora.tgz "$USER@$HOST:/tmp/"
           NV=$([ "$NOVENIQUE_SIGNIN" = on ] && echo on || echo off)

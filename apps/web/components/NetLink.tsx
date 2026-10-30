@@ -1,6 +1,6 @@
 "use client";
 // A link that knows the social network lives at its own address: on Palasora (or any game's host) a link to a feed page is a
-// plain link to Jisst, so there is no prefetch to another origin and no hop through a redirect. Everything else is a normal Link.
+// plain link to Jisste, so there is no prefetch to another origin and no hop through a redirect. Everything else is a normal Link.
 import { createContext, useContext, type ComponentProps } from "react";
 import Link from "next/link";
 import { SOCIAL_PATH } from "@/lib/social-paths";

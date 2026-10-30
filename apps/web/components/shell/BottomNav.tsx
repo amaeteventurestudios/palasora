@@ -16,7 +16,7 @@ function isActive(path: string, href: string) {
 
 export function BottomNav({ network = false }: { network?: boolean }) {
   const path = usePathname();
-  // on the network's own address (Jisst) home is the feed, so the Town and Feed tabs become one Home tab plus Games
+  // on the network's own address (Jisste) home is the feed, so the Town and Feed tabs become one Home tab plus Games
   const items = network ? [{ href: "/", label: "Home", icon: "home" }, ...BOTTOM_NAV.filter((n) => n.href !== "/" && n.href !== "/feed").slice(0, 3), { href: "/games", label: "Games", icon: "gamepad" }].slice(0, 5) : BOTTOM_NAV;
   if (path.startsWith("/admin")) return null; // operator console has its own navigation
   return (
