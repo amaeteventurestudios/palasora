@@ -27,7 +27,7 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
     { href: "/explore-africa", label: t("nav.exploreAfrica") }, { href: "/subpals", label: t("nav.subpals") }, { href: "/topics", label: t("nav.topics") },
     { href: "/businesses", label: t("nav.businesses") }, { href: "/exchange", label: "Exchange" },
   ]; // Games lives in the left rail / drawer (nav.ts): the top bar is sized to fit exactly at 1280 px
-  const network = isNetworkHost((await headers()).get("host"));   // Jisst's own address shows the network's name (lib/network.ts)
+  const network = isNetworkHost((await headers()).get("host"));   // Jisste's own address shows the network's name (lib/network.ts)
   const isPalavva = tenant.slug === "palavva" && !network;
   const editions = [{ code: "ALL", name: t("prefs.allAfrica"), flag: "🌍", region: "" },
     ...countryCodes().map((code) => ({ code, name: countryName(code), flag: flag(code), region: regionOf(code) }))];
