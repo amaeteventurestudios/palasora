@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { NetLink } from "@/components/NetLink";
 import { headers } from "next/headers";
 import { Search, UserRound } from "lucide-react";
 import { Wordmark } from "./Wordmark";
@@ -27,7 +27,7 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
     { href: "/explore-africa", label: t("nav.exploreAfrica") }, { href: "/subpals", label: t("nav.subpals") }, { href: "/topics", label: t("nav.topics") },
     { href: "/businesses", label: t("nav.businesses") }, { href: "/exchange", label: "Exchange" },
   ]; // Games lives in the left rail / drawer (nav.ts): the top bar is sized to fit exactly at 1280 px
-  const network = isNetworkHost((await headers()).get("host"));   // Novo's own address shows the network's name (lib/network.ts)
+  const network = isNetworkHost((await headers()).get("host"));   // Jisst's own address shows the network's name (lib/network.ts)
   const isPalavva = tenant.slug === "palavva" && !network;
   const editions = [{ code: "ALL", name: t("prefs.allAfrica"), flag: "🌍", region: "" },
     ...countryCodes().map((code) => ({ code, name: countryName(code), flag: flag(code), region: regionOf(code) }))];
@@ -46,13 +46,13 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
       <div className="mx-auto flex h-14 w-full max-w-[1520px] items-center gap-0.5 px-1.5 sm:gap-1.5 sm:px-4 lg:h-16">
         <MobileDrawer subpals={railSubpals.map((s) => ({ slug: s.slug, icon: s.icon }))} signedIn={!!session} label={t("nav.menu")}
           auth={session ? undefined : { login: t("nav.login"), signup: t("nav.signup"), loginHref: `/auth/sign-in${nq}`, signupHref: `/auth/sign-up${nq}` }} />
-        <Link href="/" className="me-1 shrink-0 rounded sm:me-3" aria-label={`${tenant.name} home`}>
+        <NetLink href="/" className="me-1 shrink-0 rounded sm:me-3" aria-label={`${tenant.name} home`}>
           {isPalavva ? <><span className="sm:hidden"><Wordmark size={21} /></span><span className="hidden sm:inline"><Wordmark size={28} /></span></>
             : network ? <Wordmark text={NETWORK_NAME} size={24} /> : <Wordmark text={tenant.branding.wordmark_text} size={20} dot={false} />}
-        </Link>
+        </NetLink>
         <nav aria-label="Main" className="hidden flex-1 items-center xl:flex">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="whitespace-nowrap rounded-md px-2 py-2 text-[14px] font-semibold text-white/90 hover:bg-white/10 hover:text-white 2xl:px-2.5 2xl:text-[15px]">{n.label}</Link>
+            <NetLink key={n.href} href={n.href} className="whitespace-nowrap rounded-md px-2 py-2 text-[14px] font-semibold text-white/90 hover:bg-white/10 hover:text-white 2xl:px-2.5 2xl:text-[15px]">{n.label}</NetLink>
           ))}
         </nav>
         <form action="/search" method="get" role="search" className="ms-auto hidden lg:block xl:hidden 2xl:block">
@@ -64,9 +64,9 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
           </div>
         </form>
         <span className="ms-auto lg:hidden" aria-hidden="true" />
-        <Link href="/search" className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-10 shrink-0 text-white hover:bg-white/10 hover:text-white lg:hidden xl:inline-flex 2xl:hidden")} aria-label={t("nav.search")}>
+        <NetLink href="/search" className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-10 shrink-0 text-white hover:bg-white/10 hover:text-white lg:hidden xl:inline-flex 2xl:hidden")} aria-label={t("nav.search")}>
           <Search className="size-5" aria-hidden="true" />
-        </Link>
+        </NetLink>
         <EditionPicker edition={ctx.edition} home={ctx.home} options={editions} signedIn={!!session} compact />
         <LanguagePicker ui={ctx.ui} reading={ctx.reading} uiLocales={uiLocales} readingLocales={readingLocales}
           labels={{ interface: t("prefs.interface"), reading: t("prefs.reading"), explain: t("prefs.explain"), save: t("prefs.save") }} />
@@ -76,10 +76,10 @@ export async function SiteHeader({ tenant, session, t, ctx }: { tenant: Tenant; 
             labels={{ accountMenu: t("nav.accountMenu"), saved: t("nav.saved"), account: t("nav.account"), commandCenter: t("nav.commandCenter"), logout: t("nav.logout") }} />
         ) : (
           <>
-            <Link href={`/auth/sign-in${nq}`} data-testid="masthead-login" className="ms-0.5 inline-flex h-10 min-w-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-white/30 bg-[var(--brand-midnight)] px-2 text-[13px] font-semibold text-white hover:bg-white/10 sm:px-3 sm:text-[14px]">
-              <UserRound className="size-5 min-[360px]:hidden" aria-hidden="true" /><span className="max-[359px]:sr-only">{t("nav.login")}</span></Link>
-            <Link href={`/auth/sign-up${nq}`} data-testid="masthead-signup" className="ms-1 hidden h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-primary px-3 text-[14px] font-semibold text-primary-foreground hover:opacity-90 sm:inline-flex">
-              {t("nav.signup")}</Link>
+            <NetLink href={`/auth/sign-in${nq}`} data-testid="masthead-login" className="ms-0.5 inline-flex h-10 min-w-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-white/30 bg-[var(--brand-midnight)] px-2 text-[13px] font-semibold text-white hover:bg-white/10 sm:px-3 sm:text-[14px]">
+              <UserRound className="size-5 min-[360px]:hidden" aria-hidden="true" /><span className="max-[359px]:sr-only">{t("nav.login")}</span></NetLink>
+            <NetLink href={`/auth/sign-up${nq}`} data-testid="masthead-signup" className="ms-1 hidden h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-primary px-3 text-[14px] font-semibold text-primary-foreground hover:opacity-90 sm:inline-flex">
+              {t("nav.signup")}</NetLink>
           </>
         )}
       </div>

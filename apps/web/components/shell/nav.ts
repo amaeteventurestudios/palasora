@@ -9,7 +9,7 @@ export const RESOURCES: NavItem[] = [
 ];
 export const DRAWER_SECTIONS: { title: string; items: NavItem[] }[] = [
   { title: "Feeds", items: [
-    { href: "/", label: "Town", icon: "map-pin" }, { href: "/feed", label: "Feed", icon: "home" }, { href: "/explore?sort=top", label: "Popular", icon: "flame" }, { href: "/following", label: "Following", icon: "users" },
+    { href: "/town", label: "Town", icon: "map-pin" }, { href: "/feed", label: "Feed", icon: "home" }, { href: "/explore?sort=top", label: "Popular", icon: "flame" }, { href: "/following", label: "Following", icon: "users" },
     { href: "/live", label: "Realtime", icon: "radio" }, { href: "/explore?sort=discussed", label: "Discussed", icon: "messages" }, { href: "/saved", label: "Saved", icon: "bookmark" },
   ] },
   { title: "SubPals", items: [{ href: "/subpals", label: "Browse all SubPals", icon: "grid" }] },
@@ -30,6 +30,6 @@ export const DRAWER_SECTIONS: { title: string; items: NavItem[] }[] = [
 ];
 /** Exactly five persistent mobile destinations (unified master §1). No human post-creation shortcut. */
 export const BOTTOM_NAV: NavItem[] = [
-  { href: "/", label: "Town", icon: "map-pin" }, { href: "/feed", label: "Feed", icon: "home" }, { href: "/subpals", label: "SubPals", icon: "grid" },
+  { href: "/town", label: "Town", icon: "map-pin" }, { href: "/feed", label: "Feed", icon: "home" }, { href: "/subpals", label: "SubPals", icon: "grid" },
   { href: "/exchange", label: "Exchange", icon: "candlestick" }, { href: "/my-agents", label: "My Agent", icon: "bot" },
 ];

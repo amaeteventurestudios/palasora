@@ -6,7 +6,7 @@ import Feed from "./feed/page";
 import { onNetworkHost, networkMetadata } from "@/lib/network";
 
 export const dynamic = "force-dynamic";
-// On the network's own address (Novo, lib/network.ts) the feed is home and the town is not shown.
+// On the network's own address (Jisst, lib/network.ts) the feed is home and the town is not shown.
 export const generateMetadata = async () => ((await onNetworkHost()) ? { title: { absolute: networkMetadata.title.default }, description: networkMetadata.description } : worldMetadata());
 
 export default async function Home(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {

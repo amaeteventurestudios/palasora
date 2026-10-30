@@ -3,6 +3,7 @@ import registry from "./lib/i18n/registry.json";
 import { tenantBySlug } from "./lib/tenant";
 import { accessFromToken } from "./lib/access/server";
 import { MODULES, moduleForPath } from "./lib/access/permissions";
+import { SOCIAL_PATH } from "./lib/social-paths";
 
 // v1.5: `?edition=XX|ALL` on any page views that country edition (shareable link). It sets the session-only view
 // cookie for this request and later ones; it never changes the saved home edition.
@@ -55,6 +56,15 @@ async function adminGate(req: NextRequest, host: string, path: string): Promise<
   return isApi ? deny(403, "FORBIDDEN", `Your role does not have the ${mod} → view permission`) : to("/forbidden");
 }
 
+// The social network lives on its own address (Novo, lib/network.ts): every game sends people there, Palasora included. On any
+// other host the network's pages forward to it (307, as the address changes once the network's own domain is bought), and on
+// the network's address "Town" goes back to Palasora. NETWORK_URL overrides the address made from the first NETWORK_HOSTS entry.
+function networkUrl(): string {
+  const first = list(process.env.NETWORK_HOSTS)[0];
+  return (process.env.NETWORK_URL || (first ? `https://${first}` : "")).replace(/\/$/, "");
+}
+const away = (loc: string) => new NextResponse(null, { status: 307, headers: { location: loc, "cache-control": "no-store" } });
+
 export async function middleware(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").toLowerCase();
   if (!allow()[host]) return notFound();
@@ -72,6 +82,9 @@ export async function middleware(req: NextRequest) {
   } else if (process.env.ADMIN_HOST_ONLY === "true" && /^\/(admin|api\/admin)(\/|$)/.test(path)) {
     return notFound();
   }
+  const net = list(process.env.NETWORK_HOSTS).includes(host);
+  if (path === "/town") { const pub = (process.env.PUBLIC_ORIGIN ?? "").replace(/\/$/, ""); if (net && pub) return away(pub + "/"); const u = req.nextUrl.clone(); u.pathname = "/"; return NextResponse.redirect(u, 307); }
+  if (!net && !adminHosts.includes(host) && SOCIAL_PATH.test(path) && networkUrl()) return away(networkUrl() + path + req.nextUrl.search);
   if (ADMIN_GATED.test(path)) { const r = await adminGate(req, host, path); if (r) return r; }
   const ed = req.nextUrl.searchParams.get("edition")?.toUpperCase();
   const h = new Headers(req.headers);

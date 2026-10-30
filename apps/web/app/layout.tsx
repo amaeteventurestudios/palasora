@@ -16,7 +16,8 @@ import { BottomNav } from "@/components/shell/BottomNav";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { ActivityBeacon } from "@/components/ActivityBeacon";
-import { isNetworkHost, onNetworkHost, networkMetadata } from "@/lib/network";
+import { isNetworkHost, onNetworkHost, networkMetadata, networkUrl } from "@/lib/network";
+import { NetBaseProvider } from "@/components/NetLink";
 
 const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-inter", display: "swap" });
 const serif = Source_Serif_4({ subsets: ["latin", "latin-ext"], variable: "--font-serif4", display: "swap" });
@@ -45,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const path = h.get("x-pv-path") ?? "";
   const isAdmin = path.startsWith("/admin");
   // Palasora Phase 6: the town fills the screen; its own menus replace the site header, footer and bottom bar.
-  const network = isNetworkHost(host);   // Novo's own address: the feed is home, no town (lib/network.ts)
+  const network = isNetworkHost(host);   // Jisst's own address: the feed is home, no town (lib/network.ts)
   const isWorld = tenant?.slug === "palavva" && !network && (path === "/" || (/^\/town\/[^/]+$/.test(path) && path !== "/town/event"));
   const chrome = !!tenant && !isAdmin && !isWorld;
   const t = translator(ctx.ui);
@@ -60,6 +61,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className={isWorld ? "overflow-hidden" : "pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0"}>
+        <NetBaseProvider base={tenant?.slug === "palavva" && !network && !isAdmin ? networkUrl() : ""} town={network ? (process.env.PUBLIC_ORIGIN ?? "").replace(/\/$/, "") : ""}>
         <I18nProvider locale={ctx.ui} edition={ctx.edition}>
           <TooltipProvider delayDuration={200}>
             {chrome && <SiteHeader tenant={tenant} session={session} t={t} ctx={ctx} />}
@@ -71,6 +73,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Toaster position="top-center" />
           </TooltipProvider>
         </I18nProvider>
+        </NetBaseProvider>
       </body>
     </html>
   );

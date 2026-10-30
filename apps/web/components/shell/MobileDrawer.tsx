@@ -3,7 +3,7 @@
 // recently visited SubPals, agent tools, Businesses, Exchange, About, Guidelines, Help, Developers, Privacy.
 // shadcn Sheet (Radix Dialog): focus trap, Escape to close, scroll lock, returns focus to the trigger.
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { NetLink } from "@/components/NetLink";
 import { usePathname } from "next/navigation";
 import { Menu, History } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -25,11 +25,11 @@ export function rememberSubPal(slug: string) {
 function Row({ item, active, onNavigate }: { item: NavItem; active: boolean; onNavigate: () => void }) {
   const Icon = iconFor(item.icon);
   return (
-    <Link href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined}
+    <NetLink href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined}
       className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-medium hover:bg-accent aria-[current=page]:bg-accent aria-[current=page]:font-semibold">
       <Icon className="size-[18px] shrink-0 text-muted-foreground" aria-hidden="true" />{item.label}
       {item.status && <span className="ms-auto rounded-full border px-1.5 text-[11px] font-semibold text-muted-foreground">{item.status}</span>}
-    </Link>
+    </NetLink>
   );
 }
 
@@ -56,8 +56,8 @@ export function MobileDrawer({ subpals, signedIn, label, auth }: { subpals: { sl
         <ScrollArea className="min-h-0 flex-1">
           <nav aria-label="Drawer" className="flex flex-col gap-1 p-2">
             {auth && <div className="grid grid-cols-2 gap-2 p-1" data-testid="drawer-auth">
-              <Button asChild variant="outline" className="min-h-11"><Link href={auth.loginHref} onClick={close}>{auth.login}</Link></Button>
-              <Button asChild className="min-h-11"><Link href={auth.signupHref} onClick={close}>{auth.signup}</Link></Button></div>}
+              <Button asChild variant="outline" className="min-h-11"><NetLink href={auth.loginHref} onClick={close}>{auth.login}</NetLink></Button>
+              <Button asChild className="min-h-11"><NetLink href={auth.signupHref} onClick={close}>{auth.signup}</NetLink></Button></div>}
             {DRAWER_SECTIONS.map((sec, i) => (
               <div key={sec.title}>
                 {i > 0 && <Separator className="my-2" />}
