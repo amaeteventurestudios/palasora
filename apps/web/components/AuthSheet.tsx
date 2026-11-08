@@ -32,7 +32,7 @@ export function AuthSheet({ open, onClose, next, draftNotice }: { open: boolean;
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{t("auth.joinSub")}</p>
         {draftNotice && <p className="mt-3 rounded-lg bg-card-muted p-3 text-sm" role="note">{t("auth.keepDraft")}</p>}
-        {nv && <a className="btn btn-primary mt-4 w-full" href={`/auth/novenique/start?next=${encodeURIComponent(next)}`}>Continue with Novenique</a>}
+        {nv && <a className="btn btn-primary mt-4 w-full" href={`/auth/novenique/start?next=${encodeURIComponent(next)}`}>Continue with Google or email code</a>}
         <form action={action} className="mt-4 flex flex-col gap-3">
           <input type="hidden" name="next" value={next} /><JsFlag />
           <div><label className="field-label" htmlFor={`${uid}-email`}>{t("auth.email")}</label><input id={`${uid}-email`} name="email" type="email" autoComplete="email" required className="input" /></div>
