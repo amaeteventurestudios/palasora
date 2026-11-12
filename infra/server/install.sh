@@ -148,19 +148,13 @@ if [ ! -x /usr/local/bin/caddy ] || [ ! -d /etc/caddy/sites ]; then
   echo 'The shared Caddy web server is missing (the Agent Grand Prix deploy installs it). Palasora runs, but is not on the web yet.'; exit 1
 fi
 ALL=("${NAMES[@]}" "${NET[@]}")
-# Browser safety headers: "?" only fills in what the website has not set itself (its own Content-Security-Policy and
-# frame rules stay), so this mainly adds HSTS (browsers always use https here).
+# Browser safety headers: the website sets its own Content-Security-Policy, frame, referrer and nosniff headers; Caddy
+# adds HSTS (browsers always use https here). Caddy's "?" defaults don't apply to proxied answers, so it is set outright.
 [ -f /etc/caddy/sites/palasora.caddy ] && sudo cp /etc/caddy/sites/palasora.caddy /tmp/palasora.caddy.bak
 sudo tee /etc/caddy/sites/palasora.caddy >/dev/null <<CADDY
 $(IFS=,; echo "${ALL[*]}" | sed 's/,/, /g') {
 	encode zstd gzip
-	header {
-		?Strict-Transport-Security "max-age=31536000"
-		?Content-Security-Policy "object-src 'none'; base-uri 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
-		?X-Frame-Options SAMEORIGIN
-		?X-Content-Type-Options nosniff
-		?Referrer-Policy strict-origin-when-cross-origin
-	}
+	header Strict-Transport-Security "max-age=31536000"
 	reverse_proxy 127.0.0.1:$WEB_PORT
 }
 CADDY
