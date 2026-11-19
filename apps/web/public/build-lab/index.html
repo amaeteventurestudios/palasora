@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Palasora build lab</title>
+<meta name="description" content="Palasora build lab: lay roads, farms and homes from a build tray while AI agents build the town beside you.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --panel:rgba(27,30,58,.94); --panel2:rgba(41,45,82,.96); --ink:#f6efe2; --dim:#b9b5c9; --line:rgba(255,255,255,.10);
+  --gold:#f4b324; --gold2:#ffd36b; --red:#e2553f; --ok:#5fc48a;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px); --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#d9b98a;font-family:Outfit,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+canvas#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px rgba(20,16,40,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+
+/* top bar */
+#top{position:fixed;top:calc(12px + var(--sat));left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:stretch;z-index:5;max-width:calc(100% - 24px)}
+#stats{display:flex;align-items:center;gap:16px;padding:9px 18px}
+#stats .town{font-weight:700;letter-spacing:.14em;font-size:11px;color:var(--gold2);text-transform:uppercase;white-space:nowrap}
+.stat{display:flex;align-items:center;gap:6px;white-space:nowrap;font-weight:600;font-size:15px}
+.stat small{font-weight:500;color:var(--dim);font-size:12px}
+.coin{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe9a3,#f4b324 55%,#b67a0c);box-shadow:inset 0 0 0 1.5px rgba(120,70,0,.35);flex:none}
+.sep{width:1px;align-self:stretch;background:var(--line)}
+#controls{display:flex;gap:4px;padding:5px;align-items:center}
+.btn{height:38px;min-width:38px;padding:0 10px;white-space:nowrap;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600;font-size:13px;color:var(--dim);transition:background .15s,color .15s}
+.btn:hover{background:rgba(255,255,255,.07);color:var(--ink)}
+.btn.on{background:var(--gold);color:#2a1d05}
+.btn svg{width:18px;height:18px}
+#agentsBtn.on{background:#3a8f68;color:#fff}
+
+/* agent roster + feed (desktop: right column) */
+#side{position:fixed;right:calc(12px + var(--sar));top:calc(80px + var(--sat));width:268px;z-index:4;display:flex;flex-direction:column;gap:10px}
+#roster{padding:12px 12px 6px}
+#roster h3,#feedBox h3{margin:0 0 8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);font-weight:700}
+.agent{display:flex;align-items:center;gap:9px;padding:6px 4px;border-top:1px solid var(--line)}
+.agent:first-of-type{border-top:0}
+.agent .dot{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-weight:700;font-size:13px;color:#1b1e3a;flex:none}
+.agent .who{flex:1;min-width:0}
+.agent .who b{display:block;font-size:13px}
+.agent .who span{display:block;font-size:11.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent .bal{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:4px}
+.agent .bal .coin{width:12px;height:12px}
+#feedBox{padding:12px;display:flex;flex-direction:column}
+#feed{list-style:none;margin:0;padding:0;overflow:hidden;display:flex;flex-direction:column;gap:6px}
+#feed li{font-size:12.5px;line-height:1.35;color:var(--ink);animation:in .35s ease}
+#feed li i{font-style:normal;font-weight:700}
+#feed li small{color:var(--dim)}
+@keyframes in{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}
+
+/* tray */
+#tray{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + var(--sab));z-index:5;display:flex;gap:10px;padding:10px;width:auto;min-width:min(640px,calc(100% - 24px));max-width:min(1000px,calc(100% - 24px))}
+#modes{display:flex;flex-direction:column;gap:6px;flex:none}
+.mode{width:70px;height:56px;border-radius:13px;background:rgba(255,255,255,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:600;color:var(--dim)}
+.mode svg{width:20px;height:20px}
+.mode.on{background:var(--gold);color:#2a1d05}
+#trayMain{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.chips{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+.chips::-webkit-scrollbar,#items::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:7px 13px;border-radius:999px;font-weight:600;font-size:13.5px;color:var(--dim);white-space:nowrap}
+.chip.on{background:var(--ink);color:#1b1e3a}
+#subs .chip{font-size:12.5px;padding:5px 11px}
+#subs .chip.on{background:rgba(255,255,255,.14);color:var(--ink)}
+#itemsWrap{position:relative}
+#items{display:flex;gap:8px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;padding:2px 2px 2px}
+.item{flex:none;width:98px;border-radius:13px;background:rgba(255,255,255,.05);padding:6px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;border:2px solid transparent;transition:background .15s,border-color .15s}
+.item:hover{background:rgba(255,255,255,.1)}
+.item.on{border-color:var(--gold);background:rgba(244,179,36,.14)}
+.item img{width:72px;height:56px;object-fit:contain;pointer-events:none}
+.item b{font-size:12.5px;font-weight:600;text-align:center;line-height:1.15;min-height:29px;display:flex;align-items:center}
+.item span{font-size:11.5px;color:var(--gold2);display:flex;align-items:center;gap:3px}
+.item span .coin{width:10px;height:10px}
+.item.new::after{content:"new";position:absolute;margin:-4px 0 0 60px;font-size:9.5px;background:var(--ok);color:#06210f;font-weight:700;padding:1px 5px;border-radius:6px}
+.fade{position:absolute;top:0;bottom:0;width:36px;pointer-events:none;display:none}
+.fade.r{right:0;background:linear-gradient(90deg,transparent,rgba(27,30,58,.95))}
+.fade.l{left:0;background:linear-gradient(270deg,transparent,rgba(27,30,58,.95))}
+.arrow{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:var(--ink);color:#1b1e3a;display:none;place-items:center;font-weight:700;z-index:2;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.arrow.r{right:-6px}.arrow.l{left:-6px}
+.show{display:grid!important}
+.fade.show{display:block!important}
+
+/* hint, tags */
+#hint{position:fixed;left:50%;transform:translateX(-50%);z-index:4;padding:7px 14px;border-radius:999px;font-size:13px;white-space:nowrap;pointer-events:none;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
+#price{position:fixed;z-index:6;pointer-events:none;padding:5px 10px;border-radius:10px;font-size:12.5px;font-weight:600;white-space:nowrap;display:none;transform:translate(14px,-130%)}
+#price.bad{background:rgba(120,30,25,.94)}
+#tags{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.tag{position:absolute;transform:translate(-50%,-100%);padding:4px 9px 4px 5px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;background:rgba(27,30,58,.92);transition:opacity .4s}
+.tag .d{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:700;color:#1b1e3a}
+.tag::after{content:"";position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);border:5px solid transparent;border-top-color:rgba(27,30,58,.92);border-bottom:0}
+#ticker{display:none}
+#toast{position:fixed;left:50%;top:calc(76px + var(--sat));transform:translateX(-50%);z-index:7;padding:8px 14px;border-radius:12px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none}
+#toast.show{opacity:1}
+#intro{position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:rgba(20,18,40,.35);padding:20px}
+#intro .card{max-width:440px;padding:24px 24px 20px;text-align:center}
+#intro h1{margin:0 0 6px;font-size:26px}
+#intro p{margin:0 0 16px;color:var(--dim);font-size:14.5px;line-height:1.5}
+#intro .go{background:var(--gold);color:#2a1d05;font-weight:700;padding:11px 22px;border-radius:12px;font-size:15px}
+#intro .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+#intro .alt{background:rgba(255,255,255,.08);padding:11px 18px;border-radius:12px;font-weight:600;font-size:15px}
+
+/* phones, portrait */
+@media (max-width:760px){
+  #top{top:calc(8px + var(--sat));flex-direction:column;align-items:center;gap:6px;width:calc(100% - 16px)}
+  #stats{gap:10px;padding:7px 12px;width:100%;justify-content:center}
+  #stats .town{display:none}
+  .stat{font-size:14px}
+  #controls{padding:4px;gap:2px}
+  .btn{height:34px;min-width:34px;padding:0 7px;font-size:12px}
+  .btn .lbl{display:none}
+  #side{display:none}
+  #ticker{display:flex;position:fixed;left:8px;right:8px;z-index:4;padding:6px 10px;border-radius:12px;font-size:12px;gap:6px;align-items:center;white-space:nowrap;overflow:hidden}
+  #ticker span{overflow:hidden;text-overflow:ellipsis}
+  #tray{width:calc(100% - 16px);bottom:calc(8px + var(--sab));padding:8px;gap:8px;border-radius:16px}
+  #modes{gap:5px}
+  .mode{width:50px;height:44px;font-size:10.5px;border-radius:11px}
+  .mode svg{width:17px;height:17px}
+  .chip{padding:6px 10px;font-size:12.5px}
+  #subs .chip{font-size:11.5px;padding:4px 9px}
+  .item{width:78px;padding:4px 4px 6px}
+  .item img{width:58px;height:42px}
+  .item b{font-size:11px;min-height:26px}
+  .item span{font-size:10.5px}
+  .arrow{display:none!important}
+  #hint{font-size:12px}
+}
+/* phones, landscape */
+@media (max-height:480px) and (orientation:landscape){
+  #top{top:calc(6px + var(--sat));gap:6px}
+  #stats{padding:5px 12px;gap:10px}
+  #stats .town{display:none}
+  .btn{height:30px;min-width:30px;padding:0 6px}
+  .btn .lbl{display:none}
+  #side{display:none}
+  #ticker{display:flex;position:fixed;left:calc(8px + var(--sal));z-index:4;padding:5px 10px;border-radius:12px;font-size:11.5px;gap:6px;align-items:center;white-space:nowrap;overflow:hidden;max-width:46%}
+  #ticker span{overflow:hidden;text-overflow:ellipsis}
+  #tray{bottom:calc(6px + var(--sab));padding:6px;gap:6px;width:min(760px,calc(100% - 16px - var(--sal) - var(--sar)))}
+  #modes{flex-direction:column;gap:3px}
+  .mode{width:46px;height:30px;font-size:0;gap:0}
+  .mode svg{width:16px;height:16px}
+  #trayMain{gap:4px}
+  .chip{padding:4px 10px;font-size:12px}
+  #subs{display:none!important}
+  .item{width:70px;padding:3px 3px 4px;flex-direction:row;flex-wrap:wrap;justify-content:center}
+  .item img{width:44px;height:30px}
+  .item b{font-size:10.5px;min-height:0;width:100%;justify-content:center}
+  .item span{font-size:10px}
+  .arrow{display:none!important}
+  #hint{display:none}
+}
+@media (prefers-reduced-motion:reduce){#feed li{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="scene" tabindex="0" aria-label="The town. Drag to look around; choose something from the tray to build."></canvas>
+<div id="tags"></div>
+
+<div id="top">
+  <div id="stats" class="panel">
+    <div class="town" id="townName">Palasora · Harbour Quarter</div>
+    <div class="stat"><span class="coin"></span><span id="coins">9,000</span></div>
+    <div class="sep"></div>
+    <div class="stat" id="clock">Day 1 <small>07:00</small></div>
+    <div class="sep"></div>
+    <div class="stat" title="Residents"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8z"/></svg><span id="pop">0</span></div>
+    <div class="sep"></div>
+    <div class="stat" title="Vehicles on the road"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M5 11l1.6-4.2A2 2 0 0 1 8.5 5.5h7a2 2 0 0 1 1.9 1.3L19 11h1a1 1 0 0 1 1 1v5h-2.2a2.5 2.5 0 0 1-4.6 0H9.8a2.5 2.5 0 0 1-4.6 0H3v-5a1 1 0 0 1 1-1zm2.2 0h9.6l-1.1-3.2a.6.6 0 0 0-.6-.3H8.9a.6.6 0 0 0-.6.3z"/></svg><span id="cars">0</span></div>
+  </div>
+  <div id="controls" class="panel">
+    <button class="btn" data-speed="0" title="Pause" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+    <button class="btn on" data-speed="1" title="Normal speed" aria-label="Normal speed"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg></button>
+    <button class="btn" data-speed="2" title="Fast" aria-label="Fast"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6v12l8-6zm9 0v12l8-6z"/></svg></button>
+    <button class="btn" data-speed="4" title="Faster" aria-label="Faster"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 7v10l6-5zm7 0v10l6-5zm7 0v10l6-5z"/></svg></button>
+    <button class="btn on" id="agentsBtn" title="AI agents building on their own" aria-label="AI agents on or off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M3 13v2M21 13v2"/></svg><span class="lbl">Agents on</span></button>
+    <button class="btn" id="rotBtn" title="Turn the view" aria-label="Turn the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></button>
+    <button class="btn" id="sunBtn" title="Day and night" aria-label="Skip to evening"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</div>
+
+<div id="side">
+  <div id="roster" class="panel"><h3>Agents building</h3><div id="agentList"></div></div>
+  <div id="feedBox" class="panel"><h3>What's happening</h3><ul id="feed"></ul></div>
+</div>
+
+<div id="ticker" class="panel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f4b324" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4"/></svg><span id="tickText">Agents are getting ready…</span></div>
+<div id="hint" class="panel">Drag to look around. Pick something below to build.</div>
+<div id="price" class="panel"></div>
+<div id="toast" class="panel"></div>
+
+<div id="tray" class="panel">
+  <div id="modes">
+    <button class="mode on" data-mode="look"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 11.5v-2a1.5 1.5 0 0 1 3 0V12M14 10.5a1.5 1.5 0 0 1 3 0V12M17 11.5a1.5 1.5 0 0 1 3 0V16a6 6 0 0 1-6 6h-2a6 6 0 0 1-5-2.7L4.3 15a1.5 1.5 0 0 1 2.4-1.8L8 15"/></svg>Look</button>
+    <button class="mode" data-mode="remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Remove</button>
+  </div>
+  <div id="trayMain">
+    <div class="chips" id="cats"></div>
+    <div class="chips" id="subs"></div>
+    <div id="itemsWrap">
+      <div class="fade l" id="fadeL"></div><div class="fade r" id="fadeR"></div>
+      <button class="arrow l" id="arrL" aria-label="Scroll left">‹</button>
+      <div id="items"></div>
+      <button class="arrow r" id="arrR" aria-label="Scroll right">›</button>
+    </div>
+  </div>
+</div>
+
+<div id="intro">
+  <div class="card panel">
+    <h1>Palasora build lab</h1>
+    <p>Four AI agents are building this quarter on their own, using the same build tray you have. Watch them lay roads, raise homes and start farms, or build beside them.</p>
+    <div class="row"><button class="go" id="goWatch">Watch the agents</button><button class="alt" id="goBuild">Build myself</button></div>
+  </div>
+</div>
+
+<script type="importmap">{"imports":{"three":"./three.module.min.js"}}</script>
+<script type="module" src="./town.js"></script>
+</body>
+</html>
